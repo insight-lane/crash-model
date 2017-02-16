@@ -1,3 +1,11 @@
+# Load libraries
+library(tidyverse)
+library(stringr)
+library(lubridate)
+
+setwd("/Users/Josiah/Dropbox/GitHub/boston-crash-modeling")
+
+
 # Function can be found on my github: https://github.com/JosiahParry/general_R/blob/master/personal_functions/list_dat_dirs.R
 list_dat_dirs <- function(dir, extension = "RAW", case_sensitive = FALSE) {
   case_sensitive <- ifelse(case_sensitive == TRUE, FALSE, TRUE)
@@ -6,7 +14,7 @@ list_dat_dirs <- function(dir, extension = "RAW", case_sensitive = FALSE) {
 }
 
 # https://github.com/JosiahParry/general_R/blob/master/personal_functions/read_multiple_csv.R
-read_multiple_csv <- function(dat_dir, skip = 0) {
+read_multiple_csv <- function(dat_dirs, skip = 0) {
     all_files <- list()
     for (i in 1:length(dat_dirs)) {
       for (j in 1:length(list.files(dat_dirs[i]))) {
