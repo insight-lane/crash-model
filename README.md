@@ -23,8 +23,8 @@ Building off of the [Vision Zero](http://app01.cityofboston.gov/VisionZero) & [V
 Connect
 -----------------------
 Team Leads:
- - [@therriault](https://datafordemocracy.slack.com/messages/@therriault)
- - [@niccolley](https://datafordemocracy.slack.com/messages/@niccolley)
+ - Andrew Therriault [@therriault](https://datafordemocracy.slack.com/messages/@therriault)
+ - Cat Murdock [@catsinthecloud](https://datafordemocracy.slack.com/messages/@catsinthecloud)
 
 **Maintainers**: Maintainers have write access to the repository. They are responsible for reviewing pull requests, providing feedback and ensuring consistency.
 
