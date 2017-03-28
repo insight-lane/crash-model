@@ -9,6 +9,11 @@ This directory contains the code for taking the data from the raw segments shape
 - ma\_co\_spatially\_joined\_streets.shp : Boston Segments with Mass DOT road feature information [link](https://data.world/data4democracy/boston-crash-model) (ask coordinator for invite)
 - inters.shp : Intersection points based on Boston Segments [link](https://data.world/data4democracy/boston-crash-model) (ask coordinator for invite)
 
+## Module dependencies
+Python modules: Use requirements\_spatial.txt
+
+rtree additionally requires download and installation of [libspatialindex](http://libspatialindex.github.io/)
+
 ## Process map
 1) Extract intersections : Boston Segments -> extract\_intersections.py -> inters.shp
 
