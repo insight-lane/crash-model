@@ -15,7 +15,6 @@ import csv
 import matplotlib.pyplot as plt
 import pandas as pd
 from shapely.geometry import Point, MultiPoint, shape, mapping
-get_ipython().magic(u'matplotlib inline')
 
 # Project projection = EPSG:3857
 PROJ = pyproj.Proj(init='epsg:3857')
