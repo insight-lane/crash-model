@@ -27,6 +27,10 @@ def read_records(fp, date_col, id_col, agg='week'):
         data = json.load(f)
     df = pd.DataFrame(data)
     df[date_col] = pd.to_datetime(df[date_col])
+    print "total number of records in {}:{}".format(fp, len(df))
+
+    # aggregate
+    print "aggregating by ", agg
     df[agg] = df[date_col].apply(lambda x: getattr(x, agg))
     df_g = df.groupby([id_col, agg]).size()
     return(df_g)
@@ -47,6 +51,7 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     # Read in inters data (json), turn into df with inter index
     df_index = []
     df_records = []
+    print "reading ", inters_fp
     with open(inters_fp, 'r') as f:
         inters = json.load(f)
         # Append each index to dataframe
@@ -56,6 +61,7 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     inters_df = pd.DataFrame(df_records, index=df_index)
 
     # Read in non_inters data:
+    print "reading ", non_inters_fp
     non_inters = read_shp(non_inters_fp)
     non_inters_df = pd.DataFrame([x[1] for x in non_inters])
     non_inters_df.set_index('id', inplace=True)
@@ -97,6 +103,7 @@ feats = ['AADT', 'SPEEDLIMIT',
 
 # create combined road feature dataset
 combined = road_make(feats, inters_fp, non_inters_fp)
+print "road features being included: ", ', '.join(feats)
 # All features as int
 combined = combined.apply(lambda x: x.astype('int'))
 
@@ -113,5 +120,6 @@ cr_con_roads = cr_con.merge(
     combined, left_on='segment_id', right_index=True, how='outer')
 
 # output canon dataset
+print "exporting canonical dataset to ", DATA_FP
 cr_con_roads.set_index('segment_id').to_csv(
     DATA_FP + '/vz_predict_dataset.csv.gz', compression='gzip')
