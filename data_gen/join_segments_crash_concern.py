@@ -41,18 +41,6 @@ def read_shp(fp):
     out = [(shape(line['geometry']), line['properties'])
            for line in fiona.open(fp)]
     return(out)
-
-# Read shp, output tuple geometry + property
-
-
-def read_shp(fp):
-    out = [(shape(line['geometry']), line['properties'])
-           for line in fiona.open(fp)]
-    return(out)
-
-# Make schema
-
-
 def make_schema(geometry, properties):
     """
     Utility for making schema with 'str' value for each key in properties
@@ -63,9 +51,7 @@ def make_schema(geometry, properties):
         'properties': properties_dict
     }
     return(schema)
-# Output as shapefile
-
-
+    
 def write_shp(schema, fp, data, shape_key, prop_key):
     # Write a new Shapefile
     with fiona.open(fp, 'w', 'ESRI Shapefile', schema) as c:
