@@ -13,6 +13,7 @@ This directory contains the code for taking the data from the raw segments shape
 Python modules: Use requirements\_spatial.txt
 
 rtree additionally requires download and installation of [libspatialindex](http://libspatialindex.github.io/)
+(For Anaconda install, can use [conda-forge](https://anaconda.org/conda-forge/libspatialindex))
 
 ## Process map
 1) Extract intersections : Boston Segments -> extract\_intersections.py -> inters.shp
