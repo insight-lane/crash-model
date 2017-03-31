@@ -10,6 +10,7 @@ This directory contains the code for taking the data from the raw segments shape
 - inters.shp : Intersection points based on Boston Segments [link](https://data.world/data4democracy/boston-crash-model) (ask coordinator for invite)
 
 ## Module dependencies
+If using conda, you can get all the depencies using the [environment.yml](https://github.com/Data4Democracy/boston-crash-modeling/blob/master/environment.yml) file.
 Python modules: Use requirements\_spatial.txt
 
 rtree additionally requires download and installation of [libspatialindex](http://libspatialindex.github.io/)
