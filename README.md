@@ -54,7 +54,19 @@ You'll want to reproduce the packages and package versions required to run code 
     $ conda env create -f environment.yml
     $ activate boston-crash-model
 
-If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/data_gen) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/benchmark) for running the benchmark model.
+If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/data_generation) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/benchmark) for running the benchmark model.
     
 ### Data:
+
+At the moment, the [RF benchmark model](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/benchmark/crash_pred_model_time.ipynb) is running off of a dataset of historical crashes in 2016 per street segment + week. All our processed data is in a private repository in data.world [here](https://data.world/data4democracy/boston-crash-model) -- ping a project lead or maintainer on Slack to get access. More detailed documentation is contained there.
+
+Data can be downloaded from the web frontend to data.world; it is expected to reside in the data directory.
+
+At a high level, there are a variety of raw data sources available to us:
+- Historical [crash data](http://app01.cityofboston.gov/VisionZero)
+- Street segment inventories
+- The Vision Zero crowdsourced [concerns map](http://app01.cityofboston.gov/VZSafety)
+- [Other open city data](https://data.boston.gov/) (constituent requests, liquor licenses, assessing data) 
+- 
+
 Building off of [Vision Zero crash data](http://app01.cityofboston.gov/VisionZero) & the [Vision Zero concerns map](http://app01.cityofboston.gov/VZSafety).
