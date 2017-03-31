@@ -53,6 +53,8 @@ You'll want to reproduce the packages and package versions required to run code 
 
     $ conda env create -f environment.yml
     $ activate boston-crash-model
+
+If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/data_gen) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/benchmark) for running the benchmark model.
     
 ### Data:
 Building off of [Vision Zero crash data](http://app01.cityofboston.gov/VisionZero) & the [Vision Zero concerns map](http://app01.cityofboston.gov/VZSafety).
