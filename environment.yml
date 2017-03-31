@@ -13,6 +13,8 @@ dependencies:
 - seaborn=0.7.1
 - conda-forge::shapely=1.5.17
 - wheel=0.29.0
+- pyproj=1.9.5.1
+- conda-forge::libspatialindex=1.8.5
 - pip:
   - rtree==0.8.3
 
