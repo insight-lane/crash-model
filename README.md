@@ -58,7 +58,7 @@ If you'd prefer to use a requirements.txt file, one is available in the [data_ge
     
 ### Data:
 
-At the moment, the [RF benchmark model](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/benchmark/crash_pred_model_time.ipynb) is running off of a dataset of historical crashes in 2016 per street segment + week. All our processed data is in a private repository in data.world [here](https://data.world/data4democracy/boston-crash-model) -- ping a project lead or maintainer on Slack to get access. More detailed documentation is contained there.
+At the moment, the [RF benchmark model](https://github.com/Data4Democracy/boston-crash-modeling/blob/master/notebooks/benchmark/crash_predict_benchmark.ipynb) is running off of a dataset of historical crashes in 2016 per street segment + week. All our processed data is in a private repository in data.world [here](https://data.world/data4democracy/boston-crash-model) -- ping a project lead or maintainer on Slack to get access. More detailed documentation is contained there.
 
 Data can be downloaded from the web frontend to data.world; it is expected to reside in the data directory.
 
