@@ -3,12 +3,11 @@ Boston Crash Modeling
 
 Outline:
 -----------------------
- 1. Project Vision
- 2. How
- 3. Connect
- 4. Details
- 5. Data Sources
- 6. Getting Started
+ Project Vision
+ Connect
+ Details
+ Data Sources
+ Getting Started
 
  
 Project Vision
@@ -27,9 +26,8 @@ Connect
 Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-boston-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](http://datafordemocracy.org/contact.html)!
 
 Leads:
- - our project manager Cat Murdock [@catsinthecloud](https://datafordemocracy.slack.com/messages/@catsinthecloud)
+ - project manager Ben Batorsky [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
  - Alex Chen (CoB) [@alchenist](https://datafordemocracy.slack.com/messages/@alchenist)
- - Ben Batorsky (CoB) [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
  
 **Maintainers**: Maintainers have write access to the repository. They are responsible for reviewing pull requests, providing feedback and ensuring consistency.
  - {Your name here?}
