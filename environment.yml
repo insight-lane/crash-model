@@ -3,7 +3,7 @@ channels: !!python/tuple
 - !!python/unicode 'defaults'
 - conda-forge
 dependencies:
-- conda-forge::fiona=1.7.5
+- conda-forge::fiona=1.7.8
 - jupyter=1.0.0
 - matplotlib=2.0.0
 - pandas=0.19.2
