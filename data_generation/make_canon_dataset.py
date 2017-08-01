@@ -68,15 +68,12 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
 
     # Combine inter + non_inter
     combined = pd.concat([inters_df, non_inters_df])
+    
+    # Aggregating inters data = apply aggregation (default is max)
+    aggregated = getattr(combined[feats].groupby(combined.index), agg)
 
-    # Subset columns
-    combined = combined[feats]
-
-    # Aggregating inters data = max of all properties
-    aggregated = getattr(combined.groupby(combined.index), agg)
-    combined = aggregated()
-
-    return(combined)
+    # return aggregation and adjacency info (orig_id)
+    return(aggregated(), combined['orig_id'])
 
 # read/aggregate crash/concerns
 crash = read_records(DATA_FP + '/crash_joined.json',
@@ -97,19 +94,20 @@ cr_con['near_id'] = cr_con['near_id'].astype('str')
 # combined road feature dataset parameters
 inters_fp = DATA_FP + '/inters_data.json'
 non_inters_fp = MAP_FP + '/non_inters_segments.shp'
+
 feats = ['AADT', 'SPEEDLIMIT',
          'Struct_Cnd', 'Surface_Tp',
          'F_F_Class']
 
 # create combined road feature dataset
-combined = road_make(feats, inters_fp, non_inters_fp)
+aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
 print "road features being included: ", ', '.join(feats)
 # All features as int
-combined = combined.apply(lambda x: x.astype('int'))
+aggregated = aggregated.apply(lambda x: x.astype('int'))
 
 # 53 weeks for each segment (year = 52.2 weeks)
 all_weeks = pd.MultiIndex.from_product(
-    [combined.index, range(1, 54)], names=['segment_id', 'week'])
+    [aggregated.index, range(1, 54)], names=['segment_id', 'week'])
 
 # crash/concern for each week, for each segment
 cr_con = cr_con.set_index(['near_id', 'week']).reindex(all_weeks, fill_value=0)
@@ -117,9 +115,13 @@ cr_con.reset_index(inplace=True)
 
 # join segment features to crash/concern
 cr_con_roads = cr_con.merge(
-    combined, left_on='segment_id', right_index=True, how='outer')
+    aggregated, left_on='segment_id', right_index=True, how='outer')
 
 # output canon dataset
 print "exporting canonical dataset to ", DATA_FP
 cr_con_roads.set_index('segment_id').to_csv(
     DATA_FP + '/vz_predict_dataset.csv.gz', compression='gzip')
+
+# output adjacency info
+adjacent.columns = ['segment_id', 'orig_id']
+adjacent.to_csv(DATA_FP+'/adjacency_info.csv')

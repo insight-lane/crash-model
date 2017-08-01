@@ -70,6 +70,13 @@ roads = [(shape(road['geometry']), road['properties'])
          for road in fiona.open(roads_shp_path)]
 print "read in {} road segments".format(len(roads))
 
+import pdb
+pdb.set_trace()
+
+# unique id did not get included in shapfile, need to add it for adjacency
+for i, road in enumerate(roads):
+    road[1]['orig_id'] = int(str(99) + str(i))
+
 # Read in reprojected intersection
 inters = [(shape(inter['geometry']), inter['properties'])
           for inter in fiona.open(inters_shp_path)]
