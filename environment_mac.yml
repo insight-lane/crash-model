@@ -1,0 +1,19 @@
+name: boston-crash-model
+channels: !!python/tuple
+- !!python/unicode 'defaults'
+- conda-forge
+dependencies:
+- conda-forge::fiona=1.7.5
+- jupyter=1.0.0
+- matplotlib=2.0.0
+- pandas=0.19.2
+- pip=9.0.1
+- python=2.7.13
+- scikit-learn=0.18.1
+- seaborn=0.7.1
+- conda-forge::shapely=1.5.17
+- wheel=0.29.0
+- pyproj=1.9.5.1
+- conda-forge::libspatialindex=1.8.5
+- conda-forge::rtree=0.8.3
+
