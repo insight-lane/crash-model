@@ -1,86 +1,134 @@
 import fiona
-import numpy as np
 import sys
 import math
 from shapely.geometry import Point, shape, mapping
 import itertools
 import cPickle
+import os
 
-#Import shapefile specified at commandline
-shp = sys.argv[1]
 
-#Get all lines, dummy id
-lines = [
-         (
-         line[0],
-         shape(line[1]['geometry'])
-         ) for line in enumerate(fiona.open(shp))
-        ]
-
-#Track progress
 def track(index, step, tot):
-    if index%step==0:
+    """
+    Prints progress at interval
+    """
+    if index % step == 0:
         print "finished {} of {}".format(index, tot)
 
-#Function for extracting intersections, return coordinates + properties
-def ex_inters(inter, prop):
+
+def extract_intersections(inter, prop):
+    """
+    Extracts intersections, returning coordinates + properties
+
+    Args:
+        inter: the intersection of two segments
+        prop: 
+
+    Returns:
+        Generator
+    """
+
+    # A single intersection
     if "Point" == inter.type:
         yield inter, prop
-    #If multiple intersections, return each point
+    # If multiple intersections, return each point
     elif "MultiPoint" == inter.type:
         for i in inter:
-            yield(i,prop)
-    #If line with overlap, find start/end, return
+            yield(i, prop)
+    # If line with overlap, find start/end, return
     elif "MultiLineString" == inter.type:
         multiLine = [line for line in inter]
         first_coords = multiLine[0].coords[0]
         last_coords = multiLine[-1].coords[1]
         for i in [Point(first_coords[0], first_coords[1]),Point(last_coords[0], last_coords[1])]:
-            yield(i,prop)
-    #If collection points/lines (rare), just re-run on each part
+            yield(i, prop)
+    # If collection points/lines (rare), just re-run on each part
     elif "GeometryCollection" == inter.type:
         for geom in inter:
-            for i in ex_inters(geom, prop):
+            for i in extract_intersections(geom, prop):
                 yield i
 
-if not os.path.exists('inters.pkl'):
+
+def generate_intersections(lines):
+    """
+    Runs extract_intersections on all combinations of points
+
+    Args:
+        lines: the lines from the shapefile
+
+    Returns:
+        inters: intersections
+    """
     inters = []
     i = 0
-    #Total combinations
-    def nCr(n,r):
+
+    # Total combinations
+    def nCr(n, r):
         f = math.factorial
         return f(n) / f(r) / f(n-r)
     tot = nCr(len(lines), 2)
-    #Iterate, extract intersections
-    for line1,line2 in itertools.combinations(lines, 2):
+    # Look at all pairs of segments to extract intersections
+    for segment1, segment2 in itertools.combinations(lines, 2):
         track(i, 10000, tot)
-        if line1[1].intersects(line2[1]):
-            inter = line1[1].intersection(line2[1])
-            inters.extend(ex_inters(inter, 
-                                    {'id_1':line1[0], 'id_2':line2[0]}
-                                   ))
-        i+=1
+        if segment1[1].intersects(segment2[1]):
+            inter = segment1[1].intersection(segment2[1])
+            inters.extend(extract_intersections(
+                inter,
+                {'id_1': segment1[0], 'id_2': segment2[0]}
+            ))
+        i += 1
 
-    #Save to pickle in case script breaks    
+    # Save to pickle in case script breaks
     with open('inters.pkl', 'w') as f:
         cPickle.dump(inters, f)
-else:
-    with open('inters.pkl', 'w') as f:
-        inters = cPickle.load(f)
+    return inters
 
-# de duplicated
-inters_de = []
-# schema of the shapefile
-schema = {'geometry': 'Point', 
-          'properties': {'id_1':'int',
-                        'id_2':'int'}
-         }
-# creation of the shapefile
-with fiona.open('inters.shp','w','ESRI Shapefile', schema) as output:
-    i = 0
+
+def write_intersections(inters):
+    """
+    Given a list of shapely intersections in a pkl,
+    de-dupe and write shape files
+
+    Args:
+        inters: a pkl
+    """
+    # schema of the shapefile
+    schema = {
+        'geometry': 'Point',
+        'properties': {
+            'id_1': 'int',
+            'id_2': 'int'
+        }
+    }
+
+    points = {}
+    # remove duplicate points
     for pt in inters:
-        if pt[0] not in inters_de:
-            track(i, 10000, len(inters))
-            output.write({'geometry':mapping(pt[0]), 'properties':pt[1]})
-            inters_de.append(pt[0])
-            i+=1
+        if (pt[0].x, pt[0].y) not in points.keys():
+            points[(pt[0].x, pt[0].y)] = pt
+
+    with fiona.open('inters.shp', 'w', 'ESRI Shapefile', schema) as output:
+        for i, pt in enumerate(points.values()):
+            track(i, 500, len(points))
+            output.write({'geometry': mapping(pt[0]), 'properties': pt[1]})
+
+
+if __name__ == '__main__':
+
+    # Import shapefile specified at commandline
+    shp = sys.argv[1]
+
+    # Get all lines, dummy id
+    lines = [
+        (
+            line[0],
+            shape(line[1]['geometry'])
+        ) for line in enumerate(fiona.open(shp))
+    ]
+
+    inters = []
+    if not os.path.exists('inters.pkl'):
+        inters = generate_intersections(lines)
+    else:
+        with open('inters.pkl', 'r') as f:
+            inters = cPickle.load(f)
+    write_intersections(inters)
