@@ -70,9 +70,6 @@ roads = [(shape(road['geometry']), road['properties'])
          for road in fiona.open(roads_shp_path)]
 print "read in {} road segments".format(len(roads))
 
-import pdb
-pdb.set_trace()
-
 # unique id did not get included in shapfile, need to add it for adjacency
 for i, road in enumerate(roads):
     road[1]['orig_id'] = int(str(99) + str(i))
@@ -157,3 +154,29 @@ road_schema = {
 }
 
 write_shp(road_schema, MAP_FP + '/non_inters_segments.shp', non_int_w_ids, 0, 1)
+
+
+# Create shapefile that combines intersections and non-intersections while
+# preserving their newly created IDs
+
+# need to make the schema consistent between the two
+# for now, just keep the ids for the non-intersection segments to keep things simple
+non_int_no_prop = []
+for i in non_int_w_ids:
+    id = i[1]['id']
+    non_int_no_prop.append(({'id': id}, i[0]))  # reverse the order of the tuple 
+                                                # while we're at it to make it 
+                                                # consistent with union_inter
+
+# concatenate the two datasets
+inter_and_non_int = union_inter + non_int_no_prop
+
+# create new schema that has only an 'id' property of type string
+all_schema = {
+    'geometry': 'LineString',
+    'properties': {'id': 'str'},
+}
+
+# write out shapefile that has intersection and non-intersection segments along
+# with their new IDs
+write_shp(all_schema, MAP_FP + '/inter_and_non_int.shp', inter_and_non_int, 1, 0)

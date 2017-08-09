@@ -123,5 +123,11 @@ cr_con_roads.set_index('segment_id').to_csv(
     DATA_FP + '/vz_predict_dataset.csv.gz', compression='gzip')
 
 # output adjacency info
-adjacent.columns = ['segment_id', 'orig_id']
-adjacent.to_csv(DATA_FP+'/adjacency_info.csv')
+# need to include ATRs
+atrs = pd.read_json(DATA_FP + '/ATRS/snapped_atrs.json')
+adjacent = adjacent.reset_index()
+adjacent = adjacent.merge(atrs[['near_id','orig']], left_on='index', right_on='near_id',
+                         how='left')
+adjacent.drop(['near_id'], axis=1, inplace=True)
+adjacent.columns = ['segment_id', 'orig_id', 'atr_address']
+adjacent.to_csv(DATA_FP+'/adjacency_info.csv', index=False)
