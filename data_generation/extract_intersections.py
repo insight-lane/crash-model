@@ -17,11 +17,11 @@ def track(index, step, tot):
 
 def extract_intersections(inter, prop):
     """
-    Extracts intersections, returning coordinates + properties
+    Extracts road intersections, returning coordinates + properties
 
     Args:
         inter: the intersection of two segments
-        prop: 
+        prop: ??
 
     Returns:
         Generator
@@ -61,7 +61,7 @@ def generate_intersections(lines):
     inters = []
     i = 0
 
-    # Total combinations
+    # Total combinations of two road segments
     def nCr(n, r):
         f = math.factorial
         return f(n) / f(r) / f(n-r)
@@ -85,11 +85,11 @@ def generate_intersections(lines):
 
 def write_intersections(inters):
     """
-    Given a list of shapely intersections in a pkl,
+    Given a list of shapely intersections,
     de-dupe and write shape files
 
     Args:
-        inters: a pkl
+        inters: list of points indicating intersections
     """
     # schema of the shapefile
     schema = {
@@ -102,14 +102,14 @@ def write_intersections(inters):
 
     points = {}
     # remove duplicate points
-    for pt in inters:
-        if (pt[0].x, pt[0].y) not in points.keys():
-            points[(pt[0].x, pt[0].y)] = pt
+    for pt, prop in inters:
+        if (pt.x, pt.y) not in points.keys():
+            points[(pt.x, pt.y)] = pt, prop
 
     with fiona.open('inters.shp', 'w', 'ESRI Shapefile', schema) as output:
-        for i, pt in enumerate(points.values()):
+        for i, (pt, prop) in enumerate(points.values()):
             track(i, 500, len(points))
-            output.write({'geometry': mapping(pt[0]), 'properties': pt[1]})
+            output.write({'geometry': mapping(pt), 'properties': prop})
 
 
 if __name__ == '__main__':
