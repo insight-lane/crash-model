@@ -4,16 +4,11 @@
 # Developed by: bpben
 import fiona
 import json
-import os
-import pyproj
-import rtree
-import csv
-import matplotlib.pyplot as plt
 import pandas as pd
 from shapely.geometry import Point, MultiPoint, shape, mapping
 
-MAP_FP = './data/maps'
-DATA_FP = './data'
+MAP_FP = '../data/processed/maps'
+DATA_FP = '../data/processed'
 
 
 def read_records(fp, date_col, id_col, agg='week'):
@@ -124,7 +119,7 @@ cr_con_roads.set_index('segment_id').to_csv(
 
 # output adjacency info
 # need to include ATRs
-atrs = pd.read_json(DATA_FP + '/ATRS/snapped_atrs.json')
+atrs = pd.read_json(DATA_FP + '/snapped_atrs.json')
 adjacent = adjacent.reset_index()
 adjacent = adjacent.merge(atrs[['near_id','orig']], left_on='index', right_on='near_id',
                          how='left')

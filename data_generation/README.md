@@ -18,12 +18,16 @@ rtree additionally requires download and installation of [libspatialindex](http:
 
 ## Process map
 1) Extract intersections : Boston Segments -> extract\_intersections.py -> inters.shp
+   Usage: python extract_intersections.py ../data/raw/Boston_Segments.shp
 
 2) Create segments : inters.shp + ma\_co\_spatially\_joined\_streets.shp -> create\_segments.ipynb -> inters\_segments.shp + non\_inters\_segments.shp
+   Usage: python create_segments.py
 
 3) Join segments and point data : inters/non-inters + CAD crash data + Vision Zero comments -> join\_segments\_crash\_concern.ipynb -> crash/concern\_joined.shp
+   Usage: python join_segments_crash_concern.py
 
 4) Make canonical dataset: crash/concern\_joined + inters/non-inters -> make\_canon\_dataset.ipynb -> vz\_predict\_dataset.csv.gz
+   Usage: python make_canon_dataset.py
 
 ## 1) Extract intersections
 - Reads in road segment data

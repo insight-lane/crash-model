@@ -78,7 +78,7 @@ def generate_intersections(lines):
         i += 1
 
     # Save to pickle in case script breaks
-    with open('inters.pkl', 'w') as f:
+    with open('../data/processed/maps/inters.pkl', 'w') as f:
         cPickle.dump(inters, f)
     return inters
 
@@ -106,7 +106,7 @@ def write_intersections(inters):
         if (pt.x, pt.y) not in points.keys():
             points[(pt.x, pt.y)] = pt, prop
 
-    with fiona.open('inters.shp', 'w', 'ESRI Shapefile', schema) as output:
+    with fiona.open('../data/processed/maps/inters.shp', 'w', 'ESRI Shapefile', schema) as output:
         for i, (pt, prop) in enumerate(points.values()):
             track(i, 500, len(points))
             output.write({'geometry': mapping(pt), 'properties': prop})
