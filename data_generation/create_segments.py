@@ -6,20 +6,17 @@
 # Developed by: bpben
 
 import fiona
-import os
-import itertools
 import pyproj
 import rtree
 import json
 import copy
-import matplotlib.pyplot as plt
 from fiona.crs import from_epsg
 from shapely.geometry import Point, MultiPoint, shape, mapping
 from shapely.ops import unary_union
 from collections import defaultdict
 
-MAP_FP = './data/maps'
-DATA_FP = './data'
+MAP_FP = '../data/processed/maps'
+DATA_FP = '../data/processed'
 
 print "Map data at ", MAP_FP
 print "Output intersection data to ", DATA_FP
