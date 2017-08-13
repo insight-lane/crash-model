@@ -89,18 +89,15 @@
 	
 </head>
 <body>
-
+	<h1>Crashes on Boston's Streets in 2016</h1>
 	<label for="week_selector">Week: </label>
 	<output for="week_selector" id="week_num">1</output>
 	<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" oninput="weekUpdate(value)">
 
 	<div id='map'></div>
 
+	<script src="http://d3js.org/d3.v3.min.js"></script>
 	<script>
-		function weekUpdate(week) {
-			document.querySelector('#week_num').value = week;
-		}
-
 		//style function for coloring the segments
 		function color_segments(feature) {
 	  		if (feature.properties.crash === 1.0) {	return {color: "#f39c12"}; }
@@ -120,7 +117,7 @@
 
 			var week = 1;
 
-		    // create GeoJSON layer filtered to the week that has been selected 
+		    // create GeoJSON layer for the first week of data 
 		  	crashes = new L.geoJson(data, {
 			  	filter: function(feature, layer) {
 			  		return feature.properties.week === week;
@@ -131,10 +128,19 @@
 		  	// add layer to map
 			map.addLayer(crashes);
 
-			//update data displayed on map based on week selected
-			document.querySelector('#week_selector').addEventListener('change', function(w) {
-				var week = +document.querySelector('#week_selector').value;
+			// update map when input range changes
+			d3.select('#week_selector').on("input", function() {
+				update_map(+this.value);
+			})
+
+			function update_map(week) {
+				// update week number displayed next to slider
+				d3.select('#week_num').text(week);
+				d3.select('#week_selector').property('value', week);
+
 				console.log(week);
+				
+				//update data displayed on map based on week selected
 
 				//clear map of layers
 				map.removeLayer(crashes);
@@ -148,8 +154,7 @@
 				})
 
 				map.addLayer(crashes);
-			})
-
+			}
 		});
 
 	</script>
