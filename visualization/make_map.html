@@ -12,91 +12,24 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw==" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js" integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA==" crossorigin=""></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
-	<style>
-		input[type=range] {
-		    /*removes default webkit styles*/
-		    -webkit-appearance: none;
-		    
-		    /*fix for FF unable to apply focus style bug */
-		    border: 1px solid white;
-		    
-		    /*required for proper track sizing in FF*/
-		    width: 350px;
-		}
-		input[type=range]::-webkit-slider-runnable-track {
-		    width: 350px;
-		    height: 5px;
-		    background: #ddd;
-		    border: none;
-		    border-radius: 3px;
-		}
-		input[type=range]::-webkit-slider-thumb {
-		    -webkit-appearance: none;
-		    border: none;
-		    height: 16px;
-		    width: 16px;
-		    border-radius: 50%;
-		    background: goldenrod;
-		    margin-top: -4px;
-		}
-
-		input[type=range]::-moz-range-track {
-		    width: 350px;
-		    height: 5px;
-		    background: #ddd;
-		    border: none;
-		    border-radius: 3px;
-		}
-		input[type=range]::-moz-range-thumb {
-		    border: none;
-		    height: 16px;
-		    width: 16px;
-		    border-radius: 50%;
-		    background: goldenrod;
-		}
-
-
-		input[type=range]::-ms-track {
-		    width: 350px;
-		    height: 5px;
-		    
-		    /*remove bg colour from the track, we'll use ms-fill-lower and ms-fill-upper instead */
-		    background: transparent;
-		    
-		    /*leave room for the larger thumb to overflow with a transparent border */
-		    border-color: transparent;
-		    border-width: 6px 0;
-
-		    /*remove default tick marks*/
-		    color: transparent;
-		}
-
-		input[type=range]::-ms-thumb {
-		    border: none;
-		    height: 16px;
-		    width: 16px;
-		    border-radius: 50%;
-		    background: goldenrod;
-		}
-
-		#map {
-			width: 1000px;
-			height: 800px;
-		}
-	</style>
-
 	
+	<link rel="stylesheet" href="css/style.css" />
+
 </head>
 <body>
 	<h1>Crashes on Boston's Streets in 2016</h1>
-	<label for="week_selector">Week: </label>
-	<output for="week_selector" id="week_num">1</output>
-	<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" oninput="weekUpdate(value)">
 
-	<div id='map'></div>
+	<div id="map_container">
+		<div class="input_overlay">
+			<label for="week_selector">Week: </label>
+			<output for="week_selector" id="week_num">1</output>
+			<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" oninput="weekUpdate(value)" />
+		</div>
+		<div id="map"></div>
+	</div>
 
 	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="js/update_map.js"></script>
 	<script>
 		//style function for coloring the segments
 		function color_segments(feature) {
@@ -111,51 +44,6 @@
 			maxZoom: 18, 
 			attribution: '(c) <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="http://cartodb.com/attributions">CartoDB</a>, CartoDB <a href ="http://cartodb.com/attributions">attributions</a>'
 		}).addTo(map);
-
-		// load GeoJSON from an external file
-		$.getJSON("historical_crashes.json",function(data){
-
-			var week = 1;
-
-		    // create GeoJSON layer for the first week of data 
-		  	crashes = new L.geoJson(data, {
-			  	filter: function(feature, layer) {
-			  		return feature.properties.week === week;
-			  	},
-			  	style: color_segments
-		  	})
-
-		  	// add layer to map
-			map.addLayer(crashes);
-
-			// update map when input range changes
-			d3.select('#week_selector').on("input", function() {
-				update_map(+this.value);
-			})
-
-			function update_map(week) {
-				// update week number displayed next to slider
-				d3.select('#week_num').text(week);
-				d3.select('#week_selector').property('value', week);
-
-				console.log(week);
-				
-				//update data displayed on map based on week selected
-
-				//clear map of layers
-				map.removeLayer(crashes);
-
-				//create new layer with updated data
-				crashes = new L.geoJson(data, {
-					filter: function(feature, layer) {
-						return feature.properties.week === week;
-					},
-					style: color_segments
-				})
-
-				map.addLayer(crashes);
-			}
-		});
 
 	</script>
 

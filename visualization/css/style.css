@@ -1,0 +1,79 @@
+#map_container {
+	position: absolute;
+	width: 85vw;
+	height: 85vh;
+}
+
+#map {
+	position: absolute;
+	width: 85vw;
+	height: 85vh;
+	z-index: -1;
+}
+
+.input_overlay {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 30%;
+	padding: 5px 10px;
+	margin: 5px;
+	background: rgb(255, 255, 255, 0.75);
+	border-radius: 3px;
+}
+
+input[type=range] {
+    /*removes default webkit styles*/
+    -webkit-appearance: none;
+    display: inline-block;
+    width: 100%;
+    position: relative;
+    margin: 0;
+}
+
+input[type=range],::-webkit-slider-runnable-track {
+    height: 3px;
+    background: #ccc;
+    border: none;
+    border-radius: 3px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    margin-top: -4px;
+}
+
+input[type=range]::-moz-range-track {
+    height: 3px;
+    background: #ccc;
+    border: none;
+    border-radius: 3px;
+}
+input[type=range]::-moz-range-thumb {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+}
+
+input[type=range]::-ms-track {
+    height: 3px;
+    
+    /*remove bg colour from the track, we'll use ms-fill-lower and ms-fill-upper instead */
+    background: #ccc;
+    
+    /*leave room for the larger thumb to overflow with a transparent border */
+    border-color: transparent;
+    border-width: 6px 0;
+
+    /*remove default tick marks*/
+    color: transparent;
+}
+
+input[type=range]::-ms-thumb {
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+}
