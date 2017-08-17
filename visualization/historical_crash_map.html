@@ -38,6 +38,25 @@
 			attribution: '(c) <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="http://cartodb.com/attributions">CartoDB</a>, CartoDB <a href ="http://cartodb.com/attributions">attributions</a>'
 		}).addTo(map);
 
+		// create legend
+		var legend = L.control({position: 'bottomright'});
+
+		legend.onAdd = function (map) {
+			var div = L.DomUtil.create('div', 'legend'),
+				num_crashes = [1, 2, 3],
+				color_segments = ["#f39c12", "#e67e22", "#e74c3c"];
+
+			div.innerHTML = "Number of <br /> Crashes: <br />";
+
+			for (var i=0; i < num_crashes.length; i++) {
+				div.innerHTML += '<i style="background:' + color_segments[i] + '"></i> ' + num_crashes[i] + '<br />';
+			}
+
+			return div;
+		}
+
+		legend.addTo(map);
+
 	</script>
 
 </body>
