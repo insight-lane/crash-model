@@ -1,3 +1,11 @@
+body {
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+h1 {
+    font-weight: normal;
+}
+
 #map_container {
 	position: absolute;
 	width: 85vw;
