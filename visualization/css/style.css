@@ -6,28 +6,17 @@ h1 {
     font-weight: normal;
 }
 
-#map_container {
-	position: absolute;
-	width: 85vw;
-	height: 85vh;
-}
-
 #map {
 	position: absolute;
 	width: 85vw;
 	height: 85vh;
-	z-index: -1;
 }
 
 .input_overlay {
-	position: absolute;
-	top: 0;
-	right: 0;
 	width: 30%;
-	padding: 5px 10px;
-	margin: 5px;
+	margin-left: 40px;
 	background: rgb(255, 255, 255, 0.75);
-	border-radius: 3px;
+	border-radius: 3px; 
 }
 
 input[type=range] {

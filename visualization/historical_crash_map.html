@@ -20,14 +20,12 @@
 <body>
 	<h1>Crashes on Boston's Streets in 2016</h1>
 
-	<div id="map_container">
-		<div class="input_overlay">
-			<label for="week_selector">Week: </label>
-			<output for="week_selector" id="week_num">1</output>
-			<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" oninput="weekUpdate(value)" />
-		</div>
-		<div id="map"></div>
+	<div class="input_overlay">
+		<label for="week_selector">Week: </label>
+		<output for="week_selector" id="week_num">1</output>
+		<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" oninput="weekUpdate(value)" />
 	</div>
+	<div id="map"></div>
 
 	<script src="http://d3js.org/d3.v3.min.js"></script>
 	<script src="js/update_map.js"></script>
