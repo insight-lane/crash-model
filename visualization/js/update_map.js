@@ -1,3 +1,10 @@
+//style function for coloring the segments
+function color_segments(feature) {
+		if (feature.properties.crash === 1.0) {	return {color: "#f39c12"}; }
+		else if (feature.properties.crash === 2.0) { return {color: "#e67e22"};	}
+		else { return {color: "#e74c3c"}; }
+}
+	  	
 // load GeoJSON from an external file
 $.getJSON("historical_crashes.json",function(data){
 

@@ -31,13 +31,7 @@
 	<script src="http://d3js.org/d3.v3.min.js"></script>
 	<script src="js/update_map.js"></script>
 	<script>
-		//style function for coloring the segments
-		function color_segments(feature) {
-	  		if (feature.properties.crash === 1.0) {	return {color: "#f39c12"}; }
-	  		else if (feature.properties.crash === 2.0) { return {color: "#e67e22"};	}
-	  		else { return {color: "#e74c3c"}; }
-	  	}
-
+		// create base map
 		var map = L.map('map').setView([42.3301, -71.0589], 12);
 
 		L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
