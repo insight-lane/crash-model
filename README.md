@@ -26,11 +26,13 @@ Connect
 Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-boston-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](http://datafordemocracy.org/contact.html)!
 
 Leads:
- - project manager Ben Batorsky [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
- - Alex Chen (CoB) [@alchenist](https://datafordemocracy.slack.com/messages/@alchenist)
+ - D4D Project Lead: Ben Batorsky [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
+ - City of Boston Project Lead: Michelle Tat [@michelle_tat](https://datafordemocracy.slack.com/messages/@michelle_tat)
  
 **Maintainers**: Maintainers have write access to the repository. They are responsible for reviewing pull requests, providing feedback and ensuring consistency.
- - {Your name here?}
+ - [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
+ - [@michelle_tat](https://datafordemocracy.slack.com/messages/@michelle_tat)
+ - [@therriault](https://datafordemocracy.slack.com/messages/@therriault)
 
 
 Getting Started
