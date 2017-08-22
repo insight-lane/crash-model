@@ -3,11 +3,9 @@ Boston Crash Modeling
 
 Outline:
 -----------------------
- Project Vision
- Connect
- Details
- Data Sources
- Getting Started
+ - Project Vision
+ - Connect
+ - Getting Started
 
  
 Project Vision
