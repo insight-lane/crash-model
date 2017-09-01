@@ -14,4 +14,4 @@ _historical_crash_map.html_ - This static site plots historical crash data and c
 
 To run this site, you need the following:
 - the /css and /js subdirectories with the files contained within
-- to run historical_crash_map.py to generate the data needed for the map
+- to run historical_crash_map.py to generate the data needed for the map.  Place the generated GeoJSON file in the same directory as the html file.
