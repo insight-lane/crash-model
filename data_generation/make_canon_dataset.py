@@ -2,10 +2,10 @@
 # coding: utf-8
 # Generate canonical dataset for hackathon
 # Developed by: bpben
-import fiona
 import json
 import pandas as pd
-from shapely.geometry import Point, MultiPoint, shape, mapping
+from geography import read_shp
+
 
 MAP_FP = '../data/processed/maps'
 DATA_FP = '../data/processed'
@@ -31,15 +31,8 @@ def read_records(fp, date_col, id_col, agg='week'):
     return(df_g)
 
 
-def read_shp(fp):
-    """ Read shp, output tuple geometry + property """
-    out = [(shape(line['geometry']), line['properties'])
-           for line in fiona.open(fp)]
-    return(out)
-
-
 def road_make(feats, inters_fp, non_inters_fp, agg='max'):
-    """ Makes road feature df, intersections + non-intersections 
+    """ Makes road feature df, intersections + non-intersections
 
     agg : aggregation type (default is max)
     """
@@ -70,59 +63,67 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     # return aggregation and adjacency info (orig_id)
     return(aggregated(), combined['orig_id'])
 
-# read/aggregate crash/concerns
-crash = read_records(DATA_FP + '/crash_joined.json',
-                     'CALENDAR_DATE', 'near_id')
-concern = read_records(DATA_FP + '/concern_joined.json',
-                       'REQUESTDATE', 'near_id')
 
-# join aggregated crash/concerns
-cr_con = pd.concat([crash, concern], axis=1)
-cr_con.columns = ['crash', 'concern']
+if __name__ == '__main__':
 
-# if null for a certain week = 0 (no crash/concern)
-cr_con.reset_index(inplace=True)
-cr_con = cr_con.fillna(0)
-# Make near_id string (for matching to segments)
-cr_con['near_id'] = cr_con['near_id'].astype('str')
+    # read/aggregate crash/concerns
+    crash = read_records(DATA_FP + '/crash_joined.json',
+                         'CALENDAR_DATE', 'near_id')
+    concern = read_records(DATA_FP + '/concern_joined.json',
+                           'REQUESTDATE', 'near_id')
 
-# combined road feature dataset parameters
-inters_fp = DATA_FP + '/inters_data.json'
-non_inters_fp = MAP_FP + '/non_inters_segments.shp'
+    # join aggregated crash/concerns
+    cr_con = pd.concat([crash, concern], axis=1)
+    cr_con.columns = ['crash', 'concern']
 
-feats = ['AADT', 'SPEEDLIMIT',
-         'Struct_Cnd', 'Surface_Tp',
-         'F_F_Class']
+    # if null for a certain week = 0 (no crash/concern)
+    cr_con.reset_index(inplace=True)
+    cr_con = cr_con.fillna(0)
+    # Make near_id string (for matching to segments)
+    cr_con['near_id'] = cr_con['near_id'].astype('str')
 
-# create combined road feature dataset
-aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
-print "road features being included: ", ', '.join(feats)
-# All features as int
-aggregated = aggregated.apply(lambda x: x.astype('int'))
+    # combined road feature dataset parameters
+    inters_fp = DATA_FP + '/inters_data.json'
+    non_inters_fp = MAP_FP + '/non_inters_segments.shp'
 
-# 53 weeks for each segment (year = 52.2 weeks)
-all_weeks = pd.MultiIndex.from_product(
-    [aggregated.index, range(1, 54)], names=['segment_id', 'week'])
+    feats = ['AADT', 'SPEEDLIMIT',
+             'Struct_Cnd', 'Surface_Tp',
+             'F_F_Class']
 
-# crash/concern for each week, for each segment
-cr_con = cr_con.set_index(['near_id', 'week']).reindex(all_weeks, fill_value=0)
-cr_con.reset_index(inplace=True)
+    # create combined road feature dataset
+    aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
+    print "road features being included: ", ', '.join(feats)
+    # All features as int
+    aggregated = aggregated.apply(lambda x: x.astype('int'))
 
-# join segment features to crash/concern
-cr_con_roads = cr_con.merge(
-    aggregated, left_on='segment_id', right_index=True, how='outer')
+    # 53 weeks for each segment (year = 52.2 weeks)
+    all_weeks = pd.MultiIndex.from_product(
+        [aggregated.index, range(1, 54)], names=['segment_id', 'week'])
 
-# output canon dataset
-print "exporting canonical dataset to ", DATA_FP
-cr_con_roads.set_index('segment_id').to_csv(
-    DATA_FP + '/vz_predict_dataset.csv.gz', compression='gzip')
+    # crash/concern for each week, for each segment
+    cr_con = cr_con.set_index(
+        ['near_id', 'week']).reindex(all_weeks, fill_value=0)
+    cr_con.reset_index(inplace=True)
 
-# output adjacency info
-# need to include ATRs
-atrs = pd.read_json(DATA_FP + '/snapped_atrs.json')
-adjacent = adjacent.reset_index()
-adjacent = adjacent.merge(atrs[['near_id','orig']], left_on='index', right_on='near_id',
-                         how='left')
-adjacent.drop(['near_id'], axis=1, inplace=True)
-adjacent.columns = ['segment_id', 'orig_id', 'atr_address']
-adjacent.to_csv(DATA_FP+'/adjacency_info.csv', index=False)
+    # join segment features to crash/concern
+    cr_con_roads = cr_con.merge(
+        aggregated, left_on='segment_id', right_index=True, how='outer')
+
+    # output canon dataset
+    print "exporting canonical dataset to ", DATA_FP
+    cr_con_roads.set_index('segment_id').to_csv(
+        DATA_FP + '/vz_predict_dataset.csv.gz', compression='gzip')
+
+    # output adjacency info
+    # need to include ATRs
+    atrs = pd.read_json(DATA_FP + '/snapped_atrs.json')
+    adjacent = adjacent.reset_index()
+    adjacent = adjacent.merge(
+        atrs[['near_id', 'orig']],
+        left_on='index',
+        right_on='near_id',
+        how='left'
+    )
+    adjacent.drop(['near_id'], axis=1, inplace=True)
+    adjacent.columns = ['segment_id', 'orig_id', 'atr_address']
+    adjacent.to_csv(DATA_FP+'/adjacency_info.csv', index=False)
