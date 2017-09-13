@@ -6,9 +6,15 @@ import fiona
 import csv
 import pyproj
 from shapely.geometry import mapping, Point, shape
+import os
+import re
+import geocoder
+
 
 # Project projection = EPSG:3857
 PROJ = pyproj.Proj(init='epsg:3857')
+RAW_DATA_FP = '../data/raw'
+PROCESSED_DATA_FP = '../data/processed'
 
 
 def read_record(record, x, y, orig=None, new=PROJ):
@@ -89,3 +95,55 @@ def find_nearest(records, segments, segments_index, tolerance):
         # If no segment matched, populate key = ''
         else:
             record['properties']['near_id'] = ''
+
+
+def geocode_atrs(atr_address):
+
+    # GEOCODE
+    # check if there's already a geocoded file, if not, geocode
+    # this uses Google, which may not play nice all the time
+    # definitely check your data.zip, it should have a geocoded file
+    if not os.path.exists(RAW_DATA_FP + '/processed/geocoded_atrs.csv'):
+        print "No geocoded_atrs.csv found, geocoding addresses"
+        g = geocoder.google(atr_address[0] + ' Boston, MA')
+
+        # geocode, parse result - address, lat long
+        results = []
+        for add in atr_address:
+            print "{}% done".format(1.*atr_address.index(add)/len(atr_address))
+            g = geocoder.google(add + ' Boston, MA')
+            r = [add, g.address, g.lat, g.lng]
+            results.append(r)
+
+        with open(PROCESSED_DATA_FP+'/geocoded_atrs.csv', 'w') as f:
+            writer = csv.writer(f, delimiter=',')
+            writer.writerow(['orig', 'geocoded', 'lat', 'lng'])
+            for r in results:
+                writer.writerow(r)
+
+
+def parse_atrs():
+    # parse out clean addresses
+    atrs = os.listdir(RAW_DATA_FP + r'/AUTOMATED TRAFFICE RECORDING/')
+    atr_split = [x.split('_') for x in atrs]
+    atr_address = [' '.join(x[3:5]) for x in atr_split]
+    atr_address = [re.sub('-', ' ', x) for x in atr_address]
+    # just get the unique addresses
+    atr_address = list(set(atr_address))
+    return atr_address
+
+
+def read_atrs():
+    # Read in atr lats
+    atrs = []
+    with open(PROCESSED_DATA_FP + '/geocoded_atrs.csv') as f:
+        csv_reader = csv.DictReader(f)
+        for r in csv_reader:
+            # Some crash 0 / blank coordinates
+            if r['lat'] != '':
+                atrs.append(
+                    read_record(r, r['lng'], r['lat'],
+                                orig=pyproj.Proj(init='epsg:4326'))
+                )
+    print "Read in data from {} atrs".format(len(atrs))
+    return atrs
