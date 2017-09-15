@@ -103,7 +103,7 @@ def geocode_atrs(atr_address):
     # check if there's already a geocoded file, if not, geocode
     # this uses Google, which may not play nice all the time
     # definitely check your data.zip, it should have a geocoded file
-    if not os.path.exists(RAW_DATA_FP + '/processed/geocoded_atrs.csv'):
+    if not os.path.exists(PROCESSED_DATA_FP + '/geocoded_atrs.csv'):
         print "No geocoded_atrs.csv found, geocoding addresses"
         g = geocoder.google(atr_address[0] + ' Boston, MA')
 
