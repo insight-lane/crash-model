@@ -133,5 +133,4 @@ if __name__ == '__main__':
     else:
         with open(MAP_DATA_FP + 'inters.pkl', 'r') as f:
             inters = cPickle.load(f)
-            print len(inters)
     write_intersections(inters)
