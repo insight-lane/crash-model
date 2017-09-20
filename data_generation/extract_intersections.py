@@ -6,6 +6,8 @@ import itertools
 import cPickle
 import os
 
+MAP_DATA_FP = '../data/processed/maps/'
+
 
 def track(index, step, tot):
     """
@@ -78,7 +80,7 @@ def generate_intersections(lines):
         i += 1
 
     # Save to pickle in case script breaks
-    with open('../data/processed/maps/inters.pkl', 'w') as f:
+    with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:
         cPickle.dump(inters, f)
     return inters
 
@@ -126,9 +128,10 @@ if __name__ == '__main__':
     ]
 
     inters = []
-    if not os.path.exists('inters.pkl'):
+    if not os.path.exists(MAP_DATA_FP + 'inters.pkl'):
         inters = generate_intersections(lines)
     else:
-        with open('inters.pkl', 'r') as f:
+        with open(MAP_DATA_FP + 'inters.pkl', 'r') as f:
             inters = cPickle.load(f)
+            print len(inters)
     write_intersections(inters)
