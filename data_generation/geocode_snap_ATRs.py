@@ -15,7 +15,7 @@ from ATR_util import *
 
 PROJ = pyproj.Proj(init='epsg:3857')
 
-os.chdir('../../data/raw/AUTOMATED TRAFFICE RECORDING/')
+os.chdir('../data/raw/AUTOMATED TRAFFICE RECORDING/')
 atrs = os.listdir(os.getcwd())
 
 if not os.path.exists('../../processed/geocoded_atrs.csv'):
