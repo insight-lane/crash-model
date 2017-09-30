@@ -63,7 +63,6 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     # return aggregation and adjacency info (orig_id)
     return(aggregated(), combined['orig_id'])
 
-
 if __name__ == '__main__':
 
     # read/aggregate crash/concerns
