@@ -14,7 +14,7 @@ from fiona.crs import from_epsg
 from shapely.geometry import Point, shape, mapping
 from shapely.ops import unary_union
 from collections import defaultdict
-from geography import write_shp
+from ATR_util import write_shp
 
 
 def get_intersection_buffers(intersections, intersection_buffer_units):
@@ -144,7 +144,6 @@ if __name__ == '__main__':
         'geometry': 'LineString',
         'properties': road_properties
     }
-
     write_shp(
         road_schema,
         MAP_FP + '/non_inters_segments.shp',
