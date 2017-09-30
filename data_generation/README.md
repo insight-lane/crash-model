@@ -3,6 +3,9 @@
 This directory contains the code for taking the data from the raw segments shapefile to the canonical dataset for the hackathon.
 
 ## Data dependencies
+
+All of these can be found in the data.zip file on data.world.  Download and unzip in the top boston-crash-modeling directory.
+
 - Boston\_Segments.shp : Boston routable road segments [link](http://bostonopendata-boston.opendata.arcgis.com/datasets/cfd1740c2e4b49389f47a9ce2dd236cc_8)
 - Vision\_Zero\_Entry.csv : Vision Zero comments [link](https://data.boston.gov/dataset/vision-zero-entry)
 - cad\_crash\_events\_with\_transport\_2016\_wgs84.csv : CAD crash data for 2016, projected to WGS84 [link](https://data.world/data4democracy/boston-crash-model) (ask coordinator for invite)
@@ -28,6 +31,10 @@ rtree additionally requires download and installation of [libspatialindex](http:
 
 4) Make canonical dataset: crash/concern\_joined + inters/non-inters -> make\_canon\_dataset.ipynb -> vz\_predict\_dataset.csv.gz
    Usage: python make_canon_dataset.py
+
+5) Process the ATRs: atr files + inters/non-inters -> geocoded_atrs.csv + snapped_atrs.json
+
+Usage: python geocode_snap_ATRs.py
 
 ## 1) Extract intersections
 - Reads in road segment data
