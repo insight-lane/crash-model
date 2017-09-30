@@ -1,13 +1,14 @@
-import os
 import re
 
 import geocoder
 import openpyxl
 import fiona
-from shapely.geometry import Point, MultiPoint, shape, mapping
+from shapely.geometry import Point, shape, mapping
 import pyproj
+import csv
 
 PROJ = pyproj.Proj(init='epsg:3857')
+
 
 def is_readable_ATR(fname):
     """
@@ -116,6 +117,21 @@ def read_record(record, x, y, orig=None, new=PROJ):
         'properties': record
     }
     return(r_dict)
+
+
+def read_csv(file):
+    # Read in CAD crash data
+    crash = []
+    with open(file) as f:
+        csv_reader = csv.DictReader(f)
+        for r in csv_reader:
+            # Some crash 0 / blank coordinates
+            if r['X'] != '':
+                crash.append(
+                    read_record(r, r['X'], r['Y'],
+                                orig=pyproj.Proj(init='epsg:4326'))
+                )
+    return crash
 
 
 def find_nearest(records, segments, segments_index, tolerance):

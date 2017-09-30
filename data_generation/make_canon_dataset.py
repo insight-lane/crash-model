@@ -4,7 +4,7 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from geography import read_shp
+from ATR_util import read_shp
 
 
 MAP_FP = '../data/processed/maps'
