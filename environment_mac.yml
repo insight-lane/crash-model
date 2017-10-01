@@ -263,6 +263,8 @@ dependencies:
   'jdcal=1.3=py27_0'
 - !!python/unicode
   'openpyxl=2.4.8=py27_0'
+- !!python/unicode
+  'xlrd=1.1.0=py27_0'
 - pip:
   - backports-abc==0.5
   - backports.shutil-get-terminal-size==1.0.0
