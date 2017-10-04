@@ -69,8 +69,6 @@ print "Read in data from {} atrs".format(len(atrs))
 # Find nearest atr - 20 tolerance
 print "Snapping atr to segments"
 find_nearest(atrs, combined_seg, segments_index, 20)
-print len(atrs)
-print len(combined_seg)
 
 with open(PROCESSED_DATA_FP + 'snapped_atrs.json', 'w') as f:
     json.dump([x['properties'] for x in atrs], f)
