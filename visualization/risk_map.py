@@ -59,7 +59,7 @@ if normalize==True:
 # Make map
 
 # First create basemap
-boston_map = folium.Map([42.3601, -71.0589], tiles='Cartodb Positron', zoom_start=12)  #"Cartodb dark_matter" also nice
+boston_map = folium.Map([42.3601, -71.0589], tiles='Cartodb Positron', zoom_start=12)
 
 # Create style function to color segments based on their risk score
 #color_scale = cm.linear.YlOrRd.scale(0, 1)
@@ -68,9 +68,13 @@ color_scale = cm.linear.YlOrRd.scale(streets_w_risk[prediction_column].min(),
     
 # Then add on GeoDataframe of risk scores
 folium.GeoJson(streets_w_risk[streets_w_risk[prediction_column]>0],  # filter dataframe to only seg with risk>0 to reduce size
-              style_function=lambda feature: {
+              name='Benchmark Model',
+			  style_function=lambda feature: {
                   'color': color_scale(feature['properties'][prediction_column])
               }).add_to(boston_map)
+
+# Add control to toggle between model layers
+folium.LayerControl(position='bottomright').add_to(boston_map)
 
 # Finally, add legend
 color_scale.caption = "Risk Score"
