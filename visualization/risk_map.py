@@ -6,43 +6,92 @@ Author: @bpben, @alicefeng
 This script generates a map of the "risk estimates" from model predictions.  
  
 Usage:
-    arg[1] = filename of predictions
-      predictions must be csvs with two columns; segment_id, prediction_column
-    arg[2] = column name of prediction_columns
-    arg[3] = 'T' if needs to be normalized
+    --modelname: name of the models
+            these will be used as the name of the layers in the map so they must be unique
+    --filename: filename of predictions
+              predictions must be csvs with two columns; segment_id, prediction_column
+    --colname: name of the predictions column
+    --normalize: optional flag to indicate it predictions need to be normalized
 
 Output:
-    <<arg[1]>>.html
+    risk_map.html - a Leaflet map with model predictions visualized on it
 """
 
 import pandas as pd
 import geopandas as gpd
 import folium
 import branca.colormap as cm
-import sys
+import argparse
 
-# all model outputs must be stored in the data\processed directory
+# all model outputs must be stored in the "data/processed/" directory
 fp = '../data/processed/'
 
 # parse arguments
-try:
-  filename, prediction_column = sys.argv[1:3]
-except:
-  print("Must provide filename, prediction_column as first and second argument")
-  raise
+parser = argparse.ArgumentParser(description="Plot crash predictions on a map")
+parser.add_argument("-m", "--modelname", nargs="+",
+                    help="name of the model, must be unique")
+parser.add_argument("-f", "--filename", nargs="+",
+                    help="name of the file with the predictions to be plotted on the map, must specify at least 1")
+parser.add_argument("-c", "--colname", nargs="+",
+                    help="column name that has the predictions, must be specified in the same order as the filenames")
+parser.add_argument("-n", "--normalize", help="normalize predictions", action="store_true")
+args = parser.parse_args()
 
-# check to normalize
-normalize = False
-if len(sys.argv)==4:
-  if sys.argv[3]=='T':
-    normalize = True
+# zip filenames and column names
+if len(args.modelname) == len(args.filename) == len(args.colname):
+        match = zip(args.modelname, args.filename, args.colname)
+else:
+        print "Number of models, files and column names must match"
+	raise
 
-# read in predictions
-output = pd.read_csv(fp + filename, dtype={'segment_id':'str'})
+def process_data(filename, colname):
+        """Preps model output for plotting on a map
 
-# filename is csvname
-#fname = sys.argv[1].split('/')[-1].split('.')[0]
+        Reads in model output and filters to non-zero predictions.  Spatially joins
+        the data to a shapefile of Boston's road network to match segments with
+        their predicted crash risk.  Normalizes the predictions if needed.
 
+        Args:
+                filename: name of the file with the predictions
+                colname: name of the predictions column
+
+        Returns:
+                a dataframe that links segment_ids, predictions and spatial geometries
+        """
+        output = pd.read_csv(fp + filename, dtype={'segment_id':'str'})
+
+        # filter dataframe to only seg with risk>0 to reduce size
+        output = output[output[colname]>0]
+
+        # Merge on model results to the GeoDataframe
+        streets_w_risk = streets.merge(output, left_on='id',right_on='segment_id')
+
+        # normalize predictions if specified
+        if args.normalize:
+                print "Normalizing predictions..."
+                streets_w_risk[colname] = streets_w_risk[colname] / streets_w_risk[colname].max()
+
+        return streets_w_risk
+
+def add_layer(dataset, modelname, colname, mapname):
+        """Plots data on a Leaflet map
+
+        Args:
+                dataset: a dataframe with the data to be plotted
+                modelname: name of the model to be used as the layer name
+                colname: name of the predictions column
+                mapname: name of the map to be plotted on
+
+        Returns:
+                a GeoJSON layer added to the map
+        """
+        folium.GeoJson(dataset,
+                       name=modelname,
+                       style_function=lambda feature: {
+                               'color': color_scale(feature['properties'][colname])
+                               }).add_to(mapname)
+
+        
 # Read in shapefile as a GeoDataframe
 streets = gpd.read_file('../data/processed/maps/inter_and_non_int.shp')
 
@@ -52,29 +101,21 @@ streets.crs = {'init': 'epsg:3857'}
 # Then reproject to EPSG:4326 to match what Leaflet uses
 streets = streets.to_crs({'init': 'epsg:4326'})
 
-# Merge on model results to the GeoDataframe
-streets_w_risk = streets.merge(output, left_on='id',right_on='segment_id')
 
-# third argument = T or F, normalize
-if normalize==True:
-	streets_w_risk[prediction_column] = streets_w_risk[prediction_column] / streets_w_risk[prediction_column].max()
-
-# Make map
+### Make map
 
 # First create basemap
 boston_map = folium.Map([42.3601, -71.0589], tiles='Cartodb dark_matter', zoom_start=12)
 
 # Create style function to color segments based on their risk score
-#color_scale = cm.linear.YlOrRd.scale(0, 1)
-color_scale = cm.linear.YlOrRd.scale(streets_w_risk[prediction_column].min(), 
-                                     streets_w_risk[prediction_column].max())
-    
-# Then add on GeoDataframe of risk scores
-folium.GeoJson(streets_w_risk[streets_w_risk[prediction_column]>0],  # filter dataframe to only seg with risk>0 to reduce size
-              name='Benchmark Model',
-			  style_function=lambda feature: {
-                  'color': color_scale(feature['properties'][prediction_column])
-              }).add_to(boston_map)
+color_scale = cm.linear.YlOrRd.scale(0, 1)
+#color_scale = cm.linear.YlOrRd.scale(streets_w_risk[args.colname].min(), 
+#                                     streets_w_risk[args.colname].max())
+
+# Plot model predictions as separate layers
+for model in match:
+        predictions = process_data(model[1], model[2])
+        add_layer(predictions, model[0], model[2], boston_map)
 
 # Add control to toggle between model layers
 folium.LayerControl(position='bottomright').add_to(boston_map)
@@ -84,4 +125,4 @@ color_scale.caption = "Risk Score"
 boston_map.add_child(color_scale)
 
 # Save map as separate html file
-boston_map.save(sys.argv[1]+'.html')
+boston_map.save('risk_map.html')
