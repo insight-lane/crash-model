@@ -19,26 +19,19 @@ Python modules: Use requirements\_spatial.txt
 rtree additionally requires download and installation of [libspatialindex](http://libspatialindex.github.io/)
 (For Anaconda install, can use [conda-forge](https://anaconda.org/conda-forge/libspatialindex))
 
+Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download.html) might be helpful to visualize shape files and easily see their attributes
+
 ## Process map
-1) Extract intersections : Boston Segments -> extract\_intersections.py -> inters.shp
-   Usage: python extract_intersections.py ../data/raw/Boston_Segments.shp
 
-2) Create segments : inters.shp + ma\_co\_spatially\_joined\_streets.shp -> create\_segments.ipynb -> inters\_segments.shp + non\_inters\_segments.shp
-   Usage: python create_segments.py
-
-3) Join segments and point data : inters/non-inters + CAD crash data + Vision Zero comments -> join\_segments\_crash\_concern.ipynb -> crash/concern\_joined.shp
-   Usage: python join_segments_crash_concern.py
-
-4) Make canonical dataset: crash/concern\_joined + inters/non-inters -> make\_canon\_dataset.ipynb -> vz\_predict\_dataset.csv.gz
-   Usage: python make_canon_dataset.py
-
-5) Process the ATRs: atr files + inters/non-inters -> geocoded_atrs.csv + snapped_atrs.json
-
-Usage: python geocode_snap_ATRs.py
 
 ## 1) Extract intersections
-- Reads in road segment data
+- Reads in road segment data (data/raw/Boston_Segments.shp)
 - Finds point locations where roads intersect
+- Creates a shapefile of intersections (inters.shp)
+- <b>Usage:</b> python extract_intersections.py ../data/raw/Boston_Segments.shp
+- <b>Results:</b>
+    - data/processed/maps/inters.shp (and related files)
+
 
 ## 2) Create segments
 - Reads in intersections and road segments
@@ -46,12 +39,33 @@ Usage: python geocode_snap_ATRs.py
 - Connects any parts of road segments within intersection buffer to intersection
     - Road features from connected road segments linked to intersection id (for later aggregation)
 - Separates out non-intersection segments
+-Creates unique segment ids where all non-intersections have a '00' prefix <br>
+- <b>Usage:</b> python create_segments.py
+- <b>Dependencies:</b>
+    - data/processed/maps/inters.shp
+    - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp
+        - Descriptions of the attributes from ma_co_spatially_joined_streets.shp can be found in data/docs/MassDOTRoadInvDictionary.pdf
+- <b>Results:</b>
+    - data/processed/inters_segments.shp
+    - data/processed/non_inters_segments.shp
+    - data/processed/inters_data.json
+
 
 ## 3) Join segments and point data
 - Reads in crash/concern point data and intersection/non-intersection segments
 - Snaps points to nearest segment
     - Tolerance of 30m for crashes, 20m for concerns
 - Writes shapefile of joined points and json data file
+- Includes coordinates and near_id referring to segment id (intersection or non intersection)
+- <b>Usage:</b> python join_segments_crash_concern.py
+- <b>Dependencies:</b>
+    - inters/non_inters shape data
+    - CAD crash data: data/raw/cad_crash_events_with_transport_2016_wgs84.csv
+  Vision Zero comments: data/raw/Vision_Zero_Entry.csv
+- <b>Results:</b>
+    - crash_joined.shp
+    - concern_joined.shp
+
 
 ## 4) Make canonical dataset
 - Reads in crash/concern data
@@ -61,3 +75,24 @@ Usage: python geocode_snap_ATRs.py
     - e.g. intersection features set to max of all roads joined to it
 - Creates dataframe with 52 weeks for each segment
 - Joins weekly crash/concerns to dataframe
+- <b>Usage:</b> python make_canon_dataset.py
+- <b>Dependencies:</b>
+    - crash/concern_joined
+    - inters/non_inters
+- <b>Results:</b>
+    - vz_perdict_dataset.csv.gz
+
+## 5) Process the ATRs
+- Adds coordinates for the Automated traffic recordings, along with some of the traffic count information.
+- Also snaps them to match up to road segments
+- <b>Usage:</b> python geocode_snap_ATRs.py
+- <b>Dependencies:</b>
+    - atr files
+    - data/processed/maps/inters_segments.shp
+    - data/processed/maps/non_inters_segments.shp
+- <b>Results:</b>
+    - data/processed/geocoded_atrs.csv
+    - data/processed/snapped_atrs.json
+
+
+
