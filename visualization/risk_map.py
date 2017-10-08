@@ -13,6 +13,10 @@ Usage:
     --colname: name of the predictions column
     --normalize: optional flag to indicate it predictions need to be normalized
 
+Inputs:
+    csv files of model predictions
+    inter_and_non_int.shp - a Shapefile with both intersection and non-intersection segments and their segment_ids
+    
 Output:
     risk_map.html - a Leaflet map with model predictions visualized on it
 """
@@ -39,24 +43,25 @@ args = parser.parse_args()
 
 # zip filenames and column names
 if len(args.modelname) == len(args.filename) == len(args.colname):
-        match = zip(args.modelname, args.filename, args.colname)
+    match = zip(args.modelname, args.filename, args.colname)
 else:
-        print "Number of models, files and column names must match"
-	raise
+    print "Number of models, files and column names must match"
+    raise
 
 def process_data(filename, colname):
         """Preps model output for plotting on a map
 
-        Reads in model output and filters to non-zero predictions.  Spatially joins
-        the data to a shapefile of Boston's road network to match segments with
-        their predicted crash risk.  Normalizes the predictions if needed.
+        Reads in model output and filters to non-zero predictions.
+        Spatially joins the data to a shapefile of Boston's road network to match segments with
+        their predicted crash risk.
+        Normalizes the predictions if needed.
 
         Args:
-                filename: name of the file with the predictions
-                colname: name of the predictions column
+            filename: name of the file with the predictions
+            colname: name of the predictions column
 
         Returns:
-                a dataframe that links segment_ids, predictions and spatial geometries
+            a dataframe that links segment_ids, predictions and spatial geometries
         """
         output = pd.read_csv(fp + filename, dtype={'segment_id':'str'})
 
@@ -68,22 +73,22 @@ def process_data(filename, colname):
 
         # normalize predictions if specified
         if args.normalize:
-                print "Normalizing predictions..."
-                streets_w_risk[colname] = streets_w_risk[colname] / streets_w_risk[colname].max()
+            print "Normalizing predictions..."
+            streets_w_risk[colname] = streets_w_risk[colname] / streets_w_risk[colname].max()
 
         return streets_w_risk
 
 def add_layer(dataset, modelname, colname, mapname):
-        """Plots data on a Leaflet map
+        """Plots predictions on a Leaflet map
 
         Args:
-                dataset: a dataframe with the data to be plotted
-                modelname: name of the model to be used as the layer name
-                colname: name of the predictions column
-                mapname: name of the map to be plotted on
+            dataset: a dataframe with the data to be plotted
+            modelname: name of the model to be used as the layer name
+            colname: name of the predictions column
+            mapname: name of the map to be plotted on
 
         Returns:
-                a GeoJSON layer added to the map
+            a GeoJSON layer added to the map
         """
         folium.GeoJson(dataset,
                        name=modelname,
@@ -106,6 +111,7 @@ streets = streets.to_crs({'init': 'epsg:4326'})
 
 # First create basemap
 boston_map = folium.Map([42.3601, -71.0589], tiles='Cartodb dark_matter', zoom_start=12)
+folium.TileLayer('Cartodb Positron').add_to(boston_map)
 
 # Create style function to color segments based on their risk score
 color_scale = cm.linear.YlOrRd.scale(0, 1)
@@ -114,8 +120,8 @@ color_scale = cm.linear.YlOrRd.scale(0, 1)
 
 # Plot model predictions as separate layers
 for model in match:
-        predictions = process_data(model[1], model[2])
-        add_layer(predictions, model[0], model[2], boston_map)
+    predictions = process_data(model[1], model[2])
+    add_layer(predictions, model[0], model[2], boston_map)
 
 # Add control to toggle between model layers
 folium.LayerControl(position='bottomright').add_to(boston_map)
