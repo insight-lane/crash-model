@@ -94,5 +94,40 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
     - data/processed/geocoded_atrs.csv
     - data/processed/snapped_atrs.json
 
+# Data Standards
+
+-this is meant to address [issue #32](https://github.com/Data4Democracy/boston-crash-modeling/issues/32) brought up by @therriault
+
+## 1) Where is data stored and in what format?
+-all data should be stored on data.world
+    -data should be seperated into `raw` or `processed` folder as appropriate
+    -shape files should have seperate folder `maps` within `raw` and `processed`
+-all data should be stored in CSV format with the exception of shape files
+
+## 2) How are dates and times handled?
+-each segment will have an entry for each week of the year (1 to 53 as each year is 52.2 weeks)
+
+## 3) Put outcomes and features in model-ready format
+-any non-temporal feature for a segment will have the same value across all weeks
+-this allows us the ability to use temporal and non-temporal models with minimal data-wrangling
+-example
+
+| segment_id | week | temporal_feature | static_feature |
+|------------|------|------------------|----------------|
+| 1          | 1    | 0.5              | 76             |
+| 1          | 2    | 0.75             | 76             |
+| 1          | 3    | 0.8              | 76             |
+| 1          | ...  | ...              | ...            |
+| 1          | 53   | 0.95             | 76             |
+| 2          | 1    | 0.2              | 34             |
+| 2          | 2    | 0.15             | 34             |
+| 2          | 3    | 0.23             | 34             |
+| 2          | ...  | ...              | ...            |
+| 2          | 53   | 0.27             | 34             |
+| 3          | 1    | 0.45             | 45             |
+| 3          | 2    | 0.41             | 45             |
 
 
+## 4) How to deal with new generated features?
+-generate a new csv for each feature with the above layout of 53 weeks/segment so data can be easily joined with the canonical dataset
+-create or edit data dictionary within data/docs from data.world explaining the generated data
