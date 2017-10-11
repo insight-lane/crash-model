@@ -98,6 +98,26 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, file_name):
     return(data_sheet)
 
 
+def process_format1(workbook, counter, motor_col, ped_col, bike_col, all_data):
+    if motor_col:
+        counter += 1
+        motor = extract_and_log_data_sheet(
+            workbook, motor_col, counter, file_name)
+        all_data = all_data.append(motor)
+
+    if ped_col:
+        counter += 1
+        pedestrian = extract_and_log_data_sheet(
+            workbook, ped_col, counter, file_name)
+        all_data = all_data.append(pedestrian)
+        
+    if bike_col:
+        counter += 1
+        bike = extract_and_log_data_sheet(
+            workbook, bike_col, counter, file_name)
+        all_data = all_data.append(bike)
+    return all_data, counter
+
 if __name__ == '__main__':
 
     data_directory = '../data/raw/TURNING MOVEMENT COUNT/'
@@ -126,21 +146,15 @@ if __name__ == '__main__':
 
             motors = [col for col in sheet_names
                       if col.startswith('all motors')]
-            if motors:
-                motor = extract_and_log_data_sheet(
-                    workbook, motors[0], i, file_name)
-                all_data = all_data.append(motor)
-
             peds = [col for col in sheet_names
                     if col.startswith('all peds')]
-            if peds:
-                pedestrian = extract_and_log_data_sheet(
-                    workbook, peds[0], i, file_name)
-                all_data = all_data.append(pedestrian)
-        
-            if 'bicycles hr.' in sheet_names:
-                pedestrian = extract_and_log_data_sheet(workbook, 'bicycles hr.', i, file_name)
-                all_data = all_data.append(pedestrian)
+
+            if motors or peds or 'bicycles hr.' in sheet_names:
+                all_data, i = process_format1(
+                    workbook, i, motors[0] if motors else None,
+                    peds[0] if peds else None,
+                    'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
+                    all_data)
 
     all_data.reset_index(drop=True, inplace=True)    
     data_info.reset_index(drop=True, inplace=True)
@@ -151,13 +165,14 @@ if __name__ == '__main__':
     all_data.to_csv(path_or_buf=data_directory + 'all_data.csv', index=False)
     data_info.to_csv(path_or_buf=data_directory + 'data_info.csv', index=False)
 
-    print data_info
-    print all_data
+#    print data_directory
+#    print data_info[10]
+#    print all_data
     print data_info.filename.nunique()
 
     all_joined = pd.merge(left=all_data,right=data_info, left_on='data_id', right_on='id')
-    all_joined.groupby(['data_type']).sum()
+    print all_joined.groupby(['data_type']).sum()
 
-    print data_info.head()
+#    print data_info.head()
     
-print i
+
