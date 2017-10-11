@@ -123,19 +123,24 @@ if __name__ == '__main__':
             file_path = path.join(data_directory, file_name)
             workbook = xlrd.open_workbook(file_path)
             sheet_names = [x.lower() for x in workbook.sheet_names()]
-            
-            if 'all motors' in sheet_names:
-                motor = extract_and_log_data_sheet(workbook, 'all motors', i, file_name)
+
+            motors = [col for col in sheet_names
+                      if col.startswith('all motors')]
+            if motors:
+                motor = extract_and_log_data_sheet(
+                    workbook, motors[0], i, file_name)
                 all_data = all_data.append(motor)
-            
-            if 'all peds hr.' in sheet_names:
-                pedestrian = extract_and_log_data_sheet(workbook, 'all peds hr.', i, file_name)
+
+            peds = [col for col in sheet_names
+                    if col.startswith('all peds')]
+            if peds:
+                pedestrian = extract_and_log_data_sheet(
+                    workbook, peds[0], i, file_name)
                 all_data = all_data.append(pedestrian)
         
             if 'bicycles hr.' in sheet_names:
                 pedestrian = extract_and_log_data_sheet(workbook, 'bicycles hr.', i, file_name)
                 all_data = all_data.append(pedestrian)
-
 
     all_data.reset_index(drop=True, inplace=True)    
     data_info.reset_index(drop=True, inplace=True)
@@ -155,3 +160,4 @@ if __name__ == '__main__':
 
     print data_info.head()
     
+print i
