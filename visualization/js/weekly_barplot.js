@@ -67,7 +67,7 @@ d3.csv("weekly_crashes.csv", function(d) {
 		.attr("y", function(d) { return yscale(d.crashes); })
 		.attr("width", (w / data.length) - 1)
 		.attr("height", function(d) { return h - yscale(d.crashes); })
-		.style("fill", "#7f7f7f")
+		.style("fill", "#b2b2b2")
 		.filter(function(d) { return d.week === "1"; })
 		.style("fill", "#d500f9");
 })

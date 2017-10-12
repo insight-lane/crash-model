@@ -51,7 +51,7 @@ function update_map(week) {
 function highlight_bar(week) {
 	barPlot.selectAll(".crashbar")
 		.data(weeklydata)
-		.style("fill", "#7f7f7f")
+		.style("fill", "#b2b2b2")
 		.filter(function(d) { return d.week === week ; })
 		.style("fill", "#d500f9");
 }
