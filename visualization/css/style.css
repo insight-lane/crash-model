@@ -9,7 +9,9 @@ h1 {
 h3 {
     margin-top: 20px;
     margin-bottom: 5px;
+    margin-left: 30px;
     font-size: 1em;
+    font-weight: normal;
 }
 
 #map {

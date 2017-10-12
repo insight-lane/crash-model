@@ -53,5 +53,5 @@ function highlight_bar(week) {
 		.data(weeklydata)
 		.style("fill", "#7f7f7f")
 		.filter(function(d) { return d.week === week ; })
-		.style("fill", "#d32f2f");
+		.style("fill", "#d500f9");
 }

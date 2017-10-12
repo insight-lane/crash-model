@@ -4,8 +4,8 @@ var crashdata,
 //style functions
 var geojsonMarkerOptions = {
     radius: 8,
-    fillColor: "#d32f2f",
-    color: "#9a0007",
+    fillColor: "#d500f9",
+    color: "#9e00c5",
     weight: 1,
     opacity: 1,
     fillOpacity: 0.8
