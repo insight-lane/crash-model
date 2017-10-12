@@ -37,29 +37,31 @@
 		// create base map
 		var map = L.map('map').setView([42.3301, -71.0589], 12);
 
-		L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+		var streets = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
 			maxZoom: 18, 
 			attribution: '(c) <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="http://cartodb.com/attributions">CartoDB</a>, CartoDB <a href ="http://cartodb.com/attributions">attributions</a>'
-		}).addTo(map);
+		});
+
+		streets.addTo(map);
 
 		// create legend
 		var legend = L.control({position: 'bottomright'});
 
 		legend.onAdd = function (map) {
 			var div = L.DomUtil.create('div', 'legend'),
-				num_crashes = [1, 2, 3],
+				crash_pred = [0.02, 0.05],
 				color_segments = ["#f39c12", "#e67e22", "#e74c3c"];
 
-			div.innerHTML = "Number of <br /> Crashes: <br />";
+			div.innerHTML = "Predicted <br /> Crash Prob: <br />";
 
-			for (var i=0; i < num_crashes.length; i++) {
-				div.innerHTML += '<i style="background:' + color_segments[i] + '"></i> ' + num_crashes[i] + '<br />';
+			for (var i=0; i < crash_pred.length; i++) {
+				div.innerHTML += '<i style="background:' + color_segments[i] + '"></i> ' + crash_pred[i] + '<br />';
 			}
 
 			return div;
 		}
 
-		legend.addTo(map);
+		legend.addTo(map);  
 
 	</script>
 

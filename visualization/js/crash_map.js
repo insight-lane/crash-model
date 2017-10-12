@@ -1,20 +1,11 @@
-//////////////////////// CODE FOR MAP ////////////////////////////////////////////
 var crashdata,
 	cardata;
 
-//style function for coloring the segments
-/*
-function color_segments(feature) {
-		if (feature.properties.crash === 1.0) {	return {color: "#f39c12"}; }
-		else if (feature.properties.crash === 2.0) { return {color: "#e67e22"};	}
-		else { return {color: "#e74c3c"}; }
-}
-*/
-
+//style functions
 var geojsonMarkerOptions = {
-    radius: 5,
-    fillColor: "#f39c12",
-    color: "#d8890b",
+    radius: 8,
+    fillColor: "#d32f2f",
+    color: "#9a0007",
     weight: 1,
     opacity: 1,
     fillOpacity: 0.8
@@ -30,11 +21,10 @@ function color_preds(feature) {
 
 // load GeoJSON from an external file
 $.getJSON("cad.geojson",function(data){
-
-	geodata = data;
+	crashdata = data;
 
     // create GeoJSON layer for the first week of data 
-  	crashes = new L.geoJson(data, {
+  	crashes = new L.geoJson(crashdata, {
 	  	filter: function(feature, layer) {
 	  		return feature.properties.week === 1;
 	  	},
@@ -48,8 +38,7 @@ $.getJSON("cad.geojson",function(data){
 });
 
 
-$.getJSON("car_preds.json",function(data){
-
+$.getJSON("car_preds_named.json",function(data){
 	cardata = data;
 
     // create GeoJSON layer for the first week of data 
@@ -57,10 +46,23 @@ $.getJSON("car_preds.json",function(data){
 	  	filter: function(feature, layer) {
 	  		return feature.properties.week === 1;
 	  	},
-	  	style: color_preds //color_segments
+	  	style: color_preds, //color_segments
+	  	onEachFeature: onEachFeature
   	})
 
   	// add layer to map
 	map.addLayer(car_preds);
+
+	// add pop up
+	function onEachFeature(feature, layer) {
+		if (feature.properties.st_name) {
+			layer.bindPopup(feature.properties.st_name + "<br /> Predicted Probability for Week " + feature.properties.week + ": " + feature.properties.pred);
+		}
+		else {
+			layer.bindPopup("Predicted Probability for Week " + feature.properties.week + ": " + feature.properties.pred);
+		}
+	}
 });
 
+// add layer control
+//L.control.layers(baseMaps, overlayMaps).addTo(map);

@@ -16,7 +16,7 @@ function update_map(week) {
 	map.removeLayer(car_preds);
 
 	//create new layers with updated data
-  	crashes = new L.geoJson(geodata, {
+  	crashes = new L.geoJson(crashdata, {
 	  	filter: function(feature, layer) {
 	  		return feature.properties.week === week;
 	  	},
@@ -29,12 +29,23 @@ function update_map(week) {
 	  	filter: function(feature, layer) {
 	  		return feature.properties.week === week;
 	  	},
-	  	style: color_preds //color_segments
+	  	style: color_preds,
+	  	onEachFeature: onEachFeature
   	})
 
   	// add layers to map
 	map.addLayer(crashes);
 	map.addLayer(car_preds); 
+
+	// add pop up
+	function onEachFeature(feature, layer) {
+		if (feature.properties.st_name) {
+			layer.bindPopup(feature.properties.st_name + "<br /> Predicted Probability for Week " + feature.properties.week + ": " + feature.properties.pred);
+		}
+		else {
+			layer.bindPopup("Predicted Probability for Week " + feature.properties.week + ": " + feature.properties.pred);
+		}
+	}
 }
 
 function highlight_bar(week) {
@@ -42,5 +53,5 @@ function highlight_bar(week) {
 		.data(weeklydata)
 		.style("fill", "#7f7f7f")
 		.filter(function(d) { return d.week === week ; })
-		.style("fill", "#f39c12");
+		.style("fill", "#d32f2f");
 }
