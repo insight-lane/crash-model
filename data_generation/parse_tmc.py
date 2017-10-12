@@ -2,6 +2,7 @@ import xlrd
 import pandas as pd
 from os import listdir, path
 import re
+from dateutil.parser import parse
 
 
 def file_dataframe(excel_sheet, data_location):
@@ -24,8 +25,14 @@ def file_dataframe(excel_sheet, data_location):
     columns = ['times', 'east', 'south', 'west', 'north']
     return(pd.DataFrame({'times':times_strip, 'east':east, 'south':south, 'west':west, 'north':north}, columns=columns))
 
-# finding date
+
 def find_date(excel_sheet):
+    """
+    Parse out the date
+    Args:
+        excel_sheet
+    Returns: datetime date object
+    """
     sheet_c = excel_sheet.ncols
     sheet_r = excel_sheet.nrows
     date = ''
@@ -34,7 +41,16 @@ def find_date(excel_sheet):
             cell_value = excel_sheet.cell_value(rowx=row, colx=col)
             if "date" in str(cell_value).lower():
                 date = cell_value
+
+    date = date.lower()
+
+    # Dates can be in the form 'Date - <date>'
+    stripped_date = re.sub('date(\s+\-)?(\s+)?', '', date)
+    if stripped_date:
+        return parse(stripped_date).date()
+
     return date
+
 
 def data_location(excel_sheet):
     sheet_c = excel_sheet.ncols
@@ -65,10 +81,9 @@ def extract_data_sheet(sheet, sheet_data_location, counter):
     return(sheet_df)
 
 
-def log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name):
+def log_data_sheet(sheet, sheet_name, sheet_data_location,
+                   counter, file_name, address, date):
     global data_info
-    address = find_address(sheet)
-    date = find_date(sheet)
     
     column_time = sheet_data_location['columns'][0]
     row_time = sheet_data_location['rows'][0]
@@ -88,11 +103,31 @@ def log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name):
     sheet_name = re.sub('all\s', '', sheet_name)
     sheet_name = re.sub('(\w+)\.?(\s.*)?', r'\1', sheet_name)
 
-    record = pd.DataFrame([(counter, address, date, east, south, west, north, sheet_name, file_name)], 
-                          columns=['id','address','date','east','south','west','north','data_type','filename'])
+    record = pd.DataFrame([(
+        counter,
+        address,
+        date,
+        east,
+        south,
+        west,
+        north,
+        sheet_name,
+        file_name)],
+        columns=[
+            'id',
+            'address',
+            'date',
+            'east',
+            'south',
+            'west',
+            'north',
+            'data_type',
+            'filename'])
     data_info = data_info.append(record)
 
-def extract_and_log_data_sheet(workbook, sheet_name, counter, file_name):
+
+def extract_and_log_data_sheet(workbook, sheet_name, counter, file_name,
+                               address, date):
     sheet_index = sheet_names.index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
     sheet_data_location = data_location(sheet)
@@ -100,28 +135,45 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, file_name):
     data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
     if file_name.startswith('7435_891_SOUTHAMPTON-ST'):
         print sheet_data_location
-    log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name)
+
+    log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name,
+                   address, date)
     
     return(data_sheet)
 
 
 def process_format1(workbook, counter, motor_col, ped_col, bike_col, all_data):
+
+    # dates are same across these sheets
+    sheet_name = ''
+    if motors:
+        sheet_name = motors[0]
+    elif peds:
+        sheet_name = peds[0]
+    else:
+        sheet_name = 'bicycles hr.'
+    sheet_index = sheet_names.index(sheet_name)
+    sheet = workbook.sheet_by_index(sheet_index)
+
+    address = find_address(sheet)
+    date = find_date(sheet)
+
     if motor_col:
         counter += 1
         motor = extract_and_log_data_sheet(
-            workbook, motor_col, counter, file_name)
+            workbook, motor_col, counter, file_name, address, date)
         all_data = all_data.append(motor)
 
     if ped_col:
         counter += 1
         pedestrian = extract_and_log_data_sheet(
-            workbook, ped_col, counter, file_name)
+            workbook, ped_col, counter, file_name, address, date)
         all_data = all_data.append(pedestrian)
         
     if bike_col:
         counter += 1
         bike = extract_and_log_data_sheet(
-            workbook, bike_col, counter, file_name)
+            workbook, bike_col, counter, file_name, address, date)
         all_data = all_data.append(bike)
     return all_data, counter
 
