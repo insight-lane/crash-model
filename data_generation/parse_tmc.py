@@ -1,6 +1,7 @@
 import xlrd
 import pandas as pd
 from os import listdir, path
+import re
 
 
 def file_dataframe(excel_sheet, data_location):
@@ -53,14 +54,16 @@ def data_location(excel_sheet):
         ('end', end_c, end_r)
     ], columns=['value', 'columns', 'rows'])
 
+
 def find_address(excel_sheet):
     return excel_sheet.cell_value(rowx=0, colx=0)
 
 
-def extract_data_sheet(sheet, sheet_name, sheet_data_location, counter):
+def extract_data_sheet(sheet, sheet_data_location, counter):
     sheet_df = file_dataframe(sheet, sheet_data_location)
     sheet_df['data_id'] = counter
     return(sheet_df)
+
 
 def log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name):
     global data_info
@@ -81,6 +84,10 @@ def log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name):
     west = sheet.cell_value(row_street, column_west)
     north = sheet.cell_value(row_street, column_north)
     
+    # Since column names can vary, clean up
+    sheet_name = re.sub('all\s', '', sheet_name)
+    sheet_name = re.sub('(\w+)\.?(\s.*)?', r'\1', sheet_name)
+
     record = pd.DataFrame([(counter, address, date, east, south, west, north, sheet_name, file_name)], 
                           columns=['id','address','date','east','south','west','north','data_type','filename'])
     data_info = data_info.append(record)
@@ -90,7 +97,7 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, file_name):
     sheet = workbook.sheet_by_index(sheet_index)
     sheet_data_location = data_location(sheet)
     
-    data_sheet = extract_data_sheet(sheet, sheet_name, sheet_data_location, counter)
+    data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
     if file_name.startswith('7435_891_SOUTHAMPTON-ST'):
         print sheet_data_location
     log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name)
