@@ -35,6 +35,9 @@ $.getJSON("cad.geojson",function(data){
 
   	// add layer to map
 	map.addLayer(crashes);
+
+	// add layer to layer control
+	lcontrol.addOverlay(crashes, 'Historical');
 });
 
 
@@ -62,7 +65,8 @@ $.getJSON("car_preds_named.json",function(data){
 			layer.bindPopup("Predicted Probability for Week " + feature.properties.week + ": " + feature.properties.pred);
 		}
 	}
+
+	// add layer to layer control
+	lcontrol.addOverlay(car_preds, 'CAR Predictions');
 });
 
-// add layer control
-//L.control.layers(baseMaps, overlayMaps).addTo(map);

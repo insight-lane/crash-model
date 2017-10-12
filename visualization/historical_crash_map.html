@@ -44,6 +44,11 @@
 			attribution: '(c) <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="http://cartodb.com/attributions">CartoDB</a>, CartoDB <a href ="http://cartodb.com/attributions">attributions</a>'
 		});
 
+		var dark_streets = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
+			maxZoom: 18, 
+			attribution: '(c) <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="http://cartodb.com/attributions">CartoDB</a>, CartoDB <a href ="http://cartodb.com/attributions">attributions</a>'
+		});
+
 		streets.addTo(map);
 
 		// create legend
@@ -64,6 +69,15 @@
 		}
 
 		legend.addTo(map);  
+
+		var baseMaps = {
+			'Map': streets,
+			'High Contrast': dark_streets
+		};
+
+		// add layer control
+		var lcontrol = L.control.layers(baseMaps, {})
+		lcontrol.addTo(map);
 
 	</script>
 

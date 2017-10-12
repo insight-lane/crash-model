@@ -15,6 +15,10 @@ function update_map(week) {
 	map.removeLayer(crashes);
 	map.removeLayer(car_preds);
 
+	// clear layer control of layers
+	lcontrol.removeLayer(crashes);
+	lcontrol.removeLayer(car_preds);
+
 	//create new layers with updated data
   	crashes = new L.geoJson(crashdata, {
 	  	filter: function(feature, layer) {
@@ -36,6 +40,10 @@ function update_map(week) {
   	// add layers to map
 	map.addLayer(crashes);
 	map.addLayer(car_preds); 
+
+	// add layers to layer control
+	lcontrol.addOverlay(crashes, 'Historical');
+	lcontrol.addOverlay(car_preds, 'CAR Predictions');
 
 	// add pop up
 	function onEachFeature(feature, layer) {
