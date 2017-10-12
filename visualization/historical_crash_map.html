@@ -23,11 +23,15 @@
 	<div class="input_overlay">
 		<label for="week_selector">Week: </label>
 		<output for="week_selector" id="week_num">1</output>
-		<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" oninput="weekUpdate(value)" />
+		<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" />
 	</div>
 	<div id="map"></div>
 
+	<div id="barplot"></div>
+
 	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="js/crash_map.js"></script>
+	<script src="js/weekly_barplot.js"></script>
 	<script src="js/update_map.js"></script>
 	<script>
 		// create base map

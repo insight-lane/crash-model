@@ -7,9 +7,9 @@ h1 {
 }
 
 #map {
-	position: absolute;
-	width: 85vw;
-	height: 85vh;
+	/*position: absolute;*/
+	width: 60vw;
+	height: 60vh;
 }
 
 .input_overlay {
@@ -84,4 +84,15 @@ input[type="range"]::-ms-thumb {
     float: left;
     margin-right: 8px;
     opacity: 0.7;
+}
+
+.axis {
+    font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
 }
