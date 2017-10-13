@@ -10,11 +10,11 @@ import json
 import pyproj
 import rtree
 import pandas as pd
-from ATR_util import write_shp, read_csv, read_record, read_shp, find_nearest
+from crash_and_concern_util import write_shp, read_csv, read_record, read_shp, find_nearest
 
-MAP_FP = '../data/processed/maps'
-RAW_DATA_FP = '../data/raw'
-PROCESSED_DATA_FP = '../data/processed'
+MAP_FP = '../../data/processed/maps'
+RAW_DATA_FP = '../../data/raw'
+PROCESSED_DATA_FP = '../../data/processed'
 
 
 def make_schema(geometry, properties):
