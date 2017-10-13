@@ -36,18 +36,31 @@ def find_date(excel_sheet):
     sheet_c = excel_sheet.ncols
     sheet_r = excel_sheet.nrows
     date = ''
-    for col in range(sheet_c):
-        for row in range(sheet_r):
+    row = 0
+    while row < sheet_r and not date:
+        col = 0
+        while col < sheet_c and not date:
             cell_value = excel_sheet.cell_value(rowx=row, colx=col)
             if "date" in str(cell_value).lower():
                 date = cell_value
+            col += 1
+        row += 1
 
     date = date.lower()
-
     # Dates can be in the form 'Date - <date>'
     stripped_date = re.sub('date(\s+\-)?(\s+)?', '', date)
     if stripped_date:
         return parse(stripped_date).date()
+
+    # If we didn't already figure out a date,
+    # look at the column to the right of the date field
+    # This is not very robust, e.g. it will
+    # break if whatever is to the right of the
+    # column containing 'date' is not a date
+    if col < sheet_c:
+        new_date = excel_sheet.cell_value(rowx=row-1, colx=col)
+        if new_date:
+            date = parse(new_date).date()
 
     return date
 
