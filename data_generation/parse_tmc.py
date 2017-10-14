@@ -3,6 +3,7 @@ import pandas as pd
 from os import listdir, path
 import re
 from dateutil.parser import parse
+from ATR_util import geocode_address
 
 
 def file_dataframe(excel_sheet, data_location):
@@ -66,6 +67,11 @@ def find_date(excel_sheet):
 
 
 def data_location(excel_sheet):
+    """
+    Look at current sheet to find the indices of the 'Time' field
+    Use that as starting column and row
+    Use number of columns/rows - 2 as ending column/row
+    """
     sheet_c = excel_sheet.ncols
     sheet_r = excel_sheet.nrows
     start_c = 0
@@ -90,16 +96,19 @@ def find_address(filename):
     Args:
         filename
     Returns:
-        comma-separated first two streets in intersection
+        address, latitude, longitude
     """
     intersection = filename.split('_')[2]
     streets = intersection.split(',')
     streets = [re.sub('-', ' ', s) for s in streets]
     # Strip out space at beginning of street name if it's there
     streets = [s if s[0] != ' ' else s[1:len(s)] for s in streets]
+
     if len(streets) >= 2:
-        return streets[0] + ', ' + streets[1]
-    return
+        intersection = streets[0] + ' and ' + streets[1] + ' Boston, MA'
+        result = geocode_address(intersection)
+        return result
+    return None, None, None
 
 
 def extract_data_sheet(sheet, sheet_data_location, counter):
@@ -160,9 +169,6 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
     sheet_data_location = data_location(sheet)
     
     data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
-    if filename.startswith('7435_891_SOUTHAMPTON-ST'):
-        print sheet_data_location
-
     log_data_sheet(sheet, sheet_name, sheet_data_location, counter, filename,
                    address, date)
     
@@ -182,7 +188,7 @@ def process_format1(workbook, filename,
         sheet_name = 'bicycles hr.'
     sheet_index = sheet_names.index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
-    address = find_address(filename)
+    address, latitude, longitude = find_address(filename)
     date = find_date(sheet)
 
     if motor_col:
