@@ -84,8 +84,22 @@ def data_location(excel_sheet):
     ], columns=['value', 'columns', 'rows'])
 
 
-def find_address(excel_sheet):
-    return excel_sheet.cell_value(rowx=0, colx=0)
+def find_address(filename):
+    """
+    Parses out filename to give an intersection
+    Args:
+        filename
+    Returns:
+        comma-separated first two streets in intersection
+    """
+    intersection = filename.split('_')[2]
+    streets = intersection.split(',')
+    streets = [re.sub('-', ' ', s) for s in streets]
+    # Strip out space at beginning of street name if it's there
+    streets = [s if s[0] != ' ' else s[1:len(s)] for s in streets]
+    if len(streets) >= 2:
+        return streets[0] + ', ' + streets[1]
+    return
 
 
 def extract_data_sheet(sheet, sheet_data_location, counter):
@@ -95,7 +109,7 @@ def extract_data_sheet(sheet, sheet_data_location, counter):
 
 
 def log_data_sheet(sheet, sheet_name, sheet_data_location,
-                   counter, file_name, address, date):
+                   counter, filename, address, date):
     global data_info
     
     column_time = sheet_data_location['columns'][0]
@@ -125,7 +139,7 @@ def log_data_sheet(sheet, sheet_name, sheet_data_location,
         west,
         north,
         sheet_name,
-        file_name)],
+        filename)],
         columns=[
             'id',
             'address',
@@ -139,23 +153,24 @@ def log_data_sheet(sheet, sheet_name, sheet_data_location,
     data_info = data_info.append(record)
 
 
-def extract_and_log_data_sheet(workbook, sheet_name, counter, file_name,
+def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
                                address, date):
     sheet_index = sheet_names.index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
     sheet_data_location = data_location(sheet)
     
     data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
-    if file_name.startswith('7435_891_SOUTHAMPTON-ST'):
+    if filename.startswith('7435_891_SOUTHAMPTON-ST'):
         print sheet_data_location
 
-    log_data_sheet(sheet, sheet_name, sheet_data_location, counter, file_name,
+    log_data_sheet(sheet, sheet_name, sheet_data_location, counter, filename,
                    address, date)
     
     return(data_sheet)
 
 
-def process_format1(workbook, counter, motor_col, ped_col, bike_col, all_data):
+def process_format1(workbook, filename,
+                    counter, motor_col, ped_col, bike_col, all_data):
 
     # dates are same across these sheets
     sheet_name = ''
@@ -167,26 +182,25 @@ def process_format1(workbook, counter, motor_col, ped_col, bike_col, all_data):
         sheet_name = 'bicycles hr.'
     sheet_index = sheet_names.index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
-
-    address = find_address(sheet)
+    address = find_address(filename)
     date = find_date(sheet)
 
     if motor_col:
         counter += 1
         motor = extract_and_log_data_sheet(
-            workbook, motor_col, counter, file_name, address, date)
+            workbook, motor_col, counter, filename, address, date)
         all_data = all_data.append(motor)
 
     if ped_col:
         counter += 1
         pedestrian = extract_and_log_data_sheet(
-            workbook, ped_col, counter, file_name, address, date)
+            workbook, ped_col, counter, filename, address, date)
         all_data = all_data.append(pedestrian)
         
     if bike_col:
         counter += 1
         bike = extract_and_log_data_sheet(
-            workbook, bike_col, counter, file_name, address, date)
+            workbook, bike_col, counter, filename, address, date)
         all_data = all_data.append(bike)
     return all_data, counter
 
@@ -223,7 +237,7 @@ if __name__ == '__main__':
 
             if motors or peds or 'bicycles hr.' in sheet_names:
                 all_data, i = process_format1(
-                    workbook, i, motors[0] if motors else None,
+                    workbook, file_name, i, motors[0] if motors else None,
                     peds[0] if peds else None,
                     'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
                     all_data)
