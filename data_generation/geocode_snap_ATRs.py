@@ -26,12 +26,11 @@ if not os.path.exists('../../processed/geocoded_atrs.csv'):
     for atr in atrs:
         if is_readable_ATR(atr):
             atr_address = clean_ATR_fname(atr)
-            geocoded_add, lat, lng = geocode_ATR_data(atr_address)
+            geocoded_add, lat, lng = geocode_address(atr_address)
             vol, speed, motos, light, heavy = read_ATR(atr)
             r = [atr_address, geocoded_add, lat, lng, vol, speed, motos, light, heavy, atr]
             results.append(r)
             print('Number geocoded: {}'.format(len(results)))
-            time.sleep(1) # was running into rate limit issues
 
     
     with open('../../processed/geocoded_atrs.csv', 'wb') as f:

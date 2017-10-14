@@ -6,6 +6,7 @@ import fiona
 from shapely.geometry import Point, shape, mapping
 import pyproj
 import csv
+from time import sleep
 
 PROJ = pyproj.Proj(init='epsg:3857')
 
@@ -46,9 +47,26 @@ def clean_ATR_fname(fname):
     atr_address += ' Boston, MA'
     return atr_address
 
-def geocode_ATR_data(atr_address):
-    g = geocoder.google(atr_address)
+
+def geocode_address(address):
+    """
+    Use google's API to look up the address
+    Due to rate limiting, try a few times with an increasing
+    wait if no address is found
+
+    Args:
+        address
+    Returns:
+        address, latitude, longitude
+    """
+    g = geocoder.google(address)
+    attempts = 0
+    while g.address is None and attempts < 3:
+        attempts += 1
+        sleep(attempts ** 2)
+        g = geocoder.google(address)
     return g.address, g.lat, g.lng
+
 
 def read_ATR(fname):
     """
