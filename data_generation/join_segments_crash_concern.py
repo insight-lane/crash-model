@@ -10,7 +10,8 @@ import json
 import pyproj
 import rtree
 import pandas as pd
-from ATR_util import write_shp, read_csv, read_record, read_shp, find_nearest
+from ATR_util import write_shp, csv_to_projected_records
+from ATR_util import read_record, read_shp, find_nearest
 
 MAP_FP = '../data/processed/maps'
 RAW_DATA_FP = '../data/raw'
@@ -32,7 +33,7 @@ def make_schema(geometry, properties):
 if __name__ == '__main__':
 
     # Read in CAD crash data
-    crash = read_csv(
+    crash = csv_to_projected_records(
         RAW_DATA_FP + '/cad_crash_events_with_transport_2016_wgs84.csv')
     print "Read in data from {} crashes".format(len(crash))
 

@@ -137,19 +137,28 @@ def read_record(record, x, y, orig=None, new=PROJ):
     return(r_dict)
 
 
-def read_csv(file):
-    # Read in CAD crash data
-    crash = []
-    with open(file) as f:
+def csv_to_projected_records(filename, x='X', y='Y'):
+    """
+    Reads a csv file in and creates a list of records,
+    projecting x and y coordinates to projection 4326
+
+    Args:
+        filename (csv file)
+        optional:
+            x coordinate name (defaults to 'X')
+            y coordinate name (defaults to 'Y')
+    """
+    records = []
+    with open(filename) as f:
         csv_reader = csv.DictReader(f)
         for r in csv_reader:
-            # Some crash 0 / blank coordinates
-            if r['X'] != '':
-                crash.append(
-                    read_record(r, r['X'], r['Y'],
+            # Can possibly have 0 / blank coordinates
+            if r[x] != '':
+                records.append(
+                    read_record(r, r[x], r[y],
                                 orig=pyproj.Proj(init='epsg:4326'))
                 )
-    return crash
+    return records
 
 
 def find_nearest(records, segments, segments_index, tolerance):

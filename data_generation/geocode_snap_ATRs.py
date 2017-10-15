@@ -57,16 +57,8 @@ for idx, element in enumerate(combined_seg):
 print('Created spatial index')
 
 # Read in atr lats
-atrs = []
-with open('../../processed/geocoded_atrs.csv') as f:
-    csv_reader = csv.DictReader(f)
-    for r in csv_reader:
-        # Some crash 0 / blank coordinates
-        if r['lat']!='':
-            atrs.append(
-                read_record(r, r['lng'], r['lat'],
-                           orig=pyproj.Proj(init='epsg:4326'))
-            )
+atrs = csv_to_projected_records('../../processed/geocoded_atrs.csv',
+                                x='lng', y='lat')
 print "Read in data from {} atrs".format(len(atrs))
 
 # Find nearest atr - 20 tolerance
