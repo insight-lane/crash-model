@@ -1,6 +1,7 @@
 import xlrd
 import pandas as pd
 from os import listdir, path
+from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
 from ATR_util import geocode_address
@@ -156,19 +157,6 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
 def process_format1(workbook, filename, address, date,
                     counter, motor_col, ped_col, bike_col, all_data):
 
-    # dates are same across these sheets
-#    sheet_name = ''
-#    if motors:
-#        sheet_name = motors[0]
-#    elif peds:
-#        sheet_name = peds[0]
-#    else:
-#        sheet_name = 'bicycles hr.'
-#    sheet_index = sheet_names.index(sheet_name)
-#    sheet = workbook.sheet_by_index(sheet_index)
-#    address, latitude, longitude = find_address(filename)
-#    date = find_date(sheet)
-
     if motor_col:
         counter += 1
         motor = extract_and_log_data_sheet(
@@ -187,6 +175,53 @@ def process_format1(workbook, filename, address, date,
             workbook, bike_col, counter, filename, address, date)
         all_data = all_data.append(bike)
     return all_data, counter
+
+
+def get_geocoded():
+    """
+    Gets the geocoded turning movement count addresses
+
+    If no existing geocoded tmc file exists, extracts the addresses
+    and dates from the filenames, geocodes them, and writes results
+    to file
+    If there's an existing geocoded tmc file, read it in
+
+    Args:
+        None - file is hardcoded
+    Results:
+        addresses dataframe
+    """
+    addresses = pd.DataFrame()
+    geocoded_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
+    if not path_exists(geocoded_file):
+        print 'No geocoded tmcs found, generating'
+        data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
+        for filename in listdir(data_directory):
+            if filename.endswith('.XLS'):
+                print filename
+                address, latitude, longitude = find_address(filename)
+                date = find_date(filename)
+
+                address_record = pd.DataFrame([(
+                    filename,
+                    address,
+                    latitude,
+                    longitude,
+                    date)],
+                    columns=[
+                        'File',
+                        'Address',
+                        'Latitude',
+                        'Longitude',
+                        'Date'
+                    ])
+                addresses = addresses.append(address_record)
+        addresses.to_csv(
+            path_or_buf=geocoded_file, index=False)
+    else:
+        print "reading from " + geocoded_file
+        addresses = pd.read_csv(geocoded_file)
+    return addresses
 
 if __name__ == '__main__':
 
@@ -207,45 +242,31 @@ if __name__ == '__main__':
     ])
 
     i = 0
-    addresses = pd.DataFrame()
+    addresses = get_geocoded()
+    address = None
+    date = None
 
-    for filename in data_file_names:
-        if filename.endswith('.XLS'):
-            print filename
-            address, latitude, longitude = find_address(filename)
-            date = find_date(filename)
+    for row in addresses.iterrows():
+        filename = row[1]['File']
+        print filename
+        address = row[1]['Address']
+        date = row[1]['Date']
+        file_path = path.join(data_directory, filename)
+        workbook = xlrd.open_workbook(file_path)
+        sheet_names = [x.lower() for x in workbook.sheet_names()]
 
-            address_record = pd.DataFrame([(
-                filename,
-                address,
-                latitude,
-                longitude,
-                date)],
-                columns=[
-                    'File',
-                    'Address',
-                    'Latitude',
-                    'Longitude',
-                    'Date'
-                ])
-            addresses = addresses.append(address_record)
+        motors = [col for col in sheet_names
+                  if col.startswith('all motors')]
+        peds = [col for col in sheet_names
+                if col.startswith('all peds')]
 
-            file_path = path.join(data_directory, filename)
-            workbook = xlrd.open_workbook(file_path)
-            sheet_names = [x.lower() for x in workbook.sheet_names()]
-
-            motors = [col for col in sheet_names
-                      if col.startswith('all motors')]
-            peds = [col for col in sheet_names
-                    if col.startswith('all peds')]
-
-            if motors or peds or 'bicycles hr.' in sheet_names:
-                all_data, i = process_format1(
-                    workbook, filename, address, date,
-                    i, motors[0] if motors else None,
-                    peds[0] if peds else None,
-                    'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
-                    all_data)
+        if motors or peds or 'bicycles hr.' in sheet_names:
+            all_data, i = process_format1(
+                workbook, filename, address, date,
+                i, motors[0] if motors else None,
+                peds[0] if peds else None,
+                'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
+                all_data)
 
     all_data.reset_index(drop=True, inplace=True)
     data_info.reset_index(drop=True, inplace=True)
@@ -255,8 +276,6 @@ if __name__ == '__main__':
 
     all_data.to_csv(path_or_buf=data_directory + 'all_data.csv', index=False)
     data_info.to_csv(path_or_buf=data_directory + 'data_info.csv', index=False)
-    addresses.to_csv(
-        path_or_buf=PROCESSED_DATA_FP + 'geocoded_tmcs.csv', index=False)
 
 #    print data_directory
 #    print data_info[10]
