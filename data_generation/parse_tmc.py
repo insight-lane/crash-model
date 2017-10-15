@@ -4,7 +4,10 @@ from os import listdir, path
 from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
-from ATR_util import geocode_address
+from ATR_util import geocode_address, read_record, read_shp, find_nearest
+from ATR_util import csv_to_projected_records
+import pyproj
+import rtree
 
 RAW_DATA_FP = '../data/raw/'
 PROCESSED_DATA_FP = '../data/processed/'
@@ -221,6 +224,19 @@ def get_geocoded():
     else:
         print "reading from " + geocoded_file
         addresses = pd.read_csv(geocoded_file)
+
+    address_records = csv_to_projected_records(geocoded_file,
+                                               x='Longitude', y='Latitude')
+    print "Read in data from {} records".format(len(address_records))
+
+    inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+    # Create spatial index for quick lookup
+    segments_index = rtree.index.Index()
+    for idx, element in enumerate(inter):
+        segments_index.insert(idx, element[0].bounds)
+    print "Snapping tmcs to intersections"
+    find_nearest(address_records, inter, segments_index, 20)
+
     return addresses
 
 if __name__ == '__main__':
@@ -243,12 +259,10 @@ if __name__ == '__main__':
 
     i = 0
     addresses = get_geocoded()
-    address = None
-    date = None
 
     for row in addresses.iterrows():
         filename = row[1]['File']
-        print filename
+#        print filename
         address = row[1]['Address']
         date = row[1]['Date']
         file_path = path.join(data_directory, filename)
