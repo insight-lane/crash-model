@@ -5,6 +5,9 @@ import re
 from dateutil.parser import parse
 from ATR_util import geocode_address
 
+RAW_DATA_FP = '../data/raw/'
+PROCESSED_DATA_FP = '../data/processed/'
+
 
 def file_dataframe(excel_sheet, data_location):
     column_time = data_location['columns'][0]
@@ -25,45 +28,6 @@ def file_dataframe(excel_sheet, data_location):
 
     columns = ['times', 'east', 'south', 'west', 'north']
     return(pd.DataFrame({'times':times_strip, 'east':east, 'south':south, 'west':west, 'north':north}, columns=columns))
-
-
-def find_date(excel_sheet):
-    """
-    Parse out the date
-    Args:
-        excel_sheet
-    Returns: datetime date object
-    """
-    sheet_c = excel_sheet.ncols
-    sheet_r = excel_sheet.nrows
-    date = ''
-    row = 0
-    while row < sheet_r and not date:
-        col = 0
-        while col < sheet_c and not date:
-            cell_value = excel_sheet.cell_value(rowx=row, colx=col)
-            if "date" in str(cell_value).lower():
-                date = cell_value
-            col += 1
-        row += 1
-
-    date = date.lower()
-    # Dates can be in the form 'Date - <date>'
-    stripped_date = re.sub('date(\s+\-)?(\s+)?', '', date)
-    if stripped_date:
-        return parse(stripped_date).date()
-
-    # If we didn't already figure out a date,
-    # look at the column to the right of the date field
-    # This is not very robust, e.g. it will
-    # break if whatever is to the right of the
-    # column containing 'date' is not a date
-    if col < sheet_c:
-        new_date = excel_sheet.cell_value(rowx=row-1, colx=col)
-        if new_date:
-            date = parse(new_date).date()
-
-    return date
 
 
 def data_location(excel_sheet):
@@ -88,6 +52,19 @@ def data_location(excel_sheet):
         ('start', start_c, start_r),
         ('end', end_c, end_r)
     ], columns=['value', 'columns', 'rows'])
+
+
+def find_date(filename):
+    """
+    Parses out filename to give the date
+    Args:
+        filename
+    Returns:
+        date
+    """
+    prefix = re.sub('\.XLS', '', filename)
+    segments = prefix.split('_')
+    return parse(segments[len(segments) - 1])
 
 
 def find_address(filename):
@@ -166,8 +143,9 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
                                address, date):
     sheet_index = sheet_names.index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
+    # This gives the location in the sheet where the counts start/end
     sheet_data_location = data_location(sheet)
-    
+
     data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
     log_data_sheet(sheet, sheet_name, sheet_data_location, counter, filename,
                    address, date)
@@ -175,21 +153,21 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
     return(data_sheet)
 
 
-def process_format1(workbook, filename,
+def process_format1(workbook, filename, address, date,
                     counter, motor_col, ped_col, bike_col, all_data):
 
     # dates are same across these sheets
-    sheet_name = ''
-    if motors:
-        sheet_name = motors[0]
-    elif peds:
-        sheet_name = peds[0]
-    else:
-        sheet_name = 'bicycles hr.'
-    sheet_index = sheet_names.index(sheet_name)
-    sheet = workbook.sheet_by_index(sheet_index)
-    address, latitude, longitude = find_address(filename)
-    date = find_date(sheet)
+#    sheet_name = ''
+#    if motors:
+#        sheet_name = motors[0]
+#    elif peds:
+#        sheet_name = peds[0]
+#    else:
+#        sheet_name = 'bicycles hr.'
+#    sheet_index = sheet_names.index(sheet_name)
+#    sheet = workbook.sheet_by_index(sheet_index)
+#    address, latitude, longitude = find_address(filename)
+#    date = find_date(sheet)
 
     if motor_col:
         counter += 1
@@ -212,7 +190,7 @@ def process_format1(workbook, filename,
 
 if __name__ == '__main__':
 
-    data_directory = '../data/raw/TURNING MOVEMENT COUNT/'
+    data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
     data_file_names = listdir(data_directory)
 
     all_data = pd.DataFrame()
@@ -229,10 +207,30 @@ if __name__ == '__main__':
     ])
 
     i = 0
+    addresses = pd.DataFrame()
 
-    for file_name in data_file_names:
-        if file_name.endswith('.XLS'):
-            file_path = path.join(data_directory, file_name)
+    for filename in data_file_names:
+        if filename.endswith('.XLS'):
+            print filename
+            address, latitude, longitude = find_address(filename)
+            date = find_date(filename)
+
+            address_record = pd.DataFrame([(
+                filename,
+                address,
+                latitude,
+                longitude,
+                date)],
+                columns=[
+                    'File',
+                    'Address',
+                    'Latitude',
+                    'Longitude',
+                    'Date'
+                ])
+            addresses = addresses.append(address_record)
+
+            file_path = path.join(data_directory, filename)
             workbook = xlrd.open_workbook(file_path)
             sheet_names = [x.lower() for x in workbook.sheet_names()]
 
@@ -243,12 +241,13 @@ if __name__ == '__main__':
 
             if motors or peds or 'bicycles hr.' in sheet_names:
                 all_data, i = process_format1(
-                    workbook, file_name, i, motors[0] if motors else None,
+                    workbook, filename, address, date,
+                    i, motors[0] if motors else None,
                     peds[0] if peds else None,
                     'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
                     all_data)
 
-    all_data.reset_index(drop=True, inplace=True)    
+    all_data.reset_index(drop=True, inplace=True)
     data_info.reset_index(drop=True, inplace=True)
 
     all_data = all_data.apply(pd.to_numeric, errors='ignore')
@@ -256,6 +255,8 @@ if __name__ == '__main__':
 
     all_data.to_csv(path_or_buf=data_directory + 'all_data.csv', index=False)
     data_info.to_csv(path_or_buf=data_directory + 'data_info.csv', index=False)
+    addresses.to_csv(
+        path_or_buf=PROCESSED_DATA_FP + 'geocoded_tmcs.csv', index=False)
 
 #    print data_directory
 #    print data_info[10]
@@ -263,7 +264,8 @@ if __name__ == '__main__':
     print data_info.filename.nunique()
 
     all_joined = pd.merge(left=all_data,right=data_info, left_on='data_id', right_on='id')
-    print all_joined.groupby(['data_type']).sum()
+#    print all_joined.groupby(['data_type']).sum()
+#    print addresses
 
 #    print data_info.head()
     
