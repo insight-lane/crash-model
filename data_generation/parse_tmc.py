@@ -8,6 +8,7 @@ from ATR_util import geocode_address, read_record, read_shp, find_nearest
 from ATR_util import csv_to_projected_records
 import pyproj
 import rtree
+import folium
 
 RAW_DATA_FP = '../data/raw/'
 PROCESSED_DATA_FP = '../data/processed/'
@@ -201,7 +202,6 @@ def get_geocoded():
         data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
         for filename in listdir(data_directory):
             if filename.endswith('.XLS'):
-                print filename
                 address, latitude, longitude = find_address(filename)
                 date = find_date(filename)
 
@@ -237,7 +237,39 @@ def get_geocoded():
     print "Snapping tmcs to intersections"
     find_nearest(address_records, inter, segments_index, 20)
 
-    return addresses
+    return addresses, address_records
+
+
+def plot_tmcs(addresses):
+
+    # First create basemap
+    points = folium.Map(
+        [42.3601, -71.0589],
+        tiles='Cartodb Positron',
+        zoom_start=12
+    )
+
+    # plot tmcs
+    for address in addresses.iterrows():
+        if not pd.isnull(address[1]['Latitude']):
+            folium.CircleMarker(
+                location=[address[1]['Latitude'], address[1]['Longitude']],
+                fill_color='yellow', fill=True, fill_opacity=.7, color='yellow',
+                radius=6).add_to(points)
+
+    # Plot atrs
+    atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
+                                    x='lng', y='lat')
+    for atr in atrs:
+        properties = atr['properties']
+        if properties['lat']:
+            folium.CircleMarker(
+                location=[float(properties['lat']), float(properties['lng'])],
+                fill_color='green', fill=True, fill_opacity=.7, color='grey',
+                radius=6).add_to(points)
+
+    points.save('map.html')
+
 
 if __name__ == '__main__':
 
@@ -258,9 +290,10 @@ if __name__ == '__main__':
     ])
 
     i = 0
-    addresses = get_geocoded()
-
+    addresses, address_records = get_geocoded()
+    plot_tmcs(addresses)
     for row in addresses.iterrows():
+
         filename = row[1]['File']
 #        print filename
         address = row[1]['Address']
