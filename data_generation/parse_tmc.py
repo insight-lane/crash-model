@@ -4,9 +4,8 @@ from os import listdir, path
 from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
-from ATR_util import geocode_address, read_record, read_shp, find_nearest
+from ATR_util import geocode_address, read_shp, find_nearest
 from ATR_util import csv_to_projected_records
-import pyproj
 import rtree
 import folium
 
@@ -101,7 +100,6 @@ def extract_data_sheet(sheet, sheet_data_location, counter):
 
 def log_data_sheet(sheet, sheet_name, sheet_data_location,
                    counter, filename, address, date):
-    global data_info
     
     column_time = sheet_data_location['columns'][0]
     row_time = sheet_data_location['rows'][0]
@@ -141,44 +139,55 @@ def log_data_sheet(sheet, sheet_name, sheet_data_location,
             'north',
             'data_type',
             'filename'])
-    data_info = data_info.append(record)
+    return record
 
 
 def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
-                               address, date):
+                               address, date, data_info):
+
+    sheet_names = [x.lower() for x in workbook.sheet_names()]
     sheet_index = sheet_names.index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
     # This gives the location in the sheet where the counts start/end
     sheet_data_location = data_location(sheet)
 
     data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
-    log_data_sheet(sheet, sheet_name, sheet_data_location, counter, filename,
-                   address, date)
-    
-    return(data_sheet)
+    logged = log_data_sheet(
+        sheet,
+        sheet_name,
+        sheet_data_location,
+        counter,
+        filename,
+        address,
+        date
+    )
+
+    data_info = data_info.append(logged)
+    return data_sheet, data_info
 
 
 def process_format1(workbook, filename, address, date,
-                    counter, motor_col, ped_col, bike_col, all_data):
+                    counter, motor_col, ped_col, bike_col, all_data,
+                    data_info):
 
     if motor_col:
         counter += 1
-        motor = extract_and_log_data_sheet(
-            workbook, motor_col, counter, filename, address, date)
+        motor, data_info = extract_and_log_data_sheet(
+            workbook, motor_col, counter, filename, address, date, data_info)
         all_data = all_data.append(motor)
 
     if ped_col:
         counter += 1
-        pedestrian = extract_and_log_data_sheet(
-            workbook, ped_col, counter, filename, address, date)
+        pedestrian, data_info = extract_and_log_data_sheet(
+            workbook, ped_col, counter, filename, address, date, data_info)
         all_data = all_data.append(pedestrian)
         
     if bike_col:
         counter += 1
-        bike = extract_and_log_data_sheet(
-            workbook, bike_col, counter, filename, address, date)
+        bike, data_info = extract_and_log_data_sheet(
+            workbook, bike_col, counter, filename, address, date, data_info)
         all_data = all_data.append(bike)
-    return all_data, counter
+    return all_data, counter, data_info
 
 
 def get_geocoded():
@@ -271,10 +280,9 @@ def plot_tmcs(addresses):
     points.save('map.html')
 
 
-if __name__ == '__main__':
+def parse_tmcs(addresses):
 
     data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
-    data_file_names = listdir(data_directory)
 
     all_data = pd.DataFrame()
     data_info = pd.DataFrame(columns=[
@@ -290,8 +298,6 @@ if __name__ == '__main__':
     ])
 
     i = 0
-    addresses, address_records = get_geocoded()
-    plot_tmcs(addresses)
     for row in addresses.iterrows():
 
         filename = row[1]['File']
@@ -301,19 +307,18 @@ if __name__ == '__main__':
         file_path = path.join(data_directory, filename)
         workbook = xlrd.open_workbook(file_path)
         sheet_names = [x.lower() for x in workbook.sheet_names()]
-
         motors = [col for col in sheet_names
                   if col.startswith('all motors')]
         peds = [col for col in sheet_names
                 if col.startswith('all peds')]
 
         if motors or peds or 'bicycles hr.' in sheet_names:
-            all_data, i = process_format1(
+            all_data, i, data_info = process_format1(
                 workbook, filename, address, date,
                 i, motors[0] if motors else None,
                 peds[0] if peds else None,
                 'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
-                all_data)
+                all_data, data_info)
 
     all_data.reset_index(drop=True, inplace=True)
     data_info.reset_index(drop=True, inplace=True)
@@ -326,7 +331,7 @@ if __name__ == '__main__':
 
 #    print data_directory
 #    print data_info[10]
-#    print all_data
+    print len(all_data)
     print data_info.filename.nunique()
 
     all_joined = pd.merge(left=all_data,right=data_info, left_on='data_id', right_on='id')
@@ -336,3 +341,8 @@ if __name__ == '__main__':
 #    print data_info.head()
     
 
+if __name__ == '__main__':
+
+    addresses, address_records = get_geocoded()
+    plot_tmcs(addresses)
+    parse_tmcs(addresses)
