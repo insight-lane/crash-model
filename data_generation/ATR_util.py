@@ -8,8 +8,10 @@ import pyproj
 import csv
 from time import sleep
 import matplotlib.pyplot as pyplot
+import rtree
 
 PROJ = pyproj.Proj(init='epsg:3857')
+MAP_FP = '../data/processed/maps'
 
 
 def is_readable_ATR(fname):
@@ -200,6 +202,23 @@ def csv_to_projected_records(filename, x='X', y='Y'):
                                 orig=pyproj.Proj(init='epsg:4326'))
                 )
     return records
+
+
+def read_segments():
+    # Read in segments
+    inter = read_shp(MAP_FP + '/inters_segments.shp')
+    non_inter = read_shp(MAP_FP + '/non_inters_segments.shp')
+    print "Read in {} intersection, {} non-intersection segments".format(
+        len(inter), len(non_inter))
+
+    # Combine inter + non_inter
+    combined_seg = inter + non_inter
+
+    # Create spatial index for quick lookup
+    segments_index = rtree.index.Index()
+    for idx, element in enumerate(combined_seg):
+        segments_index.insert(idx, element[0].bounds)
+    return combined_seg, segments_index
 
 
 def find_nearest(records, segments, segments_index, tolerance):

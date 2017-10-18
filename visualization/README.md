@@ -2,16 +2,32 @@
 
 This directory contains the code relevant to the visualization efforts for this project.
 
-## Visualization Scripts
+## Visualization Products
 
-_make_map.ipynb_ - This notebook can be used to plot predictions of crash risk rates generated from a model on a Leaflet map of Boston.  It color-codes each segment based on the magnitude of the predicted risk.
+_risk_map.py_ - This script can be used to plot predictions generated from multiple models on a single Leaflet map of Boston.  It color-codes each segment based on the magnitude of the predicted risk.
 
 To run this script, you need the following inputs:
-- inter_and_non_int.shp - this is a shapefile that combines intersection and non-intersection segments for the entire city while preserving the IDs assigned to them in create_segments.py.  This file is created in create_segments.py
-- a .csv file of predicted crash risk - each row should have 1 prediction per segment
+- inter_and_non_int.shp (created in create_segments.py)
+- csv files of predictions (each row should have 1 prediction per segment and be stored in the `data/processed/` directory)
 
-_historical_crash_map.html_ - This static site plots historical crash data and colors segments based on the number of crashes that occured for a given week in 2016.  Users can scrub the slider to see different weeks visualized on the map.
+The script takes the following flag arguments on the command line:
+
+-m = model names (these will be the names of the layers on your map)
+
+-f = csv file names (one for each model and specified in the same order as the model names)
+
+-c = names of the predictions columns (one for each file and specified in the same order as the model names)
+
+-n = optional flag to indicate if predictions need to be normalized
+
+An example of how to run this script to plot the output from two models is as follows:
+```
+python risk_map.py -m model1 model2 -f model1_output.csv model2_output.csv -c risk_score preds
+```
+
+_historical_crash_map.html_ - This static site plots historical crash data and model predictions for a given week in 2016.  Users can scrub the slider to see different weeks visualized on the map.  A bar graph at the bottom summarizes the total number of crashes by week.
 
 To run this site, you need the following:
 - the /css and /js subdirectories with the files contained within
-- to run historical_crash_map.py to generate the data needed for the map.  Place the generated GeoJSON file in the same directory as the html file.
+- cad.geojson and car_preds_named.json
+- to run historical_crash_map.py to generate the data needed for the bar graph.  Place the generated csv file in the same directory as the html file.
