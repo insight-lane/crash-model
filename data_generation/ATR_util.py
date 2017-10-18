@@ -7,6 +7,7 @@ from shapely.geometry import Point, shape, mapping
 import pyproj
 import csv
 from time import sleep
+import matplotlib.pyplot as pyplot
 
 PROJ = pyproj.Proj(init='epsg:3857')
 
@@ -68,6 +69,46 @@ def geocode_address(address):
     return g.address, g.lat, g.lng
 
 
+def plot_hourly_rates(files, outfile):
+    """
+    Function that reads ATRs and generates a sparkline plot
+    of percentages of traffic over time
+    
+    Args:
+        files - list of filenames to process
+        outfile - where to write the resulting plot
+    """
+
+    all_counts = []
+    for f in files:
+        wb = openpyxl.load_workbook(f, data_only=True)
+        sheet_names = wb.get_sheet_names()
+        if 'Classification-Combined' in sheet_names:
+            sheet = wb.get_sheet_by_name('Classification-Combined')
+            print sheet
+            # Right now the cell locations are hardcoded,
+            # but if we expand to cover different formats, will need to change
+            counts = []
+            for row_index in range(9, 33):
+                cell = "{}{}".format('O', row_index)
+                val = sheet[cell].value
+                counts.append(float(val))
+            total = sheet['O34'].value
+            print counts
+            print total
+            for i in range(len(counts)):
+                counts[i] = counts[i]/total
+            all_counts.append(counts)
+
+    bins = range(0, 24)
+    print len(bins)
+    for val in all_counts:
+        pyplot.plot(bins, val)
+    pyplot.legend(loc='upper right')
+    print outfile
+    pyplot.savefig(outfile)
+
+
 def read_ATR(fname):
     """
     Function to read ATR data
@@ -77,7 +118,7 @@ def read_ATR(fname):
     """
 
     # data_only=True so as to not read formulas
-    wb = openpyxl.load_workbook(fname, data_only=True) 
+    wb = openpyxl.load_workbook(fname, data_only=True)
     sheet_names = wb.get_sheet_names()
 
     # get total volume cell F106

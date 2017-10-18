@@ -3,6 +3,7 @@ import os
 import csv
 import rtree
 import pyproj
+import argparse
 from ATR_util import *
 
 
@@ -65,6 +66,12 @@ def geocode_and_parse():
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--graph', action='store_true',
+                        help='Whether to generating graphs')
+
+    args = parser.parse_args()
+
     geocode_and_parse()
     # Read in segments
     inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
@@ -85,7 +92,13 @@ if __name__ == '__main__':
     atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
                                     x='lng', y='lat')
     print "Read in data from {} atrs".format(len(atrs))
-    print atrs[0]
+
+    if args.graph:
+        # Generate sparkline graph of traffic distribution
+        files = [RAW_DATA_FP + 'AUTOMATED TRAFFICE RECORDING/' +
+                 atr['properties']['filename'] for atr in atrs]
+        plot_hourly_rates(files,
+                          os.path.abspath(PROCESSED_DATA_FP) + '/atr_dist.png')
 
     # Find nearest atr - 20 tolerance
     print "Snapping atr to segments"
