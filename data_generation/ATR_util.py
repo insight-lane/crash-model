@@ -6,6 +6,8 @@ import fiona
 from shapely.geometry import Point, shape, mapping
 import pyproj
 import csv
+from time import sleep
+import matplotlib.pyplot as pyplot
 import rtree
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -48,9 +50,61 @@ def clean_ATR_fname(fname):
     atr_address += ' Boston, MA'
     return atr_address
 
-def geocode_ATR_data(atr_address):
-    g = geocoder.google(atr_address)
+
+def geocode_address(address):
+    """
+    Use google's API to look up the address
+    Due to rate limiting, try a few times with an increasing
+    wait if no address is found
+
+    Args:
+        address
+    Returns:
+        address, latitude, longitude
+    """
+    g = geocoder.google(address)
+    attempts = 0
+    while g.address is None and attempts < 3:
+        attempts += 1
+        sleep(attempts ** 2)
+        g = geocoder.google(address)
     return g.address, g.lat, g.lng
+
+
+def plot_hourly_rates(files, outfile):
+    """
+    Function that reads ATRs and generates a sparkline plot
+    of percentages of traffic over time
+    
+    Args:
+        files - list of filenames to process
+        outfile - where to write the resulting plot
+    """
+
+    all_counts = []
+    for f in files:
+        wb = openpyxl.load_workbook(f, data_only=True)
+        sheet_names = wb.get_sheet_names()
+        if 'Classification-Combined' in sheet_names:
+            sheet = wb.get_sheet_by_name('Classification-Combined')
+            # Right now the cell locations are hardcoded,
+            # but if we expand to cover different formats, will need to change
+            counts = []
+            for row_index in range(9, 33):
+                cell = "{}{}".format('O', row_index)
+                val = sheet[cell].value
+                counts.append(float(val))
+            total = sheet['O34'].value
+            for i in range(len(counts)):
+                counts[i] = counts[i]/total
+            all_counts.append(counts)
+
+    bins = range(0, 24)
+    for val in all_counts:
+        pyplot.plot(bins, val)
+    pyplot.legend(loc='upper right')
+    pyplot.savefig(outfile)
+
 
 def read_ATR(fname):
     """
@@ -61,7 +115,7 @@ def read_ATR(fname):
     """
 
     # data_only=True so as to not read formulas
-    wb = openpyxl.load_workbook(fname, data_only=True) 
+    wb = openpyxl.load_workbook(fname, data_only=True)
     sheet_names = wb.get_sheet_names()
 
     # get total volume cell F106
@@ -121,19 +175,28 @@ def read_record(record, x, y, orig=None, new=PROJ):
     return(r_dict)
 
 
-def read_csv(file):
-    # Read in CAD crash data
-    crash = []
-    with open(file) as f:
+def csv_to_projected_records(filename, x='X', y='Y'):
+    """
+    Reads a csv file in and creates a list of records,
+    projecting x and y coordinates to projection 4326
+
+    Args:
+        filename (csv file)
+        optional:
+            x coordinate name (defaults to 'X')
+            y coordinate name (defaults to 'Y')
+    """
+    records = []
+    with open(filename) as f:
         csv_reader = csv.DictReader(f)
         for r in csv_reader:
-            # Some crash 0 / blank coordinates
-            if r['X'] != '':
-                crash.append(
-                    read_record(r, r['X'], r['Y'],
+            # Can possibly have 0 / blank coordinates
+            if r[x] != '':
+                records.append(
+                    read_record(r, r[x], r[y],
                                 orig=pyproj.Proj(init='epsg:4326'))
                 )
-    return crash
+    return records
 
 
 def read_segments():
