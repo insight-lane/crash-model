@@ -87,7 +87,6 @@ def plot_hourly_rates(files, outfile):
         sheet_names = wb.get_sheet_names()
         if 'Classification-Combined' in sheet_names:
             sheet = wb.get_sheet_by_name('Classification-Combined')
-            print sheet
             # Right now the cell locations are hardcoded,
             # but if we expand to cover different formats, will need to change
             counts = []
@@ -96,18 +95,14 @@ def plot_hourly_rates(files, outfile):
                 val = sheet[cell].value
                 counts.append(float(val))
             total = sheet['O34'].value
-            print counts
-            print total
             for i in range(len(counts)):
                 counts[i] = counts[i]/total
             all_counts.append(counts)
 
     bins = range(0, 24)
-    print len(bins)
     for val in all_counts:
         pyplot.plot(bins, val)
     pyplot.legend(loc='upper right')
-    print outfile
     pyplot.savefig(outfile)
 
 
