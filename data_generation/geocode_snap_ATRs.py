@@ -5,14 +5,17 @@ import rtree
 import pyproj
 from ATR_util import *
 
+
+RAW_DATA_FP = '../data/raw/'
+PROCESSED_DATA_FP = '../data/processed/'
+
 PROJ = pyproj.Proj(init='epsg:3857')
 
-os.chdir('../data/raw/AUTOMATED TRAFFICE RECORDING/')
-atrs = os.listdir(os.getcwd())
+atrs = os.listdir(RAW_DATA_FP + 'AUTOMATED TRAFFICE RECORDING/')
 
 
 def geocode_and_parse():
-    if not os.path.exists('../../processed/geocoded_atrs.csv'):
+    if not os.path.exists(PROCESSED_DATA_FP + 'geocoded_atrs.csv'):
         print "No geocoded_atrs.csv found, geocoding addresses"
 
         # geocode, parse result - address, lat long
@@ -23,7 +26,8 @@ def geocode_and_parse():
                 readable.append(atr)
                 atr_address = clean_ATR_fname(atr)
                 geocoded_add, lat, lng = geocode_address(atr_address)
-                vol, speed, motos, light, heavy = read_ATR(atr)
+                vol, speed, motos, light, heavy = read_ATR(
+                    RAW_DATA_FP + 'AUTOMATED TRAFFICE RECORDING/' + atr)
                 print atr
                 r = [
                     atr_address,
@@ -40,7 +44,7 @@ def geocode_and_parse():
                 results.append(r)
                 print('Number geocoded: {}'.format(len(results)))
 
-        with open('../../processed/geocoded_atrs.csv', 'wb') as f:
+        with open(PROCESSED_DATA_FP + 'geocoded_atrs.csv', 'wb') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([
                 'orig',
@@ -63,8 +67,8 @@ if __name__ == '__main__':
 
     geocode_and_parse()
     # Read in segments
-    inter = read_shp('../../processed/maps/inters_segments.shp')
-    non_inter = read_shp('../../processed/maps/non_inters_segments.shp')
+    inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+    non_inter = read_shp(PROCESSED_DATA_FP + 'maps/non_inters_segments.shp')
     print "Read in {} intersection, {} non-intersection segments".format(len(inter), len(non_inter))
 
     # Combine inter + non_inter
@@ -78,13 +82,14 @@ if __name__ == '__main__':
     print('Created spatial index')
 
     # Read in atr lats
-    atrs = csv_to_projected_records('../../processed/geocoded_atrs.csv',
+    atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
                                     x='lng', y='lat')
     print "Read in data from {} atrs".format(len(atrs))
+    print atrs[0]
 
     # Find nearest atr - 20 tolerance
     print "Snapping atr to segments"
     find_nearest(atrs, combined_seg, segments_index, 20)
 
-    with open('../../processed/snapped_atrs.json', 'w') as f:
+    with open(PROCESSED_DATA_FP + 'snapped_atrs.json', 'w') as f:
         json.dump([x['properties'] for x in atrs], f)
