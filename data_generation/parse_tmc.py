@@ -5,12 +5,13 @@ from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
 from ATR_util import geocode_address, read_shp, find_nearest
-from ATR_util import csv_to_projected_records
+from ATR_util import csv_to_projected_records, get_hourly_rates
 import rtree
 import folium
 
 RAW_DATA_FP = '../data/raw/'
 PROCESSED_DATA_FP = '../data/processed/'
+ATR_FP = '../data/raw/AUTOMATED TRAFFICE RECORDING/'
 
 
 def file_dataframe(excel_sheet, data_location):
@@ -187,7 +188,7 @@ def process_format1(workbook, filename, address, date,
         bike, data_info = extract_and_log_data_sheet(
             workbook, bike_col, counter, filename, address, date, data_info)
         all_data = all_data.append(bike)
-    return all_data, counter, data_info
+    return all_data, counter, data_info, motor if motor else None
 
 
 def get_geocoded():
@@ -313,7 +314,7 @@ def parse_tmcs(addresses):
                 if col.startswith('all peds')]
 
         if motors or peds or 'bicycles hr.' in sheet_names:
-            all_data, i, data_info = process_format1(
+            all_data, i, data_info, motor = process_format1(
                 workbook, filename, address, date,
                 i, motors[0] if motors else None,
                 peds[0] if peds else None,
@@ -326,6 +327,11 @@ def parse_tmcs(addresses):
     all_data = all_data.apply(pd.to_numeric, errors='ignore')
     data_info = data_info.apply(pd.to_numeric, errors='ignore')
 
+    # All data and data_info are temporary files that when we're done with
+    # cleanup will be obsolete
+    # data_info gives description of the intersection/filename, what type of
+    # vehicle/pedestrian is being counted, and an id indexing into all_data
+    # all_data gives an hourly count in each direction
     all_data.to_csv(path_or_buf=data_directory + 'all_data.csv', index=False)
     data_info.to_csv(path_or_buf=data_directory + 'data_info.csv', index=False)
 
@@ -333,16 +339,38 @@ def parse_tmcs(addresses):
 #    print data_info[10]
     print len(all_data)
     print data_info.filename.nunique()
-
+    print all_data.keys()
+    print data_info.keys()
     all_joined = pd.merge(left=all_data,right=data_info, left_on='data_id', right_on='id')
 #    print all_joined.groupby(['data_type']).sum()
 #    print addresses
 
 #    print data_info.head()
-    
+
+
+def normalize_counts():
+    """
+    TMC counts are only over 11 hours
+    Normalize using average rates of the 24 hour ATRs,
+    since they're pretty consistent
+    """
+    # Read in atr lats
+    atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
+                                    x='lng', y='lat')
+
+    files = [ATR_FP +
+             atr['properties']['filename'] for atr in atrs]
+    all_counts = get_hourly_rates(files)
+    counts = [[sum(i)/len(all_counts) for i in zip(*all_counts)]]
+    from ATR_util import plot_hourly_rates
+    import os
+    plot_hourly_rates(counts,
+            os.path.abspath(PROCESSED_DATA_FP) + '/atr_dist_avg.png')
 
 if __name__ == '__main__':
 
     addresses, address_records = get_geocoded()
-    plot_tmcs(addresses)
+
+    # normalize_counts()
+    # plot_tmcs(addresses)
     parse_tmcs(addresses)
