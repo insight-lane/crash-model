@@ -23,12 +23,11 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
 
 ## Process map
 
-
 ## 1) Extract intersections
 - Reads in road segment data (data/raw/Boston_Segments.shp)
 - Finds point locations where roads intersect
 - Creates a shapefile of intersections (inters.shp)
-- <b>Usage:</b> python extract_intersections.py ../data/raw/Boston_Segments.shp
+- <b>Usage:</b> python -m make_segments.extract_intersections ../data/raw/Boston_Segments.shp
 - <b>Results:</b>
     - data/processed/maps/inters.shp (and related files)
 
