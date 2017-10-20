@@ -96,7 +96,8 @@ if __name__ == '__main__':
         # Generate sparkline graph of traffic distribution
         files = [ATR_FP +
                  atr['properties']['filename'] for atr in atrs]
-        plot_hourly_rates(files,
+        all_counts = get_hourly_rates(files)
+        plot_hourly_rates(all_counts,
                         os.path.abspath(PROCESSED_DATA_FP) + '/atr_dist.png')
 
     # Find nearest atr - 20 tolerance

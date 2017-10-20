@@ -71,7 +71,7 @@ def geocode_address(address):
     return g.address, g.lat, g.lng
 
 
-def plot_hourly_rates(files, outfile):
+def get_hourly_rates(files):
     """
     Function that reads ATRs and generates a sparkline plot
     of percentages of traffic over time
@@ -80,7 +80,6 @@ def plot_hourly_rates(files, outfile):
         files - list of filenames to process
         outfile - where to write the resulting plot
     """
-
     all_counts = []
     for f in files:
         wb = openpyxl.load_workbook(f, data_only=True)
@@ -98,6 +97,18 @@ def plot_hourly_rates(files, outfile):
             for i in range(len(counts)):
                 counts[i] = counts[i]/total
             all_counts.append(counts)
+    return all_counts
+
+
+def plot_hourly_rates(all_counts, outfile):
+    """
+    Generates a sparkline plot of percentages of traffic over time
+    Eventually this should be moved to a visualization utils directory
+
+    Args:
+        all_counts - a list of lists of percentages
+        outfile - where to write the resulting plot
+    """
 
     bins = range(0, 24)
     for val in all_counts:
