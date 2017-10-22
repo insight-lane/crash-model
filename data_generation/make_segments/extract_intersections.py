@@ -6,7 +6,7 @@ import itertools
 import cPickle
 import os
 
-MAP_DATA_FP = '../data/processed/maps/'
+MAP_DATA_FP = 'data/processed/maps/'
 
 
 def track(index, step, tot):
