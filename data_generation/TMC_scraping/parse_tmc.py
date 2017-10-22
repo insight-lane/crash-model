@@ -4,13 +4,12 @@ from os import listdir, path
 from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
-from ATR_util import geocode_address, read_shp, find_nearest
-from ATR_util import csv_to_projected_records
+from .. import util
 import rtree
 import folium
 
-RAW_DATA_FP = '../data/raw/'
-PROCESSED_DATA_FP = '../data/processed/'
+RAW_DATA_FP = 'data/raw/'
+PROCESSED_DATA_FP = 'data/processed/'
 
 
 def file_dataframe(excel_sheet, data_location):
@@ -87,7 +86,7 @@ def find_address(filename):
 
     if len(streets) >= 2:
         intersection = streets[0] + ' and ' + streets[1] + ' Boston, MA'
-        result = geocode_address(intersection)
+        result = util.geocode_address(intersection)
         return result
     return None, None, None
 
@@ -234,17 +233,17 @@ def get_geocoded():
         print "reading from " + geocoded_file
         addresses = pd.read_csv(geocoded_file)
 
-    address_records = csv_to_projected_records(geocoded_file,
-                                               x='Longitude', y='Latitude')
+    address_records = util.csv_to_projected_records(
+        geocoded_file, x='Longitude', y='Latitude')
     print "Read in data from {} records".format(len(address_records))
 
-    inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+    inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(inter):
         segments_index.insert(idx, element[0].bounds)
     print "Snapping tmcs to intersections"
-    find_nearest(address_records, inter, segments_index, 20)
+    util.find_nearest(address_records, inter, segments_index, 20)
 
     return addresses, address_records
 
@@ -267,8 +266,8 @@ def plot_tmcs(addresses):
                 radius=6).add_to(points)
 
     # Plot atrs
-    atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
-                                    x='lng', y='lat')
+    atrs = util.csv_to_projected_records(
+        PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
     for atr in atrs:
         properties = atr['properties']
         if properties['lat']:

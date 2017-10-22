@@ -23,7 +23,9 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
 
 ## Process map
 
-All of the data generation scripts should be run from the top directory (boston-crash-modeling) using the following scheme: `python -m <import path> <args>`.  See below for specific examples.
+All of the python data generation scripts should be run from the top directory (boston-crash-modeling) using the following scheme: `python -m <import path> <args>`.  See below for specific examples.
+
+If you add a new feature, create a new directory for the code.  Any utilities that are specific to that feature can go in a utility in that directory, but any shared functions should go in the top util.py.
 
 ## 1) Extract intersections
 - Reads in road segment data (data/raw/Boston_Segments.shp)
