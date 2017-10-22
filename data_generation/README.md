@@ -86,7 +86,7 @@ All of the data generation scripts should be run from the top directory (boston-
 ## 5) Process the ATRs
 - Adds coordinates for the Automated traffic recordings, along with some of the traffic count information.
 - Also snaps them to match up to road segments
-- <b>Usage:</b> python geocode_snap_ATRs.py
+- <b>Usage:</b> python -m data_generation.ATR_scraping.geocode_snap_ATRs
 - <b>Dependencies:</b>
     - atr files
     - data/processed/maps/inters_segments.shp

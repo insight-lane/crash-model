@@ -2,6 +2,8 @@ import fiona
 import pyproj
 import csv
 import rtree
+import geocoder
+from time import sleep
 from shapely.geometry import Point, shape, mapping
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -129,5 +131,27 @@ def read_segments():
     for idx, element in enumerate(combined_seg):
         segments_index.insert(idx, element[0].bounds)
     return combined_seg, segments_index
+
+
+def geocode_address(address):
+    """
+    Use google's API to look up the address
+    Due to rate limiting, try a few times with an increasing
+    wait if no address is found
+
+    Args:
+        address
+    Returns:
+        address, latitude, longitude
+    """
+    g = geocoder.google(address)
+    attempts = 0
+    while g.address is None and attempts < 3:
+        attempts += 1
+        sleep(attempts ** 2)
+        g = geocoder.google(address)
+    return g.address, g.lat, g.lng
+
+
 
 

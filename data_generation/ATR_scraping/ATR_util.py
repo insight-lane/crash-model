@@ -1,17 +1,8 @@
 import re
-
-import geocoder
 import openpyxl
-import fiona
-from shapely.geometry import Point, shape, mapping
-import pyproj
-import csv
-from time import sleep
 import matplotlib.pyplot as pyplot
-import rtree
 
-PROJ = pyproj.Proj(init='epsg:3857')
-MAP_FP = '../data/processed/maps'
+MAP_FP = 'data/processed/maps'
 
 
 def is_readable_ATR(fname):
@@ -49,26 +40,6 @@ def clean_ATR_fname(fname):
     atr_address = re.sub('-', ' ', atr_address) # replace '-' with spaces
     atr_address += ' Boston, MA'
     return atr_address
-
-
-def geocode_address(address):
-    """
-    Use google's API to look up the address
-    Due to rate limiting, try a few times with an increasing
-    wait if no address is found
-
-    Args:
-        address
-    Returns:
-        address, latitude, longitude
-    """
-    g = geocoder.google(address)
-    attempts = 0
-    while g.address is None and attempts < 3:
-        attempts += 1
-        sleep(attempts ** 2)
-        g = geocoder.google(address)
-    return g.address, g.lat, g.lng
 
 
 def plot_hourly_rates(files, outfile):
