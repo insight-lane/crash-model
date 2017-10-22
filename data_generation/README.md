@@ -76,7 +76,7 @@ All of the data generation scripts should be run from the top directory (boston-
     - e.g. intersection features set to max of all roads joined to it
 - Creates dataframe with 52 weeks for each segment
 - Joins weekly crash/concerns to dataframe
-- <b>Usage:</b> python make_canon_dataset.py
+- <b>Usage:</b> python -m data_generation.make_canonical.make_canon_dataset
 - <b>Dependencies:</b>
     - crash/concern_joined
     - inters/non_inters

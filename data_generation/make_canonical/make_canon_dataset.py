@@ -4,11 +4,11 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from make_canon_util import read_shp
+from ..util import read_shp
 
 
-MAP_FP = '../../data/processed/maps'
-DATA_FP = '../../data/processed'
+MAP_FP = 'data/processed/maps'
+DATA_FP = 'data/processed'
 
 
 def read_records(fp, date_col, id_col, agg='week'):
