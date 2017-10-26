@@ -16,6 +16,14 @@ ATR_FP = '../data/raw/AUTOMATED TRAFFICE RECORDING/'
 
 
 def file_dataframe(excel_sheet, data_location):
+    """
+    Get the counts by hour in each direction from the excel spreadsheet
+    Args:
+        excel_sheet - the excel sheet of hourly counts
+        data_location - a dataframe of the starting column and row
+    Returns:
+        A dataframe containing counts by hour in each direction
+    """
     column_time = data_location['columns'][0]
     column_east = column_time + 1
     column_south = column_time + 2
@@ -25,15 +33,21 @@ def file_dataframe(excel_sheet, data_location):
     start_r = data_location['rows'][0] + 3
     end_r = data_location['rows'][1]
     
-    times = excel_sheet.col_values(column_time,start_r,end_r)
+    times = excel_sheet.col_values(column_time, start_r, end_r)
     times_strip = [x.strip() for x in times]
-    east = excel_sheet.col_values(column_east,start_r,end_r)
-    south = excel_sheet.col_values(column_south,start_r,end_r)
-    west = excel_sheet.col_values(column_west,start_r,end_r)
-    north = excel_sheet.col_values(column_north,start_r,end_r)
+    east = excel_sheet.col_values(column_east, start_r, end_r)
+    south = excel_sheet.col_values(column_south, start_r, end_r)
+    west = excel_sheet.col_values(column_west, start_r, end_r)
+    north = excel_sheet.col_values(column_north, start_r, end_r)
 
     columns = ['times', 'east', 'south', 'west', 'north']
-    return(pd.DataFrame({'times':times_strip, 'east':east, 'south':south, 'west':west, 'north':north}, columns=columns))
+    return(pd.DataFrame({
+        'times': times_strip,
+        'east': east,
+        'south': south,
+        'west': west,
+        'north': north,
+    }, columns=columns))
 
 
 def data_location(excel_sheet):
@@ -189,7 +203,8 @@ def process_format1(workbook, filename, address, date,
         bike, data_info = extract_and_log_data_sheet(
             workbook, bike_col, counter, filename, address, date, data_info)
         all_data = all_data.append(bike)
-    return all_data, counter, data_info, motor if motor else None
+
+    return all_data, counter, data_info
 
 
 def get_geocoded():
@@ -240,6 +255,10 @@ def get_geocoded():
                                                x='Longitude', y='Latitude')
     print "Read in data from {} records".format(len(address_records))
 
+    return addresses, address_records
+
+
+def snap_inter_and_non_inter(address_records):
     inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
@@ -259,7 +278,7 @@ def get_geocoded():
     combined_seg, segments_index = read_segments()
     find_nearest(address_records, combined_seg, segments_index, 20)
 
-    return addresses, address_records
+    return address_records
 
 
 def plot_tmcs(addresses):
@@ -326,13 +345,14 @@ def parse_tmcs(addresses):
                 if col.startswith('all peds')]
 
         if motors or peds or 'bicycles hr.' in sheet_names:
-            all_data, i, data_info, motor = process_format1(
+            all_data, i, data_info = process_format1(
                 workbook, filename, address, date,
                 i, motors[0] if motors else None,
                 peds[0] if peds else None,
                 'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
                 all_data, data_info)
-
+            print filename
+            print motor_count
     all_data.reset_index(drop=True, inplace=True)
     data_info.reset_index(drop=True, inplace=True)
 
@@ -380,10 +400,11 @@ def get_normalization_factor():
 if __name__ == '__main__':
 
     addresses, address_records = get_geocoded()
-
+#    address_records = snap_inter_and_non_inter(address_records)
+    
     norm = get_normalization_factor()
     print addresses.keys()
 #    print type(addresses)
     print address_records[0]
     # plot_tmcs(addresses)
-    # parse_tmcs(addresses)
+    parse_tmcs(addresses)
