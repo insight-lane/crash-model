@@ -8,6 +8,7 @@ from ATR_util import geocode_address, read_shp, find_nearest
 from ATR_util import csv_to_projected_records, get_hourly_rates
 import rtree
 import folium
+from ATR_util import read_segments
 
 RAW_DATA_FP = '../data/raw/'
 PROCESSED_DATA_FP = '../data/processed/'
@@ -247,6 +248,17 @@ def get_geocoded():
     print "Snapping tmcs to intersections"
     find_nearest(address_records, inter, segments_index, 20)
 
+    # Find_nearest got the nearest intersection id, but we want to compare
+    # against all segments too.  They don't always match, which may be
+    # something we'd like to look into
+    for address in address_records:
+        address['properties']['near_intersection_id'] = \
+                    address['properties']['near_id']
+        address['properties']['near_id'] = ''
+
+    combined_seg, segments_index = read_segments()
+    find_nearest(address_records, combined_seg, segments_index, 20)
+
     return addresses, address_records
 
 
@@ -348,7 +360,7 @@ def parse_tmcs(addresses):
 #    print data_info.head()
 
 
-def normalize_counts():
+def get_normalization_factor():
     """
     TMC counts are only over 11 hours
     Normalize using average rates of the 24 hour ATRs,
@@ -361,16 +373,17 @@ def normalize_counts():
     files = [ATR_FP +
              atr['properties']['filename'] for atr in atrs]
     all_counts = get_hourly_rates(files)
-    counts = [[sum(i)/len(all_counts) for i in zip(*all_counts)]]
-    from ATR_util import plot_hourly_rates
-    import os
-    plot_hourly_rates(counts,
-            os.path.abspath(PROCESSED_DATA_FP) + '/atr_dist_avg.png')
+    counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
+
+    return sum(counts[7:18])
 
 if __name__ == '__main__':
 
     addresses, address_records = get_geocoded()
 
-    # normalize_counts()
+    norm = get_normalization_factor()
+    print addresses.keys()
+#    print type(addresses)
+    print address_records[0]
     # plot_tmcs(addresses)
-    parse_tmcs(addresses)
+    # parse_tmcs(addresses)
