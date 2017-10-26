@@ -9,6 +9,8 @@ from ATR_util import csv_to_projected_records, get_hourly_rates
 import rtree
 import folium
 from ATR_util import read_segments
+import json
+import numpy as np
 
 RAW_DATA_FP = '../data/raw/'
 PROCESSED_DATA_FP = '../data/processed/'
@@ -24,14 +26,17 @@ def file_dataframe(excel_sheet, data_location):
     Returns:
         A dataframe containing counts by hour in each direction
     """
+    total_count = excel_sheet.cell_value(
+        data_location['rows'][1]+1, data_location['columns'][1]+1)
+    
+    start_r = data_location['rows'][0] + 3
+    end_r = data_location['rows'][1]
+
     column_time = data_location['columns'][0]
     column_east = column_time + 1
     column_south = column_time + 2
     column_west = column_time + 3
     column_north = column_time + 4
-    
-    start_r = data_location['rows'][0] + 3
-    end_r = data_location['rows'][1]
     
     times = excel_sheet.col_values(column_time, start_r, end_r)
     times_strip = [x.strip() for x in times]
@@ -47,7 +52,7 @@ def file_dataframe(excel_sheet, data_location):
         'south': south,
         'west': west,
         'north': north,
-    }, columns=columns))
+    }, columns=columns)), total_count
 
 
 def data_location(excel_sheet):
@@ -58,8 +63,10 @@ def data_location(excel_sheet):
     """
     sheet_c = excel_sheet.ncols
     sheet_r = excel_sheet.nrows
+
     start_c = 0
     start_r = 0
+    
     end_c = sheet_c - 2
     end_r = sheet_r - 2
     for col in range(sheet_c):
@@ -68,6 +75,14 @@ def data_location(excel_sheet):
             if "time" in str(cell_value).lower():
                 start_c = col
                 start_r = row
+            # Look for tot or total in the columns
+            # That shows us where the bottom right is
+            if 'tot' in str(cell_value).lower():
+                if col == 0:
+                    end_r = row - 1
+                else:
+                    end_c = col - 1
+
     return pd.DataFrame.from_records([
         ('start', start_c, start_r),
         ('end', end_c, end_r)
@@ -109,9 +124,9 @@ def find_address(filename):
 
 
 def extract_data_sheet(sheet, sheet_data_location, counter):
-    sheet_df = file_dataframe(sheet, sheet_data_location)
+    sheet_df, total_count = file_dataframe(sheet, sheet_data_location)
     sheet_df['data_id'] = counter
-    return(sheet_df)
+    return sheet_df, total_count
 
 
 def log_data_sheet(sheet, sheet_name, sheet_data_location,
@@ -167,7 +182,8 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
     # This gives the location in the sheet where the counts start/end
     sheet_data_location = data_location(sheet)
 
-    data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
+    data_sheet, total_count = extract_data_sheet(
+        sheet, sheet_data_location, counter)
     logged = log_data_sheet(
         sheet,
         sheet_name,
@@ -179,7 +195,7 @@ def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
     )
 
     data_info = data_info.append(logged)
-    return data_sheet, data_info
+    return data_sheet, data_info, total_count
 
 
 def process_format1(workbook, filename, address, date,
@@ -188,23 +204,23 @@ def process_format1(workbook, filename, address, date,
 
     if motor_col:
         counter += 1
-        motor, data_info = extract_and_log_data_sheet(
+        motor, data_info, motor_count = extract_and_log_data_sheet(
             workbook, motor_col, counter, filename, address, date, data_info)
         all_data = all_data.append(motor)
 
     if ped_col:
         counter += 1
-        pedestrian, data_info = extract_and_log_data_sheet(
+        pedestrian, data_info, ped_count = extract_and_log_data_sheet(
             workbook, ped_col, counter, filename, address, date, data_info)
         all_data = all_data.append(pedestrian)
         
     if bike_col:
         counter += 1
-        bike, data_info = extract_and_log_data_sheet(
+        bike, data_info, bike_count = extract_and_log_data_sheet(
             workbook, bike_col, counter, filename, address, date, data_info)
         all_data = all_data.append(bike)
 
-    return all_data, counter, data_info
+    return all_data, counter, data_info, motor_count
 
 
 def get_geocoded():
@@ -312,6 +328,12 @@ def plot_tmcs(addresses):
     points.save('map.html')
 
 
+def compare_atrs():
+    with open(PROCESSED_DATA_FP + 'snapped_atrs.json') as f:
+        data = json.load(f)
+        print data[0]
+
+
 def parse_tmcs(addresses):
 
     data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
@@ -329,13 +351,17 @@ def parse_tmcs(addresses):
         'filename'
     ])
 
-    i = 0
-    for row in addresses.iterrows():
+    n = get_normalization_factor()
 
-        filename = row[1]['File']
-#        print filename
-        address = row[1]['Address']
-        date = row[1]['Date']
+    i = 0
+    # Features we'll add to the processed tmc sheet
+
+    addresses['Total'] = np.nan
+    addresses['Normalized Total'] = np.nan
+    for index, row in addresses.iterrows():
+        filename = row['File']
+        address = row['Address']
+        date = row['Date']
         file_path = path.join(data_directory, filename)
         workbook = xlrd.open_workbook(file_path)
         sheet_names = [x.lower() for x in workbook.sheet_names()]
@@ -343,16 +369,23 @@ def parse_tmcs(addresses):
                   if col.startswith('all motors')]
         peds = [col for col in sheet_names
                 if col.startswith('all peds')]
-
+        
         if motors or peds or 'bicycles hr.' in sheet_names:
-            all_data, i, data_info = process_format1(
+            print filename
+            all_data, i, data_info, motor_count = process_format1(
                 workbook, filename, address, date,
                 i, motors[0] if motors else None,
                 peds[0] if peds else None,
                 'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
                 all_data, data_info)
-            print filename
-            print motor_count
+            addresses.set_value(index, 'Total', motor_count)
+            addresses.set_value(index, 'Normalized', int(motor_count/n))
+
+        # Write back to file
+        feature_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
+        addresses.to_csv(
+            path_or_buf=feature_file, index=False)
+
     all_data.reset_index(drop=True, inplace=True)
     data_info.reset_index(drop=True, inplace=True)
 
@@ -408,3 +441,7 @@ if __name__ == '__main__':
     print address_records[0]
     # plot_tmcs(addresses)
     parse_tmcs(addresses)
+
+    compare_atrs()
+
+
