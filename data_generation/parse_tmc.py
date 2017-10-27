@@ -266,12 +266,11 @@ def sum_format2_cols(sheet):
     for col in range(1, sheet.ncols):
         if sheet.cell_value(start_r - 1, col) == '':
             break
-        print sheet.col_values(col, start_r, end_r)
         total += sum(sheet.col_values(col, start_r, end_r))
     return total
 
 
-def process_format2(workbook):
+def process_format2(workbook, combined=False):
     """
     Processes files in the format of the file starting with 7538_1378_ARLINGTON
     For this format, we currently don't look for anything but total car count
@@ -285,15 +284,25 @@ def process_format2(workbook):
     # 6998 'Cars' 'Trucks' 'Bikes Peds'
     # 6988 - 'Cars Trucks' 'Bikes Peds'
 
-    sheet_index = workbook.sheet_names().index('Cars')
-    sheet = workbook.sheet_by_index(sheet_index)
-    total = sum_format2_cols(sheet)
-    if 'Heavy Vehicles' in workbook.sheet_names():
-        sheet_index = workbook.sheet_names().index('Heavy Vehicles')
-    elif 'Trucks' in workbook.sheet_names():
-        sheet_index = workbook.sheet_names().index('Trucks')
-    sheet = workbook.sheet_by_index(sheet_index)
-    total += sum_format2_cols(sheet)
+    total = 0
+    if combined:
+        sheet = None
+        for id in range(len(workbook.sheet_names())):
+            sheet = workbook.sheet_by_index(id)
+            if sheet.name.lower().startswith('car') \
+               and sheet.name.lower().endswith('trucks'):
+                break
+        total = sum_format2_cols(sheet)
+    else:
+        sheet_index = workbook.sheet_names().index('Cars')
+        sheet = workbook.sheet_by_index(sheet_index)
+        total = sum_format2_cols(sheet)
+        if 'Heavy Vehicles' in workbook.sheet_names():
+            sheet_index = workbook.sheet_names().index('Heavy Vehicles')
+        elif 'Trucks' in workbook.sheet_names():
+            sheet_index = workbook.sheet_names().index('Trucks')
+        sheet = workbook.sheet_by_index(sheet_index)
+        total += sum_format2_cols(sheet)
     return total
 
 
@@ -466,6 +475,11 @@ def parse_tmcs(addresses):
             motor_count = process_format2(workbook)
             addresses.set_value(index, 'Total', motor_count)
             addresses.set_value(index, 'Normalized', int(motor_count/n))
+        elif any(sheet.startswith('cars') for sheet in sheet_names) \
+                and any(sheet.endswith('trucks') for sheet in sheet_names):
+            motor_count = process_format2(workbook, combined=True)
+            addresses.set_value(index, 'Total', motor_count)
+            addresses.set_value(index, 'Normalized', int(motor_count/n))
         else:
             missing += 1
         # Other formats are from 
@@ -476,11 +490,12 @@ def parse_tmcs(addresses):
         # 6988 - 'Cars Trucks' 'Bikes Peds'
         # 6973 - 'Cars & Trucks' 'Bikes & Peds'
 
-        # Write back to file
-        feature_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
-        addresses.to_csv(
-            path_or_buf=feature_file, index=False)
-
+    print 'missing:::::::::::::::::' + str(missing)
+    # Write back to file
+    feature_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
+    addresses.to_csv(
+        path_or_buf=feature_file, index=False)
+        
     all_data.reset_index(drop=True, inplace=True)
     data_info.reset_index(drop=True, inplace=True)
 
