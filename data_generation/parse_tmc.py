@@ -258,11 +258,15 @@ def sum_format2_cols(sheet):
         val = sheet.cell_value(rowx=row, colx=0)
         if val == 'Start Time':
             start_r = row + 1
+        if val == '' and start_r:
             break
-    end_r = sheet.nrows-1
+    end_r = row
 
     total = 0
     for col in range(1, sheet.ncols):
+        if sheet.cell_value(start_r - 1, col) == '':
+            break
+        print sheet.col_values(col, start_r, end_r)
         total += sum(sheet.col_values(col, start_r, end_r))
     return total
 
@@ -277,10 +281,17 @@ def process_format2(workbook):
         total - total car and heavy vehicle count
     """
 
+    # same format, different tabs
+    # 6998 'Cars' 'Trucks' 'Bikes Peds'
+    # 6988 - 'Cars Trucks' 'Bikes Peds'
+
     sheet_index = workbook.sheet_names().index('Cars')
     sheet = workbook.sheet_by_index(sheet_index)
     total = sum_format2_cols(sheet)
-    sheet_index = workbook.sheet_names().index('Heavy Vehicles')
+    if 'Heavy Vehicles' in workbook.sheet_names():
+        sheet_index = workbook.sheet_names().index('Heavy Vehicles')
+    elif 'Trucks' in workbook.sheet_names():
+        sheet_index = workbook.sheet_names().index('Trucks')
     sheet = workbook.sheet_by_index(sheet_index)
     total += sum_format2_cols(sheet)
     return total
@@ -421,6 +432,7 @@ def parse_tmcs(addresses):
 
     addresses['Total'] = np.nan
     addresses['Normalized'] = np.nan
+    missing = 0
     for index, row in addresses.iterrows():
         filename = row['File']
         address = row['Address']
@@ -444,14 +456,25 @@ def parse_tmcs(addresses):
             addresses.set_value(index, 'Normalized', int(motor_count/n))
 
         elif 'cars' in sheet_names \
-             and 'heavy vehicles' in sheet_names \
-             and any(sheet.startswith('peds and ') for sheet in sheet_names):
+             and (
+                 'heavy vehicles' in sheet_names
+                 or 'trucks' in sheet_names
+             ) and (
+                 any(sheet.startswith('peds and ') for sheet in sheet_names)
+                 or any(sheet.startswith('bikes') for sheet in sheet_names)
+             ):
             motor_count = process_format2(workbook)
             addresses.set_value(index, 'Total', motor_count)
             addresses.set_value(index, 'Normalized', int(motor_count/n))
-
+        else:
+            missing += 1
         # Other formats are from 
         # 7499_279_BERKELEY
+
+        # same format, different tabs
+        # 6998 'Cars' 'Trucks' 'Bikes Peds'
+        # 6988 - 'Cars Trucks' 'Bikes Peds'
+        # 6973 - 'Cars & Trucks' 'Bikes & Peds'
 
         # Write back to file
         feature_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
