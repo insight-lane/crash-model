@@ -202,6 +202,28 @@ def process_format1(workbook, filename, address, date,
                     counter, motor_col, ped_col, bike_col, all_data,
                     data_info):
 
+    """
+    Processes files in the format of the file starting with 6822_86_BERKELEY
+    Updates dataframe for:
+        -data_info, which gives description of the
+        intersection/filename, what type of vehicle/pedestrian
+        is being counted, and an id indexing into all_data
+        -all_data gives an hourly count in each direction
+    Args:
+        workbook - the excel workbook
+        filename
+        address - the address for this TMC
+        date
+        counter - the index into all_data
+        motor_col - the name of the sheet for the motors
+        ped_col - the name of the sheet for the pedestrians
+        bike_col - the name of the sheet for the bikes
+        all_data - described above
+        data_info - data_info
+
+    Returns:
+        
+    """
     if motor_col:
         counter += 1
         motor, data_info, motor_count = extract_and_log_data_sheet(
@@ -221,6 +243,47 @@ def process_format1(workbook, filename, address, date,
         all_data = all_data.append(bike)
 
     return all_data, counter, data_info, motor_count
+
+
+def sum_format2_cols(sheet):
+    """
+    Sums the relevant rows from format2 files
+    Args:
+        workbook - the sheet
+    Returns:
+        total - total count from the sheet
+    """
+    start_r = 0
+    for row in range(sheet.nrows):
+        val = sheet.cell_value(rowx=row, colx=0)
+        if val == 'Start Time':
+            start_r = row + 1
+            break
+    end_r = sheet.nrows-1
+
+    total = 0
+    for col in range(1, sheet.ncols):
+        total += sum(sheet.col_values(col, start_r, end_r))
+    return total
+
+
+def process_format2(workbook):
+    """
+    Processes files in the format of the file starting with 7538_1378_ARLINGTON
+    For this format, we currently don't look for anything but total car count
+    Args:
+        workbook - the excel workbook
+    Returns:
+        total - total car and heavy vehicle count
+    """
+
+    sheet_index = workbook.sheet_names().index('Cars')
+    sheet = workbook.sheet_by_index(sheet_index)
+    total = sum_format2_cols(sheet)
+    sheet_index = workbook.sheet_names().index('Heavy Vehicles')
+    sheet = workbook.sheet_by_index(sheet_index)
+    total += sum_format2_cols(sheet)
+    return total
 
 
 def get_geocoded():
@@ -357,7 +420,7 @@ def parse_tmcs(addresses):
     # Features we'll add to the processed tmc sheet
 
     addresses['Total'] = np.nan
-    addresses['Normalized Total'] = np.nan
+    addresses['Normalized'] = np.nan
     for index, row in addresses.iterrows():
         filename = row['File']
         address = row['Address']
@@ -365,13 +428,12 @@ def parse_tmcs(addresses):
         file_path = path.join(data_directory, filename)
         workbook = xlrd.open_workbook(file_path)
         sheet_names = [x.lower() for x in workbook.sheet_names()]
+
         motors = [col for col in sheet_names
                   if col.startswith('all motors')]
         peds = [col for col in sheet_names
                 if col.startswith('all peds')]
-        
         if motors or peds or 'bicycles hr.' in sheet_names:
-            print filename
             all_data, i, data_info, motor_count = process_format1(
                 workbook, filename, address, date,
                 i, motors[0] if motors else None,
@@ -380,6 +442,16 @@ def parse_tmcs(addresses):
                 all_data, data_info)
             addresses.set_value(index, 'Total', motor_count)
             addresses.set_value(index, 'Normalized', int(motor_count/n))
+
+        elif 'cars' in sheet_names \
+             and 'heavy vehicles' in sheet_names \
+             and any(sheet.startswith('peds and ') for sheet in sheet_names):
+            motor_count = process_format2(workbook)
+            addresses.set_value(index, 'Total', motor_count)
+            addresses.set_value(index, 'Normalized', int(motor_count/n))
+
+        # Other formats are from 
+        # 7499_279_BERKELEY
 
         # Write back to file
         feature_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
@@ -436,9 +508,9 @@ if __name__ == '__main__':
 #    address_records = snap_inter_and_non_inter(address_records)
     
     norm = get_normalization_factor()
-    print addresses.keys()
+#    print addresses.keys()
 #    print type(addresses)
-    print address_records[0]
+#    print address_records[0]
     # plot_tmcs(addresses)
     parse_tmcs(addresses)
 
