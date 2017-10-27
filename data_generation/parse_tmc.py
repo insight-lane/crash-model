@@ -89,6 +89,19 @@ def data_location(excel_sheet):
     ], columns=['value', 'columns', 'rows'])
 
 
+def num_hours(filename):
+    """
+    Parses out filename to give the number of hours of the sample
+    Args:
+        filename
+    Returns:
+        number
+    """
+    prefix = re.sub('\.XLS', '', filename)
+    segments = prefix.split('_')
+    return segments[len(segments)-3].split('-')[0]
+
+
 def find_date(filename):
     """
     Parses out filename to give the date
@@ -329,19 +342,23 @@ def get_geocoded():
             if filename.endswith('.XLS'):
                 address, latitude, longitude = find_address(filename)
                 date = find_date(filename)
+                hours = num_hours(filename)
 
                 address_record = pd.DataFrame([(
                     filename,
                     address,
                     latitude,
                     longitude,
-                    date)],
+                    date,
+                    hours
+                )],
                     columns=[
                         'File',
                         'Address',
                         'Latitude',
                         'Longitude',
-                        'Date'
+                        'Date',
+                        'Hours'
                     ])
                 addresses = addresses.append(address_record)
         addresses.to_csv(
@@ -549,9 +566,8 @@ if __name__ == '__main__':
 #    print addresses.keys()
 #    print type(addresses)
 #    print address_records[0]
-    # plot_tmcs(addresses)
+#    plot_tmcs(addresses)
     parse_tmcs(addresses)
-
     compare_atrs()
 
 
