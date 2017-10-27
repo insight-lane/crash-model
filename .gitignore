@@ -95,3 +95,6 @@ Scripts
 
 # Data
 data/*
+
+# API Keys
+config.js
