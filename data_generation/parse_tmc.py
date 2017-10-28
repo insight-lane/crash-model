@@ -6,11 +6,13 @@ import re
 from dateutil.parser import parse
 from ATR_util import geocode_address, read_shp, find_nearest
 from ATR_util import csv_to_projected_records, get_hourly_rates
+from ATR_util import write_geocode_cache, read_geocode_cache
 import rtree
 import folium
 from ATR_util import read_segments
 import json
 import numpy as np
+
 
 RAW_DATA_FP = '../data/raw/'
 PROCESSED_DATA_FP = '../data/processed/'
@@ -115,13 +117,13 @@ def find_date(filename):
     return parse(segments[len(segments) - 1])
 
 
-def find_address(filename):
+def find_address(filename, cached):
     """
     Parses out filename to give an intersection
     Args:
         filename
     Returns:
-        address, latitude, longitude
+        tuple of original address, geocoded address, latitude, longitude
     """
     intersection = filename.split('_')[2]
     streets = intersection.split(',')
@@ -131,9 +133,15 @@ def find_address(filename):
 
     if len(streets) >= 2:
         intersection = streets[0] + ' and ' + streets[1] + ' Boston, MA'
-        result = geocode_address(intersection)
+        if intersection in cached.keys():
+            print intersection + ' is cached'
+            result = cached[intersection]
+        else:
+            print 'geocoding ' + intersection
+            result = list(geocode_address(intersection))
+        result.insert(0, intersection)
         return result
-    return None, None, None
+    return None, None, None, None
 
 
 def extract_data_sheet(sheet, sheet_data_location, counter):
@@ -334,44 +342,53 @@ def get_geocoded():
         addresses dataframe
     """
     addresses = pd.DataFrame()
-    geocoded_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
-    if not path_exists(geocoded_file):
-        print 'No geocoded tmcs found, generating'
-        data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
-        for filename in listdir(data_directory):
-            if filename.endswith('.XLS'):
-                address, latitude, longitude = find_address(filename)
-                date = find_date(filename)
-                hours = num_hours(filename)
+    geocoded_file = PROCESSED_DATA_FP + 'geocoded_addresses.csv'
 
-                address_record = pd.DataFrame([(
-                    filename,
-                    address,
-                    latitude,
-                    longitude,
-                    date,
-                    hours
-                )],
-                    columns=[
-                        'File',
-                        'Address',
-                        'Latitude',
-                        'Longitude',
-                        'Date',
-                        'Hours'
-                    ])
-                addresses = addresses.append(address_record)
-        addresses.to_csv(
-            path_or_buf=geocoded_file, index=False)
-    else:
-        print "reading from " + geocoded_file
-        addresses = pd.read_csv(geocoded_file)
+    cached = {}
+    if path_exists(geocoded_file):
+        cached = read_geocode_cache()
+
+    data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
+    for filename in listdir(data_directory):
+        if filename.endswith('.XLS'):
+            orig_address, address, latitude, longitude = find_address(
+                filename, cached)
+            if orig_address:
+                cached[orig_address] = [address, latitude, longitude]
+            date = find_date(filename)
+            hours = num_hours(filename)
+
+            address_record = pd.DataFrame([(
+                filename,
+                address,
+                latitude,
+                longitude,
+                date,
+                hours
+            )],
+                columns=[
+                    'File',
+                    'Address',
+                    'Latitude',
+                    'Longitude',
+                    'Date',
+                    'Hours'
+                ])
+            addresses = addresses.append(address_record)
+
+    write_geocode_cache(cached)
+#        addresses.to_csv(
+#            path_or_buf=geocoded_file, index=False)
+#    else:
+#        print "reading from " + geocoded_file
+#        addresses = pd.read_csv(geocoded_file)
 
     address_records = csv_to_projected_records(geocoded_file,
                                                x='Longitude', y='Latitude')
     print "Read in data from {} records".format(len(address_records))
 
-    return addresses, address_records
+#    return addresses, address_records
+    return address_records
 
 
 def snap_inter_and_non_inter(address_records):
@@ -559,15 +576,17 @@ def get_normalization_factor():
 
 if __name__ == '__main__':
 
-    addresses, address_records = get_geocoded()
+#    addresses, address_records = get_geocoded()
+    address_records = get_geocoded()
+
 #    address_records = snap_inter_and_non_inter(address_records)
-    
-    norm = get_normalization_factor()
+
+#    norm = get_normalization_factor()
 #    print addresses.keys()
 #    print type(addresses)
 #    print address_records[0]
 #    plot_tmcs(addresses)
-    parse_tmcs(addresses)
-    compare_atrs()
+#    parse_tmcs(addresses)
+#    compare_atrs()
 
 

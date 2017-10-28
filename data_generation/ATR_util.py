@@ -9,10 +9,11 @@ import csv
 from time import sleep
 import matplotlib.pyplot as pyplot
 import rtree
+from os.path import exists as path_exists
 
 PROJ = pyproj.Proj(init='epsg:3857')
 MAP_FP = '../data/processed/maps'
-
+PROCESSED_DATA_FP = '../data/processed/'
 
 def is_readable_ATR(fname):
     """
@@ -51,17 +52,73 @@ def clean_ATR_fname(fname):
     return atr_address
 
 
-def geocode_address(address):
+def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
     """
-    Use google's API to look up the address
+    Read in a csv file with columns:
+        Input address
+        Output address
+        Latitude
+        Longitude
+    Args:
+        filename
+    Results:
+        dict of input address to list of output address, latitude, longitude
+    """
+
+    if not path_exists(filename):
+        return {}
+    cached = {}
+    with open(filename) as f:
+        csv_reader = csv.DictReader(f)
+        for r in csv_reader:
+            cached[r['Input Address']] = [
+                r['Output Address'],
+                r['Latitude'],
+                r['Longitude']
+            ]
+    return cached
+
+
+def write_geocode_cache(results,
+                        filename=PROCESSED_DATA_FP + 'geocoded_addresses.csv'):
+    """
+    Write a csv file with columns:
+        Input address
+        Output address
+        Latitude
+        Longitude
+    Args:
+        results - dict of geocoded results
+        filename - file to write to (defaults to geocoded_addresses.csv)
+    """
+
+    with open(filename, 'wb') as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            'Input Address',
+            'Output Address',
+            'Latitude',
+            'Longitude'
+        ])
+        for key, value in results.iteritems():
+            writer.writerow([key, value[0], value[1], value[2]])
+
+
+def geocode_address(address, cached={}):
+    """
+    Check an optional cache to see if we already have the geocoded address
+    Otherwise, use google's API to look up the address
     Due to rate limiting, try a few times with an increasing
     wait if no address is found
 
     Args:
         address
+        cached (optional)
     Returns:
         address, latitude, longitude
     """
+    if address in cached.keys():
+        return cached[address]
     g = geocoder.google(address)
     attempts = 0
     while g.address is None and attempts < 3:
