@@ -416,8 +416,8 @@ def parse_tmcs():
     ]
     summary = pd.DataFrame(columns=summary_cols)
 
-    print 'getting normalization factor'
-    n = get_normalization_factor()
+    print 'getting normalization factors'
+    n_11, n_12 = get_normalization_factor()
 
     i = 0
     # Features we'll add to the processed tmc sheet
@@ -474,6 +474,12 @@ def parse_tmcs():
                 motor_count = None
                 missing += 1
 
+            normalized = ''
+            if motor_count:
+                if hours == 11:
+                    normalized = int(round(motor_count/n_11))
+                else:
+                    normalized = int(round(motor_count/n_12))
             value = pd.DataFrame([(
                 filename,
                 address,
@@ -481,8 +487,8 @@ def parse_tmcs():
                 longitude,
                 date,
                 hours,
-                motor_count if motor_count else '',
-                motor_count/n if motor_count else '',
+                int(motor_count) if motor_count else '',
+                normalized,
             )], columns=summary_cols)
             summary = summary.append(value)
 
@@ -517,10 +523,10 @@ def parse_tmcs():
     all_data.to_csv(path_or_buf=data_directory + 'all_data.csv', index=False)
     data_info.to_csv(path_or_buf=data_directory + 'data_info.csv', index=False)
 
-    print len(all_data)
-    print data_info.filename.nunique()
-    print all_data.keys()
-    print data_info.keys()
+#    print len(all_data)
+#    print data_info.filename.nunique()
+#    print all_data.keys()
+#    print data_info.keys()
     all_joined = pd.merge(left=all_data,right=data_info, left_on='data_id', right_on='id')
 #    print all_joined.groupby(['data_type']).sum()
 #    print addresses
@@ -530,9 +536,13 @@ def parse_tmcs():
 
 def get_normalization_factor():
     """
-    TMC counts are only over 11 hours
+    TMC counts are only over 11 or 12 hours, always starting at 7
     Normalize using average rates of the 24 hour ATRs,
     since they're pretty consistent
+    Args:
+        None
+    Returns:
+        Tuple of 11 hour normalization, 12 hour normalization
     """
     # Read in atr lats
     atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
@@ -543,7 +553,7 @@ def get_normalization_factor():
     all_counts = get_hourly_rates(files)
     counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
 
-    return sum(counts[7:18])
+    return sum(counts[7:18]), sum(counts[7:19])
 
 if __name__ == '__main__':
 
