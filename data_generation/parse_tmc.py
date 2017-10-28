@@ -11,7 +11,6 @@ import rtree
 import folium
 from ATR_util import read_segments
 import json
-import numpy as np
 
 
 RAW_DATA_FP = '../data/raw/'
@@ -327,70 +326,6 @@ def process_format2(workbook, combined=False):
     return total
 
 
-def get_geocoded():
-    """
-    Gets the geocoded turning movement count addresses
-
-    If no existing geocoded tmc file exists, extracts the addresses
-    and dates from the filenames, geocodes them, and writes results
-    to file
-    If there's an existing geocoded tmc file, read it in
-
-    Args:
-        None - file is hardcoded
-    Results:
-        addresses dataframe
-    """
-    addresses = pd.DataFrame()
-    geocoded_file = PROCESSED_DATA_FP + 'geocoded_addresses.csv'
-
-    cached = {}
-    if path_exists(geocoded_file):
-        cached = read_geocode_cache()
-
-    data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
-    for filename in listdir(data_directory):
-        if filename.endswith('.XLS'):
-            orig_address, address, latitude, longitude = find_address(
-                filename, cached)
-            if orig_address:
-                cached[orig_address] = [address, latitude, longitude]
-            date = find_date(filename)
-            hours = num_hours(filename)
-
-            address_record = pd.DataFrame([(
-                filename,
-                address,
-                latitude,
-                longitude,
-                date,
-                hours
-            )],
-                columns=[
-                    'File',
-                    'Address',
-                    'Latitude',
-                    'Longitude',
-                    'Date',
-                    'Hours'
-                ])
-            addresses = addresses.append(address_record)
-
-    write_geocode_cache(cached)
-#        addresses.to_csv(
-#            path_or_buf=geocoded_file, index=False)
-#    else:
-#        print "reading from " + geocoded_file
-#        addresses = pd.read_csv(geocoded_file)
-
-    address_records = csv_to_projected_records(geocoded_file,
-                                               x='Longitude', y='Latitude')
-    print "Read in data from {} records".format(len(address_records))
-
-#    return addresses, address_records
-    return address_records
-
-
 def snap_inter_and_non_inter(address_records):
     inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
     # Create spatial index for quick lookup
@@ -451,7 +386,7 @@ def compare_atrs():
         print data[0]
 
 
-def parse_tmcs(addresses):
+def parse_tmcs():
 
     data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
 
@@ -468,54 +403,89 @@ def parse_tmcs(addresses):
         'filename'
     ])
 
+    # Stores the total count information
+    summary_cols = [
+        'filename',
+        'address',
+        'latitude',
+        'longitude',
+        'date',
+        'hours',
+        'total',
+        'normalized'
+    ]
+    summary = pd.DataFrame(columns=summary_cols)
+
+    print 'getting normalization factor'
     n = get_normalization_factor()
 
     i = 0
     # Features we'll add to the processed tmc sheet
 
-    addresses['Total'] = np.nan
-    addresses['Normalized'] = np.nan
     missing = 0
-    for index, row in addresses.iterrows():
-        filename = row['File']
-        address = row['Address']
-        date = row['Date']
-        file_path = path.join(data_directory, filename)
-        workbook = xlrd.open_workbook(file_path)
-        sheet_names = [x.lower() for x in workbook.sheet_names()]
 
-        motors = [col for col in sheet_names
-                  if col.startswith('all motors')]
-        peds = [col for col in sheet_names
-                if col.startswith('all peds')]
-        if motors or peds or 'bicycles hr.' in sheet_names:
-            all_data, i, data_info, motor_count = process_format1(
-                workbook, filename, address, date,
-                i, motors[0] if motors else None,
-                peds[0] if peds else None,
-                'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
-                all_data, data_info)
-            addresses.set_value(index, 'Total', motor_count)
-            addresses.set_value(index, 'Normalized', int(motor_count/n))
+    # Read geocoded cache
+    geocoded_file = PROCESSED_DATA_FP + 'geocoded_addresses.csv'
+    cached = {}
+    if path_exists(geocoded_file):
+        print 'reading geocoded cache file'
+        cached = read_geocode_cache()
 
-        elif 'cars' in sheet_names \
-             and (
-                 'heavy vehicles' in sheet_names
-                 or 'trucks' in sheet_names
-             ) and (
-                 any(sheet.startswith('peds and ') for sheet in sheet_names)
-                 or any(sheet.startswith('bikes') for sheet in sheet_names)
-             ):
-            motor_count = process_format2(workbook)
-            addresses.set_value(index, 'Total', motor_count)
-            addresses.set_value(index, 'Normalized', int(motor_count/n))
-        elif any(sheet.startswith('cars') for sheet in sheet_names) \
-                and any(sheet.endswith('trucks') for sheet in sheet_names):
-            motor_count = process_format2(workbook, combined=True)
-            addresses.set_value(index, 'Total', motor_count)
-            addresses.set_value(index, 'Normalized', int(motor_count/n))
-        else:
-            missing += 1
+    data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
+    motor_count = 0
+    for filename in listdir(data_directory):
+        if filename.endswith('.XLS'):
+
+            # Pull out what we can from the filename itself
+            orig_address, address, latitude, longitude = find_address(
+                filename, cached)
+            if orig_address:
+                cached[orig_address] = [address, latitude, longitude]
+            date = find_date(filename)
+            hours = num_hours(filename)
+            file_path = path.join(data_directory, filename)
+            workbook = xlrd.open_workbook(file_path)
+            sheet_names = [x.lower() for x in workbook.sheet_names()]
+
+            motors = [col for col in sheet_names
+                      if col.startswith('all motors')]
+            peds = [col for col in sheet_names
+                    if col.startswith('all peds')]
+            if motors or peds or 'bicycles hr.' in sheet_names:
+                all_data, i, data_info, motor_count = process_format1(
+                    workbook, filename, address, date,
+                    i, motors[0] if motors else None,
+                    peds[0] if peds else None,
+                    'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
+                    all_data, data_info)
+            elif 'cars' in sheet_names \
+                 and (
+                     'heavy vehicles' in sheet_names
+                     or 'trucks' in sheet_names
+                 ) and (
+                     any(sheet.startswith('peds and ') for sheet in sheet_names)
+                     or any(sheet.startswith('bikes') for sheet in sheet_names)
+                 ):
+                motor_count = process_format2(workbook)
+            elif any(sheet.startswith('cars') for sheet in sheet_names) \
+                    and any(sheet.endswith('trucks') for sheet in sheet_names):
+                motor_count = process_format2(workbook, combined=True)
+            else:
+                motor_count = None
+                missing += 1
+
+            value = pd.DataFrame([(
+                filename,
+                address,
+                latitude,
+                longitude,
+                date,
+                hours,
+                motor_count if motor_count else '',
+                motor_count/n if motor_count else '',
+            )], columns=summary_cols)
+            summary = summary.append(value)
+
         # Other formats are from 
         # 7499_279_BERKELEY
 
@@ -525,27 +495,28 @@ def parse_tmcs(addresses):
         # 6973 - 'Cars & Trucks' 'Bikes & Peds'
 
     print 'missing:::::::::::::::::' + str(missing)
-    # Write back to file
-    feature_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
-    addresses.to_csv(
+    # Write processed_tmc info
+    feature_file = PROCESSED_DATA_FP + 'tmc_summary.csv'
+    summary.to_csv(
         path_or_buf=feature_file, index=False)
-        
-    all_data.reset_index(drop=True, inplace=True)
-    data_info.reset_index(drop=True, inplace=True)
 
-    all_data = all_data.apply(pd.to_numeric, errors='ignore')
-    data_info = data_info.apply(pd.to_numeric, errors='ignore')
+    # Write out the cached file
+    write_geocode_cache(cached)
 
     # All data and data_info are temporary files that when we're done with
     # cleanup will be obsolete
     # data_info gives description of the intersection/filename, what type of
     # vehicle/pedestrian is being counted, and an id indexing into all_data
     # all_data gives an hourly count in each direction
+    all_data.reset_index(drop=True, inplace=True)
+    data_info.reset_index(drop=True, inplace=True)
+
+    all_data = all_data.apply(pd.to_numeric, errors='ignore')
+    data_info = data_info.apply(pd.to_numeric, errors='ignore')
+
     all_data.to_csv(path_or_buf=data_directory + 'all_data.csv', index=False)
     data_info.to_csv(path_or_buf=data_directory + 'data_info.csv', index=False)
 
-#    print data_directory
-#    print data_info[10]
     print len(all_data)
     print data_info.filename.nunique()
     print all_data.keys()
@@ -576,9 +547,7 @@ def get_normalization_factor():
 
 if __name__ == '__main__':
 
-#    addresses, address_records = get_geocoded()
-    address_records = get_geocoded()
-
+    parse_tmcs()
 #    address_records = snap_inter_and_non_inter(address_records)
 
 #    norm = get_normalization_factor()
@@ -586,7 +555,8 @@ if __name__ == '__main__':
 #    print type(addresses)
 #    print address_records[0]
 #    plot_tmcs(addresses)
-#    parse_tmcs(addresses)
+
+
 #    compare_atrs()
 
 
