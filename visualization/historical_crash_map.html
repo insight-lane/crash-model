@@ -59,28 +59,28 @@
 		});
 
 		map.on('load', function() {
-		  map.addLayer({
-			id: 'predictions',
-			type: 'line',
-			source: {
-			  type: 'geojson',
-			  data: 'car_preds_named.json'
-			},
-			paint: {
-			  'line-color': {
-				property: 'pred',
-				stops: [
-				  [0.02, '#ffffb2'],
-				  [0.03, '#fecc5c'],
-				  [0.04, '#fd8d3c'],
-				  [0.05, '#e31a1c']
-				]
-			  },
-			  'line-width': 2,
-			  'line-opacity': 1
-			},
-			filter: ['==', 'week', 1]
-		  }, 'admin-2-boundaries-dispute');
+		  	map.addLayer({
+				id: 'predictions',
+				type: 'line',
+				source: {
+				  type: 'geojson',
+				  data: 'car_preds_named.json'
+				},
+				paint: {
+				  'line-color': {
+					property: 'pred',
+					stops: [
+					  [0.02, '#ffffb2'],
+					  [0.03, '#fecc5c'],
+					  [0.04, '#fd8d3c'],
+					  [0.05, '#e31a1c']
+					]
+				  },
+				  'line-width': 2,
+				  'line-opacity': 1
+				},
+				filter: ['==', 'week', 1]
+			}, 'admin-2-boundaries-dispute');
 		 
 			map.addLayer({
 				id: 'crashes',
@@ -101,6 +101,24 @@
 				},
 				filter: ['==', 'week', 1]
 			}, 'admin-2-boundaries-dispute');
+
+			// add popup for predictions
+			map.on('click', 'predictions', function(e) {
+				var popupText = (e.features[0].properties.st_name !== "null") ? (e.features[0].properties.st_name + "<br / > Predicted Probability for Week " +  e.features[0].properties.week + ": " + e.features[0].properties.pred) : ("Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.pred);
+
+				new mapboxgl.Popup()
+					.setLngLat(e.lngLat)
+					.setHTML(popupText)
+					.addTo(map);
+			});
+
+			map.on('mouseenter', 'predictions', function () {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'predictions', function () {
+				map.getCanvas().style.cursor = '';
+			});
 		});
 	</script>
 
