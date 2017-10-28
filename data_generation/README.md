@@ -23,13 +23,16 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
 
 ## Process map
 
+All of the python data generation scripts should be run from the top directory (boston-crash-modeling) using the following scheme: `python -m <import path> <args>`.  See below for specific examples.
+
+If you add a new feature, create a new directory for the code.  Any utilities that are specific to that feature can go in a utility in that directory, but any shared functions should go in the top util.py.
 
 ## 1) Extract intersections
 - Reads in road segment data (data/raw/Boston_Segments.shp)
 - Finds point locations where roads intersect
 - Creates a shapefile of intersections (inters.shp)
-- <b>Usage:</b> python extract_intersections.py ../data/raw/Boston_Segments.shp
-- <b>Results:</b>
+- **Usage:** python -m data_generation.make_segments.extract_intersections data/raw/Boston_Segments.shp
+- **Results:**
     - data/processed/maps/inters.shp (and related files)
 
 
@@ -40,12 +43,12 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
     - Road features from connected road segments linked to intersection id (for later aggregation)
 - Separates out non-intersection segments
 -Creates unique segment ids where all non-intersections have a '00' prefix <br>
-- <b>Usage:</b> python create_segments.py
-- <b>Dependencies:</b>
+- **Usage:** python -m data_generation.make_segments.create_segments
+- **Dependencies:**
     - data/processed/maps/inters.shp
     - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp
         - Descriptions of the attributes from ma_co_spatially_joined_streets.shp can be found in data/docs/MassDOTRoadInvDictionary.pdf
-- <b>Results:</b>
+- **Results:**
     - data/processed/inters_segments.shp
     - data/processed/non_inters_segments.shp
     - data/processed/inters_data.json
@@ -57,7 +60,7 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
     - Tolerance of 30m for crashes, 20m for concerns
 - Writes shapefile of joined points and json data file
 - Includes coordinates and near_id referring to segment id (intersection or non intersection)
-- <b>Usage:</b> python join_segments_crash_concern.py
+- <b>Usage:</b> python -m data_generation.crash_and_concern.join_segments_crash_concern
 - <b>Dependencies:</b>
     - inters/non_inters shape data
     - CAD crash data: data/raw/cad_crash_events_with_transport_2016_wgs84.csv
@@ -75,7 +78,7 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
     - e.g. intersection features set to max of all roads joined to it
 - Creates dataframe with 52 weeks for each segment
 - Joins weekly crash/concerns to dataframe
-- <b>Usage:</b> python make_canon_dataset.py
+- <b>Usage:</b> python -m data_generation.make_canonical.make_canon_dataset
 - <b>Dependencies:</b>
     - crash/concern_joined
     - inters/non_inters
@@ -85,7 +88,7 @@ Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download
 ## 5) Process the ATRs
 - Adds coordinates for the Automated traffic recordings, along with some of the traffic count information.
 - Also snaps them to match up to road segments
-- <b>Usage:</b> python geocode_snap_ATRs.py
+- <b>Usage:</b> python -m data_generation.ATR_scraping.geocode_snap_ATRs
 - <b>Dependencies:</b>
     - atr files
     - data/processed/maps/inters_segments.shp

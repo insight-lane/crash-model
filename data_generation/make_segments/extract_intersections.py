@@ -6,7 +6,7 @@ import itertools
 import cPickle
 import os
 
-MAP_DATA_FP = '../data/processed/maps/'
+MAP_DATA_FP = 'data/processed/maps/'
 
 
 def track(index, step, tot):
@@ -108,7 +108,8 @@ def write_intersections(inters):
         if (pt.x, pt.y) not in points.keys():
             points[(pt.x, pt.y)] = pt, prop
 
-    with fiona.open('../data/processed/maps/inters.shp', 'w', 'ESRI Shapefile', schema) as output:
+    with fiona.open(MAP_DATA_FP
+                    + 'inters.shp', 'w', 'ESRI Shapefile', schema) as output:
         for i, (pt, prop) in enumerate(points.values()):
             track(i, 500, len(points))
             output.write({'geometry': mapping(pt), 'properties': prop})
@@ -129,6 +130,7 @@ if __name__ == '__main__':
 
     inters = []
     if not os.path.exists(MAP_DATA_FP + 'inters.pkl'):
+        print 'does not exist'
         inters = generate_intersections(lines)
     else:
         with open(MAP_DATA_FP + 'inters.pkl', 'r') as f:
