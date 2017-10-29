@@ -9,7 +9,7 @@ Usage:
     --name: name of the data to be plotted
             this will be used as the name of the layers in the map so they must be unique
     --filename: filename of the dataset
-            must be csvs with separate columns for X and Y coordinates named "X" and "Y" 
+            must be csvs with separate columns named "X" and "Y" for the X and Y coordinates 
 
 Inputs:
     csv files of point-level data to be visualized
@@ -43,8 +43,7 @@ args = parser.parse_args()
 if len(args.name) == len(args.filename):
     match = zip(args.name, args.filename)
 else:
-    print "Number of layers and files must match"
-    raise
+    raise Exception("Number of layers and files must match")
 
 
 
