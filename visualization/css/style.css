@@ -89,7 +89,7 @@ input[type="range"]::-ms-thumb {
 
 #legend {
     position: absolute;
-    right: 0px;
+	right: 40px;
     width: 200px;
     margin: 10px;
     padding: 10px 20px;

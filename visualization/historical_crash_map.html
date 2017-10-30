@@ -44,7 +44,6 @@
 	</div>
 
 	<script src="https://d3js.org/d3.v3.min.js"></script>
-	<!--<script src="js/crash_map.js"></script>-->
 	<script src="js/weekly_barplot.js"></script>
 	<script src="js/update_map.js"></script>
 	<script>
@@ -120,6 +119,9 @@
 				map.getCanvas().style.cursor = '';
 			});
 		});
+		
+		// Add zoom controls to map
+		map.addControl(new mapboxgl.NavigationControl());
 	</script>
 
 </body>
