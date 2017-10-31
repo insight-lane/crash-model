@@ -1,55 +1,17 @@
-import re
-
-import geocoder
-import openpyxl
 import fiona
-from shapely.geometry import Point, shape, mapping
 import pyproj
 import csv
-from time import sleep
-import matplotlib.pyplot as pyplot
 import rtree
+import geocoder
+from time import sleep
+from shapely.geometry import Point, shape, mapping
+import openpyxl
+from matplotlib import pyplot
 from os.path import exists as path_exists
 
 PROJ = pyproj.Proj(init='epsg:3857')
-MAP_FP = '../data/processed/maps'
-PROCESSED_DATA_FP = '../data/processed/'
-
-def is_readable_ATR(fname):
-    """
-    Function to check if ATR is of type we want to read
-    checking for 3 conditions
-
-     1) of 'XXX' type (contains speed, volume, and classification data)
-     2) of 24-HOURS type
-     3) .XLSX file type 
-    """
-
-    # split file name so we can check relevant info
-    meta_info = fname.split('_')
-    file_type = meta_info[8].split('.')[1]
-
-    # only look at files that are .xlsx, are over 24 hours, and are of type XXX
-    if (meta_info[7] == 'XXX') and (meta_info[6] == '24-HOURS') and (file_type == 'XLSX'):
-        return True
-    else:
-        return False
-
-
-def clean_ATR_fname(fname):
-    """
-    Clean filename to prepare for geocoding
-    EX:
-    7362_NA_NA_147_TRAIN-ST_DORCHESTER_24-HOURS_XXX_03-19-2014.XLSX
-    to
-    147 TRAIN ST Boston, MA
-    """
-
-    atr_address = fname.split('_') # split address on underscore character
-    atr_address = ' '.join(atr_address[3:5]) # combine elements that make up the address
-    atr_address = re.sub('-', ' ', atr_address) # replace '-' with spaces
-    atr_address += ' Boston, MA'
-    return atr_address
+MAP_FP = 'data/processed/maps'
+PROCESSED_DATA_FP = 'data/processed/'
 
 
 def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
@@ -221,12 +183,25 @@ def read_ATR(fname):
 
     return vol, speed, motos, light, heavy
 
-
 def read_shp(fp):
     """ Read shp, output tuple geometry + property """
     out = [(shape(line['geometry']), line['properties'])
            for line in fiona.open(fp)]
     return(out)
+
+
+def write_shp(schema, fp, data, shape_key, prop_key):
+    """ Write Shapefile
+    schema : schema dictionary
+    shape_key : column name or tuple index of Shapely shape
+    prop_key : column name or tuple index of properties
+    """
+    with fiona.open(fp, 'w', 'ESRI Shapefile', schema) as c:
+        for i in data:
+            c.write({
+                'geometry': mapping(i[shape_key]),
+                'properties': i[prop_key],
+            })
 
 
 def read_record(record, x, y, orig=None, new=PROJ):
@@ -241,6 +216,23 @@ def read_record(record, x, y, orig=None, new=PROJ):
         'properties': record
     }
     return(r_dict)
+
+
+# Temporarily commented out; not sure we actually use this anymore
+# now that we have csv_to_projected_records
+# def read_csv(file):
+#    # Read in CAD crash data
+#    crash = []
+#    with open(file) as f:
+#        csv_reader = csv.DictReader(f)
+#        for r in csv_reader:
+#            # Some crash 0 / blank coordinates
+#            if r['X'] != '':
+#                crash.append(
+#                    read_record(r, r['X'], r['Y'],
+#                                orig=pyproj.Proj(init='epsg:4326'))
+#                )
+#    return crash
 
 
 def csv_to_projected_records(filename, x='X', y='Y'):
@@ -265,23 +257,6 @@ def csv_to_projected_records(filename, x='X', y='Y'):
                                 orig=pyproj.Proj(init='epsg:4326'))
                 )
     return records
-
-
-def read_segments():
-    # Read in segments
-    inter = read_shp(MAP_FP + '/inters_segments.shp')
-    non_inter = read_shp(MAP_FP + '/non_inters_segments.shp')
-    print "Read in {} intersection, {} non-intersection segments".format(
-        len(inter), len(non_inter))
-
-    # Combine inter + non_inter
-    combined_seg = inter + non_inter
-
-    # Create spatial index for quick lookup
-    segments_index = rtree.index.Index()
-    for idx, element in enumerate(combined_seg):
-        segments_index.insert(idx, element[0].bounds)
-    return combined_seg, segments_index
 
 
 def find_nearest(records, segments, segments_index, tolerance):
@@ -314,16 +289,42 @@ def find_nearest(records, segments, segments_index, tolerance):
             record['properties']['near_id'] = ''
 
 
-def write_shp(schema, fp, data, shape_key, prop_key):
-    """ Write Shapefile
-    schema : schema dictionary
-    shape_key : column name or tuple index of Shapely shape
-    prop_key : column name or tuple index of properties
+def read_segments():
+    # Read in segments
+    inter = read_shp(MAP_FP + '/inters_segments.shp')
+    non_inter = read_shp(MAP_FP + '/non_inters_segments.shp')
+    print "Read in {} intersection, {} non-intersection segments".format(
+        len(inter), len(non_inter))
+
+    # Combine inter + non_inter
+    combined_seg = inter + non_inter
+
+    # Create spatial index for quick lookup
+    segments_index = rtree.index.Index()
+    for idx, element in enumerate(combined_seg):
+        segments_index.insert(idx, element[0].bounds)
+    return combined_seg, segments_index
+
+
+def geocode_address(address):
     """
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema) as c:
-        for i in data:
-            c.write({
-                'geometry': mapping(i[shape_key]),
-                'properties': i[prop_key],
-            })
+    Use google's API to look up the address
+    Due to rate limiting, try a few times with an increasing
+    wait if no address is found
+
+    Args:
+        address
+    Returns:
+        address, latitude, longitude
+    """
+    g = geocoder.google(address)
+    attempts = 0
+    while g.address is None and attempts < 3:
+        attempts += 1
+        sleep(attempts ** 2)
+        g = geocoder.google(address)
+    return g.address, g.lat, g.lng
+
+
+
 

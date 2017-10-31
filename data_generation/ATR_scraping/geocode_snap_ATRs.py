@@ -4,11 +4,11 @@ import csv
 import rtree
 import pyproj
 import argparse
+from .. import util
+import ATR_util
 
-from ATR_util import *
-
-ATR_FP = '../data/raw/AUTOMATED TRAFFICE RECORDING/'
-PROCESSED_DATA_FP = '../data/processed/'
+ATR_FP = 'data/raw/AUTOMATED TRAFFICE RECORDING/'
+PROCESSED_DATA_FP = 'data/processed/'
 atrs = os.listdir(ATR_FP)
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -23,12 +23,12 @@ def geocode_and_parse():
         results = []
         for atr in atrs:
             atr = atr
-            if is_readable_ATR(ATR_FP + atr):
-                atr_address = clean_ATR_fname(ATR_FP + atr)
+            if ATR_util.is_readable_ATR(ATR_FP + atr):
+                atr_address = ATR_util.clean_ATR_fname(ATR_FP + atr)
                 print atr_address
-                geocoded_add, lat, lng = geocode_address(atr_address)
+                geocoded_add, lat, lng = util.geocode_address(atr_address)
                 print str(geocoded_add) + ',' + str(lat) + ',' + str(lng)
-                vol, speed, motos, light, heavy = read_ATR(ATR_FP + atr)
+                vol, speed, motos, light, heavy = ATR_util.read_ATR(ATR_FP + atr)
                 r = [
                     atr_address,
                     geocoded_add,
@@ -73,9 +73,11 @@ if __name__ == '__main__':
 
     geocode_and_parse()
     # Read in segments
-    inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
-    non_inter = read_shp(PROCESSED_DATA_FP + 'maps/non_inters_segments.shp')
-    print "Read in {} intersection, {} non-intersection segments".format(len(inter), len(non_inter))
+    inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+    non_inter = util.read_shp(
+        PROCESSED_DATA_FP + 'maps/non_inters_segments.shp')
+    print "Read in {} intersection, {} non-intersection segments".format(
+        len(inter), len(non_inter))
 
     # Combine inter + non_inter
     combined_seg = inter + non_inter
@@ -88,21 +90,22 @@ if __name__ == '__main__':
     print('Created spatial index')
 
     # Read in atr lats
-    atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
-                                    x='lng', y='lat')
+    atrs = util.csv_to_projected_records(
+        PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
     print "Read in data from {} atrs".format(len(atrs))
 
     if args.graph:
         # Generate sparkline graph of traffic distribution
         files = [ATR_FP +
                  atr['properties']['filename'] for atr in atrs]
-        all_counts = get_hourly_rates(files)
-        plot_hourly_rates(all_counts,
+
+        all_counts = util.get_hourly_rates(files)
+        util.plot_hourly_rates(all_counts,
                         os.path.abspath(PROCESSED_DATA_FP) + '/atr_dist.png')
 
     # Find nearest atr - 20 tolerance
     print "Snapping atr to segments"
-    find_nearest(atrs, combined_seg, segments_index, 20)
+    util.find_nearest(atrs, combined_seg, segments_index, 20)
 
     with open(PROCESSED_DATA_FP + 'snapped_atrs.json', 'w') as f:
         json.dump([x['properties'] for x in atrs], f)

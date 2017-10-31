@@ -4,18 +4,14 @@ from os import listdir, path
 from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
-from ATR_util import geocode_address, read_shp, find_nearest
-from ATR_util import csv_to_projected_records, get_hourly_rates
-from ATR_util import write_geocode_cache, read_geocode_cache
+from .. import util
 import rtree
 import folium
-from ATR_util import read_segments
 import json
 
-
-RAW_DATA_FP = '../data/raw/'
-PROCESSED_DATA_FP = '../data/processed/'
-ATR_FP = '../data/raw/AUTOMATED TRAFFICE RECORDING/'
+RAW_DATA_FP = 'data/raw/'
+PROCESSED_DATA_FP = 'data/processed/'
+ATR_FP = 'data/raw/AUTOMATED TRAFFICE RECORDING/'
 
 
 def file_dataframe(excel_sheet, data_location):
@@ -137,7 +133,7 @@ def find_address(filename, cached):
             result = cached[intersection]
         else:
             print 'geocoding ' + intersection
-            result = list(geocode_address(intersection))
+            result = list(util.geocode_address(intersection))
         result.insert(0, intersection)
         return result
     return None, None, None, None
@@ -327,13 +323,14 @@ def process_format2(workbook, combined=False):
 
 
 def snap_inter_and_non_inter(address_records):
-    inter = read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+    inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(inter):
         segments_index.insert(idx, element[0].bounds)
     print "Snapping tmcs to intersections"
-    find_nearest(address_records, inter, segments_index, 20)
+    util.find_nearest(address_records, inter, segments_index, 20)
 
     # Find_nearest got the nearest intersection id, but we want to compare
     # against all segments too.  They don't always match, which may be
@@ -343,8 +340,8 @@ def snap_inter_and_non_inter(address_records):
                     address['properties']['near_id']
         address['properties']['near_id'] = ''
 
-    combined_seg, segments_index = read_segments()
-    find_nearest(address_records, combined_seg, segments_index, 20)
+    combined_seg, segments_index = util.read_segments()
+    util.find_nearest(address_records, combined_seg, segments_index, 20)
 
     return address_records
 
@@ -367,8 +364,8 @@ def plot_tmcs(addresses):
                 radius=6).add_to(points)
 
     # Plot atrs
-    atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
-                                    x='lng', y='lat')
+    atrs = util.csv_to_projected_records(
+        PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
     for atr in atrs:
         properties = atr['properties']
         if properties['lat']:
@@ -429,7 +426,7 @@ def parse_tmcs():
     cached = {}
     if path_exists(geocoded_file):
         print 'reading geocoded cache file'
-        cached = read_geocode_cache()
+        cached = util.read_geocode_cache()
 
     data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
     motor_count = 0
@@ -507,7 +504,7 @@ def parse_tmcs():
         path_or_buf=feature_file, index=False)
 
     # Write out the cached file
-    write_geocode_cache(cached)
+    util.write_geocode_cache(cached)
 
     # All data and data_info are temporary files that when we're done with
     # cleanup will be obsolete
@@ -545,12 +542,12 @@ def get_normalization_factor():
         Tuple of 11 hour normalization, 12 hour normalization
     """
     # Read in atr lats
-    atrs = csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
+    atrs = util.csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
                                     x='lng', y='lat')
 
     files = [ATR_FP +
              atr['properties']['filename'] for atr in atrs]
-    all_counts = get_hourly_rates(files)
+    all_counts = util.get_hourly_rates(files)
     counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
 
     return sum(counts[7:18]), sum(counts[7:19])
