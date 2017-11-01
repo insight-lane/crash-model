@@ -157,6 +157,22 @@ def write_shp(schema, fp, data, shape_key, prop_key):
             })
 
 
+def record_to_csv(filename, records):
+    """
+    Write a csv file from records
+    Args:
+        filename
+        records - list of records (a dict of dicts)
+    """
+
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile,
+                                fieldnames=records[0]['properties'].keys())
+        writer.writeheader()
+        for record in records:
+            writer.writerow(record['properties'])
+
+
 def read_record(record, x, y, orig=None, new=PROJ):
     """
     Reads record, outputs dictionary with point and properties

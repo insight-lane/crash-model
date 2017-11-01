@@ -430,7 +430,9 @@ def parse_tmcs():
             # Pull out what we can from the filename itself
             orig_address, address, latitude, longitude = find_address(
                 filename, cached)
-            if address:
+            # If you can't geocode the address then there's not much point
+            # in parsing it because you won't be able to snap it to a segment
+            if latitude:
 
                 if orig_address:
                     cached[orig_address] = [address, latitude, longitude]
@@ -537,8 +539,8 @@ def get_normalization_factor():
         Tuple of 11 hour normalization, 12 hour normalization
     """
     # Read in atr lats
-    atrs = util.csv_to_projected_records(PROCESSED_DATA_FP + 'geocoded_atrs.csv',
-                                    x='lng', y='lat')
+    atrs = util.csv_to_projected_records(
+        PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
 
     files = [ATR_FP +
              atr['properties']['filename'] for atr in atrs]
@@ -551,6 +553,8 @@ if __name__ == '__main__':
 
     summary = parse_tmcs()
     address_records = snap_inter_and_non_inter(summary)
+    util.record_to_csv(PROCESSED_DATA_FP + 'tmc_summary.csv', address_records)
+
 #    norm = get_normalization_factor()
 #    print addresses.keys()
 #    print type(addresses)
