@@ -23,11 +23,16 @@ def read_records(fp, date_col, id_col, agg='week'):
     df = pd.DataFrame(data)
     df[date_col] = pd.to_datetime(df[date_col])
     print "total number of records in {}:{}".format(fp, len(df))
+    
+    # get date according to iso calendar
+    df['isodate'] = df[date_col].apply(lambda d: d.isocalendar())
+    df['week'] = df['isodate'].apply(lambda x: x[1])
+    df['year'] = df['isodate'].apply(lambda x: x[0])
 
     # aggregate
     print "aggregating by ", agg
     df[agg] = df[date_col].apply(lambda x: getattr(x, agg))
-    df_g = df.groupby([id_col, agg]).size()
+    df_g = df.groupby([id_col, 'year', agg]).size()
     return(df_g)
 
 
@@ -95,13 +100,29 @@ if __name__ == '__main__':
     # All features as int
     aggregated = aggregated.apply(lambda x: x.astype('int'))
 
-    # 53 weeks for each segment (year = 52.2 weeks)
-    all_weeks = pd.MultiIndex.from_product(
-        [aggregated.index, range(1, 54)], names=['segment_id', 'week'])
-
-    # crash/concern for each week, for each segment
+    # for each year, get iso week max, observation for each segment
+    all_years = cr_con.year.unique()
+    for y in all_years:
+        # 2017 doesn't have full year, use last obs
+        if y == 2017:
+            yr_max = cr_con[cr_con.year==2017].week.max()
+        else:
+            yr_max = pd.Timestamp('12-31-{}'.format(y)).week
+        # if this is the first year
+        # doing this because multiindex is hard to set up placeholder
+        if y == all_years[0]:
+            all_weeks = pd.MultiIndex.from_product(
+                [aggregated.index, [y], range(1, yr_max)], 
+                names=['segment_id', 'year', 'week'])            
+        else:
+            yr_index = pd.MultiIndex.from_product(
+                [aggregated.index, [y], range(1, yr_max)], 
+                names=['segment_id', 'year', 'week'])
+            all_weeks = all_weeks.union(yr_index)
+    
+    # crash/concern for each week, for each year for each segment    
     cr_con = cr_con.set_index(
-        ['near_id', 'week']).reindex(all_weeks, fill_value=0)
+        ['near_id', 'year', 'week']).reindex(all_weeks, fill_value=0)
     cr_con.reset_index(inplace=True)
 
     # join segment features to crash/concern
