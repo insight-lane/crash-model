@@ -36,15 +36,11 @@ if __name__ == '__main__':
     print "Read in data from {} crashes".format(len(crash))
 
     # Read in vision zero data
-    concern = []
     # Have to use pandas read_csv, unicode trubs
     concern_raw = pd.read_csv(RAW_DATA_FP + '/Vision_Zero_Entry.csv')
     concern_raw = concern_raw.to_dict('records')
-    for r in concern_raw:
-        concern.append(
-            util.read_record(r, r['X'], r['Y'],
-                        orig=pyproj.Proj(init='epsg:4326'))
-        )
+    concern = util.raw_to_record_list(concern_raw,
+                                      pyproj.Proj(init='epsg:4326'))
     print "Read in data from {} concerns".format(len(concern))
 
     combined_seg, segments_index = util.read_segments()

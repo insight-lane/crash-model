@@ -8,6 +8,7 @@ from .. import util
 import rtree
 import folium
 import json
+import pyproj
 
 RAW_DATA_FP = 'data/raw/'
 PROCESSED_DATA_FP = 'data/processed/'
@@ -322,7 +323,7 @@ def process_format2(workbook, combined=False):
     return total
 
 
-def snap_inter_and_non_inter(address_records):
+def snap_inter_and_non_inter(summary):
     inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
 
     # Create spatial index for quick lookup
@@ -330,6 +331,9 @@ def snap_inter_and_non_inter(address_records):
     for idx, element in enumerate(inter):
         segments_index.insert(idx, element[0].bounds)
     print "Snapping tmcs to intersections"
+
+    address_records = util.raw_to_record_list(
+        summary, pyproj.Proj(init='epsg:4326'), x='Longitude', y='Latitude')
     util.find_nearest(address_records, inter, segments_index, 20)
 
     # Find_nearest got the nearest intersection id, but we want to compare
@@ -401,17 +405,7 @@ def parse_tmcs():
     ])
 
     # Stores the total count information
-    summary_cols = [
-        'filename',
-        'address',
-        'latitude',
-        'longitude',
-        'date',
-        'hours',
-        'total',
-        'normalized'
-    ]
-    summary = pd.DataFrame(columns=summary_cols)
+    summary = []
 
     print 'getting normalization factors'
     n_11, n_12 = get_normalization_factor()
@@ -436,58 +430,60 @@ def parse_tmcs():
             # Pull out what we can from the filename itself
             orig_address, address, latitude, longitude = find_address(
                 filename, cached)
-            if orig_address:
-                cached[orig_address] = [address, latitude, longitude]
-            date = find_date(filename)
-            hours = num_hours(filename)
-            file_path = path.join(data_directory, filename)
-            workbook = xlrd.open_workbook(file_path)
-            sheet_names = [x.lower() for x in workbook.sheet_names()]
+            if address:
 
-            motors = [col for col in sheet_names
-                      if col.startswith('all motors')]
-            peds = [col for col in sheet_names
-                    if col.startswith('all peds')]
-            if motors or peds or 'bicycles hr.' in sheet_names:
-                all_data, i, data_info, motor_count = process_format1(
-                    workbook, filename, address, date,
-                    i, motors[0] if motors else None,
-                    peds[0] if peds else None,
-                    'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
-                    all_data, data_info)
-            elif 'cars' in sheet_names \
-                 and (
-                     'heavy vehicles' in sheet_names
-                     or 'trucks' in sheet_names
-                 ) and (
-                     any(sheet.startswith('peds and ') for sheet in sheet_names)
-                     or any(sheet.startswith('bikes') for sheet in sheet_names)
-                 ):
-                motor_count = process_format2(workbook)
-            elif any(sheet.startswith('cars') for sheet in sheet_names) \
-                    and any(sheet.endswith('trucks') for sheet in sheet_names):
-                motor_count = process_format2(workbook, combined=True)
-            else:
-                motor_count = None
-                missing += 1
+                if orig_address:
+                    cached[orig_address] = [address, latitude, longitude]
+                date = find_date(filename)
+                hours = num_hours(filename)
+                file_path = path.join(data_directory, filename)
+                workbook = xlrd.open_workbook(file_path)
+                sheet_names = [x.lower() for x in workbook.sheet_names()]
 
-            normalized = ''
-            if motor_count:
-                if hours == 11:
-                    normalized = int(round(motor_count/n_11))
+                motors = [col for col in sheet_names
+                          if col.startswith('all motors')]
+                peds = [col for col in sheet_names
+                        if col.startswith('all peds')]
+                if motors or peds or 'bicycles hr.' in sheet_names:
+                    all_data, i, data_info, motor_count = process_format1(
+                        workbook, filename, address, date,
+                        i, motors[0] if motors else None,
+                        peds[0] if peds else None,
+                        'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
+                        all_data, data_info)
+                elif 'cars' in sheet_names \
+                     and (
+                         'heavy vehicles' in sheet_names
+                         or 'trucks' in sheet_names
+                     ) and (
+                         any(sheet.startswith('peds and ') for sheet in sheet_names)
+                         or any(sheet.startswith('bikes') for sheet in sheet_names)
+                     ):
+                    motor_count = process_format2(workbook)
+                elif any(sheet.startswith('cars') for sheet in sheet_names) \
+                        and any(sheet.endswith('trucks') for sheet in sheet_names):
+                    motor_count = process_format2(workbook, combined=True)
                 else:
-                    normalized = int(round(motor_count/n_12))
-            value = pd.DataFrame([(
-                filename,
-                address,
-                latitude,
-                longitude,
-                date,
-                hours,
-                int(motor_count) if motor_count else '',
-                normalized,
-            )], columns=summary_cols)
-            summary = summary.append(value)
+                    motor_count = None
+                    missing += 1
+
+                normalized = ''
+                if motor_count:
+                    if hours == 11:
+                        normalized = int(round(motor_count/n_11))
+                    else:
+                        normalized = int(round(motor_count/n_12))
+                value = {
+                    'Filename': filename,
+                    'Address': address,
+                    'Latitude': latitude,
+                    'Longitude': longitude,
+                    'Date': date,
+                    'Hours': hours,
+                    'Total': int(motor_count) if motor_count else '',
+                    'Normalized': normalized
+                }
+                summary.append(value)
 
         # Other formats are from 
         # 7499_279_BERKELEY
@@ -499,9 +495,7 @@ def parse_tmcs():
 
     print 'missing:::::::::::::::::' + str(missing)
     # Write processed_tmc info
-    feature_file = PROCESSED_DATA_FP + 'tmc_summary.csv'
-    summary.to_csv(
-        path_or_buf=feature_file, index=False)
+
 
     # Write out the cached file
     util.write_geocode_cache(cached)
@@ -529,6 +523,7 @@ def parse_tmcs():
 #    print addresses
 
 #    print data_info.head()
+    return summary
 
 
 def get_normalization_factor():
@@ -554,9 +549,8 @@ def get_normalization_factor():
 
 if __name__ == '__main__':
 
-    parse_tmcs()
-#    address_records = snap_inter_and_non_inter(address_records)
-
+    summary = parse_tmcs()
+    address_records = snap_inter_and_non_inter(summary)
 #    norm = get_normalization_factor()
 #    print addresses.keys()
 #    print type(addresses)

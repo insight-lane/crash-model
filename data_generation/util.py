@@ -218,6 +218,24 @@ def read_record(record, x, y, orig=None, new=PROJ):
     return(r_dict)
 
 
+def raw_to_record_list(raw, orig, x='X', y='Y'):
+    """
+    Takes a list of dicts, and reprojects it into a list of records
+    Args:
+        raw - list of dicts
+        orig - original projection
+        x - name of key indicating longitude (default 'X')
+        y - name of key indicating latitude (default 'Y')
+    """
+    result = []
+    for r in raw:
+        result.append(
+            read_record(r, r[x], r[y],
+                        orig=orig)
+        )
+    return result
+
+
 # Temporarily commented out; not sure we actually use this anymore
 # now that we have csv_to_projected_records
 # def read_csv(file):
