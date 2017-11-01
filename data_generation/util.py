@@ -136,53 +136,6 @@ def plot_hourly_rates(all_counts, outfile):
     pyplot.savefig(outfile)
 
 
-def read_ATR(fname):
-    """
-    Function to read ATR data
-    data to collect:
-    mean speed, volume, motos (# of motorcycles), light(# of cars/trucks), 
-    and heavy(# of heavy duty vehicles)
-    """
-
-    # data_only=True so as to not read formulas
-    wb = openpyxl.load_workbook(fname, data_only=True)
-    sheet_names = wb.get_sheet_names()
-
-    # get total volume cell F106
-    if 'Volume' in sheet_names:
-        sheet = wb.get_sheet_by_name('Volume')
-        vol = sheet['F106'].value
-    else:
-        vol = 0
-
-    # get mean speed data
-    if 'Speed Combined' in sheet_names:
-        sheet = wb.get_sheet_by_name('Speed Combined')
-        speed = sheet['E42'].value
-    elif 'Speed-1' in sheet_names:
-        sheet = wb.get_sheet_by_name('Speed-1')
-        speed = sheet['E42'].value
-    else:
-        speed = 0
-
-    # get classification data
-    if 'Classification-Combined' in sheet_names:
-        sheet = wb.get_sheet_by_name('Classification-Combined')
-        motos = sheet['D38'].value
-        light = sheet['D39'].value
-        heavy = sheet['D40'].value
-    elif 'Classification-1' in sheet_names:
-        sheet = wb.get_sheet_by_name('Classification-1')
-        motos = sheet['D38'].value
-        light = sheet['D39'].value
-        heavy = sheet['D40'].value
-    else:
-        motos = 0
-        light = 0
-        heavy = 0
-
-    return vol, speed, motos, light, heavy
-
 def read_shp(fp):
     """ Read shp, output tuple geometry + property """
     out = [(shape(line['geometry']), line['properties'])
