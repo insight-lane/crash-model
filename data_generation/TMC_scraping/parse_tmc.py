@@ -381,12 +381,6 @@ def plot_tmcs(addresses):
     points.save('map.html')
 
 
-def compare_atrs():
-    with open(PROCESSED_DATA_FP + 'snapped_atrs.json') as f:
-        data = json.load(f)
-        print data[0]
-
-
 def parse_tmcs():
 
     data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
@@ -549,12 +543,23 @@ def get_normalization_factor():
 
     return sum(counts[7:18]), sum(counts[7:19])
 
+
 if __name__ == '__main__':
 
-    summary = parse_tmcs()
-    address_records = snap_inter_and_non_inter(summary)
-    util.record_to_csv(PROCESSED_DATA_FP + 'tmc_summary.csv', address_records)
+    address_records = []
+    if not path_exists(PROCESSED_DATA_FP + 'tmc_summary.csv'):
+        summary = parse_tmcs()
+        address_records = snap_inter_and_non_inter(summary)
+        util.record_to_csv(PROCESSED_DATA_FP + 'tmc_summary.csv',
+                           address_records)
+    else:
+        address_records = util.csv_to_projected_records(
+            PROCESSED_DATA_FP + 'tmc_summary.csv', x='Longitude', y='Latitude')
 
+    print len(address_records)
+    compare_crashes(address_records)
+    print address_records[0]
+#    compare_atrs(address_records)
 #    norm = get_normalization_factor()
 #    print addresses.keys()
 #    print type(addresses)
@@ -562,6 +567,6 @@ if __name__ == '__main__':
 #    plot_tmcs(addresses)
 
 
-#    compare_atrs()
+
 
 
