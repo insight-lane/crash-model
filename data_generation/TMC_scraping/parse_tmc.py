@@ -557,7 +557,7 @@ if __name__ == '__main__':
             PROCESSED_DATA_FP + 'tmc_summary.csv', x='Longitude', y='Latitude')
 
     print len(address_records)
-    compare_crashes(address_records)
+#    compare_crashes(address_records)
     print address_records[0]
 #    compare_atrs(address_records)
 #    norm = get_normalization_factor()
