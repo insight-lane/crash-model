@@ -110,7 +110,7 @@ def find_date(filename):
     """
     prefix = re.sub('\.XLS', '', filename)
     segments = prefix.split('_')
-    return parse(segments[len(segments) - 1])
+    return parse(segments[len(segments) - 1]).date()
 
 
 def find_address(filename, cached):
@@ -334,7 +334,7 @@ def snap_inter_and_non_inter(summary):
 
     address_records = util.raw_to_record_list(
         summary, pyproj.Proj(init='epsg:4326'), x='Longitude', y='Latitude')
-    util.find_nearest(address_records, inter, segments_index, 20)
+    util.find_nearest(address_records, inter, segments_index, 30)
 
     # Find_nearest got the nearest intersection id, but we want to compare
     # against all segments too.  They don't always match, which may be
@@ -345,7 +345,7 @@ def snap_inter_and_non_inter(summary):
         address['properties']['near_id'] = ''
 
     combined_seg, segments_index = util.read_segments()
-    util.find_nearest(address_records, combined_seg, segments_index, 20)
+    util.find_nearest(address_records, combined_seg, segments_index, 30)
 
     return address_records
 
@@ -430,7 +430,7 @@ def parse_tmcs():
 
                 if orig_address:
                     cached[orig_address] = [address, latitude, longitude]
-                date = find_date(filename)
+                date = str(find_date(filename))
                 hours = num_hours(filename)
                 file_path = path.join(data_directory, filename)
                 workbook = xlrd.open_workbook(file_path)
@@ -544,21 +544,57 @@ def get_normalization_factor():
     return sum(counts[7:18]), sum(counts[7:19])
 
 
+def compare_atrs(tmcs):
+    atrs = {}
+    count = 0
+    with open(PROCESSED_DATA_FP + 'snapped_atrs.json') as f:
+        data = json.load(f)
+        print data[0]
+        for row in data:
+            if row['near_id']:
+                atrs[row['near_id']] = row
+    for tmc in tmcs:
+        if tmc['properties']['near_id'] in atrs.keys():
+            print "------------------------------------------"
+            print tmc['properties']
+            print atrs[tmc['properties']['near_id']]
+            print ".........................................."
+            count += 1
+    print count
+
+
+def compare_crashes(tmcs):
+    crashes_by_seg = {}
+    with open(PROCESSED_DATA_FP + 'crash_joined.json') as f:
+        data = json.load(f)
+        for row in data:
+            crashes_by_seg[row['near_id']] = row
+
+    count = 0
+    for tmc in tmcs:
+        if tmc['properties']['near_id'] in crashes_by_seg.keys():
+            print tmc['properties']
+        count += 1
+    print "count::::::::::::::::::::" + str(count)
+    print len(crashes_by_seg)
+
+
 if __name__ == '__main__':
 
     address_records = []
-    if not path_exists(PROCESSED_DATA_FP + 'tmc_summary.csv'):
+    if not path_exists(PROCESSED_DATA_FP + 'tmc_summary.json'):
+        print 'No tmc_summary.json, parsing tmcs files now...'
         summary = parse_tmcs()
         address_records = snap_inter_and_non_inter(summary)
-        util.record_to_csv(PROCESSED_DATA_FP + 'tmc_summary.csv',
-                           address_records)
+        with open(PROCESSED_DATA_FP + 'tmc_summary.json', 'w') as f:
+            json.dump([x['properties'] for x in address_records], f)
     else:
-        address_records = util.csv_to_projected_records(
-            PROCESSED_DATA_FP + 'tmc_summary.csv', x='Longitude', y='Latitude')
+        print 'Reading tmc_summary.json'
+        tmc_summary = pd.read_json(PROCESSED_DATA_FP + '/tmc_summary.json')
 
-    print len(address_records)
+#    print len(address_records)
 #    compare_crashes(address_records)
-    print address_records[0]
+#    print address_records[0]
 #    compare_atrs(address_records)
 #    norm = get_normalization_factor()
 #    print addresses.keys()
