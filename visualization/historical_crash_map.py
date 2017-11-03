@@ -3,22 +3,17 @@ Title: historical_crash_map.py
  
 Author: @alicefeng
  
-This script creates the data needed to power the map of crashes that occurred on Boston's
-streets in 2016 along with an overlay of our model predictions.  It preps weekly model
-output for joining on the geometries of the predicted segments to enable mapping.  Finally,
-it exports this joined data as a GeoJSON file to be used in the map.
-
-It also generates the data used for the bar graph of total weekly crashes.
-
-This file only needs to be run once to generate the dataset prior to
-using the map for the first time.
+This script creates the datasets needed to power MVP. This file only needs to be
+run once prior to using the map for the first time.
 
 Inputs:
+    cad_crash_events_with_transport_2016_wgs84.csv
     vz_predict_dataset.csv (i.e., the canonical dataset)
     csv of model predictions
     inter_and_non_int.shp
 
 Output:
+    geojson of historical crash data
     geojson of predictions merged with geometries
     weekly_crashes.csv
 """
@@ -27,9 +22,31 @@ Output:
 import pandas as pd
 import geopandas as gpd
 import shapely.geometry
+from shapely.geometry import Point
 
 fp = '../data/processed/'
 
+### Generate historical crash dataset
+# read CAD data
+df = pd.read_csv('data/raw/cad_crash_events_with_transport_2016_wgs84.csv')
+
+# create points from lat/lon and read into geodataframe
+geometry = [Point(xy) for xy in zip(df.X, df.Y)]
+crs = {'init': 'epsg:4326'}
+
+# get week of the year
+df['timestamp'] = pd.to_datetime(df['CALENDAR_DATE'])
+df['week'] = df['timestamp'].dt.week
+df = df['week']
+
+geo_df = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
+geo_df.to_file('cad.geojson', driver="GeoJSON")
+
+
+
+
+
+### Generate model predictions dataset
 # read in model output and reformat
 car = pd.read_csv(fp + 'car_preds_weekly_named.csv', dtype={'segment_id': str})
 week_cols = list(car.columns[2:56])
@@ -60,6 +77,9 @@ car_preds.to_file("car_preds_named.json", driver='GeoJSON')
 
 
 
+
+
+### Generate weekly crash dataset
 # read in historical crash data
 crashes = pd.read_csv(fp + 'vz_predict_dataset.csv', dtype={'segment_id': str})
 
