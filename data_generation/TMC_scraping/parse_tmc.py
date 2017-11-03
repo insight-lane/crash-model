@@ -346,6 +346,9 @@ def snap_inter_and_non_inter(summary):
 
     combined_seg, segments_index = util.read_segments()
     util.find_nearest(address_records, combined_seg, segments_index, 30)
+    print "................................."
+    print len(combined_seg)
+    print combined_seg[0]
 
     return address_records
 
@@ -563,20 +566,123 @@ def compare_atrs(tmcs):
     print count
 
 
-def compare_crashes(tmcs):
+def compare_crashes():
+
+    count = 0
+    print 'comparing.........'
+    inters = {}
+    with open(PROCESSED_DATA_FP + 'inters_data.json') as f:
+        print 'yay'
+        data = json.load(f)
+        for key, value in data.iteritems():
+            inters[str(key)] = value[0]
+
+    print inters.values()[0]
+
     crashes_by_seg = {}
     with open(PROCESSED_DATA_FP + 'crash_joined.json') as f:
         data = json.load(f)
         for row in data:
-            crashes_by_seg[row['near_id']] = row
-
+            if str(row['near_id']) == '':
+                next
+            if str(row['near_id']) not in crashes_by_seg.keys():
+                crashes_by_seg[str(row['near_id'])] = {
+                    'total': 0, 'type': [], 'values': []}
+            crashes_by_seg[str(row['near_id'])]['total'] += 1
+            crashes_by_seg[str(row['near_id'])]['type'].append(
+                row['FIRST_EVENT_SUBTYPE'])
+            crashes_by_seg[str(row['near_id'])]['values'].append(row)
+            
+#    print len(crashes_by_seg.keys())
     count = 0
-    for tmc in tmcs:
-        if tmc['properties']['near_id'] in crashes_by_seg.keys():
-            print tmc['properties']
-        count += 1
-    print "count::::::::::::::::::::" + str(count)
-    print len(crashes_by_seg)
+    max = 0
+    max_intersection = None
+    high_crashes = []
+    single_crash = []
+    no_crashes = []
+    crash_tuples = []
+
+    results = []
+
+    crash_count = []
+    crash_volume = []
+    crash_speed = []
+    crash_speed_bins = []
+    with open(PROCESSED_DATA_FP + 'tmc_summary.json') as f:
+        data = json.load(f)
+        for row in data:
+#            print "......................."
+#            print row['near_id']
+#            print row
+            if str(row['near_intersection_id']) in crashes_by_seg.keys() \
+               and row['near_intersection_id'] != '':
+                crashes = crashes_by_seg[str(row['near_intersection_id'])]
+                row['Crashes'] = crashes['total']
+                row['Types'] = crashes['type']
+                row['Speed'] = inters[str(row['near_intersection_id'])]['SPEEDLIMIT']
+                results.append(row)
+
+                crash_tuples.append((
+                    crashes['total'], str(row['near_intersection_id']), row['Normalized']))
+                if row['Normalized']:
+                    crash_count.append(float(crashes['total']))
+#                    print row['Normalized']
+                    crash_volume.append(float(row['Normalized']))
+                    crash_speed.append(float(row['Speed']))
+                    if row['Speed'] < 20:
+                        crash_speed_bins.append(float(1))
+                    elif row['Speed'] < 30:
+                        crash_speed_bins.append(float(2))
+                    else:
+                        crash_speed_bins.append(float(3))
+                if crashes['total'] > max:
+                    max = crashes['total']
+                    max_intersection = row
+#                    print "......................."
+#                    print row
+                if crashes['total'] > 1:
+                    if row['Normalized']:
+                        high_crashes.append(row['Normalized'])
+                else:
+                    if row['Normalized']:
+                        single_crash.append(row['Normalized'])
+            else:
+                if row['Normalized']:
+                    no_crashes.append(row['Normalized'])
+                count += 1
+
+#    print '8028' in crashes_by_seg.keys()
+    high_crashes.sort()
+    single_crash.sort()
+    no_crashes.sort()
+#    print high_crashes
+#    print sum(high_crashes)/len(high_crashes)
+
+#    print sum(single_crash)/len(single_crash)
+#    print no_crashes
+#    print sum(no_crashes)/len(no_crashes)
+#    print max
+#    print max_intersection
+
+    for i in range(2):
+        print results[i]
+
+    import numpy
+    print numpy.corrcoef([crash_count, crash_speed_bins])
+#    print crash_tuples
+
+    sorted_results = sorted(results, key=lambda k: k['Normalized'])
+    print sorted_results[0]
+    print sorted_results[len(results)-1]
+    print len(sorted_results)
+    # count = 0
+    print single_crash
+    print high_crashes
+    #     if tmc['properties']['near_id'] in crashes_by_seg.keys():
+    #         print tmc['properties']
+    #     count += 1
+    # print "count::::::::::::::::::::" + str(count)
+    # print len(crashes_by_seg)
 
 
 if __name__ == '__main__':
@@ -586,14 +692,14 @@ if __name__ == '__main__':
         print 'No tmc_summary.json, parsing tmcs files now...'
         summary = parse_tmcs()
         address_records = snap_inter_and_non_inter(summary)
+        print address_records[0]
         with open(PROCESSED_DATA_FP + 'tmc_summary.json', 'w') as f:
             json.dump([x['properties'] for x in address_records], f)
-    else:
-        print 'Reading tmc_summary.json'
-        tmc_summary = pd.read_json(PROCESSED_DATA_FP + '/tmc_summary.json')
 
 #    print len(address_records)
-#    compare_crashes(address_records)
+    compare_crashes()
+
+
 #    print address_records[0]
 #    compare_atrs(address_records)
 #    norm = get_normalization_factor()
