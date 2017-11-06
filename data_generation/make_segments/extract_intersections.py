@@ -23,7 +23,8 @@ def extract_intersections(inter, prop):
 
     Args:
         inter: the intersection of two segments
-        prop: ??
+        prop: a dict where the keys are id_1 and id_2, and the values
+            are the segment ids
 
     Returns:
         Generator
@@ -41,7 +42,9 @@ def extract_intersections(inter, prop):
         multiLine = [line for line in inter]
         first_coords = multiLine[0].coords[0]
         last_coords = multiLine[-1].coords[1]
-        for i in [Point(first_coords[0], first_coords[1]),Point(last_coords[0], last_coords[1])]:
+        for i in [
+                Point(first_coords[0], first_coords[1]),
+                Point(last_coords[0], last_coords[1])]:
             yield(i, prop)
     # If collection points/lines (rare), just re-run on each part
     elif "GeometryCollection" == inter.type:
@@ -53,12 +56,15 @@ def extract_intersections(inter, prop):
 def generate_intersections(lines):
     """
     Runs extract_intersections on all combinations of points
+    Writes the resulting intersections to file as well as returning
 
     Args:
         lines: the lines from the shapefile
 
     Returns:
-        inters: intersections
+        inters: intersections - a list of point, dict tuples
+            the dict contains the newly created ids of the
+            intersecting segments
     """
     inters = []
     i = 0
@@ -107,7 +113,6 @@ def write_intersections(inters):
     for pt, prop in inters:
         if (pt.x, pt.y) not in points.keys():
             points[(pt.x, pt.y)] = pt, prop
-
     with fiona.open(MAP_DATA_FP
                     + 'inters.shp', 'w', 'ESRI Shapefile', schema) as output:
         for i, (pt, prop) in enumerate(points.values()):
