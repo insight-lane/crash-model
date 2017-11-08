@@ -18,14 +18,37 @@ from ..util import write_shp
 
 
 def get_intersection_buffers(intersections, intersection_buffer_units):
-    """ Buffers intersection according to proj units """
+    """
+    Buffers intersection according to proj units
+    Args:
+        intersections
+        intersection_buffer_units - in meters
+    Returns:
+        a list of polygons, buffering the intersections
+    """
+
     buffered_intersections = [intersection[0].buffer(intersection_buffer_units)
                               for intersection in intersections]
     return unary_union(buffered_intersections)
 
 
 def find_non_ints(roads):
+    """
+    Find the segments that aren't intersections
+    Args:
+        roads - a list of tuples of shapely shape and dict of segment info
+    Returns:
+        tuple consisting of:
+            non_int_lines - list in same format as input roads, just a subset
+            inter_segments
+    """
+    # Split intersection lines (within buffer) and non-intersection lines
+    # (outside buffer)
+    print "splitting intersection/non-intersection segments"
+    inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
+
     non_int_lines = []
+
     for road in roads:
         road_int_buffers = []
         # For each intersection whose buffer intersects road
@@ -48,7 +71,34 @@ def find_non_ints(roads):
                 non_int_lines.extend([(line, road[1]) for line in diff])
         else:
             non_int_lines.append(road)
-    return non_int_lines
+    return non_int_lines, inter_segments
+
+
+def reproject_and_read(inters, outfile, inproj, outproj):
+    """
+    Reprojects a list of points and writes to file
+    Args:
+        inters - a list of points (intersections)
+        outfile
+        inproj - the original projection of the points
+        outproj - the output projection of the points
+    """
+
+    # Write the intersection with projection 3857 to file
+    with fiona.open(outfile, 'w', crs=from_epsg(3857),
+                    schema=inters.schema, driver='ESRI Shapefile') as output:
+        for inter in inters:
+            coords = inter['geometry']['coordinates']
+            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+            point = Point(re_point)
+            output.write({'geometry': mapping(point),
+                          'properties': inter['properties']})
+
+    # Read in reprojected intersection
+    inters = [(shape(inter['geometry']), inter['properties'])
+              for inter in fiona.open(outfile)]
+    print "read in {} intersection points".format(len(inters))
+    return inters
 
 
 if __name__ == '__main__':
@@ -69,14 +119,7 @@ if __name__ == '__main__':
     inproj = pyproj.Proj(init='epsg:4326')
     outproj = pyproj.Proj(init='epsg:3857')
 
-    with fiona.open(inters_shp_path, 'w', crs=from_epsg(3857),
-                    schema=inters.schema, driver='ESRI Shapefile') as output:
-        for inter in inters:
-            coords = inter['geometry']['coordinates']
-            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
-            point = Point(re_point)
-            output.write({'geometry': mapping(point),
-                          'properties': inter['properties']})
+    inters = reproject_and_read(inters, inters_shp_path, inproj, outproj)
 
     # Read in boston segments + mass DOT join
     roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
@@ -88,29 +131,16 @@ if __name__ == '__main__':
     for i, road in enumerate(roads):
         road[1]['orig_id'] = int(str(99) + str(i))
 
-    # Read in reprojected intersection
-    inters = [(shape(inter['geometry']), inter['properties'])
-              for inter in fiona.open(inters_shp_path)]
-    print "read in {} intersection points".format(len(inters))
-
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
-
+    
     # Create index for quick lookup
     print "creating rindex"
     int_buffers_index = rtree.index.Index()
     for idx, intersection_buffer in enumerate(int_buffers):
         int_buffers_index.insert(idx, intersection_buffer.bounds)
 
-    # Split intersection lines (within buffer) and non-intersection lines
-    # (outside buffer)
-    print "splitting intersection/non-intersection segments"
-    inter_segments = {}
-    inter_segments['lines'] = defaultdict(list)
-    inter_segments['data'] = defaultdict(list)
-
-    non_int_lines = find_non_ints(roads)
-
+    non_int_lines, inter_segments = find_non_ints(roads)
     # Planarize intersection segments
     union_inter = [({'id': idx}, unary_union(l))
                    for idx, l in inter_segments['lines'].items()]
