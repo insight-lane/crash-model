@@ -16,6 +16,9 @@ from shapely.ops import unary_union
 from collections import defaultdict
 from ..util import write_shp
 
+MAP_FP = 'data/processed/maps'
+DATA_FP = 'data/processed'
+
 
 def get_intersection_buffers(intersections, intersection_buffer_units):
     """
@@ -32,7 +35,7 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
     return unary_union(buffered_intersections)
 
 
-def find_non_ints(roads):
+def find_non_ints(roads, int_buffers):
     """
     Find the segments that aren't intersections
     Args:
@@ -42,6 +45,13 @@ def find_non_ints(roads):
             non_int_lines - list in same format as input roads, just a subset
             inter_segments
     """
+
+    # Create index for quick lookup
+    print "creating rindex"
+    int_buffers_index = rtree.index.Index()
+    for idx, intersection_buffer in enumerate(int_buffers):
+        int_buffers_index.insert(idx, intersection_buffer.bounds)
+
     # Split intersection lines (within buffer) and non-intersection lines
     # (outside buffer)
     print "splitting intersection/non-intersection segments"
@@ -74,37 +84,15 @@ def find_non_ints(roads):
     return non_int_lines, inter_segments
 
 
-def reproject_and_read(inters, outfile, inproj, outproj):
+def reproject_and_read():
     """
-    Reprojects a list of points and writes to file
+    Reprojects points from the inters shapefile to a new projection
+        and writes to file
     Args:
-        inters - a list of points (intersections)
-        outfile
-        inproj - the original projection of the points
-        outproj - the output projection of the points
+        None - for the moment, all the files are hardcoded in
+    Returns:
+        inters - the reprojected intersections
     """
-
-    # Write the intersection with projection 3857 to file
-    with fiona.open(outfile, 'w', crs=from_epsg(3857),
-                    schema=inters.schema, driver='ESRI Shapefile') as output:
-        for inter in inters:
-            coords = inter['geometry']['coordinates']
-            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
-            point = Point(re_point)
-            output.write({'geometry': mapping(point),
-                          'properties': inter['properties']})
-
-    # Read in reprojected intersection
-    inters = [(shape(inter['geometry']), inter['properties'])
-              for inter in fiona.open(outfile)]
-    print "read in {} intersection points".format(len(inters))
-    return inters
-
-
-if __name__ == '__main__':
-
-    MAP_FP = 'data/processed/maps'
-    DATA_FP = 'data/processed'
 
     print "Map data at ", MAP_FP
     print "Output intersection data to ", DATA_FP
@@ -119,7 +107,26 @@ if __name__ == '__main__':
     inproj = pyproj.Proj(init='epsg:4326')
     outproj = pyproj.Proj(init='epsg:3857')
 
-    inters = reproject_and_read(inters, inters_shp_path, inproj, outproj)
+    # Write the intersection with projection 3857 to file
+    with fiona.open(inters_shp_path, 'w', crs=from_epsg(3857),
+                    schema=inters.schema, driver='ESRI Shapefile') as output:
+        for inter in inters:
+            coords = inter['geometry']['coordinates']
+            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+            point = Point(re_point)
+            output.write({'geometry': mapping(point),
+                          'properties': inter['properties']})
+
+    # Read in reprojected intersection
+    inters = [(shape(inter['geometry']), inter['properties'])
+              for inter in fiona.open(inters_shp_path)]
+    print "read in {} intersection points".format(len(inters))
+    return inters
+
+
+def create_segments():
+
+    inters = reproject_and_read()
 
     # Read in boston segments + mass DOT join
     roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
@@ -133,14 +140,9 @@ if __name__ == '__main__':
 
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
-    
-    # Create index for quick lookup
-    print "creating rindex"
-    int_buffers_index = rtree.index.Index()
-    for idx, intersection_buffer in enumerate(int_buffers):
-        int_buffers_index.insert(idx, intersection_buffer.bounds)
+    non_int_lines, inter_segments = find_non_ints(
+        roads, int_buffers)
 
-    non_int_lines, inter_segments = find_non_ints(roads)
     # Planarize intersection segments
     union_inter = [({'id': idx}, unary_union(l))
                    for idx, l in inter_segments['lines'].items()]
@@ -161,6 +163,7 @@ if __name__ == '__main__':
     # add non_inter id format = 00+i
     non_int_w_ids = []
     i = 0
+
     for l in non_int_lines:
         prop = copy.deepcopy(l[1])
         prop['id'] = '00' + str(i)
@@ -213,3 +216,7 @@ if __name__ == '__main__':
     write_shp(
         all_schema,
         MAP_FP + '/inter_and_non_int.shp', inter_and_non_int, 1, 0)
+
+if __name__ == '__main__':
+    create_segments()
+
