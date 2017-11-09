@@ -84,31 +84,26 @@ def find_non_ints(roads, int_buffers):
     return non_int_lines, inter_segments
 
 
-def reproject_and_read():
+def reproject_and_read(infile, outfile):
     """
     Reprojects points from the inters shapefile to a new projection
         and writes to file
     Args:
-        None - for the moment, all the files are hardcoded in
+        infile - shapefile to read from
+        outfile - shapefile to write to, in new projection
     Returns:
         inters - the reprojected intersections
     """
 
-    print "Map data at ", MAP_FP
-    print "Output intersection data to ", DATA_FP
-
-    inters_shp_path_raw = MAP_FP + '/inters.shp'
-    inters_shp_path = MAP_FP + '/inters_3857.shp'
-
     # Reproject to 3857
     # Necessary because original intersection extraction had null projection
     print "reprojecting raw intersection shapefile"
-    inters = fiona.open(inters_shp_path_raw)
+    inters = fiona.open(infile)
     inproj = pyproj.Proj(init='epsg:4326')
     outproj = pyproj.Proj(init='epsg:3857')
 
     # Write the intersection with projection 3857 to file
-    with fiona.open(inters_shp_path, 'w', crs=from_epsg(3857),
+    with fiona.open(outfile, 'w', crs=from_epsg(3857),
                     schema=inters.schema, driver='ESRI Shapefile') as output:
         for inter in inters:
             coords = inter['geometry']['coordinates']
@@ -118,15 +113,21 @@ def reproject_and_read():
                           'properties': inter['properties']})
 
     # Read in reprojected intersection
-    inters = [(shape(inter['geometry']), inter['properties'])
-              for inter in fiona.open(inters_shp_path)]
-    print "read in {} intersection points".format(len(inters))
-    return inters
+    reprojected_inters = [(shape(inter['geometry']), inter['properties'])
+                          for inter in fiona.open(outfile)]
+    print "read in {} intersection points".format(len(reprojected_inters))
+    return reprojected_inters
 
 
 def create_segments():
 
-    inters = reproject_and_read()
+    print "Map data at ", MAP_FP
+    print "Output intersection data to ", DATA_FP
+
+    inters_shp_path_raw = MAP_FP + '/inters.shp'
+    inters_shp_path = MAP_FP + '/inters_3857.shp'
+
+    inters = reproject_and_read(inters_shp_path_raw, inters_shp_path)
 
     # Read in boston segments + mass DOT join
     roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
