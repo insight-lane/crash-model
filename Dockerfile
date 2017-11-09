@@ -1,29 +1,17 @@
 FROM continuumio/anaconda
 
-# Set the ENTRYPOINT to use bash
-# (this is also where you'd set SHELL,
-# if your version of docker supports this)
-ENTRYPOINT [ "/bin/bash", "-c" ]
-
 EXPOSE 5000
 
-# install gcc so that conda create a virtual env
+# Install gcc so that conda create a virtual env
 RUN apt-get update && apt-get install -y gcc
 
-# Use the environment_docker.yml to create the conda environment.
-ADD environment_docker.yml /tmp/environment_docker.yml
-WORKDIR /tmp
-RUN [ "conda", "env", "create", "--file", "environment_docker.yml" ]
-
+# Add the project code
 ADD . /code
 
-# Use bash to source our new environment for setting up
-# private dependencies—note that /bin/bash is called in
-# exec mode directly
+# Use the environment_docker.yml to create the conda environment
 WORKDIR /code
-# RUN [ "/bin/bash", "-c", "source activate boston-crash-model && python setup.py develop" ]
-RUN [ "/bin/bash", "-c", "source activate boston-crash-model" ]
+RUN ["conda", "env", "create", "--file", "environment_docker.yml"]
 
-# We set ENTRYPOINT, so while we still use exec mode, we don't
-# explicitly call /bin/bash
-# CMD [ "source activate your-environment && exec python application.py" ]
+# Conda explicitly supports bash (amongst other shells), and explicitly doesn’t support sh
+# Set the ENTRYPOINT to use bash and source the new environment when executing a container
+ENTRYPOINT ["/bin/bash", "-c", "source activate boston-crash-model"]
