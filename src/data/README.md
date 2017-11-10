@@ -31,7 +31,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
 - Reads in road segment data (data/raw/Boston_Segments.shp)
 - Finds point locations where roads intersect
 - Creates a shapefile of intersections (inters.shp)
-- **Usage:** python -m data_generation.make_segments.extract_intersections data/raw/Boston_Segments.shp
+- **Usage:** python -m src.data.make_segments.extract_intersections data/raw/Boston_Segments.shp
 - **Results:**
     - data/processed/maps/inters.shp (and related files)
 
@@ -43,7 +43,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - Road features from connected road segments linked to intersection id (for later aggregation)
 - Separates out non-intersection segments
 -Creates unique segment ids where all non-intersections have a '00' prefix <br>
-- **Usage:** python -m data_generation.make_segments.create_segments
+- **Usage:** python -m src.data.make_segments.create_segments
 - **Dependencies:**
     - data/processed/maps/inters.shp
     - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp
@@ -60,7 +60,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - Tolerance of 30m for crashes, 20m for concerns
 - Writes shapefile of joined points and json data file
 - Includes coordinates and near_id referring to segment id (intersection or non intersection)
-- <b>Usage:</b> python -m data_generation.crash_and_concern.join_segments_crash_concern
+- <b>Usage:</b> python -m src.data.crash_and_concern.join_segments_crash_concern
 - <b>Dependencies:</b>
     - inters/non_inters shape data
     - CAD crash data: data/raw/cad_crash_events_with_transport_2016_wgs84.csv
@@ -69,26 +69,10 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - crash_joined.shp
     - concern_joined.shp
 
-
-## 4) Make canonical dataset
-- Reads in crash/concern data
-- Aggregates crash/concern (default by week)
-- Reads in road features for intersections and non-intersections
-- Aggregates road features to max value
-    - e.g. intersection features set to max of all roads joined to it
-- Creates dataframe with 52 weeks for each segment
-- Joins weekly crash/concerns to dataframe
-- <b>Usage:</b> python -m data_generation.make_canonical.make_canon_dataset
-- <b>Dependencies:</b>
-    - crash/concern_joined
-    - inters/non_inters
-- <b>Results:</b>
-    - vz_perdict_dataset.csv.gz
-
-## 5) Process the ATRs
+## 4) Process the ATRs
 - Adds coordinates for the Automated traffic recordings, along with some of the traffic count information.
 - Also snaps them to match up to road segments
-- <b>Usage:</b> python -m data_generation.ATR_scraping.geocode_snap_ATRs
+- <b>Usage:</b> python -m src.data.ATR_scraping.geocode_snap_ATRs
 - <b>Dependencies:</b>
     - atr files
     - data/processed/maps/inters_segments.shp
@@ -96,6 +80,21 @@ If you add a new feature, create a new directory for the code.  Any utilities th
 - <b>Results:</b>
     - data/processed/geocoded_atrs.csv
     - data/processed/snapped_atrs.json
+
+## 5) Make canonical dataset
+- Reads in crash/concern data
+- Aggregates crash/concern (default by week)
+- Reads in road features for intersections and non-intersections
+- Aggregates road features to max value
+    - e.g. intersection features set to max of all roads joined to it
+- Creates dataframe with 52 weeks for each segment
+- Joins weekly crash/concerns to dataframe
+- <b>Usage:</b> python -m src.data.make_canonical.make_canon_dataset
+- <b>Dependencies:</b>
+    - crash/concern_joined
+    - inters/non_inters
+- <b>Results:</b>
+    - vz_perdict_dataset.csv.gz
 
 # Data Standards
 
