@@ -45,8 +45,8 @@ args = parser.parse_args()
 if len(args.modelname) == len(args.filename) == len(args.colname):
     match = zip(args.modelname, args.filename, args.colname)
 else:
-    print "Number of models, files and column names must match"
-    raise
+    raise Exception("Number of models, files and column names must match")
+
 
 def process_data(filename, colname):
         """Preps model output for plotting on a map
