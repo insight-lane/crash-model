@@ -95,6 +95,3 @@ ENV/
 
 # Conda envs
 Scripts
-
-# Data
-data/*
