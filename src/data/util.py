@@ -135,20 +135,6 @@ def read_segments():
 
 def geocode_address(address):
     """
-<<<<<<< HEAD:data_generation/ATR_util.py
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema) as c:
-        for i in data:
-            # some mismatch in yearly crash data
-            # need to force it to conform to schema
-            for k in schema['properties']:
-                if k not in i[prop_key]:
-                    i[prop_key][k] = ''
-            c.write({
-                'geometry': mapping(i[shape_key]),
-                # need to maintain key order because of fiona persnicketiness
-                'properties': {k:i[prop_key][k] for k in schema['properties']},
-            })
-=======
     Use google's API to look up the address
     Due to rate limiting, try a few times with an increasing
     wait if no address is found
@@ -165,8 +151,3 @@ def geocode_address(address):
         sleep(attempts ** 2)
         g = geocoder.google(address)
     return g.address, g.lat, g.lng
-
-
-
->>>>>>> c2783ee0be212d6fa15117f1492bc8c5cf3d091a:src/data/util.py
-

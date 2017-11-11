@@ -9,7 +9,7 @@
 import json
 import pyproj
 import pandas as pd
-from .. import util
+import util
 
 <<<<<<< HEAD:data_generation/join_segments_crash_concern.py
 MAP_FP = '../data/processed/maps'
