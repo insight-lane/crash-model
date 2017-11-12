@@ -16,6 +16,8 @@ Output:
     geojson of historical crash data
     geojson of predictions merged with geometries
     weekly_crashes.csv
+    dow_crashes.csv
+    hourly_crashes.csv
 """
 
 #Import the necessary Python moduless
@@ -28,16 +30,15 @@ fp = '../data/processed/'
 
 ### Generate historical crash dataset
 # read CAD data
-df = pd.read_csv('data/raw/cad_crash_events_with_transport_2016_wgs84.csv')
+cad = pd.read_csv('../data/raw/cad_crash_events_with_transport_2016_wgs84.csv', parse_dates=['CALENDAR_DATE'])
 
 # create points from lat/lon and read into geodataframe
-geometry = [Point(xy) for xy in zip(df.X, df.Y)]
+geometry = [Point(xy) for xy in zip(cad.X, cad.Y)]
 crs = {'init': 'epsg:4326'}
 
 # get week of the year
-df['timestamp'] = pd.to_datetime(df['CALENDAR_DATE'])
-df['week'] = df['timestamp'].dt.week
-df = df['week']
+cad['week'] = cad['CALENDAR_DATE'].dt.week
+df = cad['week']
 
 geo_df = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 geo_df.to_file('cad.geojson', driver="GeoJSON")
@@ -86,3 +87,23 @@ crashes = pd.read_csv(fp + 'vz_predict_dataset.csv', dtype={'segment_id': str})
 # roll up crashes to the weekly level
 weekly_crashes = crashes.groupby(['week'], as_index=False)['crash'].sum()
 weekly_crashes.to_csv(fp + 'weekly_crashes.csv', index=False)
+
+
+### Generate day of week crash dataset
+weekday_map= {0:'Monday', 1:'Tuesday', 2:'Wednesday', 3:'Thursday', 4:'Friday', 5:'Saturday', 6:'Sunday'}
+cad['dow'] = cad['CALENDAR_DATE'].dt.dayofweek
+cad['dow_name'] = cad['dow'].map(weekday_map)
+dow_crashes = cad.groupby(['dow', 'dow_name'], as_index=False)['N_EVENTS'].sum()
+dow_crashes.to_csv('dow_crashes.csv', index=False)
+
+
+### Generate time of day crash dataset
+cad['hour'] = cad['TIME'].str.split(':').str.get(0).astype(int)
+
+# add indicator for weekday/weekend to see if there's a difference in crash distribution
+cad['weekend'] = (cad['dow']//5==1).astype(int)
+
+hourly_crashes = cad.groupby(['weekend', 'hour'], as_index=False)['N_EVENTS'].sum()
+hourly_crashes['pct_crash'] = hourly_crashes.groupby(['weekend'])['N_EVENTS'].apply(lambda x: x/x.sum())
+hourly_crashes['weekend_lbl'] = hourly_crashes['weekend'].map({0:'Weekday', 1:'Weekend'})
+hourly_crashes.to_csv('hourly_crashes.csv', index=False)
