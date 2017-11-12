@@ -16,8 +16,8 @@ function update_map(week) {
 }
 
 function highlight_bar(week) {
-	barPlot.selectAll(".crashbar")
-		.data(weeklydata)
+	d3.select("#weekly_barplot")
+	  .selectAll(".crashbar")
 		.style("fill", "#b2b2b2")
 		.filter(function(d) { return d.week === week ; })
 		.style("fill", "#d500f9");

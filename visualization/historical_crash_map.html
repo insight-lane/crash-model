@@ -39,12 +39,24 @@
 		</div>
 	</div>
 
-	<div id="barplot">
+	<div id="weekly_barplot">
 		<h3>Total Crashes by Week</h3>
+	</div>
+	<div class="viz_row">
+		<div id="dow_barplot" class="plot">
+			<h3>Crashes by Day of Week</h3>
+		</div>
+		<div id="hourly_barplot" class="plot">
+			<h3>Crashes by Time of Day</h3>
+			<div id="daytype-controls">
+				<label><input type="radio" name="daytype" value="Weekday" checked>Weekday</label>
+				<label><input type="radio" name="daytype" value="Weekend">Weekend</label>
+			</div>
+		</div>
 	</div>
 
 	<script src="https://d3js.org/d3.v3.min.js"></script>
-	<script src="js/weekly_barplot.js"></script>
+	<script src="js/make_plots.js"></script>
 	<script src="js/update_map.js"></script>
 	<script>
 		// create base map

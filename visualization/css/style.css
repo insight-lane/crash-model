@@ -22,6 +22,12 @@ h4 {
     font-weight: normal;
 }
 
+.plot {
+    position: relative;
+    width: 30vw;
+    float: left;
+}
+
 #map {
 	/*position: absolute;*/
 	width: 60vw;
@@ -117,9 +123,18 @@ input[type="range"]::-ms-thumb {
     font: 10px sans-serif;
 }
 
-.axis path,
-.axis line {
+.axis path {
+    visibility: hidden;
+}
+
+.y.axis line {
     fill: none;
     stroke: #000;
     shape-rendering: crispEdges;
+}
+
+#daytype-controls {
+    position: absolute;
+    right: 30px;
+    font-size: 0.8em;
 }
