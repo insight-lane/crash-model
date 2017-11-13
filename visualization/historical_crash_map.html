@@ -13,44 +13,49 @@
 	<link href='https://api.mapbox.com/mapbox-gl-js/v0.41.0/mapbox-gl.css' rel='stylesheet' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script type='text/javascript', src='config.js'></script>
-	<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">  
+	<!-- <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">   -->
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 	
 	<link rel="stylesheet" href="css/style.css" />
 
 </head>
 <body>
-	<h1>Crashes on Boston's Streets in 2016</h1>
-
-	<div class="input_overlay">
-		<label for="week_selector">Week: </label>
-		<output for="week_selector" id="week_num">1</output>
-		<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" />
+	<div id="header">
+		<h1>Crashes on Boston's Streets in 2016</h1>
 	</div>
-	<div id="map">
-		<div id="legend">
-			<h4>Predicted Crash Probability:</h4>
-			<div class="row colors"></div>
-			<div class="row labels">
-				<div class="label">0.02</div>
-				<div class="label">0.03</div>
-				<div class="label">0.04</div>
-				<div class="label">0.05</div>
+
+	<div id="content">
+		<div class="bigplot">
+			<div class="input_overlay">
+				<label for="week_selector">Week: </label>
+				<output for="week_selector" id="week_num">1</output>
+				<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" />
+			</div>
+			<div id="map">
+				<div id="legend">
+					<h4>Predicted Crash Probability:</h4>
+					<div class="row colors"></div>
+					<div class="row labels">
+						<div class="label">0.02</div>
+						<div class="label">0.03</div>
+						<div class="label">0.04</div>
+						<div class="label">0.05</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="weekly_barplot">
+				<h3>Total Crashes by Week</h3>
 			</div>
 		</div>
-	</div>
-
-	<div id="weekly_barplot">
-		<h3>Total Crashes by Week</h3>
-	</div>
-	<div class="viz_row">
 		<div id="dow_barplot" class="plot">
 			<h3>Crashes by Day of Week</h3>
 		</div>
 		<div id="hourly_barplot" class="plot">
-			<h3>Crashes by Time of Day</h3>
+			<h3>Distribution of Crashes by Time of Day</h3>
 			<div id="daytype-controls">
-				<label><input type="radio" name="daytype" value="Weekday" checked>Weekday</label>
-				<label><input type="radio" name="daytype" value="Weekend">Weekend</label>
+				<label><input type="radio" name="daytype" value="Weekday" checked="checked" autocomplete="off">Weekday</label>
+				<label><input type="radio" name="daytype" value="Weekend" autocomplete="off">Weekend</label>
 			</div>
 		</div>
 	</div>
@@ -87,7 +92,11 @@
 					  [0.05, '#e31a1c']
 					]
 				  },
-				  'line-width': 2,
+				  'line-width': [
+						'curve', ['linear'], ['zoom'], 
+						11, 2,
+						15, 3,
+					],
 				  'line-opacity': 1
 				},
 				filter: ['==', 'week', 1]
