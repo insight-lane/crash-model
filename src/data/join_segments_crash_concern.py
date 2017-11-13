@@ -11,18 +11,12 @@ import pyproj
 import pandas as pd
 import util
 
-<<<<<<< HEAD:data_generation/join_segments_crash_concern.py
 MAP_FP = '../data/processed/maps'
 RAW_DATA_FP = '../data/raw'
 PROCESSED_DATA_FP = '../data/processed'
 # filepaths of raw crash data (hardcoded for now)
 CRASH_DATA_FPS = ['/cad_crash_events_with_transport_2016_wgs84.csv','/2015motorvehicles_formatted.csv',
                   '/2017motorvehicles_formatted.csv']
-=======
-MAP_FP = 'data/processed/maps'
-RAW_DATA_FP = 'data/raw'
-PROCESSED_DATA_FP = 'data/processed'
->>>>>>> c2783ee0be212d6fa15117f1492bc8c5cf3d091a:src/data/crash_and_concern/join_segments_crash_concern.py
 
 
 def make_schema(geometry, properties):
@@ -40,15 +34,10 @@ def make_schema(geometry, properties):
 if __name__ == '__main__':
 
     # Read in CAD crash data
-<<<<<<< HEAD:data_generation/join_segments_crash_concern.py
     crash = []
     for fp in CRASH_DATA_FPS:
         tmp = ATR_util.csv_to_projected_records(RAW_DATA_FP + fp)
         crash = crash + tmp
-=======
-    crash = util.csv_to_projected_records(
-        RAW_DATA_FP + '/cad_crash_events_with_transport_2016_wgs84.csv')
->>>>>>> c2783ee0be212d6fa15117f1492bc8c5cf3d091a:src/data/crash_and_concern/join_segments_crash_concern.py
     print "Read in data from {} crashes".format(len(crash))
 
     # Read in vision zero data
