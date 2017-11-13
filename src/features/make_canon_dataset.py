@@ -91,6 +91,9 @@ if __name__ == '__main__':
     # combined road feature dataset parameters
     inters_fp = DATA_FP + '/inters_data.json'
     non_inters_fp = MAP_FP + '/non_inters_segments.shp'
+    
+    import pdb
+    pdb.set_trace()
 
     feats = ['AADT', 'SPEEDLIMIT',
              'Struct_Cnd', 'Surface_Tp',
