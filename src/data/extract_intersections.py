@@ -85,9 +85,6 @@ def generate_intersections(lines):
             ))
         i += 1
 
-    # Save to pickle in case script breaks
-    with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:
-        cPickle.dump(inters, f)
     return inters
 
 
@@ -137,6 +134,9 @@ if __name__ == '__main__':
     if not os.path.exists(MAP_DATA_FP + 'inters.pkl'):
         print 'does not exist'
         inters = generate_intersections(lines)
+        # Save to pickle in case script breaks
+        with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:
+            cPickle.dump(inters, f)
     else:
         with open(MAP_DATA_FP + 'inters.pkl', 'r') as f:
             inters = cPickle.load(f)
