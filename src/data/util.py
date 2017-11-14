@@ -23,11 +23,18 @@ def write_shp(schema, fp, data, shape_key, prop_key):
     shape_key : column name or tuple index of Shapely shape
     prop_key : column name or tuple index of properties
     """
+
     with fiona.open(fp, 'w', 'ESRI Shapefile', schema) as c:
         for i in data:
+            # some mismatch in yearly crash data
+            # need to force it to conform to schema
+            for k in schema['properties']:
+                if k not in i[prop_key]:
+                    i[prop_key][k] = ''
             c.write({
                 'geometry': mapping(i[shape_key]),
-                'properties': i[prop_key],
+                # need to maintain key order because of fiona persnicketiness
+                'properties': {k:i[prop_key][k] for k in schema['properties']},
             })
 
 
