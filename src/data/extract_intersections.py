@@ -5,6 +5,7 @@ from shapely.geometry import Point, shape, mapping
 import itertools
 import cPickle
 import os
+import argparse
 
 MAP_DATA_FP = 'data/processed/maps/'
 
@@ -119,8 +120,13 @@ def write_intersections(inters):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("shp", help="Segments shape file")
+
+    args = parser.parse_args()
+
     # Import shapefile specified at commandline
-    shp = sys.argv[1]
+    shp = args.shp
 
     # Get all lines, dummy id
     lines = [
