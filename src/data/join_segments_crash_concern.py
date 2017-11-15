@@ -10,10 +10,11 @@ import json
 import pyproj
 import pandas as pd
 import util
+from ATR_scraping import ATR_util
 
-MAP_FP = '../data/processed/maps'
-RAW_DATA_FP = '../data/raw'
-PROCESSED_DATA_FP = '../data/processed'
+MAP_FP = '../../data/processed/maps'
+RAW_DATA_FP = '../../data/raw'
+PROCESSED_DATA_FP = '../../data/processed'
 # filepaths of raw crash data (hardcoded for now)
 CRASH_DATA_FPS = ['/cad_crash_events_with_transport_2016_wgs84.csv','/2015motorvehicles_formatted.csv',
                   '/2017motorvehicles_formatted.csv']
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     # Read in CAD crash data
     crash = []
     for fp in CRASH_DATA_FPS:
-        tmp = ATR_util.csv_to_projected_records(RAW_DATA_FP + fp)
+        tmp = util.csv_to_projected_records(RAW_DATA_FP + fp)
         crash = crash + tmp
     print "Read in data from {} crashes".format(len(crash))
 
