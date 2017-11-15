@@ -15,6 +15,8 @@ from shapely.geometry import Point, shape, mapping
 from shapely.ops import unary_union
 from collections import defaultdict
 from util import write_shp
+import argparse
+
 
 MAP_FP = 'data/processed/maps'
 DATA_FP = 'data/processed'
@@ -28,8 +30,8 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
         intersection_buffer_units - in meters
     Returns:
         a list of polygons, buffering the intersections
+        these are circles, or groups of overlapping circles
     """
-
     buffered_intersections = [intersection[0].buffer(intersection_buffer_units)
                               for intersection in intersections]
     return unary_union(buffered_intersections)
@@ -40,6 +42,7 @@ def find_non_ints(roads, int_buffers):
     Find the segments that aren't intersections
     Args:
         roads - a list of tuples of shapely shape and dict of segment info
+        int_buffers - a list of polygons that buffer intersections
     Returns:
         tuple consisting of:
             non_int_lines - list in same format as input roads, just a subset
@@ -145,6 +148,7 @@ def create_segments():
         roads, int_buffers)
 
     # Planarize intersection segments
+    # Turns the list of LineStrings into a MultiLineString
     union_inter = [({'id': idx}, unary_union(l))
                    for idx, l in inter_segments['lines'].items()]
     print "extracted {} intersection segments".format(len(union_inter))
@@ -154,7 +158,6 @@ def create_segments():
         'geometry': 'LineString',
         'properties': {'id': 'int'},
     }
-
     write_shp(inter_schema, MAP_FP + '/inters_segments.shp', union_inter, 1, 0)
 
     # Output inters_segments properties as json
@@ -219,5 +222,21 @@ def create_segments():
         MAP_FP + '/inter_and_non_int.shp', inter_and_non_int, 1, 0)
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory")
+    parser.add_argument("-m", "--mapdir", type=str,
+                        help="Can give alternate map directory")
+
+    args = parser.parse_args()
+
+    # Can override the hardcoded data directory
+    if args.datadir:
+        DATA_FP = args.datadir
+    if args.mapdir:
+        MAP_FP = args.mapdir
+    print "Data directory: " + DATA_FP
+    print "Map directory: " + MAP_FP
     create_segments()
 

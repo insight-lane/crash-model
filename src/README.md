@@ -28,7 +28,7 @@ All of the python data generation scripts should be run from the top directory (
 If you add a new feature, create a new directory for the code.  Any utilities that are specific to that feature can go in a utility in that directory, but any shared functions should go in the top util.py.
 
 ## 1) Extract intersections
-- Reads in road segment data (data/raw/Boston_Segments.shp)
+- Reads in road segment data (data/raw/Boston_Segments.shp).  Boston_Segments is in EPSG:4326 projection
 - Finds point locations where roads intersect
 - Creates a shapefile of intersections (inters.shp)
 - **Usage:** `python -m src.data.extract_intersections data/raw/Boston_Segments.shp`
@@ -38,6 +38,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
 
 ## 2) Create segments
 - Reads in intersections and road segments
+    - Creates unique ids for the road segments (orig_id) from ma\_co\_spatially\_joined\_streets.shp
 - Creates buffer (hard-coded 20m) around intersections
 - Connects any parts of road segments within intersection buffer to intersection
     - Road features from connected road segments linked to intersection id (for later aggregation)
@@ -45,12 +46,13 @@ If you add a new feature, create a new directory for the code.  Any utilities th
 -Creates unique segment ids where all non-intersections have a '00' prefix <br>
 - **Usage:** `python -m src.data.create_segments`
 - **Dependencies:**
-    - data/processed/maps/inters.shp
-    - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp
+    - data/processed/maps/inters.shp (EPSG:4326 projection)
+    - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp (Mercator projection:3857)
         - Descriptions of the attributes from ma_co_spatially_joined_streets.shp can be found in data/docs/MassDOTRoadInvDictionary.pdf
 - **Results:**
     - data/processed/inters_segments.shp
     - data/processed/non_inters_segments.shp
+    - data/processed/inter_and_non_int.shp
     - data/processed/inters_data.json
 
 

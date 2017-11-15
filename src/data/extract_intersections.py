@@ -1,5 +1,4 @@
 import fiona
-import sys
 import math
 from shapely.geometry import Point, shape, mapping
 import itertools
@@ -122,11 +121,17 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("shp", help="Segments shape file")
+    parser.add_argument("-d", "--dir", type=str,
+                        help="Can give alternate maps output directory")
 
     args = parser.parse_args()
 
     # Import shapefile specified at commandline
     shp = args.shp
+
+    # Can override the hardcoded maps directory
+    if args.dir:
+        MAP_DATA_FP = args.dir
 
     # Get all lines, dummy id
     lines = [
@@ -136,9 +141,10 @@ if __name__ == '__main__':
         ) for line in enumerate(fiona.open(shp))
     ]
 
+    print 'map data:' + MAP_DATA_FP
     inters = []
     if not os.path.exists(MAP_DATA_FP + 'inters.pkl'):
-        print 'does not exist'
+        print 'inters.pkl does not exist - generating intersections...'
         inters = generate_intersections(lines)
         # Save to pickle in case script breaks
         with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:

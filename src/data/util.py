@@ -72,7 +72,8 @@ def read_record(record, x, y, orig=None, new=PROJ):
 def csv_to_projected_records(filename, x='X', y='Y'):
     """
     Reads a csv file in and creates a list of records,
-    projecting x and y coordinates to projection 4326
+    reprojecting x and y coordinates from projection 4326
+    to projection 3857
 
     Args:
         filename (csv file)
