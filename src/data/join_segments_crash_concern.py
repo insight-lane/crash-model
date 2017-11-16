@@ -12,13 +12,15 @@ import pandas as pd
 import util
 from ATR_scraping import ATR_util
 
-MAP_FP = '../../data/processed/maps'
-RAW_DATA_FP = '../../data/raw'
-PROCESSED_DATA_FP = '../../data/processed'
+MAP_FP = 'data/processed/maps'
+RAW_DATA_FP = 'data/raw'
+PROCESSED_DATA_FP = 'data/processed'
 # filepaths of raw crash data (hardcoded for now)
-CRASH_DATA_FPS = ['/cad_crash_events_with_transport_2016_wgs84.csv','/2015motorvehicles_formatted.csv',
-                  '/2017motorvehicles_formatted.csv']
-
+CRASH_DATA_FPS = [
+    '/cad_crash_events_with_transport_2016_wgs84.csv',
+    '/2015motorvehicles_formatted.csv',
+    '/2017motorvehicles_formatted.csv'
+]
 
 def make_schema(geometry, properties):
     """
