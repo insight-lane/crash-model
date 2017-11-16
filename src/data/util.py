@@ -34,7 +34,8 @@ def write_shp(schema, fp, data, shape_key, prop_key):
             c.write({
                 'geometry': mapping(i[shape_key]),
                 # need to maintain key order because of fiona persnicketiness
-                'properties': {k:i[prop_key][k] for k in schema['properties']},
+                'properties': {
+                    k: i[prop_key][k] for k in schema['properties']},
             })
 
 
