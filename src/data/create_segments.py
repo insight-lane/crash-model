@@ -53,8 +53,8 @@ def find_non_ints(roads):
 
 if __name__ == '__main__':
 
-    MAP_FP = 'data/processed/maps'
-    DATA_FP = 'data/processed'
+    MAP_FP = '../../data/processed/maps'
+    DATA_FP = '../../data/processed'
 
     print "Map data at ", MAP_FP
     print "Output intersection data to ", DATA_FP

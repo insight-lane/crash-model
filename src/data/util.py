@@ -7,7 +7,7 @@ from time import sleep
 from shapely.geometry import Point, shape, mapping
 
 PROJ = pyproj.Proj(init='epsg:3857')
-MAP_FP = 'data/processed/maps'
+MAP_FP = '../../data/processed/maps'
 
 
 def read_shp(fp):

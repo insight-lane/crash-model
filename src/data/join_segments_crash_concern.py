@@ -10,6 +10,7 @@ import json
 import pyproj
 import pandas as pd
 import util
+from ATR_scraping import ATR_util
 
 MAP_FP = 'data/processed/maps'
 RAW_DATA_FP = 'data/raw'
@@ -20,7 +21,6 @@ CRASH_DATA_FPS = [
     '/2015motorvehicles_formatted.csv',
     '/2017motorvehicles_formatted.csv'
 ]
-
 
 def make_schema(geometry, properties):
     """
