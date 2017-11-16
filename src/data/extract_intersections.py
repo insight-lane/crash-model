@@ -6,7 +6,10 @@ import cPickle
 import os
 import argparse
 
-MAP_DATA_FP = 'data/processed/maps/'
+MAP_DATA_FP = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__)))) + '/data/processed/maps/'
 
 
 def track(index, step, tot):

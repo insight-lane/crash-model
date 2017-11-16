@@ -2,15 +2,18 @@
 # coding: utf-8
 # Generate canonical dataset for hackathon
 # Developed by: bpben
-import sys
-sys.path.append('..')
 import json
 import pandas as pd
-from data.util import read_shp
+from ..data.util import read_shp
+import os
 
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
 
-MAP_FP = '../../data/processed/maps'
-DATA_FP = '../../data/processed'
+MAP_FP = BASE_DIR + '/data/processed/maps'
+DATA_FP = BASE_DIR + '/data/processed'
 
 
 def read_records(fp, date_col, id_col, agg='week'):

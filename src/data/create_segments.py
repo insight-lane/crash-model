@@ -16,10 +16,15 @@ from shapely.ops import unary_union
 from collections import defaultdict
 from util import write_shp
 import argparse
+import os
 
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
 
-MAP_FP = 'data/processed/maps'
-DATA_FP = 'data/processed'
+MAP_FP = BASE_DIR + '/data/processed/maps'
+DATA_FP = BASE_DIR + '/data/processed'
 
 
 def get_intersection_buffers(intersections, intersection_buffer_units):

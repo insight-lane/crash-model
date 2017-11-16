@@ -7,9 +7,15 @@ from dateutil.parser import parse
 from .. import util
 import rtree
 import folium
+import os
 
-RAW_DATA_FP = 'data/raw/'
-PROCESSED_DATA_FP = 'data/processed/'
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+RAW_DATA_FP = BASE_DIR + '/data/raw/'
+PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
 
 
 def file_dataframe(excel_sheet, data_location):

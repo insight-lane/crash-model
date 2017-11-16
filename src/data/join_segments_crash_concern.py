@@ -10,10 +10,16 @@ import json
 import pyproj
 import pandas as pd
 import util
+import os
 
-MAP_FP = 'data/processed/maps'
-RAW_DATA_FP = 'data/raw'
-PROCESSED_DATA_FP = 'data/processed'
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+MAP_FP = BASE_DIR + '/data/processed/maps'
+RAW_DATA_FP = BASE_DIR + '/data/raw'
+PROCESSED_DATA_FP = BASE_DIR + '/data/processed'
 # filepaths of raw crash data (hardcoded for now)
 CRASH_DATA_FPS = [
     '/cad_crash_events_with_transport_2016_wgs84.csv',
