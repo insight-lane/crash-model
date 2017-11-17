@@ -4,7 +4,7 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from ..data.util import read_shp
+from data.util import read_shp
 import os
 
 BASE_DIR = os.path.dirname(

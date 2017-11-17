@@ -5,7 +5,7 @@ import rtree
 import pyproj
 import argparse
 from .. import util
-import ATR_util
+from . import ATR_util
 
 
 BASE_DIR = os.path.dirname(
