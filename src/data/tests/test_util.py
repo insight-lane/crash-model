@@ -1,6 +1,7 @@
 from .. import util
 import os
 from shapely.geometry import Point
+import pyproj
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -36,3 +37,27 @@ def test_write_shp(tmpdir):
         }
     )
     util.write_shp(schema, tmppath + '/test', data, 'point', 'properties')
+
+
+def test_read_record():
+    x = float(42.30)
+    y = float(-71.07)
+    # Test with no projections given
+    record = {'a': 1, 'b': 'x'}
+
+    # Don't project if you don't pass in projections
+    result = util.read_record(record, x, y)
+    expected = {
+        'point': Point(float(x), float(y)),
+        'properties': record
+    }
+
+    assert result == expected
+
+    orig = pyproj.Proj(init='epsg:4326')
+    result = util.read_record(record, x, y, orig)
+
+    # Test projecting
+    expected['point'] = Point(
+        float(4708814.460555471), float(-11426249.391937567))
+    assert result == expected
