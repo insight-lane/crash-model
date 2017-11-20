@@ -39,8 +39,11 @@ def test_get_intersection_buffers():
     """
     Use small test version of inters_3857.shp to test
     """
-    inters = [(shape(inter['geometry']), inter['properties'])
-              for inter in fiona.open(TEST_FP + '/data/inters_3857.shp')]
+    inters = [
+        (shape(inter['geometry']), inter['properties'])
+        for inter in fiona.open(
+            TEST_FP + '/data/processed/maps/inters_3857.shp'
+        )]
     assert len(inters) == 6
 
     # Two test intersections overlap with the regular buffer
@@ -53,11 +56,15 @@ def test_get_intersection_buffers():
 
 
 def test_find_non_ints():
-    roads_shp_path = TEST_FP + '/data/ma_cob_spatially_joined_streets.shp'
+    roads_shp_path = TEST_FP + \
+        '/data/processed/maps/ma_cob_spatially_joined_streets.shp'
     roads = [(shape(road['geometry']), road['properties'])
              for road in fiona.open(roads_shp_path)]
-    inters = [(shape(inter['geometry']), inter['properties'])
-              for inter in fiona.open(TEST_FP + '/data/inters_3857.shp')]
+    inters = [
+        (shape(inter['geometry']), inter['properties'])
+        for inter in fiona.open(
+            TEST_FP + '/data/processed/maps/inters_3857.shp'
+        )]
 
     int_buffers = create_segments.get_intersection_buffers(inters, 20)
     non_int_lines, inter_segments = create_segments.find_non_ints(

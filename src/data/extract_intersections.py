@@ -125,7 +125,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("shp", help="Segments shape file")
     parser.add_argument("-d", "--dir", type=str,
-                        help="Can give alternate maps output directory")
+                        help="Can give alternate data directory")
 
     args = parser.parse_args()
 
@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     # Can override the hardcoded maps directory
     if args.dir:
-        MAP_DATA_FP = args.dir
+        MAP_DATA_FP = args.dir + '/processed/maps/'
 
     # Get all lines, dummy id
     lines = [

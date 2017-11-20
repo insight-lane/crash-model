@@ -8,7 +8,7 @@ TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_read_shp():
-    res = util.read_shp(TEST_FP + '/data/inters.shp')
+    res = util.read_shp(TEST_FP + '/data/processed/maps/inters.shp')
     assert len(res) == 6
     assert type(res[0][0]) == Point
 

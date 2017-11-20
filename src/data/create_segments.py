@@ -231,16 +231,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
-    parser.add_argument("-m", "--mapdir", type=str,
-                        help="Can give alternate map directory")
-
     args = parser.parse_args()
 
     # Can override the hardcoded data directory
     if args.datadir:
-        DATA_FP = args.datadir
-    if args.mapdir:
-        MAP_FP = args.mapdir
+        DATA_FP = args.datadir + '/processed/'
+        MAP_FP = args.datadir + '/processed/maps/'
+
     print "Data directory: " + DATA_FP
     print "Map directory: " + MAP_FP
     create_segments()
