@@ -53,23 +53,6 @@ def read_record(record, x, y, orig=None, new=PROJ):
     return(r_dict)
 
 
-# Temporarily commented out; not sure we actually use this anymore
-# now that we have csv_to_projected_records
-# def read_csv(file):
-#    # Read in CAD crash data
-#    crash = []
-#    with open(file) as f:
-#        csv_reader = csv.DictReader(f)
-#        for r in csv_reader:
-#            # Some crash 0 / blank coordinates
-#            if r['X'] != '':
-#                crash.append(
-#                    read_record(r, r['X'], r['Y'],
-#                                orig=pyproj.Proj(init='epsg:4326'))
-#                )
-#    return crash
-
-
 def csv_to_projected_records(filename, x='X', y='Y'):
     """
     Reads a csv file in and creates a list of records,
@@ -125,7 +108,16 @@ def find_nearest(records, segments, segments_index, tolerance):
             record['properties']['near_id'] = ''
 
 
-def read_segments():
+def read_segments(dir=MAP_FP):
+    """
+    Reads in the intersection and non intersection segments, and
+    makes a spatial index for lookup
+
+    Args:
+        Optional directory (defaults to MAP_FP)
+    Returns:
+        The combined segments and spatial index
+    """
     # Read in segments
     inter = read_shp(MAP_FP + '/inters_segments.shp')
     non_inter = read_shp(MAP_FP + '/non_inters_segments.shp')

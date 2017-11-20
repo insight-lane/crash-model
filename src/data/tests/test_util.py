@@ -2,6 +2,7 @@ from .. import util
 import os
 from shapely.geometry import Point
 import pyproj
+import csv
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -40,8 +41,8 @@ def test_write_shp(tmpdir):
 
 
 def test_read_record():
-    x = float(42.30)
-    y = float(-71.07)
+    x = float(-71.07)
+    y = float(42.30)
     # Test with no projections given
     record = {'a': 1, 'b': 'x'}
 
@@ -59,5 +60,35 @@ def test_read_record():
 
     # Test projecting
     expected['point'] = Point(
-        float(4708814.460555471), float(-11426249.391937567))
+        float(-7911476.210677952), float(5206024.46129235))
     assert result == expected
+
+
+def test_csv_to_projected_records(tmpdir):
+    x = float(-71.07)
+    y = float(42.3)
+    print tmpdir
+    file = str(tmpdir) + '/test.csv'
+    with open(file, 'wb') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow(['col1', 'col2', 'col3'])
+        writer.writerow(['test', x, y])
+    results = util.csv_to_projected_records(file,
+                                            'col2', 'col3')
+    expected_props = {
+        'col1': 'test',
+        'col2': '-71.07',
+        'col3': '42.3'
+    }
+    expected_point = Point(float(-7911476.210677952), float(5206024.46129235))
+
+    assert results[0]['point'] == expected_point
+    assert results[0]['properties'] == expected_props
+
+
+def find_nearest():
+    pass
+
+
+def test_read_segments():
+    pass
