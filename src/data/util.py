@@ -5,9 +5,15 @@ import rtree
 import geocoder
 from time import sleep
 from shapely.geometry import Point, shape, mapping
+import os
 
 PROJ = pyproj.Proj(init='epsg:3857')
-MAP_FP = 'data/processed/maps'
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+MAP_FP = BASE_DIR + '/data/processed/maps'
 
 
 def read_shp(fp):
@@ -108,7 +114,7 @@ def find_nearest(records, segments, segments_index, tolerance):
             record['properties']['near_id'] = ''
 
 
-def read_segments(dir=MAP_FP):
+def read_segments(dirname=MAP_FP):
     """
     Reads in the intersection and non intersection segments, and
     makes a spatial index for lookup
@@ -119,8 +125,8 @@ def read_segments(dir=MAP_FP):
         The combined segments and spatial index
     """
     # Read in segments
-    inter = read_shp(MAP_FP + '/inters_segments.shp')
-    non_inter = read_shp(MAP_FP + '/non_inters_segments.shp')
+    inter = read_shp(dirname + '/inters_segments.shp')
+    non_inter = read_shp(dirname + '/non_inters_segments.shp')
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 
