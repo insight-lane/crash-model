@@ -103,6 +103,12 @@ def reproject_and_read(infile, outfile):
         inters - the reprojected intersections
     """
 
+    MAP_FP = '../../data/processed/maps'
+    DATA_FP = '../../data/processed'
+
+    print "Map data at ", MAP_FP
+    print "Output intersection data to ", DATA_FP
+
     # Reproject to 3857
     # Necessary because original intersection extraction had null projection
     print "reprojecting raw intersection shapefile"

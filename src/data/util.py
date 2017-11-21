@@ -8,6 +8,7 @@ from shapely.geometry import Point, shape, mapping
 import os
 
 PROJ = pyproj.Proj(init='epsg:3857')
+
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(

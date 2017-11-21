@@ -29,7 +29,6 @@ CRASH_DATA_FPS = [
     '/2017motorvehicles_formatted.csv'
 ]
 
-
 def make_schema(geometry, properties):
     """
     Utility for making schema with 'str' value for each key in properties
