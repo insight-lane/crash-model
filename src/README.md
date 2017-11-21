@@ -21,6 +21,10 @@ rtree additionally requires download and installation of [libspatialindex](http:
 
 Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download.html) might be helpful to visualize shape files and easily see their attributes
 
+## Testing
+
+Before submitting PRs for code in the data directory, you should run the tests.  In the src directory: `py.test`
+
 ## Process map
 
 All of the python data generation scripts should be run from the src directory (boston-crash-modeling/src/) using the following scheme: `python -m <import path> <args>`.  See below for specific examples.
