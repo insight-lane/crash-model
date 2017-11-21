@@ -1,12 +1,17 @@
 import os
 import subprocess
 import json
+import shutil
 
 
-def test_all():
+def test_all(tmpdir):
 
-    path = os.path.dirname(
+    # Copy test data into temp directory
+    orig_path = os.path.dirname(
         os.path.abspath(__file__)) + '/data/'
+    path = tmpdir.strpath + '/data'
+    shutil.copytree(orig_path, path)
+
     filename = path + '/raw/Boston_Segments.shp'
 
     subprocess.check_call([
@@ -31,7 +36,7 @@ def test_all():
         '-m',
         'data.join_segments_crash_concern',
         '-d',
-        'data/tests/data/',
+        path,
         '-c',
         'crashes.csv'
     ])
