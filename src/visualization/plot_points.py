@@ -27,7 +27,7 @@ import argparse
 
 
 # all datasets must be stored in the "data/processed/" directory
-fp = '../data/processed/'
+fp = '../../data/processed/'
 
 
 
