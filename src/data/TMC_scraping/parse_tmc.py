@@ -120,7 +120,26 @@ def find_date(filename):
     return parse(segments[len(segments) - 1]).date()
 
 
-def find_address(filename, cached):
+def lookup_address(intersection, cached):
+    """
+    Look up an intersection first in the cache, and if it
+    doesn't exist, geocode it
+
+    Args:
+        intersection: string
+        cached: dict
+    Returns:
+        tuple of original address, geocoded address, latitude, longitude
+    """
+    if intersection in cached.keys():
+        print intersection + ' is cached'
+        return cached[intersection]
+    else:
+        print 'geocoding ' + intersection
+        return list(util.geocode_address(intersection))
+
+
+def find_address_from_filename(filename, cached):
     """
     Parses out filename to give an intersection
     Args:
@@ -133,15 +152,21 @@ def find_address(filename, cached):
     streets = [re.sub('-', ' ', s) for s in streets]
     # Strip out space at beginning of street name if it's there
     streets = [s if s[0] != ' ' else s[1:len(s)] for s in streets]
-
+    print filename
     if len(streets) >= 2:
         intersection = streets[0] + ' and ' + streets[1] + ' Boston, MA'
-        if intersection in cached.keys():
-            print intersection + ' is cached'
-            result = cached[intersection]
-        else:
-            print 'geocoding ' + intersection
+        result = lookup_address(intersection, cached)
+
+        # It's possible that google can't look up the address by the
+        # first two street names for an intersection containing three
+        # or more street names.  Try the first and second
+        print result
+        if (result is None
+                or 'Boston' not in str(result[0])) and len(streets) > 2:
+            intersection = streets[0] + ' and ' + streets[2] + ' Boston, MA'
+            print 'trying again, this time geocoding ' + intersection
             result = list(util.geocode_address(intersection))
+
         result.insert(0, intersection)
         return result
     return None, None, None, None
@@ -356,7 +381,6 @@ def snap_inter_and_non_inter(summary):
     print "................................."
     print len(combined_seg)
     print combined_seg[0]
-    import ipdb; ipdb.set_trace()
 
     return address_records
 
@@ -433,8 +457,8 @@ def parse_tmcs():
         if filename.endswith('.XLS'):
 
             # Pull out what we can from the filename itself
-            orig_address, address, latitude, longitude = find_address(
-                filename, cached)
+            orig_address, address, latitude, longitude = \
+                find_address_from_filename(filename, cached)
             # If you can't geocode the address then there's not much point
             # in parsing it because you won't be able to snap it to a segment
             if latitude:
@@ -696,17 +720,38 @@ def compare_crashes():
 if __name__ == '__main__':
 
     address_records = []
-    if not path_exists(PROCESSED_DATA_FP + 'tmc_summary.json'):
+    summary_file = PROCESSED_DATA_FP + 'tmc_summary.json'
+    if not path_exists(summary_file):
         print 'No tmc_summary.json, parsing tmcs files now...'
         summary = parse_tmcs()
         address_records = snap_inter_and_non_inter(summary)
         print address_records[0]
-        with open(PROCESSED_DATA_FP + 'tmc_summary.json', 'w') as f:
+        with open(summary_file, 'w') as f:
             json.dump([x['properties'] for x in address_records], f)
+    else:
+        address_records = json.load(open(summary_file))
 
-#    print len(address_records)
+    # temporarily write to file points that don't match intersection
+    # for visualization purposes
+    with open(PROCESSED_DATA_FP + 'tmc_nonmatches.csv', 'wb') as f:
+        import csv
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow(['filename', 'address', 'X', 'Y'])
+        for address in address_records:
+#            print address['near_id']
+            print address.keys()
+            if address['near_id'] == '':
+                writer.writerow([
+                    address['Filename'],
+                    address['Address'],
+                    address['Longitude'],
+                    address['Latitude']
+                ])
+
+    print len(address_records)
     compare_crashes()
 
+#    import ipdb; ipdb.set_trace()
 
 #    print address_records[0]
 #    compare_atrs(address_records)
