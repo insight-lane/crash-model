@@ -1,12 +1,15 @@
 import fiona
-import sys
 import math
 from shapely.geometry import Point, shape, mapping
 import itertools
 import cPickle
 import os
+import argparse
 
-MAP_DATA_FP = '../../data/processed/maps/'
+MAP_DATA_FP = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__)))) + '/data/processed/maps/'
 
 
 def track(index, step, tot):
@@ -23,7 +26,8 @@ def extract_intersections(inter, prop):
 
     Args:
         inter: the intersection of two segments
-        prop: ??
+        prop: a dict where the keys are id_1 and id_2, and the values
+            are the segment ids
 
     Returns:
         Generator
@@ -41,7 +45,9 @@ def extract_intersections(inter, prop):
         multiLine = [line for line in inter]
         first_coords = multiLine[0].coords[0]
         last_coords = multiLine[-1].coords[1]
-        for i in [Point(first_coords[0], first_coords[1]),Point(last_coords[0], last_coords[1])]:
+        for i in [
+                Point(first_coords[0], first_coords[1]),
+                Point(last_coords[0], last_coords[1])]:
             yield(i, prop)
     # If collection points/lines (rare), just re-run on each part
     elif "GeometryCollection" == inter.type:
@@ -53,12 +59,15 @@ def extract_intersections(inter, prop):
 def generate_intersections(lines):
     """
     Runs extract_intersections on all combinations of points
+    Writes the resulting intersections to file as well as returning
 
     Args:
         lines: the lines from the shapefile
 
     Returns:
-        inters: intersections
+        inters: intersections - a list of point, dict tuples
+            the dict contains the newly created ids of the
+            intersecting segments
     """
     inters = []
     i = 0
@@ -79,9 +88,6 @@ def generate_intersections(lines):
             ))
         i += 1
 
-    # Save to pickle in case script breaks
-    with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:
-        cPickle.dump(inters, f)
     return inters
 
 
@@ -107,7 +113,6 @@ def write_intersections(inters):
     for pt, prop in inters:
         if (pt.x, pt.y) not in points.keys():
             points[(pt.x, pt.y)] = pt, prop
-
     with fiona.open(MAP_DATA_FP
                     + 'inters.shp', 'w', 'ESRI Shapefile', schema) as output:
         for i, (pt, prop) in enumerate(points.values()):
@@ -117,8 +122,19 @@ def write_intersections(inters):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("shp", help="Segments shape file")
+    parser.add_argument("-d", "--dir", type=str,
+                        help="Can give alternate data directory")
+
+    args = parser.parse_args()
+
     # Import shapefile specified at commandline
-    shp = sys.argv[1]
+    shp = args.shp
+
+    # Can override the hardcoded maps directory
+    if args.dir:
+        MAP_DATA_FP = args.dir + '/processed/maps/'
 
     # Get all lines, dummy id
     lines = [
@@ -128,10 +144,14 @@ if __name__ == '__main__':
         ) for line in enumerate(fiona.open(shp))
     ]
 
+    print 'map data:' + MAP_DATA_FP
     inters = []
     if not os.path.exists(MAP_DATA_FP + 'inters.pkl'):
-        print 'does not exist'
+        print 'inters.pkl does not exist - generating intersections...'
         inters = generate_intersections(lines)
+        # Save to pickle in case script breaks
+        with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:
+            cPickle.dump(inters, f)
     else:
         with open(MAP_DATA_FP + 'inters.pkl', 'r') as f:
             inters = cPickle.load(f)

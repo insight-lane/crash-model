@@ -10,11 +10,18 @@ import json
 import pyproj
 import pandas as pd
 import util
-from ATR_scraping import ATR_util
+import os
+import argparse
 
-MAP_FP = 'data/processed/maps'
-RAW_DATA_FP = 'data/raw'
-PROCESSED_DATA_FP = 'data/processed'
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+
+MAP_FP = BASE_DIR + '/data/processed/maps'
+RAW_DATA_FP = BASE_DIR + '/data/raw'
+PROCESSED_DATA_FP = BASE_DIR + '/data/processed'
 # filepaths of raw crash data (hardcoded for now)
 CRASH_DATA_FPS = [
     '/cad_crash_events_with_transport_2016_wgs84.csv',
@@ -36,6 +43,23 @@ def make_schema(geometry, properties):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory")
+    parser.add_argument("-c", "--crashfiles", nargs='+',
+                        help="Can give alternate list of crash files. " +
+                        "Only use filename, don't include path")
+
+    args = parser.parse_args()
+
+    # Can override the hardcoded data directory
+    if args.datadir:
+        RAW_DATA_FP = args.datadir + '/raw/'
+        PROCESSED_DATA_FP = args.datadir + '/processed/'
+        MAP_FP = args.datadir + '/processed/maps/'
+    if args.crashfiles:
+        CRASH_DATA_FPS = args.crashfiles
+
     # Read in CAD crash data
     crash = []
     for fp in CRASH_DATA_FPS:
@@ -55,7 +79,7 @@ if __name__ == '__main__':
         )
     print "Read in data from {} concerns".format(len(concern))
 
-    combined_seg, segments_index = util.read_segments()
+    combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
 
     # Find nearest crashes - 30 tolerance
     print "snapping crashes to segments"

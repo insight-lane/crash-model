@@ -5,9 +5,16 @@ import rtree
 import geocoder
 from time import sleep
 from shapely.geometry import Point, shape, mapping
+import os
 
 PROJ = pyproj.Proj(init='epsg:3857')
-MAP_FP = '../../data/processed/maps'
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+MAP_FP = BASE_DIR + '/data/processed/maps'
 
 
 def read_shp(fp):
@@ -34,7 +41,8 @@ def write_shp(schema, fp, data, shape_key, prop_key):
             c.write({
                 'geometry': mapping(i[shape_key]),
                 # need to maintain key order because of fiona persnicketiness
-                'properties': {k:i[prop_key][k] for k in schema['properties']},
+                'properties': {
+                    k: i[prop_key][k] for k in schema['properties']},
             })
 
 
@@ -52,27 +60,11 @@ def read_record(record, x, y, orig=None, new=PROJ):
     return(r_dict)
 
 
-# Temporarily commented out; not sure we actually use this anymore
-# now that we have csv_to_projected_records
-# def read_csv(file):
-#    # Read in CAD crash data
-#    crash = []
-#    with open(file) as f:
-#        csv_reader = csv.DictReader(f)
-#        for r in csv_reader:
-#            # Some crash 0 / blank coordinates
-#            if r['X'] != '':
-#                crash.append(
-#                    read_record(r, r['X'], r['Y'],
-#                                orig=pyproj.Proj(init='epsg:4326'))
-#                )
-#    return crash
-
-
 def csv_to_projected_records(filename, x='X', y='Y'):
     """
     Reads a csv file in and creates a list of records,
-    projecting x and y coordinates to projection 4326
+    reprojecting x and y coordinates from projection 4326
+    to projection 3857
 
     Args:
         filename (csv file)
@@ -123,10 +115,19 @@ def find_nearest(records, segments, segments_index, tolerance):
             record['properties']['near_id'] = ''
 
 
-def read_segments():
+def read_segments(dirname=MAP_FP):
+    """
+    Reads in the intersection and non intersection segments, and
+    makes a spatial index for lookup
+
+    Args:
+        Optional directory (defaults to MAP_FP)
+    Returns:
+        The combined segments and spatial index
+    """
     # Read in segments
-    inter = read_shp(MAP_FP + '/inters_segments.shp')
-    non_inter = read_shp(MAP_FP + '/non_inters_segments.shp')
+    inter = read_shp(dirname + '/inters_segments.shp')
+    non_inter = read_shp(dirname + '/non_inters_segments.shp')
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 

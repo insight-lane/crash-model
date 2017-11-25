@@ -5,10 +5,17 @@ import rtree
 import pyproj
 import argparse
 from .. import util
-import ATR_util
+from . import ATR_util
 
-ATR_FP = 'data/raw/AUTOMATED TRAFFICE RECORDING/'
-PROCESSED_DATA_FP = 'data/processed/'
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__)))))
+
+ATR_FP = BASE_DIR + '/data/raw/AUTOMATED TRAFFICE RECORDING/'
+PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
 atrs = os.listdir(ATR_FP)
 
 PROJ = pyproj.Proj(init='epsg:3857')

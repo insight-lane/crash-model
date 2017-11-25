@@ -21,36 +21,42 @@ rtree additionally requires download and installation of [libspatialindex](http:
 
 Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download.html) might be helpful to visualize shape files and easily see their attributes
 
+## Testing
+
+Before submitting PRs for code in the data directory, you should run the tests.  In the src directory: `py.test`
+
 ## Process map
 
-All of the python data generation scripts should be run from the top directory (boston-crash-modeling) using the following scheme: `python -m <import path> <args>`.  See below for specific examples.
+All of the python data generation scripts should be run from the src directory (boston-crash-modeling/src/) using the following scheme: `python -m <import path> <args>`.  See below for specific examples.
 
 If you add a new feature, create a new directory for the code.  Any utilities that are specific to that feature can go in a utility in that directory, but any shared functions should go in the top util.py.
 
 ## 1) Extract intersections
-- Reads in road segment data (data/raw/Boston_Segments.shp)
+- Reads in road segment data (data/raw/Boston_Segments.shp).  Boston_Segments is in EPSG:4326 projection
 - Finds point locations where roads intersect
 - Creates a shapefile of intersections (inters.shp)
-- **Usage:** `python -m src.data.extract_intersections data/raw/Boston_Segments.shp`
+- **Usage:** `python -m data.extract_intersections data/raw/Boston_Segments.shp`
 - **Results:**
     - data/processed/maps/inters.shp (and related files)
 
 
 ## 2) Create segments
 - Reads in intersections and road segments
+    - Creates unique ids for the road segments (orig_id) from ma\_co\_spatially\_joined\_streets.shp
 - Creates buffer (hard-coded 20m) around intersections
 - Connects any parts of road segments within intersection buffer to intersection
     - Road features from connected road segments linked to intersection id (for later aggregation)
 - Separates out non-intersection segments
 -Creates unique segment ids where all non-intersections have a '00' prefix <br>
-- **Usage:** `python -m src.data.create_segments`
+- **Usage:** `python -m data.create_segments`
 - **Dependencies:**
-    - data/processed/maps/inters.shp
-    - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp
+    - data/processed/maps/inters.shp (EPSG:4326 projection)
+    - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp (Mercator projection:3857)
         - Descriptions of the attributes from ma_co_spatially_joined_streets.shp can be found in data/docs/MassDOTRoadInvDictionary.pdf
 - **Results:**
     - data/processed/inters_segments.shp
     - data/processed/non_inters_segments.shp
+    - data/processed/inter_and_non_int.shp
     - data/processed/inters_data.json
 
 
@@ -60,7 +66,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - Tolerance of 30m for crashes, 20m for concerns
 - Writes shapefile of joined points and json data file
 - Includes coordinates and near_id referring to segment id (intersection or non intersection)
-- <b>Usage:</b> python -m src.data.join_segments_crash_concern
+- <b>Usage:</b> `python -m data.join_segments_crash_concern`
 - <b>Dependencies:</b>
     - inters/non_inters shape data
     - CAD crash data: data/raw/cad_crash_events_with_transport_2016_wgs84.csv
@@ -72,7 +78,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
 ## 4) Process the ATRs
 - Adds coordinates for the Automated traffic recordings, along with some of the traffic count information.
 - Also snaps them to match up to road segments
-- <b>Usage:</b> python -m src.data.ATR_scraping.geocode_snap_ATRs
+- <b>Usage:</b> `python -m data.ATR_scraping.geocode_snap_ATRs`
 - <b>Dependencies:</b>
     - atr files
     - data/processed/maps/inters_segments.shp
@@ -89,7 +95,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - e.g. intersection features set to max of all roads joined to it
 - Creates dataframe with 52 weeks for each segment
 - Joins weekly crash/concerns to dataframe
-- <b>Usage:</b> At the moment, this should be run from the src/features directory `python make_canon_dataset.py`
+- <b>Usage:</b>`python -m features.make_canon_dataset`
 - <b>Dependencies:</b>
     - crash/concern_joined
     - inters/non_inters
