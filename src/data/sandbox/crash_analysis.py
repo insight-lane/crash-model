@@ -78,8 +78,6 @@ def int_vs_non_int(crashes):
                 counts['non_inter_plus'] += 1
             counts['non_inter'] += 1
 
-    print counts
-
     print "========================================================="
     print "Number of intersections:" + str(inter_count)
     print "Number of non-intersections:" + str(non_inter_count)
@@ -88,6 +86,10 @@ def int_vs_non_int(crashes):
         + str(counts['inter']) + '/' + str(counts['inter_plus'])
     print "Number of non-intersection segments with 1/more than 1 crash:" \
         + str(counts['non_inter']) + '/' + str(counts['non_inter_plus'])
+
+    print "percent of all segments with crash:" + str(
+        float(counts['inter'] + counts['non_inter']) /
+        float(inter_count + non_inter_count))
 
     # Percentage of intersections/non-intersections
     # that have at least one crash
@@ -128,13 +130,34 @@ def concern_volume(crashes, concerns):
             matching[d['count']][key][1] += 1
 
     print "========================================================="
+    print "concerns\t %\t total\t int %\t int tot\t non-int %\t non-int tot"
+    sorted_matching = sorted(matching.items())
+    print sorted_matching
     for key, value in sorted(matching.items()):
+
+        # Do the 1+,2+ stats as well as 1, 2
         total_inters = value['inter'][0] + value['inter'][1]
         total_non_inters = value['non_inter'][0] + value['non_inter'][1]
 
         inter_value = value['inter'][0]
         non_inter_value = value['non_inter'][0]
-        print str(key) + ':' + str(float(inter_value + non_inter_value)/float(total_inters + total_non_inters)) + '\t' + str(total_inters + total_non_inters)
+
+        total_percent = float(inter_value + non_inter_value) / \
+            float(total_inters + total_non_inters)
+        inters_percent = 0
+        if total_inters > 0:
+            inters_percent = float(inter_value) / float(total_inters)
+        non_inters_percent = 0
+        if total_non_inters > 0:
+            non_inters_percent = float(non_inter_value) / \
+                float(total_non_inters)
+        print str(key) + '\t' + \
+            str(total_percent) + \
+            '\t' + str(total_inters + total_non_inters) + \
+            '\t' + str(inters_percent) + \
+            '\t' + str(total_inters) + \
+            '\t' + str(non_inters_percent) + \
+            '\t' + str(total_non_inters)
 
 
 def concern_types(concerns, concern_data):
@@ -179,6 +202,7 @@ def concern_types(concerns, concern_data):
             by_type[k] = 0
         by_type[k] += 1
 
+    print "========================================================="
     for k, v in requests.iteritems():
         print k
         print 'Number of requests of this type that appear more than once at an intersection\t' + str(by_type[k])
@@ -207,20 +231,9 @@ if __name__ == '__main__':
     concern_volume(crashes, concerns)
 #    concern_types(concerns, concern_data)
 
-    # Question 3
-    # We are just looking at segments above.  What about intersections
-    # What percentage of intersections had crashes?
-    # What percentage of segments had crashes?
-    
-
-
     # other questions
 
     # Pedestrian crashes vs. not
-
-    # percentages of crashes at intersections without vision zero data
-
-    # how many intersections had a crash at all?
 
     # number of vision zero complaints may correlate with volume, so maybe less useful as a metric; vs type of complaint
 
