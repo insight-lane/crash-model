@@ -111,18 +111,28 @@ def concern_volume(crashes, concerns):
     matching = {}
     for id, d in concerns.iteritems():
         if d['count'] not in matching.keys():
-            matching[d['count']] = [0, 0]
-        if id in crashes.keys():
-            matching[d['count']][0] += 1
+            matching[d['count']] = {
+                'inter': [0, 0],
+                'non_inter': [0, 0]
+            }
+        if is_inter(id):
+            key = 'inter'
         else:
-            matching[d['count']][1] += 1
+            key = 'non_inter'
+
+        if id in crashes.keys():
+            matching[d['count']][key][0] += 1
+        else:
+            matching[d['count']][key][1] += 1
 
     print "========================================================="
     for key, value in sorted(matching.items()):
-        print str(key) + ':' + str(float(
-            value[0])/float(value[0] + value[1])) + '\t' + str(
-                value[0] + value[1])
+        total_inters = value['inter'][0] + value['inter'][1]
+        total_non_inters = value['non_inter'][0] + value['non_inter'][1]
 
+        inter_value = value['inter'][0]
+        non_inter_value = value['non_inter'][0]
+        print str(key) + ':' + str(float(inter_value + non_inter_value)/float(total_inters + total_non_inters)) + '\t' + str(total_inters + total_non_inters)
 
 
 def concern_types(concerns, concern_data):
