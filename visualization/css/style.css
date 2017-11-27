@@ -61,8 +61,8 @@ h4 {
 #map {
 	/*position: absolute;*/
     margin-left: 20px;
-	width: 60vw;
-	height: 60vh;
+	width: 900px;
+	height: 600px;
 }
 
 .input_overlay {
