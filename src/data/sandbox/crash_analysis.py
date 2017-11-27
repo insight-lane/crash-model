@@ -1,7 +1,6 @@
 import json
 import os
 import argparse
-import csv
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -9,7 +8,8 @@ import numpy as np
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
-            os.path.abspath(__file__))))
+            os.path.dirname(
+                os.path.abspath(__file__)))))
 
 
 DATA_FP = BASE_DIR + '/data/processed/'
@@ -27,7 +27,7 @@ def parse_json(jsonfile, otherfields=[]):
         locations[str(crash['near_id'])]['count'] += 1
         for field in otherfields:
             locations[str(crash['near_id'])][field].append(crash[field])
-    return locations
+    return crashes, locations
 
 
 def hist(labels, counts, ylabel, title):
@@ -51,9 +51,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    crashes = parse_json(DATA_FP + 'crash_joined.json')
+    crash_data, crashes = parse_json(DATA_FP + 'crash_joined.json')
 
-    concerns = parse_json(DATA_FP + 'concern_joined.json')
+    concern_data, concerns = parse_json(DATA_FP + 'concern_joined.json',
+                                        otherfields=['REQUESTTYPE'])
     concern_hist = {}
     matching = {}
     for id, d in concerns.iteritems():
@@ -75,7 +76,40 @@ if __name__ == '__main__':
             value[0])/float(value[0] + value[1])) + '\t' + str(
                 value[0] + value[1])
 
-    print len(crashes.keys())
-    print len(concerns.keys())
+    # Question 2:
+    # For intersections with a specific complaint type:
+    #    what percentage had a crash?
+    requests = {}
+    for data in concern_data:
+        if data['REQUESTTYPE'] not in requests.keys():
+            requests[data['REQUESTTYPE']] = 1
 
+    requests = {}
+    for k, v in concerns.iteritems():
+        for request in v['REQUESTTYPE']:
+            if request not in requests.keys():
+                requests[request] = {'crash': 0, 'no': 0}
+            if str(k) in crashes.keys():
+                requests[request]['crash'] += 1
+            else:
+                requests[request]['no'] += 1
+
+    for k, v in requests.iteritems():
+        print k
+        print '\t' + str(float(requests[k]['crash'])/(
+            float(requests[k]['crash'] + requests[k]['no'])))
+        print '\t' + str(requests[k]['crash']) + ',' + str(requests[k]['no'])
+
+    # other questions
+
+    # Accurate counts of type of request vs. just whether or not that type happened
+    # Pedestrian crashes vs. not
+
+    # percentages of crashes at intersections without vision zero data
+
+    # how many intersections had a crash at all?
+
+    # number of vision zero complaints may correlate with volume, so maybe less useful as a metric; vs type of complaint
+
+    # also parsing the extra field's text
 
