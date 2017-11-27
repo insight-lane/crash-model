@@ -3,7 +3,6 @@ import os
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 
 BASE_DIR = os.path.dirname(
@@ -14,6 +13,7 @@ BASE_DIR = os.path.dirname(
 
 
 DATA_FP = BASE_DIR + '/data/processed/'
+MAP_FP = DATA_FP + 'maps/'
 
 
 def parse_json(jsonfile, otherfields=[]):
@@ -43,14 +43,86 @@ def hist(labels, counts, ylabel, title):
     plt.show()
 
 
-def concern_volume(matching):
-    # Question 1:
-    # What percentage of intersections with concerns had crashes
-    # at varying counts of concerns?
+def is_inter(id):
+    if len(id) > 1 and id[0:2] == '00':
+        return False
+    return True
+
+
+def int_vs_non_int(crashes):
+    """
+    Info about intersections vs non intersections and their crash rate
+    """
+
+    # Hard code counts in since they don't change (at least not for Boston)
+    # and it's much faster
+    inter_count = 8574
+    non_inter_count = 17388
+
+    counts = {
+        'inter': 0,
+        'non_inter': 0,
+        'no_match': 0,
+        'inter_plus': 0,
+        'non_inter_plus': 0,
+    }
+    for k, v in crashes.iteritems():
+        if str(k) == '':
+            counts['no_match'] += 1
+        elif not is_inter:
+            if int(v['count']) > 1:
+                counts['non_inter_plus'] += 1
+            counts['non_inter'] += 1
+        else:
+            if int(v['count']) > 1:
+                counts['inter_plus'] += 1
+            counts['inter'] += 1
+
+    print "========================================================="
+    print "Number of intersections:" + str(inter_count)
+    print "Number of non-intersections:" + str(non_inter_count)
+
+    print "Number of intersection segments with 1/more than 1 crash:" \
+        + str(counts['inter']) + '/' + str(counts['inter_plus'])
+    print "Number of non-intersection segments with 1/more than 1 crash:" \
+        + str(counts['non_inter']) + '/' + str(counts['non_inter_plus'])
+
+    # Percentage of intersections/non-intersections
+    # that have at least one crash
+    print "percent of intersections with crash:" + str(
+        float(counts['inter'])/float(inter_count))
+
+    print "percent of non-intersections with crash:" + str(
+        float(counts['non_inter'])/float(non_inter_count))
+
+    print "percent of intersections with more than 1 crash:" + str(
+        float(counts['inter_plus'])/float(inter_count))
+
+    print "percent of non-intersections with more than 1 crash:" + str(
+        float(counts['non_inter_plus'])/float(non_inter_count))
+
+
+def concern_volume(crashes, concerns):
+    """
+    What percentage of intersections with concerns had crashes
+    at varying counts of concerns?
+    """
+
+    matching = {}
+    for id, d in concerns.iteritems():
+        if d['count'] not in matching.keys():
+            matching[d['count']] = [0, 0]
+        if id in crashes.keys():
+            matching[d['count']][0] += 1
+        else:
+            matching[d['count']][1] += 1
+
+    print "========================================================="
     for key, value in sorted(matching.items()):
         print str(key) + ':' + str(float(
             value[0])/float(value[0] + value[1])) + '\t' + str(
                 value[0] + value[1])
+
 
 
 def concern_types(concerns, concern_data):
@@ -64,6 +136,7 @@ def concern_types(concerns, concern_data):
 
     requests = {}
     all_unique = []
+
     for k, v in concerns.iteritems():
         unique_requests = {}
         for request in v['REQUESTTYPE']:
@@ -117,21 +190,10 @@ if __name__ == '__main__':
 
     concern_data, concerns = parse_json(DATA_FP + 'concern_joined.json',
                                         otherfields=['REQUESTTYPE'])
-    concern_hist = {}
-    matching = {}
-    for id, d in concerns.iteritems():
-        if d['count'] not in concern_hist.keys():
-            concern_hist[d['count']] = 0
-        concern_hist[d['count']] += 1
-        if d['count'] not in matching.keys():
-            matching[d['count']] = [0, 0]
-        if id in crashes.keys():
-            matching[d['count']][0] += 1
-        else:
-            matching[d['count']][1] += 1
 
-    concern_volume(matching)
-    concern_types(concerns, concern_data)
+    int_vs_non_int(crashes)
+    concern_volume(crashes, concerns)
+#    concern_types(concerns, concern_data)
 
     # Question 3
     # We are just looking at segments above.  What about intersections
