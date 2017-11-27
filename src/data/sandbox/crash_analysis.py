@@ -132,10 +132,19 @@ def concern_volume(crashes, concerns):
     print "========================================================="
     print "concerns\t %\t total\t int %\t int tot\t non-int %\t non-int tot"
     sorted_matching = sorted(matching.items())
-    print sorted_matching
-    for key, value in sorted(matching.items()):
+    for key, value in sorted_matching:
 
         # Do the 1+,2+ stats as well as 1, 2
+        # Still need to break it out by int/non-int
+        total_plus = value['inter'][0] + value['inter'][1] + \
+            value['non_inter'][0] + value['non_inter'][1]
+        crashes_plus = value['inter'][0] + value['non_inter'][0]
+        for key2, value2 in sorted_matching:
+            if key2 > key:
+                total_plus += value2['inter'][0] + value2['inter'][1] + \
+                    value2['non_inter'][0] + value2['non_inter'][1]
+                crashes_plus += value2['inter'][0] + value2['non_inter'][0]
+
         total_inters = value['inter'][0] + value['inter'][1]
         total_non_inters = value['non_inter'][0] + value['non_inter'][1]
 
@@ -151,9 +160,11 @@ def concern_volume(crashes, concerns):
         if total_non_inters > 0:
             non_inters_percent = float(non_inter_value) / \
                 float(total_non_inters)
+
         print str(key) + '\t' + \
             str(total_percent) + \
             '\t' + str(total_inters + total_non_inters) + \
+            '\t' + str(float(crashes_plus)/(float(total_plus))) + \
             '\t' + str(inters_percent) + \
             '\t' + str(total_inters) + \
             '\t' + str(non_inters_percent) + \
