@@ -44,7 +44,7 @@ def hist(labels, counts, ylabel, title):
 
 
 def is_inter(id):
-    if len(id) > 1 and id[0:2] == '00':
+    if len(str(id)) > 1 and str(id)[0:2] == '00':
         return False
     return True
 
@@ -69,14 +69,16 @@ def int_vs_non_int(crashes):
     for k, v in crashes.iteritems():
         if str(k) == '':
             counts['no_match'] += 1
-        elif not is_inter:
-            if int(v['count']) > 1:
-                counts['non_inter_plus'] += 1
-            counts['non_inter'] += 1
-        else:
+        elif is_inter(k):
             if int(v['count']) > 1:
                 counts['inter_plus'] += 1
             counts['inter'] += 1
+        else:
+            if int(v['count']) > 1:
+                counts['non_inter_plus'] += 1
+            counts['non_inter'] += 1
+
+    print counts
 
     print "========================================================="
     print "Number of intersections:" + str(inter_count)
