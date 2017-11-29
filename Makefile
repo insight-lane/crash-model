@@ -26,7 +26,7 @@ requirements: test_environment
 
 ## Make Dataset
 data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py
+	cd src && $(PYTHON_INTERPRETER) -m data.make_dataset
 
 ## Delete all compiled Python files
 clean:
