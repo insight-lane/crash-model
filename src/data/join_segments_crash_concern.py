@@ -25,8 +25,8 @@ PROCESSED_DATA_FP = BASE_DIR + '/data/processed'
 # filepaths of raw crash data (hardcoded for now)
 CRASH_DATA_FPS = [
     '/cad_crash_events_with_transport_2016_wgs84.csv',
-    '/2015motorvehicles_formatted.csv',
-    '/2017motorvehicles_formatted.csv'
+    '/2015motorvehicles_with_modetype.csv',
+    '/2017motorvehicles_with_modetype.csv'
 ]
 
 def make_schema(geometry, properties):
