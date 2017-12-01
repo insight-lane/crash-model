@@ -3,6 +3,7 @@ import os
 from shapely.geometry import Point
 import pyproj
 import csv
+import json
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -87,8 +88,52 @@ def test_csv_to_projected_records(tmpdir):
 
 
 def find_nearest():
+    # todo
     pass
 
 
 def test_read_segments():
+    # todo
     pass
+
+
+def test_group_json_by_location(tmpdir):
+    tmppath = tmpdir.strpath
+    test_json = [{
+        'near_id': '001',
+        'key1': 'value1',
+        'key2': 'value2',
+    }, {
+        'near_id': '2',
+        'key1': 'test',
+    }, {
+        'near_id': '001',
+        'key1': 'testtest',
+        'key2': 'abc',
+    }]
+
+    filename = tmppath + '/crash_joined.json'
+    with open(filename, 'w') as f:
+        json.dump(test_json, f)
+
+    result = util.group_json_by_location(filename)
+    assert result == ([
+        {'near_id': '001', u'key1': 'value1', 'key2': 'value2'},
+        {'near_id': '2', 'key1': 'test'},
+        {'near_id': '001', 'key1': 'testtest', 'key2': 'abc'}
+    ], {
+        '001': {'count': 2}, '2': {'count': 1}
+    })
+
+    result = util.group_json_by_location(filename, otherfields=['key1'])
+    assert result == ([
+        {'near_id': '001', u'key1': 'value1', 'key2': 'value2'},
+        {'near_id': '2', 'key1': 'test'},
+        {'near_id': '001', 'key1': 'testtest', 'key2': 'abc'}
+    ], {
+        '001': {
+            'count': 2, 'key1': ['value1', 'testtest']
+        }, '2': {
+            'count': 1, 'key1': ['test']}
+    })
+

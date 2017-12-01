@@ -9,6 +9,7 @@ import openpyxl
 from matplotlib import pyplot
 import os
 from os.path import exists as path_exists
+import json
 
 PROJ = pyproj.Proj(init='epsg:3857')
 BASE_DIR = os.path.dirname(
@@ -298,3 +299,29 @@ def read_segments(dirname=MAP_FP):
     for idx, element in enumerate(combined_seg):
         segments_index.insert(idx, element[0].bounds)
     return combined_seg, segments_index
+
+
+def group_json_by_location(jsonfile, otherfields=[]):
+    """
+    Get both the json data from file as well as a dict where the keys
+    are the segment id and the values are count, and a list of the values
+    of any other fields you specify
+    Args:
+        jsonfile
+        otherfields - optional list of keys of things you want to include
+                      in the grouped by segment results
+    """
+    items = json.load(open(jsonfile))
+    locations = {}
+
+    for item in items:
+        if str(item['near_id']) not in locations.keys():
+            d = {'count': 0}
+            for field in otherfields:
+                d[field] = []
+            locations[str(item['near_id'])] = d
+        locations[str(item['near_id'])]['count'] += 1
+        for field in otherfields:
+            locations[str(item['near_id'])][field].append(item[field])
+
+    return items, locations
