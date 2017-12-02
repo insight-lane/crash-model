@@ -152,7 +152,7 @@ def find_address_from_filename(filename, cached):
     streets = [re.sub('-', ' ', s) for s in streets]
     # Strip out space at beginning of street name if it's there
     streets = [s if s[0] != ' ' else s[1:len(s)] for s in streets]
-    print filename
+
     if len(streets) >= 2:
         intersection = streets[0] + ' and ' + streets[1] + ' Boston, MA'
         result = lookup_address(intersection, cached)
@@ -160,13 +160,11 @@ def find_address_from_filename(filename, cached):
         # It's possible that google can't look up the address by the
         # first two street names for an intersection containing three
         # or more street names.  Try the first and second
-        print result
         if (result is None
                 or 'Boston' not in str(result[0])) and len(streets) > 2:
             intersection = streets[0] + ' and ' + streets[2] + ' Boston, MA'
             print 'trying again, this time geocoding ' + intersection
             result = list(util.geocode_address(intersection))
-
         result.insert(0, intersection)
         return result
     return None, None, None, None
@@ -373,15 +371,11 @@ def snap_inter_and_non_inter(summary):
     # something we'd like to look into
     for address in address_records:
         address['properties']['near_intersection_id'] = \
-                    address['properties']['near_id']
+            str(address['properties']['near_id'])
         address['properties']['near_id'] = ''
 
     combined_seg, segments_index = util.read_segments()
     util.find_nearest(address_records, combined_seg, segments_index, 30)
-    print "................................."
-    print len(combined_seg)
-    print combined_seg[0]
-
     return address_records
 
 
@@ -643,9 +637,6 @@ def compare_crashes():
     with open(PROCESSED_DATA_FP + 'tmc_summary.json') as f:
         data = json.load(f)
         for row in data:
-#            print "......................."
-#            print row['near_id']
-#            print row
             if str(row['near_intersection_id']) in crashes_by_seg.keys() \
                and row['near_intersection_id'] != '':
                 crashes = crashes_by_seg[str(row['near_intersection_id'])]
@@ -720,36 +711,53 @@ def compare_crashes():
 if __name__ == '__main__':
 
     address_records = []
+
     summary_file = PROCESSED_DATA_FP + 'tmc_summary.json'
     if not path_exists(summary_file):
         print 'No tmc_summary.json, parsing tmcs files now...'
+
         summary = parse_tmcs()
         address_records = snap_inter_and_non_inter(summary)
-        print address_records[0]
+
+        all_crashes, crashes_by_location = util.group_json_by_location(
+            PROCESSED_DATA_FP + 'crash_joined.json')
+
+        for record in address_records:
+            if record['properties']['near_id'] \
+               and str(record['properties']['near_id']) \
+               in crashes_by_location.keys():
+                record['properties']['crash_count'] = crashes_by_location[
+                    str(record['properties']['near_id'])]['count']
+
         with open(summary_file, 'w') as f:
-            json.dump([x['properties'] for x in address_records], f)
+            address_records = [x['properties'] for x in address_records]
+#            json.dump([x['properties'] for x in address_records], f)
+            json.dump(address_records, f)
     else:
         address_records = json.load(open(summary_file))
 
-    # temporarily write to file points that don't match intersection
-    # for visualization purposes
+    mismatches = []
     with open(PROCESSED_DATA_FP + 'tmc_nonmatches.csv', 'wb') as f:
         import csv
         writer = csv.writer(f, delimiter=',')
-        writer.writerow(['filename', 'address', 'X', 'Y'])
+        writer.writerow(['filename', 'address', 'X', 'Y', 'near_id', 'near_intersection_id'])
         for address in address_records:
 #            print address['near_id']
-            print address.keys()
-            if address['near_id'] == '':
+#            print address.keys()
+            if 'near_id' not in address.keys() \
+               or address['near_id'] != address['near_intersection_id']:
                 writer.writerow([
                     address['Filename'],
                     address['Address'],
                     address['Longitude'],
-                    address['Latitude']
+                    address['Latitude'],
+                    address['near_id'],
+                    address['near_intersection_id'],
                 ])
 
     print len(address_records)
-    compare_crashes()
+
+#    compare_crashes()
 
 #    import ipdb; ipdb.set_trace()
 
