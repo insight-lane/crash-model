@@ -9,4 +9,4 @@ install:
 - source activate boston-crash-model
 
 script:
-- py.test
+- cd src && py.test
