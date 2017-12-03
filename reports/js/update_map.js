@@ -10,55 +10,14 @@ function update_map(week) {
 	d3.select('#week_selector').property('value', week);
 	
 	//update data displayed on map based on week selected
+	map.setFilter('crashes', ['==', 'week', week]);
+	map.setFilter('predictions', ['==', 'week', week]);
 
-	//clear map of layers
-	map.removeLayer(crashes);
-	map.removeLayer(car_preds);
-
-	// clear layer control of layers
-	lcontrol.removeLayer(crashes);
-	lcontrol.removeLayer(car_preds);
-
-	//create new layers with updated data
-  	crashes = new L.geoJson(crashdata, {
-	  	filter: function(feature, layer) {
-	  		return feature.properties.week === week;
-	  	},
-	  	pointToLayer: function(feature, latlng) {
-	  		return L.circleMarker(latlng, geojsonMarkerOptions);
-	  	}
-  	})
-
-	car_preds = new L.geoJson(cardata, {
-	  	filter: function(feature, layer) {
-	  		return feature.properties.week === week;
-	  	},
-	  	style: color_preds,
-	  	onEachFeature: onEachFeature
-  	})
-
-  	// add layers to map
-	map.addLayer(crashes);
-	map.addLayer(car_preds); 
-
-	// add layers to layer control
-	lcontrol.addOverlay(crashes, 'Historical');
-	lcontrol.addOverlay(car_preds, 'CAR Predictions');
-
-	// add pop up
-	function onEachFeature(feature, layer) {
-		if (feature.properties.st_name) {
-			layer.bindPopup(feature.properties.st_name + "<br /> Predicted Probability for Week " + feature.properties.week + ": " + feature.properties.pred);
-		}
-		else {
-			layer.bindPopup("Predicted Probability for Week " + feature.properties.week + ": " + feature.properties.pred);
-		}
-	}
 }
 
 function highlight_bar(week) {
-	barPlot.selectAll(".crashbar")
-		.data(weeklydata)
+	d3.select("#weekly_barplot")
+	  .selectAll(".crashbar")
 		.style("fill", "#b2b2b2")
 		.filter(function(d) { return d.week === week ; })
 		.style("fill", "#d500f9");

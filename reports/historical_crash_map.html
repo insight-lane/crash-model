@@ -9,76 +9,139 @@
 	
 	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw==" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js" integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA==" crossorigin=""></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.41.0/mapbox-gl.js'></script>
+	<link href='https://api.mapbox.com/mapbox-gl-js/v0.41.0/mapbox-gl.css' rel='stylesheet' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">  
+	<script type='text/javascript', src='config.js'></script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 	
 	<link rel="stylesheet" href="css/style.css" />
 
 </head>
 <body>
-	<h1>Crashes on Boston's Streets in 2016</h1>
-
-	<div class="input_overlay">
-		<label for="week_selector">Week: </label>
-		<output for="week_selector" id="week_num">1</output>
-		<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" />
-	</div>
-	<div id="map"></div>
-
-	<div id="barplot">
-		<h3>Total Crashes by Week</h3>
+	<div id="header">
+		<h1>Crashes on Boston's Streets in 2016</h1>
 	</div>
 
-	<script src="http://d3js.org/d3.v3.min.js"></script>
-	<script src="js/crash_map.js"></script>
-	<script src="js/weekly_barplot.js"></script>
+	<div id="content">
+		<div class="bigplot">
+			<div class="input_overlay">
+				<label for="week_selector">Week: </label>
+				<output for="week_selector" id="week_num">1</output>
+				<input type="range" id="week_selector" autocomplete="off" min="1" max="53" step="1" value="1" />
+			</div>
+			<div id="map">
+				<div id="legend">
+					<h4>Predicted Crash Probability:</h4>
+					<div class="row colors"></div>
+					<div class="row labels">
+						<div class="label">0.02</div>
+						<div class="label">0.03</div>
+						<div class="label">0.04</div>
+						<div class="label">0.05</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="weekly_barplot">
+				<h3>Total Crashes by Week</h3>
+			</div>
+		</div>
+		<div id="dow_barplot" class="plot">
+			<h3>Crashes by Day of Week</h3>
+		</div>
+		<div id="hourly_barplot" class="plot">
+			<h3>Distribution of Crashes by Time of Day</h3>
+			<div id="daytype-controls">
+				<label><input type="radio" name="daytype" value="Weekday" checked="checked" autocomplete="off">Weekday</label>
+				<label><input type="radio" name="daytype" value="Weekend" autocomplete="off">Weekend</label>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<script src="js/make_plots.js"></script>
 	<script src="js/update_map.js"></script>
 	<script>
 		// create base map
-		var map = L.map('map').setView([42.3301, -71.0589], 12);
+		mapboxgl.accessToken = config.MAPBOX_TOKEN;
 
-		var streets = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
-			maxZoom: 18, 
-			attribution: '(c) <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="http://cartodb.com/attributions">CartoDB</a>, CartoDB <a href ="http://cartodb.com/attributions">attributions</a>'
+		var map = new mapboxgl.Map({
+		  container: 'map',
+		  style: 'mapbox://styles/mapbox/light-v9',
+		  center: [-71.0589, 42.3301],
+		  zoom: 11
 		});
 
-		var dark_streets = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
-			maxZoom: 18, 
-			attribution: '(c) <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="http://cartodb.com/attributions">CartoDB</a>, CartoDB <a href ="http://cartodb.com/attributions">attributions</a>'
+		map.on('load', function() {
+		  	map.addLayer({
+				id: 'predictions',
+				type: 'line',
+				source: {
+				  type: 'geojson',
+				  data: 'car_preds_named.json'
+				},
+				paint: {
+				  'line-color': {
+					property: 'pred',
+					stops: [
+					  [0.02, '#ffffb2'],
+					  [0.03, '#fecc5c'],
+					  [0.04, '#fd8d3c'],
+					  [0.05, '#e31a1c']
+					]
+				  },
+				  'line-width': [
+						'curve', ['linear'], ['zoom'], 
+						11, 2,
+						15, 3,
+					],
+				  'line-opacity': 1
+				},
+				filter: ['==', 'week', 1]
+			}, 'admin-2-boundaries-dispute');
+		 
+			map.addLayer({
+				id: 'crashes',
+				type: 'circle', 
+				source: {
+					type: 'geojson', 
+					data: 'cad.geojson'
+				},
+				paint: {
+					'circle-radius': [
+						'curve', ['linear'], ['zoom'], 
+						12, 4,
+						15, 8,
+					],
+					'circle-color': '#d500f9',
+					'circle-stroke-color': '#9e00c5',
+					'circle-opacity': 0.8
+				},
+				filter: ['==', 'week', 1]
+			}, 'admin-2-boundaries-dispute');
+
+			// add popup for predictions
+			map.on('click', 'predictions', function(e) {
+				var popupText = (e.features[0].properties.st_name !== "null") ? (e.features[0].properties.st_name + "<br / > Predicted Probability for Week " +  e.features[0].properties.week + ": " + e.features[0].properties.pred) : ("Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.pred);
+
+				new mapboxgl.Popup()
+					.setLngLat(e.lngLat)
+					.setHTML(popupText)
+					.addTo(map);
+			});
+
+			map.on('mouseenter', 'predictions', function () {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'predictions', function () {
+				map.getCanvas().style.cursor = '';
+			});
 		});
-
-		streets.addTo(map);
-
-		// create legend
-		var legend = L.control({position: 'bottomright'});
-
-		legend.onAdd = function (map) {
-			var div = L.DomUtil.create('div', 'legend'),
-				crash_pred = [0.02, 0.05],
-				color_segments = ["#f39c12", "#e67e22", "#e74c3c"];
-
-			div.innerHTML = "Predicted <br /> Crash Prob: <br />";
-
-			for (var i=0; i < crash_pred.length; i++) {
-				div.innerHTML += '<i style="background:' + color_segments[i] + '"></i> ' + crash_pred[i] + '<br />';
-			}
-
-			return div;
-		}
-
-		legend.addTo(map);  
-
-		var baseMaps = {
-			'Map': streets,
-			'High Contrast': dark_streets
-		};
-
-		// add layer control
-		var lcontrol = L.control.layers(baseMaps, {})
-		lcontrol.addTo(map);
-
+		
+		// Add zoom controls to map
+		map.addControl(new mapboxgl.NavigationControl());
 	</script>
 
 </body>
