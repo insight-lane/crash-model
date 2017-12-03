@@ -25,12 +25,21 @@ import pandas as pd
 import geopandas as gpd
 import shapely.geometry
 from shapely.geometry import Point
+import os
 
-fp = '../data/processed/'
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+RAW_FP = BASE_DIR + '/data/raw'
+MAP_FP = BASE_DIR + '/data/processed/maps'
+DATA_FP = BASE_DIR + '/data/processed'
 
 ### Generate historical crash dataset
 # read CAD data
-cad = pd.read_csv('../data/raw/cad_crash_events_with_transport_2016_wgs84.csv', parse_dates=['CALENDAR_DATE'])
+cad = pd.read_csv(RAW_FP + '/cad_crash_events_with_transport_2016_wgs84.csv', parse_dates=['CALENDAR_DATE'])
 
 # create points from lat/lon and read into geodataframe
 geometry = [Point(xy) for xy in zip(cad.X, cad.Y)]
@@ -49,7 +58,7 @@ geo_df.to_file('cad.geojson', driver="GeoJSON")
 
 ### Generate model predictions dataset
 # read in model output and reformat
-car = pd.read_csv(fp + 'car_preds_weekly_named.csv', dtype={'segment_id': str})
+car = pd.read_csv(DATA_FP + '/car_preds_weekly_named.csv', dtype={'segment_id': str})
 week_cols = list(car.columns[2:56])
 car_weekly = pd.melt(car, id_vars=['segment_id', 'st_name'], value_vars=week_cols,
                      var_name='week', value_name='pred')
@@ -58,7 +67,7 @@ car_weekly['id'] = car_weekly['segment_id']
 
 
 # Read in shapefile as a GeoDataframe
-streets = gpd.read_file('../data/processed/maps/inter_and_non_int.shp')
+streets = gpd.read_file(MAP_FP + '/inter_and_non_int.shp')
 
 # Set the projection as EPSG:3857 since the shapefile didn't export with one
 streets.crs = {'init': 'epsg:3857'}
@@ -82,11 +91,11 @@ car_preds.to_file("car_preds_named.json", driver='GeoJSON')
 
 ### Generate weekly crash dataset
 # read in historical crash data
-crashes = pd.read_csv(fp + 'vz_predict_dataset.csv', dtype={'segment_id': str})
+crashes = pd.read_csv(DATA_FP + '/vz_predict_dataset.csv', dtype={'segment_id': str})
 
 # roll up crashes to the weekly level
 weekly_crashes = crashes.groupby(['week'], as_index=False)['crash'].sum()
-weekly_crashes.to_csv(fp + 'weekly_crashes.csv', index=False)
+weekly_crashes.to_csv('weekly_crashes.csv', index=False)
 
 
 ### Generate day of week crash dataset
