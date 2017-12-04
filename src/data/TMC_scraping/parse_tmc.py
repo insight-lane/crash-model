@@ -20,6 +20,7 @@ BASE_DIR = os.path.dirname(
 RAW_DATA_FP = BASE_DIR + '/data/raw/'
 PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
 ATR_FP = BASE_DIR + '/data/raw/AUTOMATED TRAFFICE RECORDING/'
+TMC_FP = RAW_DATA_FP + '/TURNING MOVEMENT COUNT/'
 
 
 def file_dataframe(excel_sheet, data_location):
@@ -708,6 +709,115 @@ def compare_crashes():
     # print len(crashes_by_seg)
 
 
+def add_direction(direction_locations, direction, col, previous, count):
+    direction_locations[direction] = {'indices': [col, 0]}
+    if previous:
+        direction_locations[previous]['indices'][1] = direction_locations[
+            previous]['indices'][0] + count
+    return direction_locations
+
+
+def parse_15_min(workbook, sheet_name):
+
+    sheet_index = workbook.sheet_names().index(sheet_name)
+    sheet = workbook.sheet_by_index(sheet_index)
+
+    row = 8
+    col = 1
+    dir_locations = {}
+    current = ''
+    curr_count = 0
+    while col < sheet.ncols:
+        if 'north' in sheet.cell_value(row, col).lower():
+            dir_locations = add_direction(
+                dir_locations,
+                'north',
+                col,
+                current,
+                curr_count
+            )
+            current = 'north'
+            curr_count = 0
+        elif 'south' in sheet.cell_value(row, col).lower():
+            dir_locations = add_direction(
+                dir_locations,
+                'south',
+                col,
+                current,
+                curr_count
+            )
+            current = 'south'
+            curr_count = 0
+        elif 'east' in sheet.cell_value(row, col).lower():
+            dir_locations = add_direction(
+                dir_locations,
+                'east',
+                col,
+                current,
+                curr_count
+            )
+            current = 'east'
+            curr_count = 0
+        elif 'west' in sheet.cell_value(row, col).lower():
+            dir_locations = add_direction(
+                dir_locations,
+                'west',
+                col,
+                current,
+                curr_count
+            )
+            current = 'west'
+            curr_count = 0
+        col += 1
+        curr_count += 1
+
+    dir_locations[current]['indices'][1] = dir_locations[
+        current]['indices'][0] + curr_count
+
+    row += 1
+    total = 0
+    for direction in dir_locations.keys():
+        indices = dir_locations[direction]['indices']
+        dir_locations[direction]['to'] = {}
+        for col in range(indices[0], indices[1]):
+            if 'thru' in sheet.cell_value(row, col).lower():
+                dir_locations['to']['thru'] = col
+            elif 'right' in sheet.cell_value(row, col).lower():
+                dir_locations['to']['right'] = col
+            elif 'left' in sheet.cell_value(row, col).lower():
+                dir_locations['to']['left'] = col
+
+    # Want counts of left turns and counts of right turns from each direction
+
+    # Conflicts (count each conflict over 15 minutes)
+    # Left turn from south conflicts with straight from north
+    # Right turn from south conflicts with straight from west
+
+    # Left turn from west conflicts with straight from east
+    # Right turn from west conflicts with straight from north
+
+    # Left turn from north conflicts with straight from south
+    # Right turn from north conflicts with straight from east
+
+    # Left turn from east conflicts with straight from west
+    # Right turn from east conflicts with straight from south
+
+
+def parse_conflicts(address_records):
+    for address in address_records:
+        filename = address['Filename']
+        file_path = path.join(TMC_FP, filename)
+        workbook = xlrd.open_workbook(file_path)
+        sheet_names = workbook.sheet_names()
+        print filename
+        # If it's not near an intersection, either the
+        # address couldn't be looked up or it's at a crosswalk which
+        # we don't look at yet
+        if address['near_intersection_id']:
+            if 'Cars & Trucks' in sheet_names:
+                parse_15_min(workbook, 'Cars & Trucks')
+
+
 if __name__ == '__main__':
 
     address_records = []
@@ -736,26 +846,8 @@ if __name__ == '__main__':
     else:
         address_records = json.load(open(summary_file))
 
-    mismatches = []
-    with open(PROCESSED_DATA_FP + 'tmc_nonmatches.csv', 'wb') as f:
-        import csv
-        writer = csv.writer(f, delimiter=',')
-        writer.writerow(['filename', 'address', 'X', 'Y', 'near_id', 'near_intersection_id'])
-        for address in address_records:
-#            print address['near_id']
-#            print address.keys()
-            if 'near_id' not in address.keys() \
-               or address['near_id'] != address['near_intersection_id']:
-                writer.writerow([
-                    address['Filename'],
-                    address['Address'],
-                    address['Longitude'],
-                    address['Latitude'],
-                    address['near_id'],
-                    address['near_intersection_id'],
-                ])
-
     print len(address_records)
+    parse_conflicts(address_records)
 
 #    compare_crashes()
 
