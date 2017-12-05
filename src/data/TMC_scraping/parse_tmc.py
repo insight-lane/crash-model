@@ -333,6 +333,7 @@ def process_format2(workbook, combined=False):
     # 6988 - 'Cars Trucks' 'Bikes Peds'
 
     total = 0
+
     if combined:
         sheet = None
         for id in range(len(workbook.sheet_names())):
@@ -351,6 +352,7 @@ def process_format2(workbook, combined=False):
             sheet_index = workbook.sheet_names().index('Trucks')
         sheet = workbook.sheet_by_index(sheet_index)
         total += sum_format2_cols(sheet)
+
     return total
 
 
@@ -470,6 +472,7 @@ def parse_tmcs():
                           if col.startswith('all motors')]
                 peds = [col for col in sheet_names
                         if col.startswith('all peds')]
+                
                 if motors or peds or 'bicycles hr.' in sheet_names:
                     all_data, i, data_info, motor_count = process_format1(
                         workbook, filename, address, date,
@@ -488,6 +491,7 @@ def parse_tmcs():
                     motor_count = process_format2(workbook)
                 elif any(sheet.startswith('cars') for sheet in sheet_names) \
                         and any(sheet.endswith('trucks') for sheet in sheet_names):
+
                     motor_count = process_format2(workbook, combined=True)
                 else:
                     motor_count = None
@@ -717,6 +721,80 @@ def add_direction(direction_locations, direction, col, previous, count):
     return direction_locations
 
 
+def get_conflict_count(dir_locations, sheet, row):
+
+    # Conflicts (count each conflict over 15 minutes)
+    conflicts = 0
+    conflict_sets = [{
+        # Left turn from south conflicts with straight from north
+        'from1': 'south',
+        'to1': 'left',
+        'from2': 'north',
+        'to2': 'thru'
+    }, {
+        # Right turn from south conflicts with straight from west
+        'from1': 'south',
+        'to1': 'right',
+        'from2': 'west',
+        'to2': 'thru'
+    }, {
+        # Left turn from west conflicts with straight from east
+        'from1': 'west',
+        'to1': 'left',
+        'from2': 'east',
+        'to2': 'thru'
+    }, {
+        # Right turn from west conflicts with straight from north
+        'from1': 'west',
+        'to1': 'right',
+        'from2': 'north',
+        'to2': 'thru'
+    }, {
+        # Left turn from north conflicts with straight from south
+        'from1': 'north',
+        'to1': 'left',
+        'from2': 'south',
+        'to2': 'thru'
+    }, {
+        # Right turn from north conflicts with straight from east
+        'from1': 'north',
+        'to1': 'right',
+        'from2': 'east',
+        'to2': 'thru'
+    }, {
+        # Left turn from east conflicts with straight from west
+        'from1': 'east',
+        'to1': 'left',
+        'from2': 'west',
+        'to2': 'thru'
+    }, {
+        # Right turn from east conflicts with straight from south
+        'from1': 'east',
+        'to1': 'right',
+        'from2': 'south',
+        'to2': 'thru'
+    }]
+
+    for conflict in conflict_sets:
+        if conflict['from1'] in dir_locations.keys() \
+           and conflict['to1'] in dir_locations[
+               conflict['from1']]['to'].keys() \
+           and conflict['from2'] in dir_locations.keys() \
+           and conflict['to2'] in dir_locations[
+               conflict['from2']]['to'].keys():
+            for index in range(row+1, sheet.nrows):
+                conflicts += abs(
+                    sheet.cell_value(
+                        index,
+                        dir_locations[
+                            conflict['from1']]['to'][conflict['to1']])
+                    - sheet.cell_value(
+                        index,
+                        dir_locations[
+                            conflict['from2']]['to'][conflict['to2']]))
+    return conflicts
+
+
 def parse_15_min(workbook, sheet_name):
 
     sheet_index = workbook.sheet_names().index(sheet_name)
@@ -776,31 +854,33 @@ def parse_15_min(workbook, sheet_name):
 
     row += 1
     total = 0
+    left = 0
+    right = 0
     for direction in dir_locations.keys():
         indices = dir_locations[direction]['indices']
         dir_locations[direction]['to'] = {}
         for col in range(indices[0], indices[1]):
             if 'thru' in sheet.cell_value(row, col).lower():
-                dir_locations['to']['thru'] = col
+                dir_locations[direction]['to']['thru'] = col
             elif 'right' in sheet.cell_value(row, col).lower():
-                dir_locations['to']['right'] = col
+                dir_locations[direction]['to']['right'] = col
             elif 'left' in sheet.cell_value(row, col).lower():
-                dir_locations['to']['left'] = col
+                dir_locations[direction]['to']['left'] = col
+            elif 'u-tr' in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['u-tr'] = col
 
-    # Want counts of left turns and counts of right turns from each direction
+        for dir, col_index in dir_locations[direction]['to'].iteritems():
+            col_sum = sum(sheet.col_values(col_index, row + 1, sheet.nrows))
+            total += col_sum
 
-    # Conflicts (count each conflict over 15 minutes)
-    # Left turn from south conflicts with straight from north
-    # Right turn from south conflicts with straight from west
+            # counts of left turns and counts of right turns
+            # from each direction
+            if dir == 'right':
+                right += col_sum
+            elif dir == 'left':
+                left += col_sum
 
-    # Left turn from west conflicts with straight from east
-    # Right turn from west conflicts with straight from north
-
-    # Left turn from north conflicts with straight from south
-    # Right turn from north conflicts with straight from east
-
-    # Left turn from east conflicts with straight from west
-    # Right turn from east conflicts with straight from south
+    conflicts = get_conflict_count(dir_locations, sheet, row)
 
 
 def parse_conflicts(address_records):
