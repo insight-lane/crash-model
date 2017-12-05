@@ -795,7 +795,7 @@ def get_conflict_count(dir_locations, sheet, row):
     return conflicts
 
 
-def parse_15_min(workbook, sheet_name):
+def parse_15_min_format1(workbook, sheet_name):
 
     sheet_index = workbook.sheet_names().index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
@@ -805,8 +805,12 @@ def parse_15_min(workbook, sheet_name):
     dir_locations = {}
     current = ''
     curr_count = 0
+
     while col < sheet.ncols:
         if 'north' in sheet.cell_value(row, col).lower():
+            if 'north' in dir_locations.keys():
+                return
+
             dir_locations = add_direction(
                 dir_locations,
                 'north',
@@ -817,6 +821,8 @@ def parse_15_min(workbook, sheet_name):
             current = 'north'
             curr_count = 0
         elif 'south' in sheet.cell_value(row, col).lower():
+            if 'south' in dir_locations.keys():
+                return
             dir_locations = add_direction(
                 dir_locations,
                 'south',
@@ -827,6 +833,8 @@ def parse_15_min(workbook, sheet_name):
             current = 'south'
             curr_count = 0
         elif 'east' in sheet.cell_value(row, col).lower():
+            if 'east' in dir_locations.keys():
+                return
             dir_locations = add_direction(
                 dir_locations,
                 'east',
@@ -837,6 +845,8 @@ def parse_15_min(workbook, sheet_name):
             current = 'east'
             curr_count = 0
         elif 'west' in sheet.cell_value(row, col).lower():
+            if 'west' in dir_locations.keys():
+                return
             dir_locations = add_direction(
                 dir_locations,
                 'west',
@@ -881,6 +891,219 @@ def parse_15_min(workbook, sheet_name):
                 left += col_sum
 
     conflicts = get_conflict_count(dir_locations, sheet, row)
+    print str(total) + ',' + str(left) + ',' + str(right) + ',' + str(conflicts)
+
+
+def parse_15_min_format(workbook, sheet_name, format):
+
+    sheet_index = workbook.sheet_names().index(sheet_name)
+    sheet = workbook.sheet_by_index(sheet_index)
+
+    if format == 1:
+        row = 8
+        north = 'north'
+        south = 'south'
+        east = 'east'
+        west = 'west'
+        thru = 'thru'
+        left = 'left'
+        right = 'right'
+    elif format == 2:
+        row = 6
+        north = 's.b.'
+        south = 'n.b.'
+        east = 'w.b.'
+        west = 'e.b.'
+        thru = 't'
+        left = 'l'
+        right = 'r'
+
+    col = 1
+    dir_locations = {}
+    current = ''
+    curr_count = 0
+
+    while col < sheet.ncols:
+        if north in sheet.cell_value(row, col).lower():
+            if 'north' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'north',
+                col,
+                current,
+                curr_count
+            )
+            current = 'north'
+            curr_count = 0
+        elif south in sheet.cell_value(row, col).lower():
+            if 'south' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'south',
+                col,
+                current,
+                curr_count
+            )
+            current = 'south'
+            curr_count = 0
+        elif east in sheet.cell_value(row, col).lower():
+            if 'east' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'east',
+                col,
+                current,
+                curr_count
+            )
+            current = 'east'
+            curr_count = 0
+        elif west in sheet.cell_value(row, col).lower():
+            if 'west' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'west',
+                col,
+                current,
+                curr_count
+            )
+            current = 'west'
+            curr_count = 0
+        col += 1
+        curr_count += 1
+
+    dir_locations[current]['indices'][1] = dir_locations[
+        current]['indices'][0] + curr_count
+
+    row += 1
+    total_count = 0
+    left_count = 0
+    right_count = 0
+    for direction in dir_locations.keys():
+        indices = dir_locations[direction]['indices']
+        dir_locations[direction]['to'] = {}
+        for col in range(indices[0], indices[1]):
+            if thru in sheet.cell_value(row, col).lower() \
+               and 'tot' not in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['thru'] = col
+            elif right in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['right'] = col
+            elif left in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['left'] = col
+            elif 'u-tr' in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['u-tr'] = col
+
+        for dir, col_index in dir_locations[direction]['to'].iteritems():
+            col_sum = sum(sheet.col_values(col_index, row + 1, sheet.nrows))
+            total_count += col_sum
+
+            # counts of left turns and counts of right turns
+            # from each direction
+            if dir == 'right':
+                right_count += col_sum
+            elif dir == 'left':
+                left_count += col_sum
+
+    conflicts = get_conflict_count(dir_locations, sheet, row)
+    print str(total_count) + ',' + str(left_count) + ',' + str(right_count) + ',' + str(conflicts)
+
+def parse_15_min_format2(workbook, sheet_name):
+
+    sheet_index = workbook.sheet_names().index(sheet_name)
+    sheet = workbook.sheet_by_index(sheet_index)
+
+    row = 6
+    col = 1
+    dir_locations = {}
+    current = ''
+    curr_count = 0
+
+    while col < sheet.ncols:
+        if 's.b.' in sheet.cell_value(row, col).lower():
+            if 'north' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'north',
+                col,
+                current,
+                curr_count
+            )
+            current = 'north'
+            curr_count = 0
+        elif 'n.b.' in sheet.cell_value(row, col).lower():
+            if 'south' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'south',
+                col,
+                current,
+                curr_count
+            )
+            current = 'south'
+            curr_count = 0
+        elif 'w.b.' in sheet.cell_value(row, col).lower():
+            if 'east' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'east',
+                col,
+                current,
+                curr_count
+            )
+            current = 'east'
+            curr_count = 0
+        elif 'e.b.' in sheet.cell_value(row, col).lower():
+            if 'west' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'west',
+                col,
+                current,
+                curr_count
+            )
+            current = 'west'
+            curr_count = 0
+        col += 1
+        curr_count += 1
+
+    dir_locations[current]['indices'][1] = dir_locations[
+        current]['indices'][0] + curr_count
+
+    row += 1
+    total = 0
+    left = 0
+    right = 0
+    for direction in dir_locations.keys():
+        indices = dir_locations[direction]['indices']
+        dir_locations[direction]['to'] = {}
+        for col in range(indices[0], indices[1]):
+            if 't' in sheet.cell_value(row, col).lower() \
+               and 'tot' not in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['thru'] = col
+            elif 'r' in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['right'] = col
+            elif 'l' in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['left'] = col
+
+        for dir, col_index in dir_locations[direction]['to'].iteritems():
+            col_sum = sum(sheet.col_values(col_index, row + 1, sheet.nrows))
+            total += col_sum
+
+            # counts of left turns and counts of right turns
+            # from each direction
+            if dir == 'right':
+                right += col_sum
+            elif dir == 'left':
+                left += col_sum
+
+    conflicts = get_conflict_count(dir_locations, sheet, row)
 
 
 def parse_conflicts(address_records):
@@ -889,14 +1112,21 @@ def parse_conflicts(address_records):
         file_path = path.join(TMC_FP, filename)
         workbook = xlrd.open_workbook(file_path)
         sheet_names = workbook.sheet_names()
-        print filename
         # If it's not near an intersection, either the
         # address couldn't be looked up or it's at a crosswalk which
         # we don't look at yet
         if address['near_intersection_id']:
             if 'Cars & Trucks' in sheet_names:
-                parse_15_min(workbook, 'Cars & Trucks')
+                parse_15_min_format(workbook, 'Cars & Trucks', 1)
 
+    # files that don't adhere to n/s/e/w
+    # 6909_629_ADAMS-ST,-EAST-ST,-WINTER-ST_NA_NA_DORCHESTER_11HR_NA_05-14-2013.XLS
+    # 7283_268_BOWDOIN-ST,-QUINCY-ST_NA_NA_DORCHESTER_11-HOURS_NA_06-04-2013.XLS
+    # 6986_2346_MALCOLM-X-BLVD,-ROXBURY-ST,-SHAWMUT-AVE_NA_NA_ROXBURY_11-HOURS_NA_06-19-2013.XLS
+
+#            elif '15\' all Motors' in sheet_names:
+#                print filename
+#                parse_15_min_format2(workbook, '15\' all Motors')
 
 if __name__ == '__main__':
 
