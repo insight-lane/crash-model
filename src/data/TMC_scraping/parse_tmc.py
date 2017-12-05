@@ -783,15 +783,21 @@ def get_conflict_count(dir_locations, sheet, row):
            and conflict['to2'] in dir_locations[
                conflict['from2']]['to'].keys():
             for index in range(row+1, sheet.nrows):
-                conflicts += abs(
-                    sheet.cell_value(
-                        index,
-                        dir_locations[
-                            conflict['from1']]['to'][conflict['to1']])
-                    - sheet.cell_value(
-                        index,
-                        dir_locations[
-                            conflict['from2']]['to'][conflict['to2']]))
+                conflict_count1 = sheet.cell_value(
+                    index,
+                    dir_locations[
+                        conflict['from1']]['to'][conflict['to1']])
+                conflict_count2 = sheet.cell_value(
+                    index,
+                    dir_locations[
+                        conflict['from2']]['to'][conflict['to2']])
+
+                rowlabel = sheet.cell_value(index, 0)
+                if 'tot' not in str(rowlabel).lower() and \
+                   type(conflict_count1) == float and \
+                   type(conflict_count2) == float:
+
+                    conflicts += abs(conflict_count1 - conflict_count2)
     return conflicts
 
 
@@ -889,7 +895,6 @@ def parse_15_min_format1(workbook, sheet_name):
                 right += col_sum
             elif dir == 'left':
                 left += col_sum
-
     conflicts = get_conflict_count(dir_locations, sheet, row)
     print str(total) + ',' + str(left) + ',' + str(right) + ',' + str(conflicts)
 
@@ -997,7 +1002,15 @@ def parse_15_min_format(workbook, sheet_name, format):
                 dir_locations[direction]['to']['u-tr'] = col
 
         for dir, col_index in dir_locations[direction]['to'].iteritems():
-            col_sum = sum(sheet.col_values(col_index, row + 1, sheet.nrows))
+            col_sum = 0
+            row_start = row + 1
+            if format == 2:
+                row_start = row + 3
+            for r in range(row_start, sheet.nrows):
+                rowlabel = sheet.cell_value(r, 0)
+                if 'tot' not in str(rowlabel).lower() and \
+                   type(sheet.cell_value(r, col_index)) == float:
+                    col_sum += sheet.cell_value(r, col_index)
             total_count += col_sum
 
             # counts of left turns and counts of right turns
@@ -1006,6 +1019,9 @@ def parse_15_min_format(workbook, sheet_name, format):
                 right_count += col_sum
             elif dir == 'left':
                 left_count += col_sum
+
+    if format == 2:
+        row += 2
 
     conflicts = get_conflict_count(dir_locations, sheet, row)
     print str(total_count) + ',' + str(left_count) + ',' + str(right_count) + ',' + str(conflicts)
@@ -1124,9 +1140,9 @@ def parse_conflicts(address_records):
     # 7283_268_BOWDOIN-ST,-QUINCY-ST_NA_NA_DORCHESTER_11-HOURS_NA_06-04-2013.XLS
     # 6986_2346_MALCOLM-X-BLVD,-ROXBURY-ST,-SHAWMUT-AVE_NA_NA_ROXBURY_11-HOURS_NA_06-19-2013.XLS
 
-#            elif '15\' all Motors' in sheet_names:
-#                print filename
-#                parse_15_min_format2(workbook, '15\' all Motors')
+            elif '15\' all Motors' in sheet_names:
+                print filename
+                parse_15_min_format(workbook, '15\' all Motors', 2)
 
 if __name__ == '__main__':
 
