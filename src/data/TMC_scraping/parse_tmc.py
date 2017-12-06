@@ -928,6 +928,9 @@ def parse_15_min_format(workbook, sheet_name, format):
     current = ''
     curr_count = 0
 
+    # Can't be a full 11-12 hour count if it's this small
+    if sheet.nrows < 25:
+        return
     while col < sheet.ncols:
         if north in sheet.cell_value(row, col).lower():
             if 'north' in dir_locations.keys():
@@ -983,14 +986,23 @@ def parse_15_min_format(workbook, sheet_name, format):
     dir_locations[current]['indices'][1] = dir_locations[
         current]['indices'][0] + curr_count
 
-    row += 1
+    if format == 1:
+        row += 1
+    elif format == 2:
+        row += 3
     total_count = 0
     left_count = 0
     right_count = 0
     for direction in dir_locations.keys():
         indices = dir_locations[direction]['indices']
         dir_locations[direction]['to'] = {}
-        for col in range(indices[0], indices[1]):
+
+        # hack because at least one of the tmcs has a bad header for the total
+        if format == 2:
+            end = indices[1] - 1
+        else:
+            end = indices[1]
+        for col in range(indices[0], end):
             if thru in sheet.cell_value(row, col).lower() \
                and 'tot' not in sheet.cell_value(row, col).lower():
                 dir_locations[direction]['to']['thru'] = col
@@ -1004,8 +1016,7 @@ def parse_15_min_format(workbook, sheet_name, format):
         for dir, col_index in dir_locations[direction]['to'].iteritems():
             col_sum = 0
             row_start = row + 1
-            if format == 2:
-                row_start = row + 3
+            
             for r in range(row_start, sheet.nrows):
                 rowlabel = sheet.cell_value(r, 0)
                 if 'tot' not in str(rowlabel).lower() and \
@@ -1020,106 +1031,8 @@ def parse_15_min_format(workbook, sheet_name, format):
             elif dir == 'left':
                 left_count += col_sum
 
-    if format == 2:
-        row += 2
-
     conflicts = get_conflict_count(dir_locations, sheet, row)
     print str(total_count) + ',' + str(left_count) + ',' + str(right_count) + ',' + str(conflicts)
-
-def parse_15_min_format2(workbook, sheet_name):
-
-    sheet_index = workbook.sheet_names().index(sheet_name)
-    sheet = workbook.sheet_by_index(sheet_index)
-
-    row = 6
-    col = 1
-    dir_locations = {}
-    current = ''
-    curr_count = 0
-
-    while col < sheet.ncols:
-        if 's.b.' in sheet.cell_value(row, col).lower():
-            if 'north' in dir_locations.keys():
-                return
-            dir_locations = add_direction(
-                dir_locations,
-                'north',
-                col,
-                current,
-                curr_count
-            )
-            current = 'north'
-            curr_count = 0
-        elif 'n.b.' in sheet.cell_value(row, col).lower():
-            if 'south' in dir_locations.keys():
-                return
-            dir_locations = add_direction(
-                dir_locations,
-                'south',
-                col,
-                current,
-                curr_count
-            )
-            current = 'south'
-            curr_count = 0
-        elif 'w.b.' in sheet.cell_value(row, col).lower():
-            if 'east' in dir_locations.keys():
-                return
-            dir_locations = add_direction(
-                dir_locations,
-                'east',
-                col,
-                current,
-                curr_count
-            )
-            current = 'east'
-            curr_count = 0
-        elif 'e.b.' in sheet.cell_value(row, col).lower():
-            if 'west' in dir_locations.keys():
-                return
-            dir_locations = add_direction(
-                dir_locations,
-                'west',
-                col,
-                current,
-                curr_count
-            )
-            current = 'west'
-            curr_count = 0
-        col += 1
-        curr_count += 1
-
-    dir_locations[current]['indices'][1] = dir_locations[
-        current]['indices'][0] + curr_count
-
-    row += 1
-    total = 0
-    left = 0
-    right = 0
-    for direction in dir_locations.keys():
-        indices = dir_locations[direction]['indices']
-        dir_locations[direction]['to'] = {}
-        for col in range(indices[0], indices[1]):
-            if 't' in sheet.cell_value(row, col).lower() \
-               and 'tot' not in sheet.cell_value(row, col).lower():
-                dir_locations[direction]['to']['thru'] = col
-            elif 'r' in sheet.cell_value(row, col).lower():
-                dir_locations[direction]['to']['right'] = col
-            elif 'l' in sheet.cell_value(row, col).lower():
-                dir_locations[direction]['to']['left'] = col
-
-        for dir, col_index in dir_locations[direction]['to'].iteritems():
-            col_sum = sum(sheet.col_values(col_index, row + 1, sheet.nrows))
-            total += col_sum
-
-            # counts of left turns and counts of right turns
-            # from each direction
-            if dir == 'right':
-                right += col_sum
-            elif dir == 'left':
-                left += col_sum
-
-    conflicts = get_conflict_count(dir_locations, sheet, row)
 
 
 def parse_conflicts(address_records):
@@ -1140,9 +1053,9 @@ def parse_conflicts(address_records):
     # 7283_268_BOWDOIN-ST,-QUINCY-ST_NA_NA_DORCHESTER_11-HOURS_NA_06-04-2013.XLS
     # 6986_2346_MALCOLM-X-BLVD,-ROXBURY-ST,-SHAWMUT-AVE_NA_NA_ROXBURY_11-HOURS_NA_06-19-2013.XLS
 
-            elif '15\' all Motors' in sheet_names:
-                print filename
-                parse_15_min_format(workbook, '15\' all Motors', 2)
+        elif '15\' all Motors' in sheet_names:
+            print filename
+            parse_15_min_format(workbook, '15\' all Motors', 2)
 
 if __name__ == '__main__':
 
