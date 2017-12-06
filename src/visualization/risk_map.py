@@ -26,9 +26,16 @@ import geopandas as gpd
 import folium
 import branca.colormap as cm
 import argparse
+import os
 
 # all model outputs must be stored in the "data/processed/" directory
-fp = '../data/processed/'
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+DATA_FP = BASE_DIR + '/data/processed/'
+MAP_FP = BASE_DIR + '/data/processed/maps/'
 
 # parse arguments
 parser = argparse.ArgumentParser(description="Plot crash predictions on a map")
@@ -63,7 +70,7 @@ def process_data(filename, colname):
         Returns:
             a dataframe that links segment_ids, predictions and spatial geometries
         """
-        output = pd.read_csv(fp + filename, dtype={'segment_id':'str'})
+        output = pd.read_csv(DATA_FP + filename, dtype={'segment_id':'str'})
 
         # filter dataframe to only seg with risk>0 to reduce size
         output = output[output[colname]>0]
@@ -98,7 +105,7 @@ def add_layer(dataset, modelname, colname, mapname):
 
         
 # Read in shapefile as a GeoDataframe
-streets = gpd.read_file('../data/processed/maps/inter_and_non_int.shp')
+streets = gpd.read_file(MAP_FP + 'inter_and_non_int.shp')
 
 # Set the projection as EPSG:3857 since the shapefile didn't export with one
 streets.crs = {'init': 'epsg:3857'}
