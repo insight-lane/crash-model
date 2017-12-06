@@ -968,7 +968,6 @@ def parse_conflicts(address_records):
         # address couldn't be looked up or it's at a crosswalk which
         # we don't look at yet
         if address['near_intersection_id']:
-            print filename
             # total, left, right, conflicts
             counts = [0, 0, 0, 0]
             result = None
@@ -988,29 +987,24 @@ def parse_conflicts(address_records):
             elif 'Cars' in sheet_names and (
                     'Heavy Vehicles' in sheet_names
                     or 'Trucks' in sheet_names):
-                # this one isn't done yet
                 hv = 'Heavy Vehicles'
                 if 'Trucks' in sheet_names:
                     hv = 'Trucks'
                 result = parse_15_min_format(workbook, 'Cars', 1,
                                              sheet_name2=hv)
             elif '15-min. Cars' in sheet_names \
-                 and '15-min. Heavy Vehicle' in sheet_names:
-                # this one isn't done yet but same as prev
-                pass
-            elif '15-min. Cars' in sheet_names \
-                 and '15-min.  Heavy Vehicle' in sheet_names:
-                # this one isn't done yet but same as prev
-                pass
+                 and [x for x in sheet_names if re.match(
+                     '15-min*Heavy Vehicle', x)]:
+                hv = [x for x in sheet_names if re.match(
+                    '15-min*Heavy Vehicle', x)][0]
+                result = parse_15_min_format(workbook, '15-min. Cars', 1,
+                                             sheet_name2=hv)
             elif 'Cars & Peds' in sheet_names \
                  and 'Trucks & Bikes' in sheet_names:
-                # this one isn't done yet but same as prev
-                pass
+                result = parse_15_min_format(workbook, 'Cars & Peds', 1,
+                                             sheet_name2='Trucks & Bikes')
 
             if result:
-#                if 'BRAINARD' in filename:
-#                    import ipdb; ipdb.set_trace()
-
                 counts = result
                 print counts
 
