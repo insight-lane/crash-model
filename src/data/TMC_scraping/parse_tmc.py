@@ -899,7 +899,7 @@ def parse_15_min_format1(workbook, sheet_name):
     print str(total) + ',' + str(left) + ',' + str(right) + ',' + str(conflicts)
 
 
-def parse_15_min_format(workbook, sheet_name, format):
+def parse_15_min_format(workbook, sheet_name, format, second_sheet=None):
 
     sheet_index = workbook.sheet_names().index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
@@ -983,6 +983,10 @@ def parse_15_min_format(workbook, sheet_name, format):
         col += 1
         curr_count += 1
 
+    # Labels might be messed up, don't look at these either
+    if not current:
+        return
+
     dir_locations[current]['indices'][1] = dir_locations[
         current]['indices'][0] + curr_count
 
@@ -1032,7 +1036,8 @@ def parse_15_min_format(workbook, sheet_name, format):
                 left_count += col_sum
 
     conflicts = get_conflict_count(dir_locations, sheet, row)
-    print str(total_count) + ',' + str(left_count) + ',' + str(right_count) + ',' + str(conflicts)
+    return [total_count, left_count, right_count, conflicts]
+#    print str(total_count) + ',' + str(left_count) + ',' + str(right_count) + ',' + str(conflicts)
 
 
 def parse_conflicts(address_records):
@@ -1045,17 +1050,52 @@ def parse_conflicts(address_records):
         # address couldn't be looked up or it's at a crosswalk which
         # we don't look at yet
         if address['near_intersection_id']:
+            # total, left, right, conflicts
+            counts = [0, 0, 0, 0]
+            result = None
             if 'Cars & Trucks' in sheet_names:
-                parse_15_min_format(workbook, 'Cars & Trucks', 1)
+                result = parse_15_min_format(workbook, 'Cars & Trucks', 1)
+            elif 'Cars Trucks' in sheet_names:
+                result = parse_15_min_format(workbook, 'Cars Trucks', 1)
 
     # files that don't adhere to n/s/e/w
     # 6909_629_ADAMS-ST,-EAST-ST,-WINTER-ST_NA_NA_DORCHESTER_11HR_NA_05-14-2013.XLS
     # 7283_268_BOWDOIN-ST,-QUINCY-ST_NA_NA_DORCHESTER_11-HOURS_NA_06-04-2013.XLS
     # 6986_2346_MALCOLM-X-BLVD,-ROXBURY-ST,-SHAWMUT-AVE_NA_NA_ROXBURY_11-HOURS_NA_06-19-2013.XLS
 
-        elif '15\' all Motors' in sheet_names:
-            print filename
-            parse_15_min_format(workbook, '15\' all Motors', 2)
+            elif '15\' all Motors' in sheet_names:
+                result = parse_15_min_format(workbook, '15\' all Motors', 2)
+            elif '15-min. All Motors' in sheet_names:
+                result = parse_15_min_format(workbook, '15-min. All Motors', 2)
+            elif '15-min All Motors' in sheet_names:
+                result = parse_15_min_format(workbook, '15-min All Motors', 2)
+            elif '15-min all Motors' in sheet_names:
+                result = parse_15_min_format(workbook, '15-min all Motors', 2)
+            elif 'Cars' in sheet_names and 'Heavy Vehicles' in sheet_names:
+                # this one isn't done yet
+                pass
+            elif 'Cars' in sheet_names and 'Trucks' in sheet_names:
+                # this one isn't done yet but same as prev
+                pass
+            elif '15-min. Cars' in sheet_names \
+                 and '15-min. Heavy Vehicle' in sheet_names:
+                # this one isn't done yet but same as prev
+                pass
+            elif '15-min. Cars' in sheet_names \
+                 and '15-min.  Heavy Vehicle' in sheet_names:
+                # this one isn't done yet but same as prev
+                pass
+            elif 'Cars & Peds' in sheet_names \
+                 and 'Trucks & Bikes' in sheet_names:
+                # this one isn't done yet but same as prev
+                pass
+                
+            elif [x for x in sheet_names if re.match('15.*Motors A', x)]:
+                # skip this one
+                pass
+            if result:
+                counts = result
+                print counts
 
 if __name__ == '__main__':
 
