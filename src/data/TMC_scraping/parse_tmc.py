@@ -721,7 +721,7 @@ def add_direction(direction_locations, direction, col, previous, count):
     return direction_locations
 
 
-def get_conflict_count(dir_locations, sheet, row):
+def get_conflict_count(dir_locations, sheet, row, sheet2):
 
     # Conflicts (count each conflict over 15 minutes)
     conflicts = 0
@@ -787,11 +787,20 @@ def get_conflict_count(dir_locations, sheet, row):
                     index,
                     dir_locations[
                         conflict['from1']]['to'][conflict['to1']])
+                if sheet2:
+                    conflict_count1 += sheet2.cell_value(
+                        index,
+                        dir_locations[
+                            conflict['from1']]['to'][conflict['to1']])
                 conflict_count2 = sheet.cell_value(
                     index,
                     dir_locations[
                         conflict['from2']]['to'][conflict['to2']])
-
+                if sheet2:
+                    conflict_count2 += sheet2.cell_value(
+                        index,
+                        dir_locations[
+                            conflict['from2']]['to'][conflict['to2']])
                 rowlabel = sheet.cell_value(index, 0)
                 if 'tot' not in str(rowlabel).lower() and \
                    type(conflict_count1) == float and \
@@ -801,10 +810,14 @@ def get_conflict_count(dir_locations, sheet, row):
     return conflicts
 
 
-def parse_15_min_format(workbook, sheet_name, format, second_sheet=None):
+def parse_15_min_format(workbook, sheet_name, format, sheet_name2=None):
 
     sheet_index = workbook.sheet_names().index(sheet_name)
     sheet = workbook.sheet_by_index(sheet_index)
+    sheet2 = None
+    if sheet_name2:
+        sheet_index2 = workbook.sheet_names().index(sheet_name2)
+        sheet2 = workbook.sheet_by_index(sheet_index2)
 
     if format == 1:
         row = 8
@@ -928,6 +941,9 @@ def parse_15_min_format(workbook, sheet_name, format, second_sheet=None):
                 if 'tot' not in str(rowlabel).lower() and \
                    type(sheet.cell_value(r, col_index)) == float:
                     col_sum += sheet.cell_value(r, col_index)
+                    if sheet2:
+                        col_sum += sheet2.cell_value(r, col_index)
+                        
             total_count += col_sum
 
             # counts of left turns and counts of right turns
@@ -937,7 +953,7 @@ def parse_15_min_format(workbook, sheet_name, format, second_sheet=None):
             elif dir == 'left':
                 left_count += col_sum
 
-    conflicts = get_conflict_count(dir_locations, sheet, row)
+    conflicts = get_conflict_count(dir_locations, sheet, row, sheet2)
 
     return [total_count, left_count, right_count, conflicts]
 
@@ -968,12 +984,16 @@ def parse_conflicts(address_records):
                 sheet_name = [x for x in sheet_names
                               if re.match('15.*ll Motors', x)][0]
                 result = parse_15_min_format(workbook, sheet_name, 2)
-            elif 'Cars' in sheet_names and 'Heavy Vehicles' in sheet_names:
+
+            elif 'Cars' in sheet_names and (
+                    'Heavy Vehicles' in sheet_names
+                    or 'Trucks' in sheet_names):
                 # this one isn't done yet
-                pass
-            elif 'Cars' in sheet_names and 'Trucks' in sheet_names:
-                # this one isn't done yet but same as prev
-                pass
+                hv = 'Heavy Vehicles'
+                if 'Trucks' in sheet_names:
+                    hv = 'Trucks'
+                result = parse_15_min_format(workbook, 'Cars', 1,
+                                             sheet_name2=hv)
             elif '15-min. Cars' in sheet_names \
                  and '15-min. Heavy Vehicle' in sheet_names:
                 # this one isn't done yet but same as prev
