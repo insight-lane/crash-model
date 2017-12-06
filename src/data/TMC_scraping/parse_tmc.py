@@ -797,106 +797,8 @@ def get_conflict_count(dir_locations, sheet, row):
                    type(conflict_count1) == float and \
                    type(conflict_count2) == float:
 
-                    conflicts += abs(conflict_count1 - conflict_count2)
+                    conflicts += min(conflict_count1, conflict_count2)
     return conflicts
-
-
-def parse_15_min_format1(workbook, sheet_name):
-
-    sheet_index = workbook.sheet_names().index(sheet_name)
-    sheet = workbook.sheet_by_index(sheet_index)
-
-    row = 8
-    col = 1
-    dir_locations = {}
-    current = ''
-    curr_count = 0
-
-    while col < sheet.ncols:
-        if 'north' in sheet.cell_value(row, col).lower():
-            if 'north' in dir_locations.keys():
-                return
-
-            dir_locations = add_direction(
-                dir_locations,
-                'north',
-                col,
-                current,
-                curr_count
-            )
-            current = 'north'
-            curr_count = 0
-        elif 'south' in sheet.cell_value(row, col).lower():
-            if 'south' in dir_locations.keys():
-                return
-            dir_locations = add_direction(
-                dir_locations,
-                'south',
-                col,
-                current,
-                curr_count
-            )
-            current = 'south'
-            curr_count = 0
-        elif 'east' in sheet.cell_value(row, col).lower():
-            if 'east' in dir_locations.keys():
-                return
-            dir_locations = add_direction(
-                dir_locations,
-                'east',
-                col,
-                current,
-                curr_count
-            )
-            current = 'east'
-            curr_count = 0
-        elif 'west' in sheet.cell_value(row, col).lower():
-            if 'west' in dir_locations.keys():
-                return
-            dir_locations = add_direction(
-                dir_locations,
-                'west',
-                col,
-                current,
-                curr_count
-            )
-            current = 'west'
-            curr_count = 0
-        col += 1
-        curr_count += 1
-
-    dir_locations[current]['indices'][1] = dir_locations[
-        current]['indices'][0] + curr_count
-
-    row += 1
-    total = 0
-    left = 0
-    right = 0
-    for direction in dir_locations.keys():
-        indices = dir_locations[direction]['indices']
-        dir_locations[direction]['to'] = {}
-        for col in range(indices[0], indices[1]):
-            if 'thru' in sheet.cell_value(row, col).lower():
-                dir_locations[direction]['to']['thru'] = col
-            elif 'right' in sheet.cell_value(row, col).lower():
-                dir_locations[direction]['to']['right'] = col
-            elif 'left' in sheet.cell_value(row, col).lower():
-                dir_locations[direction]['to']['left'] = col
-            elif 'u-tr' in sheet.cell_value(row, col).lower():
-                dir_locations[direction]['to']['u-tr'] = col
-
-        for dir, col_index in dir_locations[direction]['to'].iteritems():
-            col_sum = sum(sheet.col_values(col_index, row + 1, sheet.nrows))
-            total += col_sum
-
-            # counts of left turns and counts of right turns
-            # from each direction
-            if dir == 'right':
-                right += col_sum
-            elif dir == 'left':
-                left += col_sum
-    conflicts = get_conflict_count(dir_locations, sheet, row)
-    print str(total) + ',' + str(left) + ',' + str(right) + ',' + str(conflicts)
 
 
 def parse_15_min_format(workbook, sheet_name, format, second_sheet=None):
@@ -1003,9 +905,9 @@ def parse_15_min_format(workbook, sheet_name, format, second_sheet=None):
 
         # hack because at least one of the tmcs has a bad header for the total
         if format == 2:
-            end = indices[1] - 1
+            end = min(indices[1] - 1, sheet.ncols)
         else:
-            end = indices[1]
+            end = min(indices[1], sheet.ncols)
         for col in range(indices[0], end):
             if thru in sheet.cell_value(row, col).lower() \
                and 'tot' not in sheet.cell_value(row, col).lower():
@@ -1036,8 +938,8 @@ def parse_15_min_format(workbook, sheet_name, format, second_sheet=None):
                 left_count += col_sum
 
     conflicts = get_conflict_count(dir_locations, sheet, row)
+
     return [total_count, left_count, right_count, conflicts]
-#    print str(total_count) + ',' + str(left_count) + ',' + str(right_count) + ',' + str(conflicts)
 
 
 def parse_conflicts(address_records):
@@ -1050,6 +952,7 @@ def parse_conflicts(address_records):
         # address couldn't be looked up or it's at a crosswalk which
         # we don't look at yet
         if address['near_intersection_id']:
+            print filename
             # total, left, right, conflicts
             counts = [0, 0, 0, 0]
             result = None
@@ -1085,6 +988,9 @@ def parse_conflicts(address_records):
                 pass
 
             if result:
+#                if 'BRAINARD' in filename:
+#                    import ipdb; ipdb.set_trace()
+
                 counts = result
                 print counts
 
