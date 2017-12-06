@@ -1053,24 +1053,18 @@ def parse_conflicts(address_records):
             # total, left, right, conflicts
             counts = [0, 0, 0, 0]
             result = None
-            if 'Cars & Trucks' in sheet_names:
-                result = parse_15_min_format(workbook, 'Cars & Trucks', 1)
-            elif 'Cars Trucks' in sheet_names:
-                result = parse_15_min_format(workbook, 'Cars Trucks', 1)
-
-    # files that don't adhere to n/s/e/w
-    # 6909_629_ADAMS-ST,-EAST-ST,-WINTER-ST_NA_NA_DORCHESTER_11HR_NA_05-14-2013.XLS
-    # 7283_268_BOWDOIN-ST,-QUINCY-ST_NA_NA_DORCHESTER_11-HOURS_NA_06-04-2013.XLS
-    # 6986_2346_MALCOLM-X-BLVD,-ROXBURY-ST,-SHAWMUT-AVE_NA_NA_ROXBURY_11-HOURS_NA_06-19-2013.XLS
-
-            elif '15\' all Motors' in sheet_names:
-                result = parse_15_min_format(workbook, '15\' all Motors', 2)
-            elif '15-min. All Motors' in sheet_names:
-                result = parse_15_min_format(workbook, '15-min. All Motors', 2)
-            elif '15-min All Motors' in sheet_names:
-                result = parse_15_min_format(workbook, '15-min All Motors', 2)
-            elif '15-min all Motors' in sheet_names:
-                result = parse_15_min_format(workbook, '15-min all Motors', 2)
+                
+            if [x for x in sheet_names if re.match('Cars.*Trucks', x)]:
+                sheet_name = [x for x in sheet_names
+                              if re.match('Cars.*Trucks', x)][0]
+                result = parse_15_min_format(workbook, sheet_name, 1)
+            elif [x for x in sheet_names if re.match('15.*Motors A', x)]:
+                # skip this one
+                pass
+            elif [x for x in sheet_names if re.match('15.*ll Motors', x)]:
+                sheet_name = [x for x in sheet_names
+                              if re.match('15.*ll Motors', x)][0]
+                result = parse_15_min_format(workbook, sheet_name, 2)
             elif 'Cars' in sheet_names and 'Heavy Vehicles' in sheet_names:
                 # this one isn't done yet
                 pass
@@ -1089,10 +1083,7 @@ def parse_conflicts(address_records):
                  and 'Trucks & Bikes' in sheet_names:
                 # this one isn't done yet but same as prev
                 pass
-                
-            elif [x for x in sheet_names if re.match('15.*Motors A', x)]:
-                # skip this one
-                pass
+
             if result:
                 counts = result
                 print counts
