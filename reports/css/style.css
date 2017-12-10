@@ -41,9 +41,11 @@ h4 {
 .bigplot {
     box-sizing: border-box;
     width: 960px;
+    height: 960px;
     background-color: #fff;
     margin: 10px;
     padding: 10px ;
+    position: relative;
     /*border: 1px solid #b2b2b2;*/
 }
 
@@ -58,8 +60,8 @@ h4 {
     /*border: 1px solid #b2b2b2;*/
 }
 
-#map {
-	/*position: absolute;*/
+.map {
+	position: absolute;
     margin-left: 20px;
 	width: 900px;
 	height: 600px;
@@ -123,6 +125,16 @@ input[type="range"]::-ms-thumb {
     border-radius: 50%;
 }
 
+#select_compare_week{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+select {
+    margin: 10px;
+}
+
 #legend {
     position: absolute;
 	right: 40px;
@@ -147,6 +159,11 @@ input[type="range"]::-ms-thumb {
     display: inline-block;
     text-align: center;
     font: 10px sans-serif;
+}
+
+#weekly_barplot {
+    position: absolute;
+    bottom: 0;
 }
 
 .axis {
