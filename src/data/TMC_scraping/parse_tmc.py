@@ -535,11 +535,16 @@ def parse_15_min_format(workbook, sheet_name, format, sheet_name2=None):
         for dir, col_index in dir_locations[direction]['to'].iteritems():
             col_sum = 0
             row_start = row + 1
-            
+
+            quarter_hours = 0
             for r in range(row_start, sheet.nrows):
                 rowlabel = sheet.cell_value(r, 0)
-                if 'tot' not in str(rowlabel).lower() and \
+                # Only look at the first 11 hours for normalization
+                # And ignore totals
+                if quarter_hours < 44 \
+                   and 'tot' not in str(rowlabel).lower() and \
                    type(sheet.cell_value(r, col_index)) == float:
+                    quarter_hours += 1
                     col_sum += sheet.cell_value(r, col_index)
                     if sheet2:
                         col_sum += sheet2.cell_value(r, col_index)
@@ -555,12 +560,11 @@ def parse_15_min_format(workbook, sheet_name, format, sheet_name2=None):
 
     conflicts = get_conflict_count(dir_locations, sheet, row, sheet2)
 
-    return [total_count, left_count, right_count, conflicts]
+    return [total_count, left_count, right_count, conflicts, quarter_hours]
 
 
 def parse_conflicts():
-    count1 = 0
-    count2 = 0
+    count = 0
 
     print 'getting normalization factors'
     n_11, n_12 = get_normalization_factor()
@@ -627,8 +631,10 @@ def parse_conflicts():
                                                  sheet_name2='Trucks & Bikes')
 
                 if result:
-                    count1 += 1
+                    count += 1
                     counts = result
+                    print filename
+                    print hours
                     print counts
 
                     normalized = ''
@@ -651,13 +657,11 @@ def parse_conflicts():
                         'Conflict': int(result[3])
                     }
                     summary.append(value)
-            else:
-                count2 += 1
 
     # Write out the cached file
     util.write_geocode_cache(cached)
 
-    print "count1:" + str(count1) + ", count2:" + str(count2)
+    print "parsed " + str(count) + " TMC files"
     return summary
 
 if __name__ == '__main__':
@@ -689,17 +693,14 @@ if __name__ == '__main__':
 
     print len(address_records)
 
+    # to do
+    # move compare crashes to notebook
+    # want to do anything with compare_atrs?
+    # tests?
+    # add any features to model?  what do we add from atrs?
+    # plot_tmcs?  keep or get rid of
+    
 #    compare_crashes()
-
-#    import ipdb; ipdb.set_trace()
-
-#    print address_records[0]
-#    compare_atrs(address_records)
-#    norm = get_normalization_factor()
-#    print addresses.keys()
-#    print type(addresses)
-#    print address_records[0]
-#    plot_tmcs(addresses)
 
 
 
