@@ -125,37 +125,6 @@ def snap_inter_and_non_inter(summary):
     return address_records
 
 
-def plot_tmcs(addresses):
-
-    # First create basemap
-    points = folium.Map(
-        [42.3601, -71.0589],
-        tiles='Cartodb Positron',
-        zoom_start=12
-    )
-
-    # plot tmcs
-    for address in addresses.iterrows():
-        if not pd.isnull(address[1]['Latitude']):
-            folium.CircleMarker(
-                location=[address[1]['Latitude'], address[1]['Longitude']],
-                fill_color='yellow', fill=True, fill_opacity=.7, color='yellow',
-                radius=6).add_to(points)
-
-    # Plot atrs
-    atrs = util.csv_to_projected_records(
-        PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
-    for atr in atrs:
-        properties = atr['properties']
-        if properties['lat']:
-            folium.CircleMarker(
-                location=[float(properties['lat']), float(properties['lng'])],
-                fill_color='green', fill=True, fill_opacity=.7, color='grey',
-                radius=6).add_to(points)
-
-    points.save('map.html')
-
-
 def get_normalization_factor():
     """
     TMC counts are only over 11 or 12 hours, always starting at 7
@@ -176,141 +145,6 @@ def get_normalization_factor():
     counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
 
     return sum(counts[7:18]), sum(counts[7:19])
-
-
-def compare_atrs(tmcs):
-    atrs = {}
-    count = 0
-    with open(PROCESSED_DATA_FP + 'snapped_atrs.json') as f:
-        data = json.load(f)
-        print data[0]
-        for row in data:
-            if row['near_id']:
-                atrs[row['near_id']] = row
-    for tmc in tmcs:
-        if tmc['properties']['near_id'] in atrs.keys():
-            print "------------------------------------------"
-            print tmc['properties']
-            print atrs[tmc['properties']['near_id']]
-            print ".........................................."
-            count += 1
-    print count
-
-
-def compare_crashes():
-
-    count = 0
-    print 'comparing.........'
-    inters = {}
-    with open(PROCESSED_DATA_FP + 'inters_data.json') as f:
-        print 'yay'
-        data = json.load(f)
-        for key, value in data.iteritems():
-            inters[str(key)] = value[0]
-
-    print inters.values()[0]
-
-    crashes_by_seg = {}
-    with open(PROCESSED_DATA_FP + 'crash_joined.json') as f:
-        data = json.load(f)
-        for row in data:
-            if str(row['near_id']) == '':
-                next
-            if str(row['near_id']) not in crashes_by_seg.keys():
-                crashes_by_seg[str(row['near_id'])] = {
-                    'total': 0, 'type': [], 'values': []}
-            crashes_by_seg[str(row['near_id'])]['total'] += 1
-            crashes_by_seg[str(row['near_id'])]['type'].append(
-                row['FIRST_EVENT_SUBTYPE'])
-            crashes_by_seg[str(row['near_id'])]['values'].append(row)
-            
-#    print len(crashes_by_seg.keys())
-    count = 0
-    max = 0
-    max_intersection = None
-    high_crashes = []
-    single_crash = []
-    no_crashes = []
-    crash_tuples = []
-
-    results = []
-
-    crash_count = []
-    crash_volume = []
-    crash_speed = []
-    crash_speed_bins = []
-    with open(PROCESSED_DATA_FP + 'tmc_summary.json') as f:
-        data = json.load(f)
-        for row in data:
-            if str(row['near_intersection_id']) in crashes_by_seg.keys() \
-               and row['near_intersection_id'] != '':
-                crashes = crashes_by_seg[str(row['near_intersection_id'])]
-                row['Crashes'] = crashes['total']
-                row['Types'] = crashes['type']
-                row['Speed'] = inters[str(row['near_intersection_id'])]['SPEEDLIMIT']
-                results.append(row)
-
-                crash_tuples.append((
-                    crashes['total'], str(row['near_intersection_id']), row['Normalized']))
-                if row['Normalized']:
-                    crash_count.append(float(crashes['total']))
-#                    print row['Normalized']
-                    crash_volume.append(float(row['Normalized']))
-                    crash_speed.append(float(row['Speed']))
-                    if row['Speed'] < 20:
-                        crash_speed_bins.append(float(1))
-                    elif row['Speed'] < 30:
-                        crash_speed_bins.append(float(2))
-                    else:
-                        crash_speed_bins.append(float(3))
-                if crashes['total'] > max:
-                    max = crashes['total']
-                    max_intersection = row
-#                    print "......................."
-#                    print row
-                if crashes['total'] > 1:
-                    if row['Normalized']:
-                        high_crashes.append(row['Normalized'])
-                else:
-                    if row['Normalized']:
-                        single_crash.append(row['Normalized'])
-            else:
-                if row['Normalized']:
-                    no_crashes.append(row['Normalized'])
-                count += 1
-
-#    print '8028' in crashes_by_seg.keys()
-    high_crashes.sort()
-    single_crash.sort()
-    no_crashes.sort()
-#    print high_crashes
-#    print sum(high_crashes)/len(high_crashes)
-
-#    print sum(single_crash)/len(single_crash)
-#    print no_crashes
-#    print sum(no_crashes)/len(no_crashes)
-#    print max
-#    print max_intersection
-
-    for i in range(2):
-        print results[i]
-
-    import numpy
-    print numpy.corrcoef([crash_count, crash_speed_bins])
-#    print crash_tuples
-
-    sorted_results = sorted(results, key=lambda k: k['Normalized'])
-    print sorted_results[0]
-    print sorted_results[len(results)-1]
-    print len(sorted_results)
-    # count = 0
-    print single_crash
-    print high_crashes
-    #     if tmc['properties']['near_id'] in crashes_by_seg.keys():
-    #         print tmc['properties']
-    #     count += 1
-    # print "count::::::::::::::::::::" + str(count)
-    # print len(crashes_by_seg)
 
 
 def add_direction(direction_locations, direction, col, previous, count):
@@ -690,17 +524,11 @@ if __name__ == '__main__':
             json.dump(address_records, f)
     else:
         address_records = json.load(open(summary_file))
-
-    print len(address_records)
+        print "Read in " + str(len(address_records)) + " records"
 
     # to do
-    # move compare crashes to notebook
-    # want to do anything with compare_atrs?
     # tests?
     # add any features to model?  what do we add from atrs?
-    # plot_tmcs?  keep or get rid of
-    
-#    compare_crashes()
 
 
 
