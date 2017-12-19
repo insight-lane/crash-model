@@ -24,11 +24,16 @@ from shapely.geometry import Point
 import folium
 from folium import FeatureGroup, LayerControl, Map, CircleMarker
 import argparse
+import os
 
 
 # all datasets must be stored in the "data/processed/" directory
-fp = '../../data/processed/'
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
 
+DATA_FP = BASE_DIR + '/data/processed/'
 
 
 # parse arguments
@@ -58,7 +63,7 @@ def process_data(filename):
     Returns:
         a dataframe with point geometries added to it
     """
-    df = pd.read_csv(fp + filename)
+    df = pd.read_csv(DATA_FP + filename)
     geometry = [Point(xy) for xy in zip(df.X, df.Y)]
     crs = {'init': 'epsg:4326'}
 
