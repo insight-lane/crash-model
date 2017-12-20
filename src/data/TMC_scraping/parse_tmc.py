@@ -7,60 +7,33 @@ from dateutil.parser import parse
 from .. import util
 import rtree
 import folium
+import json
+import pyproj
 import os
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
-            os.path.abspath(__file__))))
+            os.path.dirname(
+                os.path.abspath(__file__)))))
 
 RAW_DATA_FP = BASE_DIR + '/data/raw/'
 PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
+ATR_FP = BASE_DIR + '/data/raw/AUTOMATED TRAFFICE RECORDING/'
+TMC_FP = RAW_DATA_FP + '/TURNING MOVEMENT COUNT/'
 
 
-def file_dataframe(excel_sheet, data_location):
-    column_time = data_location['columns'][0]
-    column_east = column_time + 1
-    column_south = column_time + 2
-    column_west = column_time + 3
-    column_north = column_time + 4
-    
-    start_r = data_location['rows'][0] + 3
-    end_r = data_location['rows'][1]
-    
-    times = excel_sheet.col_values(column_time,start_r,end_r)
-    times_strip = [x.strip() for x in times]
-    east = excel_sheet.col_values(column_east,start_r,end_r)
-    south = excel_sheet.col_values(column_south,start_r,end_r)
-    west = excel_sheet.col_values(column_west,start_r,end_r)
-    north = excel_sheet.col_values(column_north,start_r,end_r)
-
-    columns = ['times', 'east', 'south', 'west', 'north']
-    return(pd.DataFrame({'times':times_strip, 'east':east, 'south':south, 'west':west, 'north':north}, columns=columns))
-
-
-def data_location(excel_sheet):
+def num_hours(filename):
     """
-    Look at current sheet to find the indices of the 'Time' field
-    Use that as starting column and row
-    Use number of columns/rows - 2 as ending column/row
+    Parses out filename to give the number of hours of the sample
+    Args:
+        filename
+    Returns:
+        number
     """
-    sheet_c = excel_sheet.ncols
-    sheet_r = excel_sheet.nrows
-    start_c = 0
-    start_r = 0
-    end_c = sheet_c - 2
-    end_r = sheet_r - 2
-    for col in range(sheet_c):
-        for row in range(sheet_r):
-            cell_value = excel_sheet.cell_value(rowx=row, colx=col)
-            if "time" in str(cell_value).lower():
-                start_c = col
-                start_r = row
-    return pd.DataFrame.from_records([
-        ('start', start_c, start_r),
-        ('end', end_c, end_r)
-    ], columns=['value', 'columns', 'rows'])
+    prefix = re.sub('\.XLS', '', filename)
+    segments = prefix.split('_')
+    return segments[len(segments)-3].split('-')[0]
 
 
 def find_date(filename):
@@ -73,16 +46,35 @@ def find_date(filename):
     """
     prefix = re.sub('\.XLS', '', filename)
     segments = prefix.split('_')
-    return parse(segments[len(segments) - 1])
+    return parse(segments[len(segments) - 1]).date()
 
 
-def find_address(filename):
+def lookup_address(intersection, cached):
+    """
+    Look up an intersection first in the cache, and if it
+    doesn't exist, geocode it
+
+    Args:
+        intersection: string
+        cached: dict
+    Returns:
+        tuple of original address, geocoded address, latitude, longitude
+    """
+    if intersection in cached.keys():
+        print intersection + ' is cached'
+        return cached[intersection]
+    else:
+        print 'geocoding ' + intersection
+        return list(util.geocode_address(intersection))
+
+
+def find_address_from_filename(filename, cached):
     """
     Parses out filename to give an intersection
     Args:
         filename
     Returns:
-        address, latitude, longitude
+        tuple of original address, geocoded address, latitude, longitude
     """
     intersection = filename.split('_')[2]
     streets = intersection.split(',')
@@ -92,262 +84,453 @@ def find_address(filename):
 
     if len(streets) >= 2:
         intersection = streets[0] + ' and ' + streets[1] + ' Boston, MA'
-        result = util.geocode_address(intersection)
+        result = lookup_address(intersection, cached)
+
+        # It's possible that google can't look up the address by the
+        # first two street names for an intersection containing three
+        # or more street names.  Try the first and second
+        if (result is None
+                or 'Boston' not in str(result[0])) and len(streets) > 2:
+            intersection = streets[0] + ' and ' + streets[2] + ' Boston, MA'
+            print 'trying again, this time geocoding ' + intersection
+            result = list(util.geocode_address(intersection))
+        result.insert(0, intersection)
         return result
-    return None, None, None
+    return None, None, None, None
 
 
-def extract_data_sheet(sheet, sheet_data_location, counter):
-    sheet_df = file_dataframe(sheet, sheet_data_location)
-    sheet_df['data_id'] = counter
-    return(sheet_df)
-
-
-def log_data_sheet(sheet, sheet_name, sheet_data_location,
-                   counter, filename, address, date):
-    
-    column_time = sheet_data_location['columns'][0]
-    row_time = sheet_data_location['rows'][0]
-    
-    row_street = row_time + 1
-    column_east = column_time + 1
-    column_south = column_time + 2
-    column_west = column_time + 3
-    column_north = column_time + 4
-    
-    east = sheet.cell_value(row_street, column_east)
-    south = sheet.cell_value(row_street, column_south)
-    west = sheet.cell_value(row_street, column_west)
-    north = sheet.cell_value(row_street, column_north)
-    
-    # Since column names can vary, clean up
-    sheet_name = re.sub('all\s', '', sheet_name)
-    sheet_name = re.sub('(\w+)\.?(\s.*)?', r'\1', sheet_name)
-
-    record = pd.DataFrame([(
-        counter,
-        address,
-        date,
-        east,
-        south,
-        west,
-        north,
-        sheet_name,
-        filename)],
-        columns=[
-            'id',
-            'address',
-            'date',
-            'east',
-            'south',
-            'west',
-            'north',
-            'data_type',
-            'filename'])
-    return record
-
-
-def extract_and_log_data_sheet(workbook, sheet_name, counter, filename,
-                               address, date, data_info):
-
-    sheet_names = [x.lower() for x in workbook.sheet_names()]
-    sheet_index = sheet_names.index(sheet_name)
-    sheet = workbook.sheet_by_index(sheet_index)
-    # This gives the location in the sheet where the counts start/end
-    sheet_data_location = data_location(sheet)
-
-    data_sheet = extract_data_sheet(sheet, sheet_data_location, counter)
-    logged = log_data_sheet(
-        sheet,
-        sheet_name,
-        sheet_data_location,
-        counter,
-        filename,
-        address,
-        date
-    )
-
-    data_info = data_info.append(logged)
-    return data_sheet, data_info
-
-
-def process_format1(workbook, filename, address, date,
-                    counter, motor_col, ped_col, bike_col, all_data,
-                    data_info):
-
-    if motor_col:
-        counter += 1
-        motor, data_info = extract_and_log_data_sheet(
-            workbook, motor_col, counter, filename, address, date, data_info)
-        all_data = all_data.append(motor)
-
-    if ped_col:
-        counter += 1
-        pedestrian, data_info = extract_and_log_data_sheet(
-            workbook, ped_col, counter, filename, address, date, data_info)
-        all_data = all_data.append(pedestrian)
-        
-    if bike_col:
-        counter += 1
-        bike, data_info = extract_and_log_data_sheet(
-            workbook, bike_col, counter, filename, address, date, data_info)
-        all_data = all_data.append(bike)
-    return all_data, counter, data_info
-
-
-def get_geocoded():
-    """
-    Gets the geocoded turning movement count addresses
-
-    If no existing geocoded tmc file exists, extracts the addresses
-    and dates from the filenames, geocodes them, and writes results
-    to file
-    If there's an existing geocoded tmc file, read it in
-
-    Args:
-        None - file is hardcoded
-    Results:
-        addresses dataframe
-    """
-    addresses = pd.DataFrame()
-    geocoded_file = PROCESSED_DATA_FP + 'geocoded_tmcs.csv'
-    if not path_exists(geocoded_file):
-        print 'No geocoded tmcs found, generating'
-        data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
-        for filename in listdir(data_directory):
-            if filename.endswith('.XLS'):
-                address, latitude, longitude = find_address(filename)
-                date = find_date(filename)
-
-                address_record = pd.DataFrame([(
-                    filename,
-                    address,
-                    latitude,
-                    longitude,
-                    date)],
-                    columns=[
-                        'File',
-                        'Address',
-                        'Latitude',
-                        'Longitude',
-                        'Date'
-                    ])
-                addresses = addresses.append(address_record)
-        addresses.to_csv(
-            path_or_buf=geocoded_file, index=False)
-    else:
-        print "reading from " + geocoded_file
-        addresses = pd.read_csv(geocoded_file)
-
-    address_records = util.csv_to_projected_records(
-        geocoded_file, x='Longitude', y='Latitude')
-    print "Read in data from {} records".format(len(address_records))
-
+def snap_inter_and_non_inter(summary):
     inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(inter):
         segments_index.insert(idx, element[0].bounds)
     print "Snapping tmcs to intersections"
-    util.find_nearest(address_records, inter, segments_index, 20)
 
-    return addresses, address_records
+    address_records = util.raw_to_record_list(
+        summary, pyproj.Proj(init='epsg:4326'), x='Longitude', y='Latitude')
+    util.find_nearest(address_records, inter, segments_index, 30)
+
+    # Find_nearest got the nearest intersection id, but we want to compare
+    # against all segments too.  They don't always match, which may be
+    # something we'd like to look into
+    for address in address_records:
+        address['properties']['near_intersection_id'] = \
+            str(address['properties']['near_id'])
+        address['properties']['near_id'] = ''
+
+    combined_seg, segments_index = util.read_segments()
+    util.find_nearest(address_records, combined_seg, segments_index, 30)
+    return address_records
 
 
-def plot_tmcs(addresses):
-
-    # First create basemap
-    points = folium.Map(
-        [42.3601, -71.0589],
-        tiles='Cartodb Positron',
-        zoom_start=12
-    )
-
-    # plot tmcs
-    for address in addresses.iterrows():
-        if not pd.isnull(address[1]['Latitude']):
-            folium.CircleMarker(
-                location=[address[1]['Latitude'], address[1]['Longitude']],
-                fill_color='yellow', fill=True, fill_opacity=.7, color='yellow',
-                radius=6).add_to(points)
-
-    # Plot atrs
+def get_normalization_factor():
+    """
+    TMC counts are only over 11 or 12 hours, always starting at 7
+    Normalize using average rates of the 24 hour ATRs,
+    since they're pretty consistent
+    Args:
+        None
+    Returns:
+        Tuple of 11 hour normalization, 12 hour normalization
+    """
+    # Read in atr lats
     atrs = util.csv_to_projected_records(
         PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
-    for atr in atrs:
-        properties = atr['properties']
-        if properties['lat']:
-            folium.CircleMarker(
-                location=[float(properties['lat']), float(properties['lng'])],
-                fill_color='green', fill=True, fill_opacity=.7, color='grey',
-                radius=6).add_to(points)
 
-    points.save('map.html')
+    files = [ATR_FP +
+             atr['properties']['filename'] for atr in atrs]
+    all_counts = util.get_hourly_rates(files)
+    counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
+
+    return sum(counts[7:18]), sum(counts[7:19])
 
 
-def parse_tmcs(addresses):
+def add_direction(direction_locations, direction, col, previous, count):
+    direction_locations[direction] = {'indices': [col, 0]}
+    if previous:
+        direction_locations[previous]['indices'][1] = direction_locations[
+            previous]['indices'][0] + count
+    return direction_locations
 
-    data_directory = RAW_DATA_FP + 'TURNING MOVEMENT COUNT/'
 
-    all_data = pd.DataFrame()
-    data_info = pd.DataFrame(columns=[
-        'id',
-        'address',
-        'date',
-        'east',
-        'south',
-        'west',
-        'north',
-        'data_type',
-        'filename'
-    ])
+def get_conflict_count(dir_locations, sheet, row, sheet2):
 
-    i = 0
-    for row in addresses.iterrows():
+    # Conflicts (count each conflict over 15 minutes)
+    conflicts = 0
+    conflict_sets = [{
+        # Left turn from south conflicts with straight from north
+        'from1': 'south',
+        'to1': 'left',
+        'from2': 'north',
+        'to2': 'thru'
+    }, {
+        # Right turn from south conflicts with straight from west
+        'from1': 'south',
+        'to1': 'right',
+        'from2': 'west',
+        'to2': 'thru'
+    }, {
+        # Left turn from west conflicts with straight from east
+        'from1': 'west',
+        'to1': 'left',
+        'from2': 'east',
+        'to2': 'thru'
+    }, {
+        # Right turn from west conflicts with straight from north
+        'from1': 'west',
+        'to1': 'right',
+        'from2': 'north',
+        'to2': 'thru'
+    }, {
+        # Left turn from north conflicts with straight from south
+        'from1': 'north',
+        'to1': 'left',
+        'from2': 'south',
+        'to2': 'thru'
+    }, {
+        # Right turn from north conflicts with straight from east
+        'from1': 'north',
+        'to1': 'right',
+        'from2': 'east',
+        'to2': 'thru'
+    }, {
+        # Left turn from east conflicts with straight from west
+        'from1': 'east',
+        'to1': 'left',
+        'from2': 'west',
+        'to2': 'thru'
+    }, {
+        # Right turn from east conflicts with straight from south
+        'from1': 'east',
+        'to1': 'right',
+        'from2': 'south',
+        'to2': 'thru'
+    }]
 
-        filename = row[1]['File']
-#        print filename
-        address = row[1]['Address']
-        date = row[1]['Date']
-        file_path = path.join(data_directory, filename)
-        workbook = xlrd.open_workbook(file_path)
-        sheet_names = [x.lower() for x in workbook.sheet_names()]
-        motors = [col for col in sheet_names
-                  if col.startswith('all motors')]
-        peds = [col for col in sheet_names
-                if col.startswith('all peds')]
+    for conflict in conflict_sets:
+        if conflict['from1'] in dir_locations.keys() \
+           and conflict['to1'] in dir_locations[
+               conflict['from1']]['to'].keys() \
+           and conflict['from2'] in dir_locations.keys() \
+           and conflict['to2'] in dir_locations[
+               conflict['from2']]['to'].keys():
+            for index in range(row+1, sheet.nrows):
+                conflict_count1 = sheet.cell_value(
+                    index,
+                    dir_locations[
+                        conflict['from1']]['to'][conflict['to1']])
+                if sheet2:
+                    conflict_count1 += sheet2.cell_value(
+                        index,
+                        dir_locations[
+                            conflict['from1']]['to'][conflict['to1']])
+                conflict_count2 = sheet.cell_value(
+                    index,
+                    dir_locations[
+                        conflict['from2']]['to'][conflict['to2']])
+                if sheet2:
+                    conflict_count2 += sheet2.cell_value(
+                        index,
+                        dir_locations[
+                            conflict['from2']]['to'][conflict['to2']])
+                rowlabel = sheet.cell_value(index, 0)
+                if 'tot' not in str(rowlabel).lower() and \
+                   type(conflict_count1) == float and \
+                   type(conflict_count2) == float:
 
-        if motors or peds or 'bicycles hr.' in sheet_names:
-            all_data, i, data_info = process_format1(
-                workbook, filename, address, date,
-                i, motors[0] if motors else None,
-                peds[0] if peds else None,
-                'bicycles hr.' if 'bicycles hr.' in sheet_names else None,
-                all_data, data_info)
+                    conflicts += min(conflict_count1, conflict_count2)
+    return conflicts
 
-    all_data.reset_index(drop=True, inplace=True)
-    data_info.reset_index(drop=True, inplace=True)
 
-    all_data = all_data.apply(pd.to_numeric, errors='ignore')
-    data_info = data_info.apply(pd.to_numeric, errors='ignore')
+def parse_15_min_format(workbook, sheet_name, format, sheet_name2=None):
 
-    all_data.to_csv(path_or_buf=data_directory + 'all_data.csv', index=False)
-    data_info.to_csv(path_or_buf=data_directory + 'data_info.csv', index=False)
+    sheet_index = workbook.sheet_names().index(sheet_name)
+    sheet = workbook.sheet_by_index(sheet_index)
+    sheet2 = None
+    if sheet_name2:
+        sheet_index2 = workbook.sheet_names().index(sheet_name2)
+        sheet2 = workbook.sheet_by_index(sheet_index2)
 
-#    print data_directory
-#    print data_info[10]
-    print len(all_data)
-    print data_info.filename.nunique()
+    if format == 1:
+        row = 8
+        north = 'north'
+        south = 'south'
+        east = 'east'
+        west = 'west'
+        thru = 'thru'
+        left = 'left'
+        right = 'right'
+    elif format == 2:
+        row = 6
+        north = 's.b.'
+        south = 'n.b.'
+        east = 'w.b.'
+        west = 'e.b.'
+        thru = 't'
+        left = 'l'
+        right = 'r'
 
-    all_joined = pd.merge(left=all_data,right=data_info, left_on='data_id', right_on='id')
-#    print all_joined.groupby(['data_type']).sum()
-#    print addresses
+    col = 1
+    dir_locations = {}
+    current = ''
+    curr_count = 0
 
-#    print data_info.head()
-    
+    # Can't be a full 11-12 hour count if it's this small
+    if sheet.nrows < 25:
+        return
+    while col < sheet.ncols:
+        if north in sheet.cell_value(row, col).lower():
+            if 'north' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'north',
+                col,
+                current,
+                curr_count
+            )
+            current = 'north'
+            curr_count = 0
+        elif south in sheet.cell_value(row, col).lower():
+            if 'south' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'south',
+                col,
+                current,
+                curr_count
+            )
+            current = 'south'
+            curr_count = 0
+        elif east in sheet.cell_value(row, col).lower():
+            if 'east' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'east',
+                col,
+                current,
+                curr_count
+            )
+            current = 'east'
+            curr_count = 0
+        elif west in sheet.cell_value(row, col).lower():
+            if 'west' in dir_locations.keys():
+                return
+            dir_locations = add_direction(
+                dir_locations,
+                'west',
+                col,
+                current,
+                curr_count
+            )
+            current = 'west'
+            curr_count = 0
+        col += 1
+        curr_count += 1
+
+    # Labels might be messed up, don't look at these either
+    if not current:
+        return
+
+    dir_locations[current]['indices'][1] = dir_locations[
+        current]['indices'][0] + curr_count
+
+    if format == 1:
+        row += 1
+    elif format == 2:
+        row += 3
+    total_count = 0
+    left_count = 0
+    right_count = 0
+    for direction in dir_locations.keys():
+        indices = dir_locations[direction]['indices']
+        dir_locations[direction]['to'] = {}
+
+        # hack because at least one of the tmcs has a bad header for the total
+        if format == 2:
+            end = min(indices[1] - 1, sheet.ncols)
+        else:
+            end = min(indices[1], sheet.ncols)
+        for col in range(indices[0], end):
+            if thru in sheet.cell_value(row, col).lower() \
+               and 'tot' not in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['thru'] = col
+            elif right in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['right'] = col
+            elif left in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['left'] = col
+            elif 'u-tr' in sheet.cell_value(row, col).lower():
+                dir_locations[direction]['to']['u-tr'] = col
+
+        for dir, col_index in dir_locations[direction]['to'].iteritems():
+            col_sum = 0
+            row_start = row + 1
+
+            quarter_hours = 0
+            for r in range(row_start, sheet.nrows):
+                rowlabel = sheet.cell_value(r, 0)
+                # Only look at the first 11 hours for normalization
+                # And ignore totals
+                if quarter_hours < 44 \
+                   and 'tot' not in str(rowlabel).lower() and \
+                   type(sheet.cell_value(r, col_index)) == float:
+                    quarter_hours += 1
+                    col_sum += sheet.cell_value(r, col_index)
+                    if sheet2:
+                        col_sum += sheet2.cell_value(r, col_index)
+                        
+            total_count += col_sum
+
+            # counts of left turns and counts of right turns
+            # from each direction
+            if dir == 'right':
+                right_count += col_sum
+            elif dir == 'left':
+                left_count += col_sum
+
+    conflicts = get_conflict_count(dir_locations, sheet, row, sheet2)
+
+    return [total_count, left_count, right_count, conflicts, quarter_hours]
+
+
+def parse_conflicts():
+    count = 0
+
+    print 'getting normalization factors'
+    n_11, n_12 = get_normalization_factor()
+
+    # Read geocoded cache
+    geocoded_file = PROCESSED_DATA_FP + 'geocoded_addresses.csv'
+    cached = {}
+    if path_exists(geocoded_file):
+        print 'reading geocoded cache file'
+        cached = util.read_geocode_cache()
+
+    summary = []
+    for filename in listdir(TMC_FP):
+        if filename.endswith('.XLS'):
+
+            # Pull out what we can from the filename itself
+            orig_address, address, latitude, longitude = \
+                find_address_from_filename(filename, cached)
+            # If you can't geocode the address then there's not much point
+            # in parsing it because you won't be able to snap it to a segment
+            if latitude:
+
+                if orig_address:
+                    cached[orig_address] = [address, latitude, longitude]
+                date = str(find_date(filename))
+                hours = num_hours(filename)
+                file_path = path.join(TMC_FP, filename)
+                workbook = xlrd.open_workbook(file_path)
+                sheet_names = workbook.sheet_names()
+
+                # total, left, right, conflicts
+                counts = [0, 0, 0, 0]
+                result = None
+                
+                if [x for x in sheet_names if re.match('Cars.*Trucks', x)]:
+                    sheet_name = [x for x in sheet_names
+                                  if re.match('Cars.*Trucks', x)][0]
+                    result = parse_15_min_format(workbook, sheet_name, 1)
+                elif [x for x in sheet_names if re.match('15.*Motors A', x)]:
+                    # skip this one
+                    pass
+                elif [x for x in sheet_names if re.match('15.*ll Motors', x)]:
+                    sheet_name = [x for x in sheet_names
+                                  if re.match('15.*ll Motors', x)][0]
+                    result = parse_15_min_format(workbook, sheet_name, 2)
+                elif 'Cars' in sheet_names and (
+                        'Heavy Vehicles' in sheet_names
+                        or 'Trucks' in sheet_names):
+                    hv = 'Heavy Vehicles'
+                    if 'Trucks' in sheet_names:
+                        hv = 'Trucks'
+                    result = parse_15_min_format(workbook, 'Cars', 1,
+                                                 sheet_name2=hv)
+                elif '15-min. Cars' in sheet_names \
+                     and [x for x in sheet_names if re.match(
+                         '15-min*Heavy Vehicle', x)]:
+                    hv = [x for x in sheet_names if re.match(
+                        '15-min*Heavy Vehicle', x)][0]
+                    result = parse_15_min_format(workbook, '15-min. Cars', 1,
+                                                 sheet_name2=hv)
+                elif 'Cars & Peds' in sheet_names \
+                     and 'Trucks & Bikes' in sheet_names:
+                    result = parse_15_min_format(workbook, 'Cars & Peds', 1,
+                                                 sheet_name2='Trucks & Bikes')
+
+                if result:
+                    count += 1
+                    counts = result
+                    print filename
+                    print hours
+                    print counts
+
+                    normalized = ''
+                    total = result[0]
+                    if hours == 11:
+                        normalized = int(round(total/n_11))
+                    else:
+                        normalized = int(round(total/n_12))
+                    value = {
+                        'Filename': filename,
+                        'Address': address,
+                        'Latitude': latitude,
+                        'Longitude': longitude,
+                        'Date': date,
+                        'Hours': hours,
+                        'Total': int(total),
+                        'Normalized': normalized,
+                        'Left': int(result[1]),
+                        'Right': int(result[2]),
+                        'Conflict': int(result[3])
+                    }
+                    summary.append(value)
+
+    # Write out the cached file
+    util.write_geocode_cache(cached)
+
+    print "parsed " + str(count) + " TMC files"
+    return summary
 
 if __name__ == '__main__':
 
-    addresses, address_records = get_geocoded()
-    plot_tmcs(addresses)
-    parse_tmcs(addresses)
+    address_records = []
+
+    summary_file = PROCESSED_DATA_FP + 'tmc_summary.json'
+    if not path_exists(summary_file):
+        print 'No tmc_summary.json, parsing tmcs files now...'
+
+        summary = parse_conflicts()
+        address_records = snap_inter_and_non_inter(summary)
+
+        all_crashes, crashes_by_location = util.group_json_by_location(
+            PROCESSED_DATA_FP + 'crash_joined.json')
+
+        for record in address_records:
+            if record['properties']['near_id'] \
+               and str(record['properties']['near_id']) \
+               in crashes_by_location.keys():
+                record['properties']['crash_count'] = crashes_by_location[
+                    str(record['properties']['near_id'])]['count']
+
+        with open(summary_file, 'w') as f:
+            address_records = [x['properties'] for x in address_records]
+            json.dump(address_records, f)
+    else:
+        address_records = json.load(open(summary_file))
+        print "Read in " + str(len(address_records)) + " records"
+
+    # to do
+    # tests?
+    # add any features to model?  what do we add from atrs?
+
+
+
+
+

@@ -5,16 +5,142 @@ import rtree
 import geocoder
 from time import sleep
 from shapely.geometry import Point, shape, mapping
+import openpyxl
+from matplotlib import pyplot
 import os
+from os.path import exists as path_exists
+import json
 
 PROJ = pyproj.Proj(init='epsg:3857')
-
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
 MAP_FP = BASE_DIR + '/data/processed/maps'
+PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
+
+
+def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
+    """
+    Read in a csv file with columns:
+        Input address
+        Output address
+        Latitude
+        Longitude
+    Args:
+        filename
+    Results:
+        dict of input address to list of output address, latitude, longitude
+    """
+
+    if not path_exists(filename):
+        return {}
+    cached = {}
+    with open(filename) as f:
+        csv_reader = csv.DictReader(f)
+        for r in csv_reader:
+            cached[r['Input Address']] = [
+                r['Output Address'],
+                r['Latitude'],
+                r['Longitude']
+            ]
+    return cached
+
+
+def write_geocode_cache(results,
+                        filename=PROCESSED_DATA_FP + 'geocoded_addresses.csv'):
+    """
+    Write a csv file with columns:
+        Input address
+        Output address
+        Latitude
+        Longitude
+    Args:
+        results - dict of geocoded results
+        filename - file to write to (defaults to geocoded_addresses.csv)
+    """
+
+    with open(filename, 'wb') as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            'Input Address',
+            'Output Address',
+            'Latitude',
+            'Longitude'
+        ])
+        for key, value in results.iteritems():
+            writer.writerow([key, value[0], value[1], value[2]])
+
+
+def geocode_address(address, cached={}):
+    """
+    Check an optional cache to see if we already have the geocoded address
+    Otherwise, use google's API to look up the address
+    Due to rate limiting, try a few times with an increasing
+    wait if no address is found
+
+    Args:
+        address
+        cached (optional)
+    Returns:
+        address, latitude, longitude
+    """
+    if address in cached.keys():
+        return cached[address]
+    g = geocoder.google(address)
+    attempts = 0
+    while g.address is None and attempts < 3:
+        attempts += 1
+        sleep(attempts ** 2)
+        g = geocoder.google(address)
+    return g.address, g.lat, g.lng
+
+
+def get_hourly_rates(files):
+    """
+    Function that reads ATRs and generates a sparkline plot
+    of percentages of traffic over time
+    
+    Args:
+        files - list of filenames to process
+        outfile - where to write the resulting plot
+    """
+    all_counts = []
+    for f in files:
+        wb = openpyxl.load_workbook(f, data_only=True)
+        sheet_names = wb.get_sheet_names()
+        if 'Classification-Combined' in sheet_names:
+            sheet = wb.get_sheet_by_name('Classification-Combined')
+            # Right now the cell locations are hardcoded,
+            # but if we expand to cover different formats, will need to change
+            counts = []
+            for row_index in range(9, 33):
+                cell = "{}{}".format('O', row_index)
+                val = sheet[cell].value
+                counts.append(float(val))
+            total = sheet['O34'].value
+            for i in range(len(counts)):
+                counts[i] = counts[i]/total
+            all_counts.append(counts)
+    return all_counts
+
+
+def plot_hourly_rates(all_counts, outfile):
+    """
+    Generates a sparkline plot of percentages of traffic over time
+    Eventually this should be moved to a visualization utils directory
+
+    Args:
+        all_counts - a list of lists of percentages
+        outfile - where to write the resulting plot
+    """
+
+    bins = range(0, 24)
+    for val in all_counts:
+        pyplot.plot(bins, val)
+    pyplot.legend(loc='upper right')
+    pyplot.savefig(outfile)
 
 
 def read_shp(fp):
@@ -46,6 +172,22 @@ def write_shp(schema, fp, data, shape_key, prop_key):
             })
 
 
+def record_to_csv(filename, records):
+    """
+    Write a csv file from records
+    Args:
+        filename
+        records - list of records (a dict of dicts)
+    """
+
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile,
+                                fieldnames=records[0]['properties'].keys())
+        writer.writeheader()
+        for record in records:
+            writer.writerow(record['properties'])
+
+
 def read_record(record, x, y, orig=None, new=PROJ):
     """
     Reads record, outputs dictionary with point and properties
@@ -58,6 +200,24 @@ def read_record(record, x, y, orig=None, new=PROJ):
         'properties': record
     }
     return(r_dict)
+
+
+def raw_to_record_list(raw, orig, x='X', y='Y'):
+    """
+    Takes a list of dicts, and reprojects it into a list of records
+    Args:
+        raw - list of dicts
+        orig - original projection
+        x - name of key indicating longitude (default 'X')
+        y - name of key indicating latitude (default 'Y')
+    """
+    result = []
+    for r in raw:
+        result.append(
+            read_record(r, r[x], r[y],
+                        orig=orig)
+        )
+    return result
 
 
 def csv_to_projected_records(filename, x='X', y='Y'):
@@ -141,21 +301,27 @@ def read_segments(dirname=MAP_FP):
     return combined_seg, segments_index
 
 
-def geocode_address(address):
+def group_json_by_location(jsonfile, otherfields=[]):
     """
-    Use google's API to look up the address
-    Due to rate limiting, try a few times with an increasing
-    wait if no address is found
-
+    Get both the json data from file as well as a dict where the keys
+    are the segment id and the values are count, and a list of the values
+    of any other fields you specify
     Args:
-        address
-    Returns:
-        address, latitude, longitude
+        jsonfile
+        otherfields - optional list of keys of things you want to include
+                      in the grouped by segment results
     """
-    g = geocoder.google(address)
-    attempts = 0
-    while g.address is None and attempts < 3:
-        attempts += 1
-        sleep(attempts ** 2)
-        g = geocoder.google(address)
-    return g.address, g.lat, g.lng
+    items = json.load(open(jsonfile))
+    locations = {}
+
+    for item in items:
+        if str(item['near_id']) not in locations.keys():
+            d = {'count': 0}
+            for field in otherfields:
+                d[field] = []
+            locations[str(item['near_id'])] = d
+        locations[str(item['near_id'])]['count'] += 1
+        for field in otherfields:
+            locations[str(item['near_id'])][field].append(item[field])
+
+    return items, locations
