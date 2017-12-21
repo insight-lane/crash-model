@@ -5,19 +5,12 @@ import itertools
 import cPickle
 import os
 import argparse
+from util import track, write_points
 
 MAP_DATA_FP = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/data/processed/maps/'
-
-
-def track(index, step, tot):
-    """
-    Prints progress at interval
-    """
-    if index % step == 0:
-        print "finished {} of {}".format(index, tot)
 
 
 def extract_intersections(inter, prop):
@@ -107,17 +100,7 @@ def write_intersections(inters):
             'id_2': 'int'
         }
     }
-
-    points = {}
-    # remove duplicate points
-    for pt, prop in inters:
-        if (pt.x, pt.y) not in points.keys():
-            points[(pt.x, pt.y)] = pt, prop
-    with fiona.open(MAP_DATA_FP
-                    + 'inters.shp', 'w', 'ESRI Shapefile', schema) as output:
-        for i, (pt, prop) in enumerate(points.values()):
-            track(i, 500, len(points))
-            output.write({'geometry': mapping(pt), 'properties': prop})
+    write_points(inters, schema, MAP_DATA_FP + 'inters.shp')
 
 
 if __name__ == '__main__':

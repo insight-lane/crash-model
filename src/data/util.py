@@ -159,3 +159,33 @@ def geocode_address(address):
         sleep(attempts ** 2)
         g = geocoder.google(address)
     return g.address, g.lat, g.lng
+
+
+def track(index, step, tot):
+    """
+    Prints progress at interval
+    """
+    if index % step == 0:
+        print "finished {} of {}".format(index, tot)
+
+
+def write_points(points, schema, filename):
+    """
+    Given a list of shapely points,
+    de-dupe and write shape files
+
+    Args:
+        points: list of points indicating intersections
+        schema: schema of the shapefile
+        filename: filename for the shapefile
+    """
+
+    deduped_points = {}
+    # remove duplicate points
+    for pt, prop in points:
+        if (pt.x, pt.y) not in deduped_points.keys():
+            deduped_points[(pt.x, pt.y)] = pt, prop
+    with fiona.open(filename, 'w', 'ESRI Shapefile', schema) as output:
+        for i, (pt, prop) in enumerate(deduped_points.values()):
+            track(i, 500, len(deduped_points))
+            output.write({'geometry': mapping(pt), 'properties': prop})
