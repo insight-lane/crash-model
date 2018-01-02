@@ -133,7 +133,7 @@ def reproject_and_read(infile, outfile):
     return reprojected_inters
 
 
-def create_segments():
+def create_segments(roads_shp_path):
 
     print "Map data at ", MAP_FP
     print "Output intersection data to ", DATA_FP
@@ -144,7 +144,6 @@ def create_segments():
     inters = reproject_and_read(inters_shp_path_raw, inters_shp_path)
 
     # Read in boston segments + mass DOT join
-    roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
     roads = [(shape(road['geometry']), road['properties'])
              for road in fiona.open(roads_shp_path)]
     print "read in {} road segments".format(len(roads))
@@ -162,6 +161,7 @@ def create_segments():
     # Turns the list of LineStrings into a MultiLineString
     union_inter = [({'id': idx}, unary_union(l))
                    for idx, l in inter_segments['lines'].items()]
+
     print "extracted {} intersection segments".format(len(union_inter))
 
     # Intersections shapefile
@@ -237,6 +237,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
+    parser.add_argument("-r", "--altroad", type=str,
+                        help="Can give alternate road shape file")
     args = parser.parse_args()
 
     # Can override the hardcoded data directory
@@ -246,5 +248,9 @@ if __name__ == '__main__':
 
     print "Data directory: " + DATA_FP
     print "Map directory: " + MAP_FP
-    create_segments()
+    roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
+    if args.altroad:
+        roads_shp_path = args.altroad
+        
+    create_segments(roads_shp_path)
 
