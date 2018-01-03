@@ -14,7 +14,7 @@ from fiona.crs import from_epsg
 from shapely.geometry import Point, shape, mapping
 from shapely.ops import unary_union
 from collections import defaultdict
-from util import write_shp
+from util import write_shp, reproject_records
 import argparse
 import os
 
@@ -113,18 +113,14 @@ def reproject_and_read(infile, outfile):
     # Necessary because original intersection extraction had null projection
     print "reprojecting raw intersection shapefile"
     inters = fiona.open(infile)
-    inproj = pyproj.Proj(init='epsg:4326')
-    outproj = pyproj.Proj(init='epsg:3857')
 
-    # Write the intersection with projection 3857 to file
+    reprojected_records = reproject_records(inters)
+
+    # Write the reprojected (to 3857) intersections to file
     with fiona.open(outfile, 'w', crs=from_epsg(3857),
                     schema=inters.schema, driver='ESRI Shapefile') as output:
-        for inter in inters:
-            coords = inter['geometry']['coordinates']
-            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
-            point = Point(re_point)
-            output.write({'geometry': mapping(point),
-                          'properties': inter['properties']})
+        for record in reprojected_records:
+            output.write(record)
 
     # Read in reprojected intersection
     reprojected_inters = [(shape(inter['geometry']), inter['properties'])

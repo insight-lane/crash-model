@@ -189,3 +189,25 @@ def write_points(points, schema, filename):
         for i, (pt, prop) in enumerate(deduped_points.values()):
             track(i, 500, len(deduped_points))
             output.write({'geometry': mapping(pt), 'properties': prop})
+
+
+def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
+    """
+    Reprojects a set of records from one projection to another
+    Args:
+        records - list of records to reproject
+        inproj - defaults to 4326
+        outproj - defaults to 3857
+    Returns:
+        list of reprojected records
+    """
+    results = []
+    inproj = pyproj.Proj(init=inproj)
+    outproj = pyproj.Proj(init=outproj)
+    for record in records:
+        coords = record['geometry']['coordinates']
+        re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+        point = Point(re_point)
+        results.append({'geometry': mapping(point),
+                        'properties': record['properties']})
+    return results
