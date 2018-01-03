@@ -106,7 +106,7 @@ def write_intersections(inters):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--shp", help="Segments shape file")
+    parser.add_argument("shp", help="Segments shape file")
     parser.add_argument("-d", "--dir", type=str,
                         help="Can give alternate data directory")
 
