@@ -4,7 +4,7 @@ import csv
 import rtree
 import geocoder
 from time import sleep
-from shapely.geometry import Point, shape, mapping
+from shapely.geometry import Point, shape, mapping, MultiLineString
 import os
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -24,15 +24,22 @@ def read_shp(fp):
     return(out)
 
 
-def write_shp(schema, fp, data, shape_key, prop_key):
+def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
     """ Write Shapefile
-    schema : schema dictionary
-    shape_key : column name or tuple index of Shapely shape
-    prop_key : column name or tuple index of properties
+    Args:
+        schema : schema dictionary
+        fp : file (.shp file)
+        data : a list of tuples
+            one element of the tuple is a shapely shape,
+            the other is a dict of properties
+        shape_key : column name or tuple index of Shapely shape
+        prop_key : column name or tuple index of properties
     """
 
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema) as c:
+    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
+
         for i in data:
+
             # some mismatch in yearly crash data
             # need to force it to conform to schema
             for k in schema['properties']:
@@ -194,6 +201,7 @@ def write_points(points, schema, filename):
 def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     """
     Reprojects a set of records from one projection to another
+    Records can either be points or multiline strings
     Args:
         records - list of records to reproject
         inproj - defaults to 4326
@@ -205,9 +213,26 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     inproj = pyproj.Proj(init=inproj)
     outproj = pyproj.Proj(init=outproj)
     for record in records:
+
         coords = record['geometry']['coordinates']
-        re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
-        point = Point(re_point)
-        results.append({'geometry': mapping(point),
-                        'properties': record['properties']})
+        if record['geometry']['type'] == 'Point':
+            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+            point = Point(re_point)
+            results.append({'geometry': mapping(point),
+                            'properties': record['properties']})
+        elif record['geometry']['type'] == 'MultiLineString':
+            new_coords = []
+            for segment in coords:
+                new_segment = [
+                    pyproj.transform(
+                        inproj, outproj, segment[0][0], segment[0][1]),
+                    pyproj.transform(
+                        inproj, outproj, segment[1][0], segment[1][1])
+                ]
+                new_coords.append(new_segment)
+
+            geo = MultiLineString(new_coords)
+
+            results.append({'geometry': geo,
+                            'properties': record['properties']})
     return results
