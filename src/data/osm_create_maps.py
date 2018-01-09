@@ -86,8 +86,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     city = args.city
-    PROCESSED_FP = args.datadir + '/processed'
-    MAP_FP = args.datadir + '/processed/maps'
+    PROCESSED_FP = args.datadir + '/processed/'
+    MAP_FP = args.datadir + '/processed/maps/'
 
     # We may have already created city elements
     # If so, read them in to save time
