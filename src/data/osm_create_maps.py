@@ -55,20 +55,35 @@ def get_roads(elements):
                     node_counts[n] = 0
                 node_counts[n] += 1
             # Make the multiline string for this way_lines
-            if 'name' in way['tags'].keys():
-                if way['tags']['highway'] in ('service', 'footway'):
+
+            tags = way['tags']
+            if 'name' in tags.keys():
+
+                if tags['highway'] in ('service', 'footway'):
                     service_lines.append((
                         MultiLineString(coords), {
-                            'name': way['tags']['name'], 'id': way['id']}))
+                            'name': tags['name'], 'id': way['id']}))
                 else:
+                    oneway = tags['oneway'] if 'oneway' in tags else None
+                    width = tags['width'] if 'width' in tags else None
+                    lanes = tags['lanes'] if 'lanes' in tags else None
+                    ma_way_id = tags['massgis:way_id'] \
+                        if 'massgis:way_id' in tags else None
                     way_lines.append((
                         MultiLineString(coords), {
-                            'name': way['tags']['name'], 'id': way['id']}))
+                            'name': tags['name'],
+                            'id': way['id'],
+                            'width': width,
+                            'type': tags['highway'],
+                            'lanes': lanes,
+                            'oneway': oneway,
+                            'ma_way_id': ma_way_id
+                        }))
             else:
                 unnamed_lines.append((
                     MultiLineString(coords), {'id': way['id']}))
                 non_named_count += 1
-    
+
     print 'Found ' + str(len(way_lines)) + ' residential roads'
     print 'Found ' + str(len(unnamed_lines)) + ' unnamed roads'
     print 'Found ' + str(len(service_lines)) + ' service roads or footpaths'
@@ -102,13 +117,20 @@ if __name__ == '__main__':
 
     schema = {
         'geometry': 'MultiLineString',
-        'properties': {'id': 'int', 'name': 'str'}}
+        'properties': {
+            'id': 'int',
+            'name': 'str',
+            'width': 'str',
+            'type': 'str',
+            'lanes': 'str',
+            'oneway': 'str',
+            'ma_way_id': 'str',
+        }}
 
     # If maps do not exist, create
     if not os.path.exists(MAP_FP + '/named_ways.shp'):
         print "Processing elements to get roads"
         way_lines = get_roads(elements)
-
         util.write_shp(schema, MAP_FP + '/named_ways.shp', way_lines, 0, 1)
     way_results = fiona.open(MAP_FP + '/named_ways.shp')
 
