@@ -3,6 +3,7 @@ import os
 from shapely.geometry import Point
 import pyproj
 import csv
+import fiona
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -92,3 +93,18 @@ def find_nearest():
 
 def test_read_segments():
     pass
+
+
+def test_write_points():
+    pass
+
+
+def test_reproject_records():
+    start_lines = fiona.open(
+        TEST_FP + '/data/processed/maps/test_line_convert.shp')
+    result = util.reproject_records(start_lines)
+
+    # Test makes sure that both the LineStrings and MultiLineStrings
+    # successfully get reprojected
+    assert len(start_lines) == len(result)
+
