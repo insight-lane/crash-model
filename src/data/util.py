@@ -4,7 +4,7 @@ import csv
 import rtree
 import geocoder
 from time import sleep
-from shapely.geometry import Point, shape, mapping, MultiLineString
+from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
 import os
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -201,7 +201,7 @@ def write_points(points, schema, filename):
 def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     """
     Reprojects a set of records from one projection to another
-    Records can either be points or multiline strings
+    Records can either be points, line strings, or multiline strings
     Args:
         records - list of records to reproject
         inproj - defaults to 4326
@@ -231,8 +231,14 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
                 ]
                 new_coords.append(new_segment)
 
-            geo = MultiLineString(new_coords)
+            results.append({'geometry': MultiLineString(new_coords),
+                            'properties': record['properties']})
+        elif record['geometry']['type'] == 'LineString':
 
-            results.append({'geometry': geo,
+            new_segment = [
+                pyproj.transform(inproj, outproj, coords[0][0], coords[0][1]),
+                pyproj.transform(inproj, outproj, coords[1][0], coords[1][1])
+            ]
+            results.append({'geometry': LineString(new_segment),
                             'properties': record['properties']})
     return results
