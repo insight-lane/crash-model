@@ -212,6 +212,7 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     results = []
     inproj = pyproj.Proj(init=inproj)
     outproj = pyproj.Proj(init=outproj)
+    print len(records)
     for record in records:
 
         coords = record['geometry']['coordinates']
@@ -222,7 +223,9 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
                             'properties': record['properties']})
         elif record['geometry']['type'] == 'MultiLineString':
             new_coords = []
+            print coords
             for segment in coords:
+                print segment
                 new_segment = [
                     pyproj.transform(
                         inproj, outproj, segment[0][0], segment[0][1]),
@@ -234,11 +237,11 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
             results.append({'geometry': MultiLineString(new_coords),
                             'properties': record['properties']})
         elif record['geometry']['type'] == 'LineString':
-
-            new_segment = [
-                pyproj.transform(inproj, outproj, coords[0][0], coords[0][1]),
-                pyproj.transform(inproj, outproj, coords[1][0], coords[1][1])
-            ]
-            results.append({'geometry': LineString(new_segment),
+            new_coords = []
+            for coord in coords:
+                new_coords.append(
+                    pyproj.transform(inproj, outproj, coord[0], coord[1])
+                )
+            results.append({'geometry': LineString(new_coords),
                             'properties': record['properties']})
     return results
