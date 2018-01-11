@@ -1,5 +1,4 @@
 import argparse
-#import cPickle
 import util
 import osmnx as ox
 from shapely.geometry import MultiLineString, Point
@@ -7,12 +6,13 @@ import fiona
 import shutil
 import os
 
-# BASE_DIR = os.path.dirname(os.getcwd())
 PROCESSED_FP = None
 MAP_FP = None
 
 
 def get_city(city):
+
+    # Not used currently; once this script is finished, probably delete
     gdf_place = ox.gdf_from_place(city)
     polygon = gdf_place['geometry'].unary_union
     city_info = ox.core.osm_net_download(polygon)
@@ -28,15 +28,21 @@ def simple_get_roads(city):
     ox.save_graph_shapefile(
         G, filename='temp', folder=MAP_FP)
     # Copy and remove temp directory
-    tempdir = MAP_FP + '/temp/edges/'
-    for filename in os.listdir(tempdir):
-
+    tempdir = MAP_FP + '/temp/'
+    for filename in os.listdir(tempdir + 'edges/'):
         name, extension = filename.split('.')
-        shutil.move(tempdir + filename, MAP_FP + 'osm_ways.' + extension)
-    shutil.rmtree(MAP_FP + '/temp/')
+        shutil.move(
+            tempdir + 'edges/' + filename, MAP_FP + 'osm_ways.' + extension)
+    for filename in os.listdir(tempdir + 'nodes/'):
+        name, extension = filename.split('.')
+        shutil.move(
+            tempdir + 'nodes/' + filename, MAP_FP + 'osm_nodes.' + extension)
+    shutil.rmtree(tempdir)
 
 
 def get_roads(elements):
+
+    # Not used currently; once this script is finished, probably delete
 
     # Turn the nodes into key value pairs where key is the node id
     nodes = {x['id']: x for x in elements if x['type'] == 'node'}
@@ -154,56 +160,14 @@ if __name__ == '__main__':
     PROCESSED_FP = args.datadir + '/processed/'
     MAP_FP = args.datadir + '/processed/maps/'
 
-    # We may have already created city elements
-    # If so, read them in to save time
-#    if not os.path.exists(PROCESSED_FP + 'city_elements.pkl'):
-#        elements = get_city(city)
-#        print "Generating elements for " + city
-#        with open(PROCESSED_FP + 'city_elements.pkl', 'w') as f:
-#            cPickle.dump(elements, f)
-#    else:
-#        with open(PROCESSED_FP + 'city_elements.pkl', 'r') as f:
-#            elements = cPickle.load(f)
-
-#    schema = {
-#        'geometry': 'MultiLineString',
-#        'properties': {
-#            'id': 'int',
-#            'name': 'str',
-#            'width': 'str',
-#            'type': 'str',
-#            'lanes': 'str',
-#            'oneway': 'str',
-#            'ma_way_id': 'str',
-#        }}
-
     # If maps do not exist, create
     if not os.path.exists(MAP_FP + '/osm_ways.shp'):
         print 'Generating maps from open street map'
         simple_get_roads(city)
 
-#    if not os.path.exists(MAP_FP + '/named_ways.shp') or True:
-#        print "Processing elements to get roads"
-#        way_lines, service_lines, unnamed_lines = get_roads(elements)
-#        util.write_shp(schema, MAP_FP + '/named_ways.shp', way_lines, 0, 1)
-
-#        outschema = {
-#            'geometry': 'MultiLineString',
-#            'properties': {'id': 'int', 'name': 'str'}}
-#        # Write the service roads
-#        util.write_shp(outschema,
-#                       MAP_FP + '/service_ways.shp',
-#                       service_lines, 0, 1)
-
-        # Write the unnamed ways
-#        outschema = {
-#            'geometry': 'MultiLineString', 'properties': {'id': 'int'}}
-#        util.write_shp(outschema,
-#                       MAP_FP + '/unnamed_ways.shp',
-#                       unnamed_lines, 0, 1)
-
-    if not os.path.exists(MAP_FP + '/osm_ways_3857.shp'):
+    if not os.path.exists(MAP_FP + '/osm_ways_3857.shp') or True:
         way_results = fiona.open(MAP_FP + '/osm_ways.shp')
+
         # Convert the map from above to 3857
         reprojected_way_lines = [
             tuple(x.values()) for x in util.reproject_records(way_results)]
