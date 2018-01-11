@@ -32,6 +32,7 @@ def get_roads(elements):
     way_lines = []
     unnamed_lines = []
     service_lines = []
+    road_types = {}
     for way in elements:
         if way['type'] == 'way':
 
@@ -56,15 +57,27 @@ def get_roads(elements):
                 else:
                     node_info[n] = {'count': 1, 'ways': []}
 
-            # Make the multiline string for this way_lines
-
             tags = way['tags']
-            if 'name' in tags.keys():
+            if tags['highway'] not in road_types.keys():
+                road_types[tags['highway']] = 0
+            road_types[tags['highway']] += 1
 
-                if tags['highway'] in ('service', 'footway'):
-                    service_lines.append((
-                        MultiLineString(coords), {
-                            'name': tags['name'], 'id': way['id']}))
+            name = tags['name'] if 'name' in tags else ''
+
+            # Ignore footways and service roads in the main map
+            if tags['highway'] in ('service', 'footway'):
+                service_lines.append((
+                    MultiLineString(coords), {
+                        'name': name,
+                        'id': way['id']
+                    }))
+            else:
+                # if it's unnamed AND not residential, don't include
+                # in main list
+                if not name and tags['highway'] != 'residential':
+                    unnamed_lines.append((
+                        MultiLineString(coords), {'id': way['id']}))
+                    non_named_count += 1
                 else:
                     oneway = tags['oneway'] if 'oneway' in tags else None
                     width = tags['width'] if 'width' in tags else None
@@ -73,7 +86,7 @@ def get_roads(elements):
                         if 'massgis:way_id' in tags else None
                     way_lines.append((
                         MultiLineString(coords), {
-                            'name': tags['name'],
+                            'name': name,
                             'id': way['id'],
                             'width': width,
                             'type': tags['highway'],
@@ -81,10 +94,6 @@ def get_roads(elements):
                             'oneway': oneway,
                             'ma_way_id': ma_way_id
                         }))
-            else:
-                unnamed_lines.append((
-                    MultiLineString(coords), {'id': way['id']}))
-                non_named_count += 1
 
     print 'Found ' + str(len(way_lines)) + ' residential roads'
     print 'Found ' + str(len(unnamed_lines)) + ' unnamed roads'
@@ -112,6 +121,7 @@ def get_roads(elements):
         schema,
         MAP_FP + '/osm_inter.shp')
 
+    print road_types
     return way_lines, service_lines, unnamed_lines
 
 
@@ -152,7 +162,7 @@ if __name__ == '__main__':
         }}
 
     # If maps do not exist, create
-    if not os.path.exists(MAP_FP + '/named_ways.shp') or True:
+    if not os.path.exists(MAP_FP + '/named_ways.shp'):
         print "Processing elements to get roads"
         way_lines, service_lines, unnamed_lines = get_roads(elements)
         util.write_shp(schema, MAP_FP + '/named_ways.shp', way_lines, 0, 1)
