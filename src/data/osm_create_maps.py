@@ -1,9 +1,10 @@
 import argparse
-import cPickle
+#import cPickle
 import util
 import osmnx as ox
 from shapely.geometry import MultiLineString, Point
 import fiona
+import shutil
 import os
 
 # BASE_DIR = os.path.dirname(os.getcwd())
@@ -18,6 +19,21 @@ def get_city(city):
     elements = city_info[0]['elements']
 
     return elements
+
+
+def simple_get_roads(city):
+
+    G = ox.graph_from_place(city, network_type='drive', simplify=True)
+    # osmnx creates a directory for the nodes and edges
+    ox.save_graph_shapefile(
+        G, filename='temp', folder=MAP_FP)
+    # Copy and remove temp directory
+    tempdir = MAP_FP + '/temp/edges/'
+    for filename in os.listdir(tempdir):
+
+        name, extension = filename.split('.')
+        shutil.move(tempdir + filename, MAP_FP + 'osm_ways.' + extension)
+    shutil.rmtree(MAP_FP + '/temp/')
 
 
 def get_roads(elements):
@@ -140,59 +156,61 @@ if __name__ == '__main__':
 
     # We may have already created city elements
     # If so, read them in to save time
-    if not os.path.exists(PROCESSED_FP + 'city_elements.pkl'):
-        elements = get_city(city)
-        print "Generating elements for " + city
-        with open(PROCESSED_FP + 'city_elements.pkl', 'w') as f:
-            cPickle.dump(elements, f)
-    else:
-        with open(PROCESSED_FP + 'city_elements.pkl', 'r') as f:
-            elements = cPickle.load(f)
+#    if not os.path.exists(PROCESSED_FP + 'city_elements.pkl'):
+#        elements = get_city(city)
+#        print "Generating elements for " + city
+#        with open(PROCESSED_FP + 'city_elements.pkl', 'w') as f:
+#            cPickle.dump(elements, f)
+#    else:
+#        with open(PROCESSED_FP + 'city_elements.pkl', 'r') as f:
+#            elements = cPickle.load(f)
 
-    schema = {
-        'geometry': 'MultiLineString',
-        'properties': {
-            'id': 'int',
-            'name': 'str',
-            'width': 'str',
-            'type': 'str',
-            'lanes': 'str',
-            'oneway': 'str',
-            'ma_way_id': 'str',
-        }}
+#    schema = {
+#        'geometry': 'MultiLineString',
+#        'properties': {
+#            'id': 'int',
+#            'name': 'str',
+#            'width': 'str',
+#            'type': 'str',
+#            'lanes': 'str',
+#            'oneway': 'str',
+#            'ma_way_id': 'str',
+#        }}
 
     # If maps do not exist, create
-    if not os.path.exists(MAP_FP + '/named_ways.shp'):
-        print "Processing elements to get roads"
-        way_lines, service_lines, unnamed_lines = get_roads(elements)
-        util.write_shp(schema, MAP_FP + '/named_ways.shp', way_lines, 0, 1)
+    if not os.path.exists(MAP_FP + '/osm_ways.shp'):
+        print 'Generating maps from open street map'
+        simple_get_roads(city)
 
-        outschema = {
-            'geometry': 'MultiLineString',
-            'properties': {'id': 'int', 'name': 'str'}}
-        # Write the service roads
-        util.write_shp(outschema,
-                       MAP_FP + '/service_ways.shp',
-                       service_lines, 0, 1)
+#    if not os.path.exists(MAP_FP + '/named_ways.shp') or True:
+#        print "Processing elements to get roads"
+#        way_lines, service_lines, unnamed_lines = get_roads(elements)
+#        util.write_shp(schema, MAP_FP + '/named_ways.shp', way_lines, 0, 1)
+
+#        outschema = {
+#            'geometry': 'MultiLineString',
+#            'properties': {'id': 'int', 'name': 'str'}}
+#        # Write the service roads
+#        util.write_shp(outschema,
+#                       MAP_FP + '/service_ways.shp',
+#                       service_lines, 0, 1)
 
         # Write the unnamed ways
-        outschema = {
-            'geometry': 'MultiLineString', 'properties': {'id': 'int'}}
-        util.write_shp(outschema,
-                       MAP_FP + '/unnamed_ways.shp',
-                       unnamed_lines, 0, 1)
+#        outschema = {
+#            'geometry': 'MultiLineString', 'properties': {'id': 'int'}}
+#        util.write_shp(outschema,
+#                       MAP_FP + '/unnamed_ways.shp',
+#                       unnamed_lines, 0, 1)
 
-    way_results = fiona.open(MAP_FP + '/named_ways.shp')
+    if not os.path.exists(MAP_FP + '/osm_ways_3857.shp'):
+        way_results = fiona.open(MAP_FP + '/osm_ways.shp')
+        # Convert the map from above to 3857
+        reprojected_way_lines = [
+            tuple(x.values()) for x in util.reproject_records(way_results)]
 
-    # Convert the map from above to 3857
-    reprojected_way_lines = [
-        tuple(x.values()) for x in util.reproject_records(way_results)]
+        util.write_shp(
+            way_results.schema,
+            MAP_FP + '/osm_ways_3857.shp',
+            reprojected_way_lines, 0, 1, crs=fiona.crs.from_epsg(3857))
 
-    util.write_shp(
-        schema,
-        MAP_FP + '/named_ways_3857.shp',
-        reprojected_way_lines, 0, 1, crs=fiona.crs.from_epsg(3857))
-
-    # Now write the unnamed roads and service/ped roads
-    # just to look at for comparison purposes
 
