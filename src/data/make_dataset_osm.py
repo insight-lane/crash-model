@@ -40,3 +40,17 @@ if __name__ == '__main__':
         DATA_FP + '/processed/maps/osm_ways_3857.shp'
     ])
 
+    subprocess.check_call([
+        'python',
+        '-m',
+        'data.join_segments_crash_concern',
+        '-d',
+        DATA_FP
+    ])
+    subprocess.check_call([
+        'python',
+        '-m',
+        'data.ATR_scraping.geocode_snap_ATRs'
+        '-d',
+        DATA_FP + '/processed/'
+    ])

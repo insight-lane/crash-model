@@ -74,9 +74,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--graph', action='store_true',
-                        help='Whether to generating graphs')
+                        help='Whether to generate graphs')
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory." +
+                        "For now this is just for the processed dir")
 
     args = parser.parse_args()
+    if args.datadir:
+        PROCESSED_DATA_FP = args.datadir
 
     geocode_and_parse()
     # Read in segments
