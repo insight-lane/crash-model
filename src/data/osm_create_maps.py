@@ -5,6 +5,7 @@ from shapely.geometry import MultiLineString, Point
 import fiona
 import shutil
 import os
+import re
 
 PROCESSED_FP = None
 MAP_FP = None
@@ -181,26 +182,30 @@ if __name__ == '__main__':
         for way_line in reprojected_way_lines:
             speed = way_line[1]['maxspeed']
             if speed:
-                speed = speed.split(' ')[0]
+                # It's possible that this combines two segments and thus speeds
+                # doesn't happen a ton so just choose first one
+                speed = re.search('[0-9]+', speed).group(0)
+            else:
+                speed = 0
+
             way_line[1].update({
-                'AADT': None,
-                'SPEEDLIMIT': speed,
-                'Struct_Cnd': '',
-                'Surface_Tp': '',
-                'F_F_Class': '',
+                'AADT': 0,
+                'SPEEDLIMIT': 0,
+                'Struct_Cnd': 0,
+                'Surface_Tp': 0,
+                'F_F_Class': 0,
             })
         schema = way_results.schema
         schema['properties'].update({
-            'AADT': 'str',
-            'SPEEDLIMIT': 'str',
-            'Struct_Cnd': 'str',
-            'Surface_Tp': 'str',
-            'F_F_Class': 'str',
+            'AADT': 'int',
+            'SPEEDLIMIT': 'int',
+            'Struct_Cnd': 'int',
+            'Surface_Tp': 'int',
+            'F_F_Class': 'int',
         })
 
         util.write_shp(
             schema,
             MAP_FP + '/osm_ways_3857.shp',
             reprojected_way_lines, 0, 1, crs=fiona.crs.from_epsg(3857))
-
 

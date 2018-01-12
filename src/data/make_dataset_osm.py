@@ -50,7 +50,7 @@ if __name__ == '__main__':
     subprocess.check_call([
         'python',
         '-m',
-        'data.ATR_scraping.geocode_snap_ATRs'
+        'data.ATR_scraping.geocode_snap_ATRs',
         '-d',
         DATA_FP + '/processed/'
     ])

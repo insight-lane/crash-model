@@ -6,6 +6,8 @@ import json
 import pandas as pd
 from data.util import read_shp
 import os
+import argparse
+
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -74,6 +76,17 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     return(aggregated(), combined['orig_id'])
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory")
+
+    args = parser.parse_args()
+
+    # Can override the hardcoded data directory
+    if args.datadir:
+        DATA_FP = args.datadir + '/processed/'
+        MAP_FP = DATA_FP + 'maps/'
 
     # read/aggregate crash/concerns
     crash = read_records(DATA_FP + '/crash_joined.json',
