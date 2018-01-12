@@ -165,15 +165,41 @@ if __name__ == '__main__':
         print 'Generating maps from open street map'
         simple_get_roads(city)
 
-    if not os.path.exists(MAP_FP + '/osm_ways_3857.shp') or True:
+    if not os.path.exists(MAP_FP + '/osm_ways_3857.shp'):
         way_results = fiona.open(MAP_FP + '/osm_ways.shp')
 
         # Convert the map from above to 3857
         reprojected_way_lines = [
-            tuple(x.values()) for x in util.reproject_records(way_results)]
+            tuple(
+                x.values()
+            ) for x in util.reproject_records(way_results)]
+
+        # Add values to schema if they don't exist, so new map won't break
+        # Eventually do something better to handle differing schema elements
+        # Probably should map osm maps to CoB data
+        # Use speed limit if given in osm
+        for way_line in reprojected_way_lines:
+            speed = way_line[1]['maxspeed']
+            if speed:
+                speed = speed.split(' ')[0]
+            way_line[1].update({
+                'AADT': None,
+                'SPEEDLIMIT': speed,
+                'Struct_Cnd': '',
+                'Surface_Tp': '',
+                'F_F_Class': '',
+            })
+        schema = way_results.schema
+        schema['properties'].update({
+            'AADT': 'str',
+            'SPEEDLIMIT': 'str',
+            'Struct_Cnd': 'str',
+            'Surface_Tp': 'str',
+            'F_F_Class': 'str',
+        })
 
         util.write_shp(
-            way_results.schema,
+            schema,
             MAP_FP + '/osm_ways_3857.shp',
             reprojected_way_lines, 0, 1, crs=fiona.crs.from_epsg(3857))
 
