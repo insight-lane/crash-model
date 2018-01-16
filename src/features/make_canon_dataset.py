@@ -80,6 +80,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
+    parser.add_argument('-f', '--featlist', type=str,
+                        help='Alternate feature list as comma separated str')
 
     args = parser.parse_args()
 
@@ -87,6 +89,15 @@ if __name__ == '__main__':
     if args.datadir:
         DATA_FP = args.datadir + '/processed/'
         MAP_FP = DATA_FP + 'maps/'
+
+    # Can override the hardcoded feature list
+    feats = ['AADT', 'SPEEDLIMIT',
+             'Struct_Cnd', 'Surface_Tp',
+             'F_F_Class']
+    if args.featlist:
+        feats = args.featlist.split(',')
+
+    print "Data directory: " + DATA_FP
 
     # read/aggregate crash/concerns
     crash = read_records(DATA_FP + '/crash_joined.json',
@@ -107,10 +118,6 @@ if __name__ == '__main__':
     # combined road feature dataset parameters
     inters_fp = DATA_FP + '/inters_data.json'
     non_inters_fp = MAP_FP + '/non_inters_segments.shp'
-    
-    feats = ['AADT', 'SPEEDLIMIT',
-             'Struct_Cnd', 'Surface_Tp',
-             'F_F_Class']
 
     # create combined road feature dataset
     aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
