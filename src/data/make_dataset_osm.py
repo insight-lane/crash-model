@@ -18,7 +18,8 @@ if __name__ == '__main__':
         '-m',
         'data.osm_create_maps',
         city,
-        DATA_FP
+        DATA_FP,
+        '--forceupdate'
     ])
 
     subprocess.check_call([

@@ -159,17 +159,22 @@ if __name__ == '__main__':
     parser.add_argument("datadir", type=str,
                         help="data directory")
 
+    # Can force update
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether force update the maps')
+
     args = parser.parse_args()
     city = args.city
+
     PROCESSED_FP = args.datadir + '/processed/'
     MAP_FP = args.datadir + '/processed/maps/'
 
     # If maps do not exist, create
-    if not os.path.exists(MAP_FP + '/osm_ways.shp'):
+    if not os.path.exists(MAP_FP + '/osm_ways.shp') or args.forceupdate:
         print 'Generating maps from open street map'
         simple_get_roads(city)
 
-    if not os.path.exists(MAP_FP + '/osm_ways_3857.shp'):
+    if not os.path.exists(MAP_FP + '/osm_ways_3857.shp') or args.forceupdate:
         way_results = fiona.open(MAP_FP + '/osm_ways.shp')
 
         # Convert the map from above to 3857
