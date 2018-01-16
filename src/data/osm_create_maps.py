@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
             way_line[1].update({
                 'AADT': 0,
-                'SPEEDLIMIT': 0,
+                'SPEEDLIMIT': speed,
                 'Struct_Cnd': 0,
                 'Surface_Tp': 0,
                 'F_F_Class': 0,
