@@ -24,7 +24,10 @@ def get_city(city):
 
 def simple_get_roads(city):
 
-    G = ox.graph_from_place(city, network_type='drive', simplify=True)
+    G = ox.graph_from_place(city, network_type='drive', simplify=False)
+    # Have to simplify as a separate call so it can be not strict
+    G = ox.simplify_graph(G, strict=False)
+
     # osmnx creates a directory for the nodes and edges
     ox.save_graph_shapefile(
         G, filename='temp', folder=MAP_FP)
@@ -175,18 +178,23 @@ if __name__ == '__main__':
                 x.values()
             ) for x in util.reproject_records(way_results)]
 
-        # Add values to schema if they don't exist, so new map won't break
-        # Eventually do something better to handle differing schema elements
-        # Probably should map osm maps to CoB data
-        # Use speed limit if given in osm
         for way_line in reprojected_way_lines:
+
+            # Use speed limit if given in osm
             speed = way_line[1]['maxspeed']
             if speed:
-                # It's possible that this combines two segments and thus speeds
-                # doesn't happen a ton so just choose first one
-                speed = re.search('[0-9]+', speed).group(0)
-            else:
+                s = re.search('[0-9]+', speed)
+                if s:
+                    speed = s.group(0)
+            if not speed:
                 speed = 0
+
+            width = way_line[1]['width']
+            # round width
+            if not width or ';' in width:
+                width = 0
+            else:
+                width = round(float(width))
 
             way_line[1].update({
                 'AADT': 0,
@@ -194,8 +202,11 @@ if __name__ == '__main__':
                 'Struct_Cnd': 0,
                 'Surface_Tp': 0,
                 'F_F_Class': 0,
+                'width': width,
             })
         schema = way_results.schema
+
+        # Add values to schema if they don't exist, so new map won't break
         schema['properties'].update({
             'AADT': 'int',
             'SPEEDLIMIT': 'int',
