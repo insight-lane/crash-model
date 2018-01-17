@@ -125,6 +125,7 @@ if __name__ == '__main__':
     util.find_nearest(atrs, combined_seg, segments_index, 20)
 
     atrs_df = json_normalize(atrs)
+    
     atrs_df = atrs_df[['properties.near_id',
                         'properties.heavy', 
                         'properties.light', 
@@ -217,4 +218,6 @@ if __name__ == '__main__':
     # write to csv
     print('Writing to CSV')
     output_fp = PROCESSED_DATA_FP + 'atrs_predicted.csv'
-    merged_df.to_csv(output_fp)
+    # force id into string
+    merged_df['id'] = merged_df['id'].astype(str)
+    merged_df.to_csv(output_fp, index=False)
