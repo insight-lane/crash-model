@@ -89,18 +89,18 @@ data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment
 # add concerns
 data_model = data_model.merge(concern_observed.reset_index(), on='segment_id')
 
-# trying a different feature set
-dummy_att = ['SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class']
-for d in dummy_att:
-    t = pd.get_dummies(data_model[d])
-    t.columns = [d+str(c) for c in t.columns]
-    data_model = pd.concat([data_model, t], axis=1)
+# trying a different feature set (not implemented)
+#dummy_att = ['SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class']
+#for d in dummy_att:
+#    t = pd.get_dummies(data_model[d])
+#    t.columns = [d+str(c) for c in t.columns]
+#    data_model = pd.concat([data_model, t], axis=1)
 # aadt - log-transform
-data_model['log_aadt'] = np.log(data_model.AADT+1)
+#data_model['log_aadt'] = np.log(data_model.AADT+1)
 # add segment type
-data_model['intersection'] = data_model.segment_id.map(lambda x: x[:2]!='00').astype(int)
+#data_model['intersection'] = data_model.segment_id.map(lambda x: x[:2]!='00').astype(int)
 # features
-features = data_model.filter(regex='[0-9]').columns.tolist() + ['log_aadt', 'intersection']
+#features = data_model.filter(regex='[0-9]').columns.tolist() + ['log_aadt', 'intersection']
 
 features = SEG_CHARS
 
