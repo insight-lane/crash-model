@@ -170,7 +170,7 @@ if __name__ == '__main__':
     MAP_FP = args.datadir + '/processed/maps/'
 
     # If maps do not exist, create
-    if not os.path.exists(MAP_FP + '/osm_ways.shp') or args.forceupdate:
+    if not os.path.exists(MAP_FP + '/osm_ways.shp'):
         print 'Generating maps from open street map'
         simple_get_roads(city)
 
@@ -201,6 +201,10 @@ if __name__ == '__main__':
             else:
                 width = round(float(width))
 
+            # If lanes are not given, put 0
+            lanes = way_line[1]['lanes']
+            if not lanes:
+                lanes = 0
             way_line[1].update({
                 'AADT': 0,
                 'SPEEDLIMIT': speed,
@@ -208,6 +212,7 @@ if __name__ == '__main__':
                 'Surface_Tp': 0,
                 'F_F_Class': 0,
                 'width': width,
+                'lanes': lanes,
             })
         schema = way_results.schema
 
