@@ -6,6 +6,7 @@ import fiona
 import shutil
 import os
 import re
+import csv
 
 PROCESSED_FP = None
 MAP_FP = None
@@ -168,6 +169,7 @@ if __name__ == '__main__':
 
     PROCESSED_FP = args.datadir + '/processed/'
     MAP_FP = args.datadir + '/processed/maps/'
+    DOC_FP = args.datadir + '/docs/'
 
     # If maps do not exist, create
     if not os.path.exists(MAP_FP + '/osm_ways.shp'):
@@ -183,6 +185,7 @@ if __name__ == '__main__':
                 x.values()
             ) for x in util.reproject_records(way_results)]
 
+        highway_keys = {}
         for way_line in reprojected_way_lines:
 
             # Use speed limit if given in osm
@@ -205,6 +208,11 @@ if __name__ == '__main__':
             lanes = way_line[1]['lanes']
             if not lanes:
                 lanes = 0
+
+            # Need to have an int highway field
+            if way_line[1]['highway'] not in highway_keys.keys():
+                highway_keys[way_line[1]['highway']] = len(highway_keys)
+
             way_line[1].update({
                 'AADT': 0,
                 'SPEEDLIMIT': speed,
@@ -213,6 +221,7 @@ if __name__ == '__main__':
                 'F_F_Class': 0,
                 'width': width,
                 'lanes': lanes,
+                'highway_type': highway_keys[way_line[1]['highway']]
             })
         schema = way_results.schema
 
@@ -223,6 +232,8 @@ if __name__ == '__main__':
             'Struct_Cnd': 'int',
             'Surface_Tp': 'int',
             'F_F_Class': 'int',
+            # also add highway type key
+            'highway_type': 'int',
         })
 
         util.write_shp(
@@ -230,3 +241,9 @@ if __name__ == '__main__':
             MAP_FP + '/osm_ways_3857.shp',
             reprojected_way_lines, 0, 1, crs=fiona.crs.from_epsg(3857))
 
+        # Write highway keys to docs
+        with open(DOC_FP + '/highway_keys.csv', 'wb') as f:
+            w = csv.writer(f)
+            w.writerow(['type', 'value'])
+            for item in highway_keys.iteritems():
+                w.writerow(item)
