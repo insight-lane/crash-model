@@ -76,6 +76,7 @@ def find_non_ints(roads, int_buffers):
                 inter_segments['lines'][idx].append(
                     int_buffer.intersection(road[0]))
                 # Add intersecting road segment data
+                road[1]['inter'] = 1
                 inter_segments['data'][idx].append(road[1])
                 road_int_buffers.append(int_buffer)
         # If intersection buffers intersect roads
@@ -177,6 +178,7 @@ def create_segments(roads_shp_path):
     for l in non_int_lines:
         prop = copy.deepcopy(l[1])
         prop['id'] = '00' + str(i)
+        prop['inter'] = 0
         non_int_w_ids.append(tuple([l[0], prop]))
         i += 1
     print "extracted {} non-intersection segments".format(len(non_int_w_ids))
