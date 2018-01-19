@@ -26,9 +26,10 @@ atrs = os.listdir(ATR_FP)
 PROJ = pyproj.Proj(init='epsg:3857')
 
 
-def geocode_and_parse():
+def geocode_and_parse(forceupdate):
 
-    if not os.path.exists(PROCESSED_DATA_FP + 'geocoded_atrs.csv'):
+    if not os.path.exists(PROCESSED_DATA_FP + 'geocoded_atrs.csv') \
+       or forceupdate:
         print "No geocoded_atrs.csv found, geocoding addresses"
 
         # geocode, parse result - address, lat long
@@ -83,12 +84,15 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory." +
                         "For now this is just for the processed dir")
+    # Can force update
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether force update the maps')
 
     args = parser.parse_args()
     if args.datadir:
         PROCESSED_DATA_FP = args.datadir
 
-    geocode_and_parse()
+    geocode_and_parse(args.forceupdate)
     # Read in segments
     inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
     non_inter = util.read_shp(

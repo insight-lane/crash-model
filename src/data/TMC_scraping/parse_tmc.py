@@ -1,15 +1,14 @@
 import xlrd
-import pandas as pd
 from os import listdir, path
 from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
 from .. import util
 import rtree
-import folium
 import json
 import pyproj
 import os
+import argparse
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -499,6 +498,17 @@ def parse_conflicts():
     return summary
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory")
+    args = parser.parse_args()
+    if args.datadir:
+        RAW_DATA_FP = args.datadir + '/raw/'
+        PROCESSED_DATA_FP = args.datadir + '/processed/'
+        ATR_FP = RAW_DATA_FP + '/AUTOMATED TRAFFICE RECORDING/'
+        TMC_FP = RAW_DATA_FP + '/TURNING MOVEMENT COUNT/'
 
     address_records = []
 

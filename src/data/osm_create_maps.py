@@ -206,7 +206,8 @@ if __name__ == '__main__':
 
             # If lanes are not given, put 0
             lanes = way_line[1]['lanes']
-            if not lanes:
+
+            if not lanes or ';' in lanes:
                 lanes = 0
 
             # Need to have an int highway field
@@ -220,8 +221,8 @@ if __name__ == '__main__':
                 'Surface_Tp': 0,
                 'F_F_Class': 0,
                 'width': width,
-                'lanes': lanes,
-                'highway_type': highway_keys[way_line[1]['highway']]
+                'lanes': str(lanes),
+                'hwy_type': highway_keys[way_line[1]['highway']]
             })
         schema = way_results.schema
 
@@ -233,7 +234,7 @@ if __name__ == '__main__':
             'Surface_Tp': 'int',
             'F_F_Class': 'int',
             # also add highway type key
-            'highway_type': 'int',
+            'hwy_type': 'int',
         })
 
         util.write_shp(
