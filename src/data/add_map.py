@@ -13,6 +13,8 @@ def find_overlap(buffered, orig_map):
             if not Point(coord).within(buffered[0]):
                 match = False
         if match:
+#            import ipdb; ipdb.set_trace()
+
             overlapping.append(old_segment)
 
     # write a points file for debugging
@@ -57,29 +59,38 @@ if __name__ == '__main__':
     }
 
     final = []
-    new_lines = []
-    new_lines_buffered = []
-    for line in new_map:
-        if line[1]['ST_NAME'] == 'Gold':
-            new_lines.append(line)
+#    new_lines = []
+#    new_lines_buffered = []
+    orig_lines = []
+    orig_lines_buffered = []
+
+    # Buffer all the original lines
+    for line in orig_map:
+#        if line[1]['ST_NAME'] == 'Gold':
+        if line[1]['name'] == 'Gold Street':
+#            new_lines.append(line)
+            orig_lines.append(line)
             b = line[0].buffer(20)
-            new_lines_buffered.append((b, line[1]))
+#            new_lines_buffered.append((b, line[1]))
+            orig_lines_buffered.append((b, line[1]))
 
     path = '/home/jenny/boston-crash-modeling/osm-data/processed/maps/'
     util.write_shp(
         schema,
         path + 'gold.shp',
-        new_lines, 0, 1)
+        orig_lines, 0, 1)
 
     other_schema = schema.copy()
     other_schema['geometry'] = 'Polygon'
     util.write_shp(
         other_schema,
         path + 'buffered.shp',
-        new_lines_buffered, 0, 1)
+        orig_lines_buffered, 0, 1)
 
-    for i in range(1):
-        results = find_overlap(new_lines_buffered[i], orig_map)
+#    for i in range(len(new_lines_buffered)):
+    for i in range(len(orig_lines_buffered)):
+#        results = find_overlap(new_lines_buffered[i], orig_map)
+        results = find_overlap(orig_lines_buffered[i], new_map)
 #        import ipdb; ipdb.set_trace()
 
         for v in results:
