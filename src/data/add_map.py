@@ -13,8 +13,6 @@ def find_overlap(buffered, orig_map):
             if not Point(coord).within(buffered[0]):
                 match = False
         if match:
-#            import ipdb; ipdb.set_trace()
-
             overlapping.append(old_segment)
 
     # write a points file for debugging
