@@ -26,6 +26,76 @@ def write_test(props, geometry, values, filename):
         values, 0, 1)
 
 
+def get_mapping(lines):
+    """
+    Attempts to map one or more segments of the second map to the first map
+    Args:
+        lines - a list of dicts containing the line from the first map,
+            the properties, the candidate overlapping lines from the new map,
+            and nearby segments on the original map because we may want to
+            combine two for the purposes of mapping
+    """
+
+    result_counts = [0, 0]
+    buff = 5
+    while buff <= 20:
+        for i in range(len(lines)):
+            if 'matches' in lines[i].keys():
+                continue
+
+            matched_candidates = []
+
+            for candidate in lines[i]['candidates']:
+                match = True
+                for coord in candidate.coords:
+                    if not Point(coord).within(lines[i]['line'].buffer(buff)):
+                        match = False
+                if match:
+                    matched_candidates.append(candidate)
+
+            if matched_candidates:
+                lines[i]['matches'] = matched_candidates
+
+        buff *= 2
+
+    orig = []
+    matched = []
+    for i, line in enumerate(lines):
+        if 'matches' in line.keys():
+            result_counts[0] += 1
+            
+            if i < 1:
+
+                orig.append((line['line'], line['properties']))
+                for m in line['matches']:
+                    matched.append((m, line['properties']))
+
+        else:
+            result_counts[1] += 1
+
+    write_test(
+        line['properties'],
+        'LineString',
+        orig,
+        'orig.shp'
+    )
+    write_test(
+        line['properties'],
+        'LineString',
+        matched,
+        'matches.shp'
+    )
+#        write_test(
+#            line['properties'],
+#            'Polygon',
+#            [(line['line'].buffer(5), line['properties'])],
+#            'buffered.shp'
+#        )
+
+
+    print result_counts
+
+
 # right now called with new_buffered, new_index, orig_map
 def get_candidates(buffered, buffered_index, lines):
 
@@ -36,33 +106,26 @@ def get_candidates(buffered, buffered_index, lines):
     # Go through each line from the osm map
     for i, line in enumerate(lines):
         overlapping = []
-        if i == 0:
-            util.track(i, 1000, len(lines))
-            for idx in buffered_index.intersection(line[0].bounds):
-                buffer = buffered[idx][0]
-#                import ipdb; ipdb.set_trace()
+        util.track(i, 1000, len(lines))
+        for idx in buffered_index.intersection(line[0].bounds):
+            buffer = buffered[idx][0]
 
-                # If the new line overlaps the old line
-                # then check whether it is entirely within the old buffer
-                if buffer.intersects(line[0]):
-                    overlapping.append(buffered[idx][1])
-                    overlapping_buffers.append([buffer, line[1]])
-            # write original map's line for testing
-            write_test(lines[0][1], 'LineString', [line], 'first')
-            results.append({
-                'line': line[0],
-                'properties': line[1],
-                'candidates': overlapping,
-            })
-#    write_test(lines[0][1], 'LineString', overlapping, 'testlines')
-#    write_test(lines[0][1], 'Polygon', overlapping_buffers, 'testbuffer')
-#    import ipdb; ipdb.set_trace()
+            # If the new line overlaps the old line
+            # then check whether it is entirely within the old buffer
+            if buffer.intersects(line[0]):
+                overlapping.append(buffered[idx][1])
+                overlapping_buffers.append([buffer, line[1]])
+        results.append({
+            'line': line[0],
+            'properties': line[1],
+            'candidates': overlapping,
+        })
 
     # just for testing purposes write out the first result
-    output = [(x, lines[0][1]) for x in results[0]['candidates']]
+#    output = [(x, lines[0][1]) for x in results[0]['candidates']]
 
-    write_test(lines[0][1], 'LineString', output, 'testlines')
-    return overlapping
+
+    return results
 
 
 def find_overlap(buffered, new_map, index):
@@ -165,7 +228,7 @@ if __name__ == '__main__':
 
 #    final = get_candidates(orig_lines_buffered, buffers_index, new_map)
     final = get_candidates(new_buffered, new_index, orig_map)
-
+    get_mapping(final)
 
     path = '/home/jenny/boston-crash-modeling/osm-data/processed/maps/'
 #    util.write_shp(
