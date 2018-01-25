@@ -2,39 +2,66 @@ import argparse
 import util
 from shapely.geometry import Point
 import rtree
+import os
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+MAP_FP = BASE_DIR + '/osm-data/processed/maps/'
 
 
+def write_test(props, geometry, values, filename):
+    keys = props.keys()
+    properties = {k: 'str' for k in keys}
+    schema = {
+        'geometry': geometry,
+        'properties': properties
+    }
+    print filename
+    util.write_shp(
+        schema,
+        MAP_FP + filename,
+        values, 0, 1)
+
+
+# right now called with new_buffered, new_index, orig_map
 def get_candidates(buffered, buffered_index, lines):
 
-#    for line in lines:
+    results = []
 
-#        overlaps = []
-#        for idx in buffered_index.intersection(line[0].bounds):
-#            buffer = buffered[idx][0]
+    overlapping_buffers = []
 
-            # If the new line overlaps the old line
-            # then check whether it is entirely within the old buffer
-#            if buffer.intersects(line[0]):
-#                overlaps.append(line)
-#        import ipdb; ipdb.set_trace()
-
-    overlapping = []
-
+    # Go through each line from the osm map
     for i, line in enumerate(lines):
-        util.track(i, 1000, len(lines))
-        for idx in buffered_index.intersection(line[0].bounds):
-            buffer = buffered[idx][0]
+        overlapping = []
+        if i == 0:
+            util.track(i, 1000, len(lines))
+            for idx in buffered_index.intersection(line[0].bounds):
+                buffer = buffered[idx][0]
+#                import ipdb; ipdb.set_trace()
 
-            # If the new line overlaps the old line
-            # then check whether it is entirely within the old buffer
-            if buffer.intersects(line[0]):
-                match = True
-                for coord in line[0].coords:
-                    if not Point(coord).within(buffer):
-                        match = False
-                if match:
-                    overlapping.append(line)
+                # If the new line overlaps the old line
+                # then check whether it is entirely within the old buffer
+                if buffer.intersects(line[0]):
+                    overlapping.append(buffered[idx][1])
+                    overlapping_buffers.append([buffer, line[1]])
+            # write original map's line for testing
+            write_test(lines[0][1], 'LineString', [line], 'first')
+            results.append({
+                'line': line[0],
+                'properties': line[1],
+                'candidates': overlapping,
+            })
+#    write_test(lines[0][1], 'LineString', overlapping, 'testlines')
+#    write_test(lines[0][1], 'Polygon', overlapping_buffers, 'testbuffer')
+#    import ipdb; ipdb.set_trace()
 
+    # just for testing purposes write out the first result
+    output = [(x, lines[0][1]) for x in results[0]['candidates']]
+
+    write_test(lines[0][1], 'LineString', output, 'testlines')
     return overlapping
 
 
@@ -110,7 +137,7 @@ if __name__ == '__main__':
     orig_lines_buffered = []
 
     # Buffer all the original lines
-#    orig_map = [x for x in orig_map if x[1]['name'] == 'Gold Street']
+    orig_map = [x for x in orig_map if x[1]['name'] == 'Columbia Road']
     buffers_index = rtree.index.Index()
     for idx, line in enumerate(orig_map):
         util.track(idx, 1000, len(orig_map))
@@ -120,15 +147,24 @@ if __name__ == '__main__':
         buffers_index.insert(idx, b.bounds)
 
     # Index for the new map
-#    index = rtree.index.Index()
+    new_buffered = []
+    new_index = rtree.index.Index()
 #    print 'indexing.........'
 
-#    new_map = [x for x in new_map if x[1]['ST_NAME'] == 'Gold']
-#    for idx, new_line in enumerate(new_map_gold):
-#        index.insert(idx, new_line[0].buffer(20).bounds)
+    # Buffer all the new lines
+    new_map = [x for x in new_map if x[1]['ST_NAME'] in (
+        'Columbia', 'Devon', 'Stanwood')]
+
+    for idx, new_line in enumerate(new_map):
+        b = new_line[0].buffer(20)
+        new_buffered.append((b, new_line[0], new_line[1]))
+        new_index.insert(idx, new_line[0].buffer(20).bounds)
+
 #    print 'done indexing.....'
 
-    final = get_candidates(orig_lines_buffered, buffers_index, new_map)
+
+#    final = get_candidates(orig_lines_buffered, buffers_index, new_map)
+    final = get_candidates(new_buffered, new_index, orig_map)
 
 
     path = '/home/jenny/boston-crash-modeling/osm-data/processed/maps/'
@@ -156,10 +192,10 @@ if __name__ == '__main__':
 #            final.append(v)
 #        final.append(new_map[i])
     print len(final)
-    util.write_shp(
-        schema,
-        '/home/jenny/boston-crash-modeling/osm-data/processed/maps/overlap.shp',
-        final, 0, 1)
+#    util.write_shp(
+#        schema,
+#        '/home/jenny/boston-crash-modeling/osm-data/processed/maps/overlap.shp',
+#        final, 0, 1)
 
 
 
