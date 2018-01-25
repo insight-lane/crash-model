@@ -58,17 +58,30 @@ def get_mapping(lines):
 
         buff *= 2
 
+    # Now go through the lines that still aren't matched
+    # this time, see if they are a subset of any of their candidates
+    for i in range(len(lines)):
+        if 'matches' in lines[i].keys():
+            continue
+        for candidate in lines[i]['candidates']:
+            match = True
+            for coord in lines[i]['line'].coords:
+                if not Point(coord).within(candidate.buffer(20)):
+                    match = False
+            if match:
+                matched_candidates.append(candidate)
+        if matched_candidates:
+            lines[i]['matches'] = matched_candidates
+
     orig = []
     matched = []
     for i, line in enumerate(lines):
         if 'matches' in line.keys():
             result_counts[0] += 1
             
-            if i < 1:
-
-                orig.append((line['line'], line['properties']))
-                for m in line['matches']:
-                    matched.append((m, line['properties']))
+            orig.append((line['line'], line['properties']))
+            for m in line['matches']:
+                matched.append((m, line['properties']))
 
         else:
             result_counts[1] += 1
@@ -92,12 +105,10 @@ def get_mapping(lines):
 #            'buffered.shp'
 #        )
 
-
     print result_counts
 
 
-# right now called with new_buffered, new_index, orig_map
-def get_candidates(buffered, buffered_index, lines):
+def get_candidates(buffered, buffered_index, lines, orig_buffered):
 
     results = []
 
@@ -107,6 +118,9 @@ def get_candidates(buffered, buffered_index, lines):
     for i, line in enumerate(lines):
         overlapping = []
         util.track(i, 1000, len(lines))
+
+        # First, get candidates from new map that overlap the buffer
+        # from the original map
         for idx in buffered_index.intersection(line[0].bounds):
             buffer = buffered[idx][0]
 
@@ -115,15 +129,12 @@ def get_candidates(buffered, buffered_index, lines):
             if buffer.intersects(line[0]):
                 overlapping.append(buffered[idx][1])
                 overlapping_buffers.append([buffer, line[1]])
+
         results.append({
             'line': line[0],
             'properties': line[1],
             'candidates': overlapping,
         })
-
-    # just for testing purposes write out the first result
-#    output = [(x, lines[0][1]) for x in results[0]['candidates']]
-
 
     return results
 
@@ -152,26 +163,6 @@ def find_overlap(buffered, new_map, index):
 
                 overlapping.append(new_segment)
 
-    # write a points file for debugging
-#    points = []
-#    for over in overlapping:
-#        for coord in over[0].coords:
-#            points.append((Point(coord), {
-#                'lat': str(coord[0]), 'long': str(coord[1])
-#            }))
-#    schema = {
-#        'geometry': 'Point',
-#        'properties': {
-#            'lat': 'str',
-#            'long': 'str',
-#        }
-#    }
-#    util.write_shp(
-#        schema,
-#        '/home/jenny/boston-crash-modeling/osm-data/processed/maps/overlap_points.shp',
-#        points, 0, 1)
-#    import ipdb; ipdb.set_trace()
-
     return overlapping
 
 if __name__ == '__main__':
@@ -186,16 +177,9 @@ if __name__ == '__main__':
     
     orig_map = util.read_shp(args.map1)
     new_map = util.read_shp(args.map2)
-    keys = orig_map[0][1].keys() + new_map[0][1].keys()
-    properties = {k: 'str' for k in keys}
-    schema = {
-        'geometry': 'LineString',
-        'properties': properties
-    }
 
     final = []
-#    new_lines = []
-#    new_lines_buffered = []
+
     orig_lines = []
     orig_lines_buffered = []
 
@@ -227,7 +211,8 @@ if __name__ == '__main__':
 
 
 #    final = get_candidates(orig_lines_buffered, buffers_index, new_map)
-    final = get_candidates(new_buffered, new_index, orig_map)
+    final = get_candidates(
+        new_buffered, new_index, orig_map, orig_lines_buffered)
     get_mapping(final)
 
     path = '/home/jenny/boston-crash-modeling/osm-data/processed/maps/'
