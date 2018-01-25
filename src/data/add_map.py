@@ -39,7 +39,9 @@ def get_mapping(lines):
     result_counts = [0, 0]
     buff = 5
     while buff <= 20:
+        print "Looking at buffer " + str(buff)
         for i in range(len(lines)):
+            util.track(i, 1000, len(lines))
             if 'matches' in lines[i].keys():
                 continue
 
@@ -57,10 +59,11 @@ def get_mapping(lines):
                 lines[i]['matches'] = matched_candidates
 
         buff *= 2
-
+    
     # Now go through the lines that still aren't matched
     # this time, see if they are a subset of any of their candidates
     for i in range(len(lines)):
+        matched_candidates = []
         if 'matches' in lines[i].keys():
             continue
         for candidate in lines[i]['candidates']:
@@ -105,14 +108,18 @@ def get_mapping(lines):
 #            'buffered.shp'
 #        )
 
+    percent_matched = round(float(result_counts[1])/(
+        float(result_counts[0]+result_counts[1]))) * 100
+    print 'Found matches for ' + str(percent_matched) + '% of segments'
     print result_counts
 
 
-def get_candidates(buffered, buffered_index, lines, orig_buffered):
+def get_candidates(buffered, buffered_index, lines):
 
     results = []
 
     overlapping_buffers = []
+    print "Getting candidate overlapping lines"
 
     # Go through each line from the osm map
     for i, line in enumerate(lines):
@@ -139,32 +146,6 @@ def get_candidates(buffered, buffered_index, lines, orig_buffered):
     return results
 
 
-def find_overlap(buffered, new_map, index):
-    # for road in orig_map
-
-    overlapping = []
-
-#        for idx in int_buffers_index.intersection(road[0].bounds):
-#            int_buffer = int_buffers[idx]
-
-    for i, new_segment in enumerate(new_map):
-        util.track(i, 1000, len(new_map))
-        import ipdb; ipdb.set_trace()
-
-        for idx in index.intersection(buffered[0]):
-            new_match = index[idx]
-            
-            match = True
-            for coord in new_segment[0].coords:
-                if not Point(coord).within(buffered[0]):
-                    match = False
-            if match:
-#            import ipdb; ipdb.set_trace()
-
-                overlapping.append(new_segment)
-
-    return overlapping
-
 if __name__ == '__main__':
     # Read osm map file
     parser = argparse.ArgumentParser()
@@ -178,72 +159,22 @@ if __name__ == '__main__':
     orig_map = util.read_shp(args.map1)
     new_map = util.read_shp(args.map2)
 
-    final = []
-
-    orig_lines = []
-    orig_lines_buffered = []
-
-    # Buffer all the original lines
-    orig_map = [x for x in orig_map if x[1]['name'] == 'Columbia Road']
-    buffers_index = rtree.index.Index()
-    for idx, line in enumerate(orig_map):
-        util.track(idx, 1000, len(orig_map))
-        orig_lines.append(line)
-        b = line[0].buffer(20)
-        orig_lines_buffered.append((b, line[1]))
-        buffers_index.insert(idx, b.bounds)
-
     # Index for the new map
     new_buffered = []
     new_index = rtree.index.Index()
-#    print 'indexing.........'
+
+#    new_map = [x for x in new_map if x[1]['ST_NAME'] in (
+#        'Columbia', 'Devon', 'Stanwood')]
 
     # Buffer all the new lines
-    new_map = [x for x in new_map if x[1]['ST_NAME'] in (
-        'Columbia', 'Devon', 'Stanwood')]
-
     for idx, new_line in enumerate(new_map):
         b = new_line[0].buffer(20)
         new_buffered.append((b, new_line[0], new_line[1]))
         new_index.insert(idx, new_line[0].buffer(20).bounds)
 
-#    print 'done indexing.....'
-
-
-#    final = get_candidates(orig_lines_buffered, buffers_index, new_map)
-    final = get_candidates(
-        new_buffered, new_index, orig_map, orig_lines_buffered)
-    get_mapping(final)
-
-    path = '/home/jenny/boston-crash-modeling/osm-data/processed/maps/'
-#    util.write_shp(
-#        schema,
-#        path + 'gold.shp',
-#        orig_lines, 0, 1)
-
-#    other_schema = schema.copy()
-#    other_schema['geometry'] = 'Polygon'
-#    util.write_shp(
-#        other_schema,
-#        path + 'buffered.shp',
-#        orig_lines_buffered, 0, 1)
-
-#    print 'ready to enumerate....'
-#    for i in range(len(new_lines_buffered)):
-#    for i, line in enumerate(orig_lines_buffered):
-#        print i
-#        util.track(i, 1000, len(orig_lines_buffered))
-#        results = find_overlap(line, new_map, index)
-#        import ipdb; ipdb.set_trace()
-
-#        for v in results:
-#            final.append(v)
-#        final.append(new_map[i])
-    print len(final)
-#    util.write_shp(
-#        schema,
-#        '/home/jenny/boston-crash-modeling/osm-data/processed/maps/overlap.shp',
-#        final, 0, 1)
+    lines_with_candidates = get_candidates(
+        new_buffered, new_index, orig_map)
+    get_mapping(lines_with_candidates)
 
 
 
