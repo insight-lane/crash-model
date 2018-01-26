@@ -26,6 +26,18 @@ def write_test(props, geometry, values, filename):
         values, 0, 1)
 
 
+def add_match_features(line):
+    features = {}
+    matching = True
+    for m in line['matches']:
+        for k, v in m[1].items():
+            if k not in features.keys():
+                features[k] = v
+            elif features[k] != v:
+                matching = False
+    print matching
+
+
 def get_mapping(lines):
     """
     Attempts to map one or more segments of the second map to the first map
@@ -35,7 +47,7 @@ def get_mapping(lines):
             and nearby segments on the original map because we may want to
             combine two for the purposes of mapping
     """
-
+    print len(lines)
     result_counts = [0, 0]
     buff = 5
     while buff <= 20:
@@ -49,7 +61,8 @@ def get_mapping(lines):
 
             for candidate in lines[i]['candidates']:
                 match = True
-                for coord in candidate.coords:
+
+                for coord in candidate[0].coords:
                     if not Point(coord).within(lines[i]['line'].buffer(buff)):
                         match = False
                 if match:
@@ -69,7 +82,7 @@ def get_mapping(lines):
         for candidate in lines[i]['candidates']:
             match = True
             for coord in lines[i]['line'].coords:
-                if not Point(coord).within(candidate.buffer(20)):
+                if not Point(coord).within(candidate[0].buffer(20)):
                     match = False
             if match:
                 matched_candidates.append(candidate)
@@ -83,20 +96,26 @@ def get_mapping(lines):
             result_counts[0] += 1
             
             orig.append((line['line'], line['properties']))
+
+            # Every single match for this line
+            add_match_features(line)
+
+            # Add each matching line
+            # Only used for debugging purposes, take out eventually
             for m in line['matches']:
-                matched.append((m, line['properties']))
+                matched.append((m[0], m[1]))
 
         else:
             result_counts[1] += 1
 
     write_test(
-        line['properties'],
+        lines[0]['properties'],
         'LineString',
         orig,
         'orig.shp'
     )
     write_test(
-        line['properties'],
+        lines[0]['matches'][0][1],
         'LineString',
         matched,
         'matches.shp'
@@ -108,8 +127,8 @@ def get_mapping(lines):
 #            'buffered.shp'
 #        )
 
-    percent_matched = round(float(result_counts[1])/(
-        float(result_counts[0]+result_counts[1]))) * 100
+    percent_matched = float(result_counts[0])/(
+        float(result_counts[0]+result_counts[1])) * 100
     print 'Found matches for ' + str(percent_matched) + '% of segments'
     print result_counts
 
@@ -118,7 +137,6 @@ def get_candidates(buffered, buffered_index, lines):
 
     results = []
 
-    overlapping_buffers = []
     print "Getting candidate overlapping lines"
 
     # Go through each line from the osm map
@@ -134,8 +152,9 @@ def get_candidates(buffered, buffered_index, lines):
             # If the new line overlaps the old line
             # then check whether it is entirely within the old buffer
             if buffer.intersects(line[0]):
-                overlapping.append(buffered[idx][1])
-                overlapping_buffers.append([buffer, line[1]])
+
+                # Add the linestring and the features to the overlap list
+                overlapping.append((buffered[idx][1], buffered[idx][2]))
 
         results.append({
             'line': line[0],
@@ -157,14 +176,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     orig_map = util.read_shp(args.map1)
+
+    orig_map = [x for x in orig_map if x[1]['name'] == 'Columbia Road']
     new_map = util.read_shp(args.map2)
 
     # Index for the new map
     new_buffered = []
     new_index = rtree.index.Index()
 
-#    new_map = [x for x in new_map if x[1]['ST_NAME'] in (
-#        'Columbia', 'Devon', 'Stanwood')]
+    new_map = [x for x in new_map if x[1]['ST_NAME'] in (
+        'Columbia', 'Devon', 'Stanwood')]
 
     # Buffer all the new lines
     for idx, new_line in enumerate(new_map):
