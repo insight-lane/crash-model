@@ -27,15 +27,53 @@ def write_test(props, geometry, values, filename):
 
 
 def add_match_features(line):
+
+    # Hardcoded features of interest; eventually pass in
+    # None of the features we are currently using can have a
+    # legitimate value of 0, so we can ignore 0 values
+    # If we start allowing features with value 0, need to change this
+    # for those types of features
+    use_feats = [
+        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class']
+
     features = {}
     matching = True
+    unmatching_feats = []
+    feats_list = {}
     for m in line['matches']:
         for k, v in m[1].items():
-            if k not in features.keys():
-                features[k] = v
-            elif features[k] != v:
-                matching = False
+            if k in use_feats:
+
+                if k not in feats_list:
+                    feats_list[k] = []
+                feats_list[k].append(v)
+
+                if k not in features.keys():
+                    features[k] = v
+                elif features[k] != v and features[k] is not None:
+                    matching = False
+                    if k not in unmatching_feats:
+                        unmatching_feats.append(k)
+    if not matching:
+        orig = [(line['line'], line['properties'])]
+        write_test(
+            line['properties'],
+            'LineString',
+            orig,
+            'orig.shp'
+        )
+        write_test(
+            line['matches'][0][1],
+            'LineString',
+            line['matches'],
+            'matches.shp'
+        )
+
     print matching
+    if not matching:
+        print feats_list
+        print unmatching_feats
+        print "good feats......................."
 
 
 def get_mapping(lines):
@@ -108,18 +146,6 @@ def get_mapping(lines):
         else:
             result_counts[1] += 1
 
-    write_test(
-        lines[0]['properties'],
-        'LineString',
-        orig,
-        'orig.shp'
-    )
-    write_test(
-        lines[0]['matches'][0][1],
-        'LineString',
-        matched,
-        'matches.shp'
-    )
 #        write_test(
 #            line['properties'],
 #            'Polygon',
