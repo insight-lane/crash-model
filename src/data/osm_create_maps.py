@@ -27,7 +27,10 @@ def simple_get_roads(city):
 
     G = ox.graph_from_place(city, network_type='drive', simplify=False)
     # Have to simplify as a separate call so it can be not strict
-    G = ox.simplify_graph(G, strict=False)
+    G = ox.simplify_graph(G, strict=True)
+
+    # Some of the ways span several blocks, so in addition to simplifying
+    # the network, we need to split some ways into blocks
 
     # osmnx creates a directory for the nodes and edges
     ox.save_graph_shapefile(
@@ -172,7 +175,7 @@ if __name__ == '__main__':
     DOC_FP = args.datadir + '/docs/'
 
     # If maps do not exist, create
-    if not os.path.exists(MAP_FP + '/osm_ways.shp'):
+    if not os.path.exists(MAP_FP + '/osm_ways.shp') or args.forceupdate:
         print 'Generating maps from open street map'
         simple_get_roads(city)
 
@@ -199,7 +202,7 @@ if __name__ == '__main__':
 
             width = way_line[1]['width']
             # round width
-            if not width or ';' in width:
+            if not width or ';' in width or '[' in width:
                 width = 0
             else:
                 width = round(float(width))

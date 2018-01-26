@@ -512,6 +512,7 @@ if __name__ == '__main__':
 
     address_records = []
 
+    print 'Parsing turning movement counts...'
     summary_file = PROCESSED_DATA_FP + 'tmc_summary.json'
     if not path_exists(summary_file):
         print 'No tmc_summary.json, parsing tmcs files now...'

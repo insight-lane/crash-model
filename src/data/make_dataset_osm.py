@@ -2,6 +2,8 @@
 import os
 import subprocess
 
+# Just for testing, it's temporary that we're putting this in
+# a different directory than the regular data one
 DATA_FP = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
@@ -18,8 +20,7 @@ if __name__ == '__main__':
         '-m',
         'data.osm_create_maps',
         city,
-        DATA_FP,
-        '--forceupdate'
+        DATA_FP
     ])
 
     subprocess.check_call([
@@ -54,4 +55,11 @@ if __name__ == '__main__':
         'data.ATR_scraping.geocode_snap_ATRs',
         '-d',
         DATA_FP + '/processed/'
+    ])
+    subprocess.check_call([
+        'python',
+        '-m',
+        'data.TMC_scraping.parse_tmc',
+        '-d',
+        DATA_FP
     ])
