@@ -50,7 +50,13 @@ def find_non_ints(roads, int_buffers):
     Returns:
         tuple consisting of:
             non_int_lines - list in same format as input roads, just a subset
-            inter_segments
+                each element in the list is a tuple of LineString or
+                MultiLineString and dict of properties
+            inter_segments - dict of lists with keys data and lines
+                each element in the lines list is one of the lines
+                overlapping the intersection buffer, and each element
+                each element in the data list is a dict of properties
+                corresponding to the lines
     """
 
     # Create index for quick lookup
@@ -89,6 +95,7 @@ def find_non_ints(roads, int_buffers):
                 non_int_lines.extend([(line, road[1]) for line in diff])
         else:
             non_int_lines.append(road)
+
     return non_int_lines, inter_segments
 
 
@@ -167,7 +174,8 @@ def create_segments(roads_shp_path):
     }
     write_shp(inter_schema, MAP_FP + '/inters_segments.shp', union_inter, 1, 0)
 
-    # Output inters_segments properties as json
+    # The inters_segments shapefile above only gives an id property
+    # Store the other properties from inters_segments as json file
     with open(DATA_FP + '/inters_data.json', 'w') as f:
         json.dump(inter_segments['data'], f)
 

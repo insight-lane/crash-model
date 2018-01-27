@@ -56,6 +56,9 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
         inters = json.load(f)
         # Append each index to dataframe
         for idx, lines in inters.iteritems():
+
+            # Each intersection has more than one segment
+            # Add each segment's properties to df_records
             df_records.extend(lines)
             df_index.extend([idx] * len(lines))
     inters_df = pd.DataFrame(df_records, index=df_index)
@@ -68,8 +71,9 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
 
     # Combine inter + non_inter
     combined = pd.concat([inters_df, non_inters_df])
-    
-    # Aggregating inters data = apply aggregation (default is max)
+
+    # Since there are multiple segments per intersection,
+    # aggregating inters data = apply aggregation (default is max)
     aggregated = getattr(combined[feats].groupby(combined.index), agg)
 
     # return aggregation and adjacency info (orig_id)
