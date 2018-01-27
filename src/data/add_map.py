@@ -37,7 +37,6 @@ def add_match_features(line):
         'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class']
 
     features = {}
-    matching = True
     unmatching_feats = []
     feats_list = {}
     for m in line['matches']:
@@ -46,34 +45,33 @@ def add_match_features(line):
 
                 if k not in feats_list:
                     feats_list[k] = []
-                feats_list[k].append(v)
+                if v:
+                    feats_list[k].append(v)
+                    if k not in features.keys():
+                        features[k] = v
+                    elif features[k] != v:
+                        if k not in unmatching_feats:
+                            unmatching_feats.append(k)
 
-                if k not in features.keys():
-                    features[k] = v
-                elif features[k] != v and features[k] is not None:
-                    matching = False
-                    if k not in unmatching_feats:
-                        unmatching_feats.append(k)
-    if not matching:
-        orig = [(line['line'], line['properties'])]
-        write_test(
-            line['properties'],
-            'LineString',
-            orig,
-            'orig.shp'
-        )
-        write_test(
-            line['matches'][0][1],
-            'LineString',
-            line['matches'],
-            'matches.shp'
-        )
+#    if not matching:
+#        orig = [(line['line'], line['properties'])]
+#        write_test(
+#            line['properties'],
+#            'LineString',
+#            orig,
+#            'orig.shp'
+#        )
+#        write_test(
+#            line['matches'][0][1],
+#            'LineString',
+#            line['matches'],
+#            'matches.shp'
+#        )
 
-    print matching
-    if not matching:
-        print feats_list
-        print unmatching_feats
-        print "good feats......................."
+    # Add new features to existing ones
+    for feat, values in feats_list.items():
+        if values and len(set(values)) == 1:
+            line['properties'][feat] = values[0]
 
 
 def get_mapping(lines):
@@ -184,6 +182,7 @@ def get_mapping(lines):
     percent_matched = float(result_counts[0])/(
         float(result_counts[0]+result_counts[1])) * 100
     print 'Found matches for ' + str(percent_matched) + '% of segments'
+
     print result_counts
 
 
