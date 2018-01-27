@@ -88,6 +88,11 @@ def get_mapping(lines):
     print len(lines)
     result_counts = [0, 0]
     buff = 5
+
+    # keep track of which new segments matched at which size buffer
+    buff_match = {}
+
+    new_id = 0
     while buff <= 20:
         print "Looking at buffer " + str(buff)
         for i in range(len(lines)):
@@ -97,14 +102,21 @@ def get_mapping(lines):
 
             matched_candidates = []
 
-            for candidate in lines[i]['candidates']:
+            for j, candidate in enumerate(lines[i]['candidates']):
+                if 'id' not in lines[i]['candidates'][j][1].keys():
+                    lines[i]['candidates'][j][1]['id'] = new_id
+                    new_id += 1
                 match = True
 
                 for coord in candidate[0].coords:
                     if not Point(coord).within(lines[i]['line'].buffer(buff)):
                         match = False
                 if match:
-                    matched_candidates.append(candidate)
+                    matched_candidates.append((candidate, buff))
+
+                    if lines[i]['candidates'][j][1]['id'] \
+                       not in buff_match.keys():
+                        buff_match[lines[i]['candidates'][j][1]['id']] = buff
 
             if matched_candidates:
                 lines[i]['matches'] = matched_candidates
@@ -117,15 +129,31 @@ def get_mapping(lines):
         matched_candidates = []
         if 'matches' in lines[i].keys():
             continue
-        for candidate in lines[i]['candidates']:
+        for j, candidate in enumerate(lines[i]['candidates']):
+            if 'id' not in lines[i]['candidates'][j][1].keys():
+                lines[i]['candidates'][j][1]['id'] = new_id
+                new_id += 1
+
             match = True
             for coord in lines[i]['line'].coords:
                 if not Point(coord).within(candidate[0].buffer(20)):
                     match = False
             if match:
-                matched_candidates.append(candidate)
+                matched_candidates.append((candidate, 20))
+                if lines[i]['candidates'][j][1]['id'] not in buff_match.keys():
+                    buff_match[lines[i]['candidates'][j][1]['id']] = buff
         if matched_candidates:
             lines[i]['matches'] = matched_candidates
+
+    # Remove matches that matched better on a different segment
+    for i in range(len(lines)):
+        if 'matches' in lines[i].keys():
+            matches = lines[i]['matches']
+            new_matches = []
+            for (m, buff) in matches:
+                if buff_match[m[1]['id']] == buff:
+                    new_matches.append(m)
+            lines[i]['matches'] = new_matches
 
     orig = []
     matched = []
