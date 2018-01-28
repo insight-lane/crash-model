@@ -110,9 +110,6 @@ def reproject_and_read(infile, outfile):
         inters - the reprojected intersections
     """
 
-    MAP_FP = '../../data/processed/maps'
-    DATA_FP = '../../data/processed'
-
     print "Map data at ", MAP_FP
     print "Output intersection data to ", DATA_FP
 
@@ -244,15 +241,24 @@ if __name__ == '__main__':
                         help="Can give alternate data directory")
     parser.add_argument("-r", "--altroad", type=str,
                         help="Can give alternate road shape file")
+    parser.add_argument("-n", "--newmap", type=str,
+                        help="If given, write output to new directory" +
+                        "within the maps directory")
+
     args = parser.parse_args()
 
     # Can override the hardcoded data directory
     if args.datadir:
         DATA_FP = args.datadir + '/processed/'
         MAP_FP = args.datadir + '/processed/maps/'
+    if args.newmap:
+        DATA_FP = MAP_FP + '/' + args.newmap
+        MAP_FP = DATA_FP
 
     print "Data directory: " + DATA_FP
     print "Map directory: " + MAP_FP
+
+    
     roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
     if args.altroad:
         roads_shp_path = args.altroad

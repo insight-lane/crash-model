@@ -1,6 +1,6 @@
 import fiona
 import math
-from shapely.geometry import Point, shape, mapping
+from shapely.geometry import Point, shape
 import itertools
 import cPickle
 import os
@@ -110,6 +110,10 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--dir", type=str,
                         help="Can give alternate data directory")
 
+    parser.add_argument("-n", "--newmap", type=str,
+                        help="If given, write output to new directory" +
+                        "within the maps directory")
+
     args = parser.parse_args()
 
     # Import shapefile specified at commandline
@@ -118,6 +122,10 @@ if __name__ == '__main__':
     # Can override the hardcoded maps directory
     if args.dir:
         MAP_DATA_FP = args.dir + '/processed/maps/'
+    if args.newmap:
+        if not os.path.exists(MAP_DATA_FP + args.newmap):
+            os.mkdir(MAP_DATA_FP + args.newmap)
+        MAP_DATA_FP = MAP_DATA_FP + args.newmap + '/'
 
     # Get all lines, dummy id
     lines = [
