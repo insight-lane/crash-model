@@ -69,6 +69,7 @@ def add_match_features(line):
 #        )
 
     # Add new features to existing ones
+
     for feat, values in feats_list.items():
         if values and len(set(values)) == 1:
             line['properties'][feat] = values[0]
@@ -155,7 +156,7 @@ def get_mapping(lines):
     orig = []
     matched = []
     for i, line in enumerate(lines):
-        if 'matches' in line.keys():
+        if 'matches' in line.keys() and line['matches']:
             result_counts[0] += 1
             
             orig.append((line['line'], line['properties']))
