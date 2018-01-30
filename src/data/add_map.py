@@ -73,7 +73,6 @@ def add_match_features(line):
         if values and len(set(values)) == 1:
             line['properties'][feat] = values[0]
 
-
 def get_mapping(lines):
     """
     Attempts to map one or more segments of the second map to the first map
@@ -217,38 +216,49 @@ def get_candidates(buffered, buffered_index, lines):
 
     return results
 
-
 if __name__ == '__main__':
     # Read osm map file
     parser = argparse.ArgumentParser()
 
     # Both maps should be in 3857 projection
-    parser.add_argument("map1", help="Map generated from open street map")
-    parser.add_argument("map2", help="City specific map")
+    parser.add_argument(
+        "map1dir", help="directory containing maps generated from"
+        + "open street map")
+    parser.add_argument(
+        "map2dir", help="directory containing maps generated from"
+        + "city specific data")
 
     args = parser.parse_args()
-    
-    orig_map = util.read_shp(args.map1)
 
-    orig_map = [x for x in orig_map if x[1]['name'] == 'Columbia Road']
-    new_map = util.read_shp(args.map2)
+    orig_map_non_inter = util.read_shp(
+        args.map1dir + '/' + 'non_inters_segments.shp')
 
-    # Index for the new map
+    orig_map_non_inter = [
+        x for x in orig_map_non_inter if x[1]['name'] == 'Columbia Road']
+
+    new_map_non_inter = util.read_shp(
+        args.map2dir + '/' + 'non_inters_segments.shp')
+
+#    # Index for the new map
     new_buffered = []
     new_index = rtree.index.Index()
 
-    new_map = [x for x in new_map if x[1]['ST_NAME'] in (
+    new_map_non_inter = [x for x in new_map_non_inter if x[1]['ST_NAME'] in (
         'Columbia', 'Devon', 'Stanwood')]
 
-    # Buffer all the new lines
-    for idx, new_line in enumerate(new_map):
+#    # Buffer all the new lines
+    for idx, new_line in enumerate(new_map_non_inter):
         b = new_line[0].buffer(20)
         new_buffered.append((b, new_line[0], new_line[1]))
-        new_index.insert(idx, new_line[0].buffer(20).bounds)
+        new_index.insert(idx, b.bounds)
 
-    lines_with_candidates = get_candidates(
-        new_buffered, new_index, orig_map)
-    get_mapping(lines_with_candidates)
+    non_ints_with_candidates = get_candidates(
+        new_buffered, new_index, orig_map_non_inter)
+    get_mapping(non_ints_with_candidates)
+
+#    lines_with_candidates = get_candidates(
+#        new_buffered, new_index, orig_map)
+#    get_mapping(lines_with_candidates)
 
 
 
