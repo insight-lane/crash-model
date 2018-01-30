@@ -238,13 +238,13 @@ if __name__ == '__main__':
 
     new_map_non_inter = util.read_shp(
         args.map2dir + '/' + 'non_inters_segments.shp')
+    new_map_non_inter = [x for x in new_map_non_inter if x[1]['ST_NAME'] in (
+        'Columbia', 'Devon', 'Stanwood')]
 
 #    # Index for the new map
     new_buffered = []
     new_index = rtree.index.Index()
 
-    new_map_non_inter = [x for x in new_map_non_inter if x[1]['ST_NAME'] in (
-        'Columbia', 'Devon', 'Stanwood')]
 
 #    # Buffer all the new lines
     for idx, new_line in enumerate(new_map_non_inter):
@@ -255,6 +255,34 @@ if __name__ == '__main__':
     non_ints_with_candidates = get_candidates(
         new_buffered, new_index, orig_map_non_inter)
     get_mapping(non_ints_with_candidates)
+
+    # =================================================
+    # Now do intersections
+    orig_map_inter = util.read_shp(
+        args.map1dir + '/' + 'inters_segments.shp')
+
+    new_map_inter = util.read_shp(
+        args.map2dir + '/' + 'inters_segments.shp')
+
+    new_buffered_inter = []
+    new_index_inter = []
+    for idx, new_line in enumerate(new_map_inter):
+        b = new_line[0].buffer(10)
+        new_buffered_inter.append((b, new_line[0], new_line[1]))
+        new_index_inter.insert(idx, b.bounds)
+
+    write_test(
+        new_buffered_inter[0][2],
+        'Polygon',
+        [(x[0], x[2]) for x in new_buffered_inter],
+        'buffered.shp'
+    )
+
+
+
+#    non_ints_with_candidates = get_candidates(
+#        new_buffered, new_index, orig_map_non_inter)
+#    get_mapping(non_ints_with_candidates)
 
 #    lines_with_candidates = get_candidates(
 #        new_buffered, new_index, orig_map)
