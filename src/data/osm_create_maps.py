@@ -219,13 +219,14 @@ if __name__ == '__main__':
 
             way_line[1].update({
                 'AADT': 0,
-                'SPEEDLIMIT': speed,
+                'SPEEDLIMIT': 0,
                 'Struct_Cnd': 0,
                 'Surface_Tp': 0,
                 'F_F_Class': 0,
                 'width': width,
                 'lanes': str(lanes),
-                'hwy_type': highway_keys[way_line[1]['highway']]
+                'hwy_type': highway_keys[way_line[1]['highway']],
+                'osm_speed': speed,
             })
         schema = way_results.schema
 
@@ -238,6 +239,7 @@ if __name__ == '__main__':
             'F_F_Class': 'int',
             # also add highway type key
             'hwy_type': 'int',
+            'osm_speed': 'int',
         })
 
         util.write_shp(
