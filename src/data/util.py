@@ -378,7 +378,6 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     results = []
     inproj = pyproj.Proj(init=inproj)
     outproj = pyproj.Proj(init=outproj)
-    print len(records)
     for record in records:
 
         coords = record['geometry']['coordinates']
@@ -411,3 +410,4 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
             results.append({'geometry': LineString(new_coords),
                             'properties': record['properties']})
     return results
+

@@ -120,7 +120,7 @@ def get_roads(elements):
                             'id': way['id'],
                             'width': width,
                             'type': tags['highway'],
-                            'lanes': lanes,
+                            'lanes': int(lanes),
                             'oneway': oneway,
                             'ma_way_id': ma_way_id
                         }))
@@ -207,10 +207,10 @@ if __name__ == '__main__':
             else:
                 width = round(float(width))
 
-            # If lanes are not given, put 0
             lanes = way_line[1]['lanes']
-
-            if not lanes or ';' in lanes:
+            if lanes:
+                lanes = max([int(x) for x in re.findall('\d', lanes)])
+            else:
                 lanes = 0
 
             # Need to have an int highway field
@@ -224,7 +224,7 @@ if __name__ == '__main__':
                 'Surface_Tp': 0,
                 'F_F_Class': 0,
                 'width': width,
-                'lanes': str(lanes),
+                'lanes': int(lanes),
                 'hwy_type': highway_keys[way_line[1]['highway']],
                 'osm_speed': speed,
             })
