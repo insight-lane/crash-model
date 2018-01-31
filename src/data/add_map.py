@@ -4,6 +4,7 @@ from shapely.ops import unary_union
 from shapely.geometry import Point
 import rtree
 import os
+import json
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -219,7 +220,7 @@ def get_int_mapping(lines, buffered, buffered_index):
         line_results.append([line[0], line[1], best_match])
 
     total = len(line_results)
-    percent_matched = 100 * float(
+    percent_matched = 100 - 100 * float(
         len([x for x in line_results if not x[2]]))/float(total)
     print "Found matches for " + str(percent_matched) + " of intersections"
     return line_results
@@ -257,13 +258,37 @@ def get_candidates(buffered, buffered_index, lines):
 
     return results
 
+
+def add_int_features(int_lines, dir1, dir2, featlist):
+    with open(dir2 + '/inters_data.json', 'r') as f:
+        inters_new = json.load(f)
+    
+    with open(dir1 + '/processed/inters_data.json', 'r') as f:
+        inters_orig = json.load(f)
+
+    for line in int_lines:
+        orig_feats = inters_orig[str(line[1]['id'])]
+        if line[2]:
+            new_feats = inters_new[str(line[2]['id'])]
+
+            # Since at the moment, the canonical dataset is created by only
+            # looking at the max value of each feature, we can just append
+            # the max value of the new features to the first segment of the
+            # original feature list
+            for feat in featlist:
+                orig_feats[0][feat] = max([x[feat] for x in new_feats])
+
+    with open(dir1 + '/processed/inters_data.json', 'w') as f:
+        json.dump(inters_orig, f)
+
+
 if __name__ == '__main__':
     # Read osm map file
     parser = argparse.ArgumentParser()
 
     # Both maps should be in 3857 projection
     parser.add_argument(
-        "map1dir", help="directory containing maps generated from"
+        "map1dir", help="base data directory containing maps generated from"
         + "open street map")
     parser.add_argument(
         "map2dir", help="directory containing maps generated from"
@@ -272,7 +297,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     orig_map_non_inter = util.read_shp(
-        args.map1dir + '/' + 'non_inters_segments.shp')
+        args.map1dir + '/processed/maps/non_inters_segments.shp')
 
     orig_map_non_inter = [
         x for x in orig_map_non_inter if x[1]['name'] == 'Columbia Road']
@@ -310,7 +335,7 @@ if __name__ == '__main__':
     # =================================================
     # Now do intersections
     orig_map_inter = util.read_shp(
-        args.map1dir + '/' + 'inters_segments.shp')
+        args.map1dir + '/processed/maps/inters_segments.shp')
 
     new_map_inter = util.read_shp(
         args.map2dir + '/' + 'inters_segments.shp')
@@ -329,7 +354,15 @@ if __name__ == '__main__':
         new_buffered_inter.append((b, new_line[0], new_line[1]))
         new_index_inter.insert(idx, b.bounds)
 
-    get_int_mapping(orig_map_inter, new_buffered_inter, new_index_inter)
+    int_results = get_int_mapping(
+        orig_map_inter, new_buffered_inter, new_index_inter)
+
+    # Eventually, allow feature list to be an argument
+    feats = ['AADT', 'SPEEDLIMIT',
+             'Struct_Cnd', 'Surface_Tp',
+             'F_F_Class']
+
+    add_int_features(int_results, args.map1dir, args.map2dir, feats)
 #    write_test(
 #        new_buffered_inter[0][2],
 #        'Polygon',
