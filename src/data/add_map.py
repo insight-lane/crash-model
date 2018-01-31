@@ -1,5 +1,6 @@
 import argparse
 import util
+from shapely.ops import unary_union
 from shapely.geometry import Point
 import rtree
 import os
@@ -190,6 +191,40 @@ def get_mapping(lines):
     print result_counts
 
 
+def get_int_mapping(lines, buffered, buffered_index):
+    # Go through each line from the osm map
+    print "Getting intersection mappings"
+
+    results = [0, 0, 0]
+    for i, line in enumerate(lines):
+        util.track(i, 1000, len(lines))
+        line_buffer = line[0].buffer(10)
+        found_intersect = False
+        found_overlap = False
+        overlaps = []
+        for idx in buffered_index.intersection(line_buffer.bounds):
+            buffer = buffered[idx][0]
+            # If the new buffered intersection intersects the old one
+            # figure out how much overlap
+            if buffer.intersects(line[0]):
+                found_intersect = True
+                total_area = unary_union([line_buffer, buffer]).area
+                best_overlap = max(
+                    line_buffer.area/total_area, buffer.area/total_area)
+                overlaps.append(best_overlap)
+                if line_buffer.area/total_area > .20 \
+                   or buffer.area/total_area > .20:
+                    found_overlap = True
+        if found_intersect and not found_overlap:
+            results[1] += 1
+        elif found_overlap:
+            results[0] += 1
+        else:
+            results[2] += 1
+
+    print results
+
+
 def get_candidates(buffered, buffered_index, lines):
 
     results = []
@@ -251,24 +286,24 @@ if __name__ == '__main__':
     new_index = rtree.index.Index()
 
     # Buffer all the new lines
-    for idx, new_line in enumerate(new_map_non_inter):
-        b = new_line[0].buffer(20)
-        new_buffered.append((b, new_line[0], new_line[1]))
-        new_index.insert(idx, b.bounds)
+#    for idx, new_line in enumerate(new_map_non_inter):
+#        b = new_line[0].buffer(20)
+#        new_buffered.append((b, new_line[0], new_line[1]))
+#        new_index.insert(idx, b.bounds)
 
-    non_ints_with_candidates = get_candidates(
-        new_buffered, new_index, orig_map_non_inter)
-    get_mapping(non_ints_with_candidates)
+#    non_ints_with_candidates = get_candidates(
+#        new_buffered, new_index, orig_map_non_inter)
+#    get_mapping(non_ints_with_candidates)
 
     # Write the non-intersections segments back out with the new features
-    schema = {
-        'geometry': 'LineString',
-        'properties': {k: 'str' for k in orig_map_non_inter[0][1].keys()}
-    }
-    util.write_shp(
-        schema,
-        MAP_FP + 'non_inters_results.shp',
-        orig_map_non_inter, 0, 1)
+#    schema = {
+#        'geometry': 'LineString',
+#        'properties': {k: 'str' for k in orig_map_non_inter[0][1].keys()}
+#    }
+#    util.write_shp(
+#        schema,
+#        MAP_FP + 'non_inters_results.shp',
+#        orig_map_non_inter, 0, 1)
 
 
     # =================================================
@@ -279,18 +314,33 @@ if __name__ == '__main__':
     new_map_inter = util.read_shp(
         args.map2dir + '/' + 'inters_segments.shp')
 
+    orig_buffered_inter = []
+    orig_index_inter = rtree.index.Index()
+#    for idx, new_line in enumerate(orig_map_inter):
+#        b = new_line[0].buffer(10)
+#        orig_buffered_inter.append((b, new_line[0], new_line[1]))
+#        orig_index_inter.insert(idx, b.bounds)
+
     new_buffered_inter = []
-    new_index_inter = []
+    new_index_inter = new_index = rtree.index.Index()
     for idx, new_line in enumerate(new_map_inter):
         b = new_line[0].buffer(10)
         new_buffered_inter.append((b, new_line[0], new_line[1]))
         new_index_inter.insert(idx, b.bounds)
 
+    get_int_mapping(orig_map_inter, new_buffered_inter, new_index_inter)
 #    write_test(
 #        new_buffered_inter[0][2],
 #        'Polygon',
 #        [(x[0], x[2]) for x in new_buffered_inter],
 #        'buffered.shp'
+#    )
+
+#    write_test(
+#        new_buffered_inter[0][2],
+#        'Polygon',
+#        [(x[0], x[2]) for x in orig_buffered_inter],
+#        'orig_buffered.shp'
 #    )
 
 
