@@ -192,37 +192,37 @@ def get_mapping(lines):
 
 
 def get_int_mapping(lines, buffered, buffered_index):
-    # Go through each line from the osm map
+
     print "Getting intersection mappings"
 
-    results = [0, 0, 0]
+    line_results = []
+    # Go through each line from the osm map
     for i, line in enumerate(lines):
         util.track(i, 1000, len(lines))
         line_buffer = line[0].buffer(10)
-        found_intersect = False
-        found_overlap = False
-        overlaps = []
+
+        best_match = {}
+        best_overlap = 0
         for idx in buffered_index.intersection(line_buffer.bounds):
             buffer = buffered[idx][0]
             # If the new buffered intersection intersects the old one
-            # figure out how much overlap
+            # figure out how much overlap, and take the best one
             if buffer.intersects(line[0]):
-                found_intersect = True
                 total_area = unary_union([line_buffer, buffer]).area
-                best_overlap = max(
+                overlap = max(
                     line_buffer.area/total_area, buffer.area/total_area)
-                overlaps.append(best_overlap)
-                if line_buffer.area/total_area > .20 \
-                   or buffer.area/total_area > .20:
-                    found_overlap = True
-        if found_intersect and not found_overlap:
-            results[1] += 1
-        elif found_overlap:
-            results[0] += 1
-        else:
-            results[2] += 1
+                
+                if overlap > best_overlap and overlap > .20:
+                    best_overlap = overlap
+                    best_match = buffered[idx][2]
 
-    print results
+        line_results.append([line[0], line[1], best_match])
+
+    total = len(line_results)
+    percent_matched = 100 * float(
+        len([x for x in line_results if not x[2]]))/float(total)
+    print "Found matches for " + str(percent_matched) + " of intersections"
+    return line_results
 
 
 def get_candidates(buffered, buffered_index, lines):
@@ -233,6 +233,7 @@ def get_candidates(buffered, buffered_index, lines):
 
     # Go through each line from the osm map
     for i, line in enumerate(lines):
+
         overlapping = []
         util.track(i, 1000, len(lines))
 
@@ -322,7 +323,7 @@ if __name__ == '__main__':
 #        orig_index_inter.insert(idx, b.bounds)
 
     new_buffered_inter = []
-    new_index_inter = new_index = rtree.index.Index()
+    new_index_inter = rtree.index.Index()
     for idx, new_line in enumerate(new_map_inter):
         b = new_line[0].buffer(10)
         new_buffered_inter.append((b, new_line[0], new_line[1]))
