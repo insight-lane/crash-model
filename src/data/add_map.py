@@ -69,7 +69,6 @@ def add_match_features(line):
 #        )
 
     # Add new features to existing ones
-
     for feat, values in feats_list.items():
         if values and len(set(values)) == 1:
             line['properties'][feat] = values[0]
@@ -144,6 +143,7 @@ def get_mapping(lines):
             lines[i]['matches'] = matched_candidates
 
     # Remove matches that matched better on a different segment
+    # But only if there's a match for that segment already
     for i in range(len(lines)):
         if 'matches' in lines[i].keys():
             matches = lines[i]['matches']
@@ -151,7 +151,11 @@ def get_mapping(lines):
             for (m, buff) in matches:
                 if buff_match[m[1]['id']] == buff:
                     new_matches.append(m)
-            lines[i]['matches'] = new_matches
+            if new_matches:
+                lines[i]['matches'] = new_matches
+            else:
+                # Remove buffer info
+                lines[i]['matches'] = [m[0] for m in lines[i]['matches']]
 
     orig = []
     matched = []
@@ -174,9 +178,9 @@ def get_mapping(lines):
 
 #        write_test(
 #            line['properties'],
-#            'Polygon',
-#            [(line['line'].buffer(5), line['properties'])],
-#            'buffered.shp'
+#            'LineString',
+#            [(line['line'], line['properties'])],
+#            'orig.shp'
 #        )
 
     percent_matched = float(result_counts[0])/(
@@ -242,12 +246,11 @@ if __name__ == '__main__':
     new_map_non_inter = [x for x in new_map_non_inter if x[1]['ST_NAME'] in (
         'Columbia', 'Devon', 'Stanwood')]
 
-#    # Index for the new map
+    # Index for the new map
     new_buffered = []
     new_index = rtree.index.Index()
 
-
-#    # Buffer all the new lines
+    # Buffer all the new lines
     for idx, new_line in enumerate(new_map_non_inter):
         b = new_line[0].buffer(20)
         new_buffered.append((b, new_line[0], new_line[1]))
@@ -256,6 +259,17 @@ if __name__ == '__main__':
     non_ints_with_candidates = get_candidates(
         new_buffered, new_index, orig_map_non_inter)
     get_mapping(non_ints_with_candidates)
+
+    # Write the non-intersections segments back out with the new features
+    schema = {
+        'geometry': 'LineString',
+        'properties': {k: 'str' for k in orig_map_non_inter[0][1].keys()}
+    }
+    util.write_shp(
+        schema,
+        MAP_FP + 'non_inters_results.shp',
+        orig_map_non_inter, 0, 1)
+
 
     # =================================================
     # Now do intersections
@@ -272,12 +286,12 @@ if __name__ == '__main__':
         new_buffered_inter.append((b, new_line[0], new_line[1]))
         new_index_inter.insert(idx, b.bounds)
 
-    write_test(
-        new_buffered_inter[0][2],
-        'Polygon',
-        [(x[0], x[2]) for x in new_buffered_inter],
-        'buffered.shp'
-    )
+#    write_test(
+#        new_buffered_inter[0][2],
+#        'Polygon',
+#        [(x[0], x[2]) for x in new_buffered_inter],
+#        'buffered.shp'
+#    )
 
 
 
