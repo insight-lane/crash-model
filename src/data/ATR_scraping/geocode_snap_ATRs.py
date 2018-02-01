@@ -1,3 +1,4 @@
+import json
 import os
 import csv
 import rtree
@@ -118,6 +119,11 @@ if __name__ == '__main__':
     # Find nearest atr - 20 tolerance
     print "Snapping atr to segments"
     util.find_nearest(atrs, combined_seg, segments_index, 20)
+
+    # Should deprecate once imputed atrs are used, but for the moment
+    # this is needed for make_canon_dataset
+    with open(os.path.join(PROCESSED_DATA_FP, 'snapped_atrs.json'), 'w') as f:
+        json.dump([x['properties'] for x in atrs], f)
 
     atrs_df = json_normalize(atrs)
     
