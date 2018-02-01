@@ -14,8 +14,8 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-MAP_FP = BASE_DIR + '/data/processed/maps'
-DATA_FP = BASE_DIR + '/data/processed'
+MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
+DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 
 def read_records(fp, date_col, id_col, agg='week'):
@@ -47,6 +47,8 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     """ Makes road feature df, intersections + non-intersections
 
     agg : aggregation type (default is max)
+    IMPORTANT: if the aggregation type changes, need to also update
+        how aggregation is calculated in src/data/add_map.py
     """
     # Read in inters data (json), turn into df with inter index
     df_index = []
@@ -91,8 +93,8 @@ if __name__ == '__main__':
 
     # Can override the hardcoded data directory
     if args.datadir:
-        DATA_FP = args.datadir + '/processed/'
-        MAP_FP = DATA_FP + 'maps/'
+        DATA_FP = os.path.join(args.datadir, 'processed')
+        MAP_FP = os.path.join(DATA_FP, 'maps')
 
     # Can override the hardcoded feature list
     feats = ['AADT', 'SPEEDLIMIT',
@@ -104,9 +106,9 @@ if __name__ == '__main__':
     print "Data directory: " + DATA_FP
 
     # read/aggregate crash/concerns
-    crash = read_records(DATA_FP + '/crash_joined.json',
+    crash = read_records(os.path.join(DATA_FP, 'crash_joined.json'),
                          'CALENDAR_DATE', 'near_id')
-    concern = read_records(DATA_FP + '/concern_joined.json',
+    concern = read_records(os.path.join(DATA_FP, 'concern_joined.json'),
                            'REQUESTDATE', 'near_id')
 
     # join aggregated crash/concerns
@@ -120,8 +122,8 @@ if __name__ == '__main__':
     cr_con['near_id'] = cr_con['near_id'].astype('str')
 
     # combined road feature dataset parameters
-    inters_fp = DATA_FP + '/inters_data.json'
-    non_inters_fp = MAP_FP + '/non_inters_segments.shp'
+    inters_fp = os.path.join(DATA_FP, 'inters_data.json')
+    non_inters_fp = os.path.join(MAP_FP, 'non_inters_segments.shp')
 
     # create combined road feature dataset
     aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
@@ -161,11 +163,12 @@ if __name__ == '__main__':
     # output canon dataset
     print "exporting canonical dataset to ", DATA_FP
     cr_con_roads.set_index('segment_id').to_csv(
-        DATA_FP + '/vz_predict_dataset.csv.gz', compression='gzip')
+        os.path.join(DATA_FP, 'vz_predict_dataset.csv.gz'),
+        compression='gzip')
 
     # output adjacency info
     # need to include ATRs
-    atrs = pd.read_json(DATA_FP + '/snapped_atrs.json')
+    atrs = pd.read_json(os.path.join(DATA_FP, 'snapped_atrs.json'))
     adjacent = adjacent.reset_index()
     adjacent = adjacent.merge(
         atrs[['near_id', 'orig']],
@@ -175,4 +178,4 @@ if __name__ == '__main__':
     )
     adjacent.drop(['near_id'], axis=1, inplace=True)
     adjacent.columns = ['segment_id', 'orig_id', 'atr_address']
-    adjacent.to_csv(DATA_FP+'/adjacency_info.csv', index=False)
+    adjacent.to_csv(os.path.join(DATA_FP, 'adjacency_info.csv'), index=False)
