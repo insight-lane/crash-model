@@ -11,7 +11,8 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-MAP_FP = BASE_DIR + '/osm-data/processed/maps/'
+PROCESSED_DATA_FP = None
+MAP_FP = None
 
 
 def write_test(props, geometry, values, filename):
@@ -28,22 +29,14 @@ def write_test(props, geometry, values, filename):
         values, 0, 1)
 
 
-def add_match_features(line):
-
-    # Hardcoded features of interest; eventually pass in
-    # None of the features we are currently using can have a
-    # legitimate value of 0, so we can ignore 0 values
-    # If we start allowing features with value 0, need to change this
-    # for those types of features
-    use_feats = [
-        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class']
+def add_match_features(line, features):
 
     features = {}
     unmatching_feats = []
     feats_list = {}
     for m in line['matches']:
         for k, v in m[1].items():
-            if k in use_feats:
+            if k in features:
 
                 if k not in feats_list:
                     feats_list[k] = []
@@ -75,7 +68,7 @@ def add_match_features(line):
         if values and len(set(values)) == 1:
             line['properties'][feat] = values[0]
 
-def get_mapping(lines):
+def get_mapping(lines, features):
     """
     Attempts to map one or more segments of the second map to the first map
     Args:
@@ -168,7 +161,7 @@ def get_mapping(lines):
             orig.append((line['line'], line['properties']))
 
             # Every single match for this line
-            add_match_features(line)
+            add_match_features(line, features)
 
             # Add each matching line
             # Only used for debugging purposes, take out eventually
@@ -222,7 +215,7 @@ def get_int_mapping(lines, buffered, buffered_index):
     total = len(line_results)
     percent_matched = 100 - 100 * float(
         len([x for x in line_results if not x[2]]))/float(total)
-    print "Found matches for " + str(percent_matched) + " of intersections"
+    print "Found matches for " + str(percent_matched) + "% of intersections"
     return line_results
 
 
@@ -260,10 +253,12 @@ def get_candidates(buffered, buffered_index, lines):
 
 
 def add_int_features(int_lines, dir1, dir2, featlist):
-    with open(dir2 + '/inters_data.json', 'r') as f:
+
+    with open(os.path.join(dir2, 'inters_data.json'), 'r') as f:
         inters_new = json.load(f)
     
-    with open(dir1 + '/processed/inters_data.json', 'r') as f:
+    inters_data_fp = os.path.join(dir1, 'inters_data.json')
+    with open(inters_data_fp, 'r') as f:
         inters_orig = json.load(f)
 
     for line in int_lines:
@@ -278,7 +273,7 @@ def add_int_features(int_lines, dir1, dir2, featlist):
             for feat in featlist:
                 orig_feats[0][feat] = max([x[feat] for x in new_feats])
 
-    with open(dir1 + '/processed/inters_data.json', 'w') as f:
+    with open(inters_data_fp, 'w') as f:
         json.dump(inters_orig, f)
 
 
@@ -288,64 +283,72 @@ if __name__ == '__main__':
 
     # Both maps should be in 3857 projection
     parser.add_argument(
-        "map1dir", help="base data directory containing maps generated from"
+        "datadir", help="base data directory containing maps generated from"
         + "open street map")
     parser.add_argument(
         "map2dir", help="directory containing maps generated from"
         + "city specific data")
+    parser.add_argument("-features", "--features", nargs="+", default=[
+        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
+        help="List of segment features to include")
 
     args = parser.parse_args()
+    
+    feats = args.features
 
-    orig_map_non_inter = util.read_shp(
-        args.map1dir + '/processed/maps/non_inters_segments.shp')
+    PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
+    MAP_FP = os.path.join(PROCESSED_DATA_FP, 'maps')
 
-    orig_map_non_inter = [
-        x for x in orig_map_non_inter if x[1]['name'] == 'Columbia Road']
+    non_inters_orig_file = os.path.join(
+        MAP_FP, 'non_inters_segments.shp')
+    print "Reading original map from " + non_inters_orig_file
+    orig_map_non_inter = util.read_shp(non_inters_orig_file)
 
-    new_map_non_inter = util.read_shp(
-        args.map2dir + '/' + 'non_inters_segments.shp')
-    new_map_non_inter = [x for x in new_map_non_inter if x[1]['ST_NAME'] in (
-        'Columbia', 'Devon', 'Stanwood')]
+#    orig_map_non_inter = [
+#        x for x in orig_map_non_inter if x[1]['name'] == 'Columbia Road']
+
+    non_inters_new_file = os.path.join(
+        MAP_FP, args.map2dir, 'non_inters_segments.shp')
+    print "Reading new map from " + non_inters_new_file
+    new_map_non_inter = util.read_shp(non_inters_new_file)
+#    new_map_non_inter = [x for x in new_map_non_inter if x[1]['ST_NAME'] in (
+#        'Columbia', 'Devon', 'Stanwood')]
 
     # Index for the new map
     new_buffered = []
     new_index = rtree.index.Index()
 
     # Buffer all the new lines
-#    for idx, new_line in enumerate(new_map_non_inter):
-#        b = new_line[0].buffer(20)
-#        new_buffered.append((b, new_line[0], new_line[1]))
-#        new_index.insert(idx, b.bounds)
+    for idx, new_line in enumerate(new_map_non_inter):
+        b = new_line[0].buffer(20)
+        new_buffered.append((b, new_line[0], new_line[1]))
+        new_index.insert(idx, b.bounds)
 
-#    non_ints_with_candidates = get_candidates(
-#        new_buffered, new_index, orig_map_non_inter)
-#    get_mapping(non_ints_with_candidates)
+    non_ints_with_candidates = get_candidates(
+        new_buffered, new_index, orig_map_non_inter)
+
+    print "Adding features: " + ','.join(feats)
+    get_mapping(non_ints_with_candidates, feats)
 
     # Write the non-intersections segments back out with the new features
-#    schema = {
-#        'geometry': 'LineString',
-#        'properties': {k: 'str' for k in orig_map_non_inter[0][1].keys()}
-#    }
-#    util.write_shp(
-#        schema,
-#        MAP_FP + 'non_inters_results.shp',
-#        orig_map_non_inter, 0, 1)
+    schema = {
+        'geometry': 'LineString',
+        'properties': {k: 'str' for k in orig_map_non_inter[0][1].keys()}
+    }
+    util.write_shp(
+        schema,
+        MAP_FP + 'non_inters_segments.shp',
+        orig_map_non_inter, 0, 1)
 
-
-    # =================================================
     # Now do intersections
     orig_map_inter = util.read_shp(
-        args.map1dir + '/processed/maps/inters_segments.shp')
+        os.path.join(MAP_FP, 'inters_segments.shp'))
 
     new_map_inter = util.read_shp(
-        args.map2dir + '/' + 'inters_segments.shp')
+        os.path.join(MAP_FP, args.map2dir, 'inters_segments.shp'))
 
     orig_buffered_inter = []
     orig_index_inter = rtree.index.Index()
-#    for idx, new_line in enumerate(orig_map_inter):
-#        b = new_line[0].buffer(10)
-#        orig_buffered_inter.append((b, new_line[0], new_line[1]))
-#        orig_index_inter.insert(idx, b.bounds)
 
     new_buffered_inter = []
     new_index_inter = rtree.index.Index()
@@ -357,12 +360,10 @@ if __name__ == '__main__':
     int_results = get_int_mapping(
         orig_map_inter, new_buffered_inter, new_index_inter)
 
-    # Eventually, allow feature list to be an argument
-    feats = ['AADT', 'SPEEDLIMIT',
-             'Struct_Cnd', 'Surface_Tp',
-             'F_F_Class']
-
-    add_int_features(int_results, args.map1dir, args.map2dir, feats)
+    add_int_features(
+        int_results,
+        PROCESSED_DATA_FP,
+        os.path.join(MAP_FP, args.map2dir), feats)
 #    write_test(
 #        new_buffered_inter[0][2],
 #        'Polygon',

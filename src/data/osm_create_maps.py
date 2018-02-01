@@ -140,12 +140,12 @@ if __name__ == '__main__':
     DOC_FP = os.path.join(args.datadir, 'docs')
 
     # If maps do not exist, create
-    if not os.path.exists(os.path.join(MAP_FP, '/osm_ways.shp')) \
+    if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
        or args.forceupdate:
         print 'Generating map from open street map...'
         simple_get_roads(city)
 
-    if not os.path.exists(os.path.join(MAP_FP, '/osm_ways_3857.shp')) \
+    if not os.path.exists(os.path.join(MAP_FP, 'osm_ways_3857.shp')) \
        or args.forceupdate:
         print "Reprojecting..."
         reproject_and_clean_feats()

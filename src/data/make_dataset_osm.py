@@ -23,12 +23,31 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Can optionally give a new map file from which new features
     # can be generated
-    parser.add_argument("-c", "--cityfile", type=str,
+    parser.add_argument("-e", "--extramap", type=str,
                         help="Can give an additional shapefile")
+    # if city file is given, need to also give a list of feats
+    parser.add_argument("-features", "--features", nargs="+", default=[
+        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
+        help="List of segment features to include")
+    parser.add_argument("-o", "--outputdir", type=str,
+                        help="Directory to write output from extramap")
+    parser.add_argument("-p", "--extramap3857", type=str,
+                        help="Additional shapefile in 3857 projection")
+
     args = parser.parse_args()
+
+    if args.extramap and (
+            args.features is None
+            or args.outputdir is None
+            or args.extramap3857 is None
+    ):
+        parser.error(
+            "--extramap requires --features, --outputdir, and --extramap3857.")
 
     # Eventually make this an arg as well:
     city = 'Boston, Massachusetts, USA'
+    # Original features, that args.features can add on to
+    features = ['width', 'lanes', 'hwy_type', 'osm_speed']
 
     # Get the maps out of open street map, both projections
     subprocess.check_call([
@@ -58,7 +77,7 @@ if __name__ == '__main__':
         os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp')
     ])
 
-    if args.cityfile:
+    if args.extramap:
         # Extract intersections from the new city file
         # Write to a subdirectory so files created from osm aren't overwritten
         # Eventually, directory of additional files should also be an argument
@@ -66,11 +85,11 @@ if __name__ == '__main__':
             'python',
             '-m',
             'data.extract_intersections',
-            os.path.join(DATA_FP,  '/raw/Boston_Segments.shp'),
+            os.path.join(args.extramap),
             '-d',
             DATA_FP,
             '-n',
-            'boston'
+            args.outputdir
         ])
         # Create segments from the Boston data
         subprocess.check_call([
@@ -80,9 +99,9 @@ if __name__ == '__main__':
             '-d',
             DATA_FP,
             '-n',
-            'boston',
+            args.outputdir,
             '-r',
-            DATA_FP + '/processed/maps/ma_cob_spatially_joined_streets.shp'
+            args.extramap3857
         ])
 
         # Map the boston segments to the open street map segments
@@ -92,7 +111,7 @@ if __name__ == '__main__':
             '-m',
             'data.add_map',
             DATA_FP,
-            DATA_FP + '/processed/maps/boston/'
+            args.outputdir,
         ])
 
     subprocess.check_call([
@@ -109,13 +128,17 @@ if __name__ == '__main__':
         '-d',
         os.path.join(DATA_FP, 'processed')
     ])
-    subprocess.check_call([
-        'python',
-        '-m',
-        'data.TMC_scraping.parse_tmc',
-        '-d',
-        DATA_FP
-    ])
+#    subprocess.check_call([
+#        'python',
+#        '-m',
+#        'data.TMC_scraping.parse_tmc',
+#        '-d',
+#        DATA_FP
+#    ])
+
+    if args.features:
+        features = features + args.features
+        
     # Throw in make canonical dataset here too just to keep track
     # of standardized features
     subprocess.check_call([
@@ -125,6 +148,5 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-f',
-#        'AADT,SPEEDLIMIT,Struct_Cnd,Surface_Tp,F_F_Class,width,lanes,hwy_type,osm_speed',
-        'width,lanes,hwy_type,osm_speed',
+        features
     ])
