@@ -16,6 +16,7 @@ from collections import defaultdict
 from util import write_shp, reproject_records
 import argparse
 import os
+import shutil
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -172,6 +173,21 @@ def create_segments(roads_shp_path):
     # Store the other properties from inters_segments as json file
     with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_segments['data'], f)
+
+    # Copy files, since we'll be modifying if we add
+    # features from another source
+    shp_files = [
+        file for file in os.listdir(MAP_FP) if 'inters_segments' in file]
+    for file in shp_files:
+        file_segs = file.split('.')
+        shutil.copyfile(
+            os.path.join(MAP_FP, file),
+            os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1]))
+    # Also copy inters_data.json
+    shutil.copyfile(
+        os.path.join(DATA_FP, 'inters_data.json'),
+        os.path.join(DATA_FP, 'inters_data_orig.json')
+    )
 
     # add non_inter id format = 00+i
     non_int_w_ids = []
