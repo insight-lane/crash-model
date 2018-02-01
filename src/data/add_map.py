@@ -300,7 +300,7 @@ if __name__ == '__main__':
     MAP_FP = os.path.join(PROCESSED_DATA_FP, 'maps')
 
     non_inters_orig_file = os.path.join(
-        MAP_FP, 'non_inters_segments.shp')
+        MAP_FP, 'non_inters_segments_orig.shp')
     print "Reading original map from " + non_inters_orig_file
     orig_map_non_inter = util.read_shp(non_inters_orig_file)
 
@@ -327,6 +327,10 @@ if __name__ == '__main__':
     non_ints_with_candidates = get_candidates(
         new_buffered, new_index, orig_map_non_inter)
 
+# Try this later
+#    non_int_results = get_int_mapping(
+#        orig_map_non_inter, new_buffered, new_index)
+
     print "Adding features: " + ','.join(feats)
     get_mapping(non_ints_with_candidates, feats)
 
@@ -342,7 +346,7 @@ if __name__ == '__main__':
 
     # Now do intersections
     orig_map_inter = util.read_shp(
-        os.path.join(MAP_FP, 'inters_segments.shp'))
+        os.path.join(MAP_FP, 'inters_segments_orig.shp'))
 
     new_map_inter = util.read_shp(
         os.path.join(MAP_FP, args.map2dir, 'inters_segments.shp'))
@@ -364,30 +368,6 @@ if __name__ == '__main__':
         int_results,
         PROCESSED_DATA_FP,
         os.path.join(MAP_FP, args.map2dir), feats)
-#    write_test(
-#        new_buffered_inter[0][2],
-#        'Polygon',
-#        [(x[0], x[2]) for x in new_buffered_inter],
-#        'buffered.shp'
-#    )
-
-#    write_test(
-#        new_buffered_inter[0][2],
-#        'Polygon',
-#        [(x[0], x[2]) for x in orig_buffered_inter],
-#        'orig_buffered.shp'
-#    )
-
-
-
-#    non_ints_with_candidates = get_candidates(
-#        new_buffered, new_index, orig_map_non_inter)
-#    get_mapping(non_ints_with_candidates)
-
-#    lines_with_candidates = get_candidates(
-#        new_buffered, new_index, orig_map)
-#    get_mapping(lines_with_candidates)
-
 
 
     
