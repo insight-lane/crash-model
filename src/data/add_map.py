@@ -341,7 +341,7 @@ if __name__ == '__main__':
     }
     util.write_shp(
         schema,
-        MAP_FP + 'non_inters_segments.shp',
+        os.path.join(MAP_FP, 'non_inters_segments.shp'),
         orig_map_non_inter, 0, 1)
 
     # Now do intersections
