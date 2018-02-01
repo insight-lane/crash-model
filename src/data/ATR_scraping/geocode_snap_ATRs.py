@@ -1,4 +1,3 @@
-import json
 import os
 import csv
 import rtree
@@ -10,7 +9,6 @@ import numpy as np
 import pandas as pd
 from pandas.io.json import json_normalize
 import geopandas as gpd
-from shapely.geometry import Point, LineString, Polygon
 from sklearn.neighbors import KNeighborsRegressor
 
 BASE_DIR = os.path.dirname(
@@ -19,8 +17,8 @@ BASE_DIR = os.path.dirname(
             os.path.dirname(
                 os.path.abspath(__file__)))))
 
-ATR_FP = BASE_DIR + '/data/raw/AUTOMATED TRAFFICE RECORDING/'
-PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
+ATR_FP = os.path.join(BASE_DIR, 'data/raw/AUTOMATED TRAFFICE RECORDING')
+PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 atrs = os.listdir(ATR_FP)
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -28,20 +26,22 @@ PROJ = pyproj.Proj(init='epsg:3857')
 
 def geocode_and_parse(forceupdate):
 
-    if not os.path.exists(PROCESSED_DATA_FP + 'geocoded_atrs.csv') \
-       or forceupdate:
+    if not os.path.exists(os.path.join(
+            PROCESSED_DATA_FP, 'geocoded_atrs.csv')) or forceupdate:
         print "No geocoded_atrs.csv found, geocoding addresses"
 
         # geocode, parse result - address, lat long
         results = []
         for atr in atrs:
             atr = atr
-            if ATR_util.is_readable_ATR(ATR_FP + atr):
-                atr_address = ATR_util.clean_ATR_fname(ATR_FP + atr)
+            if ATR_util.is_readable_ATR(os.path.join(ATR_FP, atr)):
+                atr_address = ATR_util.clean_ATR_fname(
+                    os.path.join(ATR_FP, atr))
                 print atr_address
                 geocoded_add, lat, lng = util.geocode_address(atr_address)
                 print str(geocoded_add) + ',' + str(lat) + ',' + str(lng)
-                vol, speed, motos, light, heavy = ATR_util.read_ATR(ATR_FP + atr)
+                vol, speed, motos, light, heavy = ATR_util.read_ATR(
+                    os.path.join(ATR_FP, atr))
                 r = [
                     atr_address,
                     geocoded_add,
@@ -57,7 +57,8 @@ def geocode_and_parse(forceupdate):
                 results.append(r)
                 print('Number geocoded: {}'.format(len(results)))
 
-        with open(PROCESSED_DATA_FP + 'geocoded_atrs.csv', 'wb') as f:
+        with open(os.path.join(
+                PROCESSED_DATA_FP, 'geocoded_atrs.csv'), 'wb') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([
                 'orig',
@@ -79,8 +80,6 @@ def geocode_and_parse(forceupdate):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--graph', action='store_true',
-                        help='Whether to generate graphs')
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory." +
                         "For now this is just for the processed dir")
@@ -94,9 +93,10 @@ if __name__ == '__main__':
 
     geocode_and_parse(args.forceupdate)
     # Read in segments
-    inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+    inter = util.read_shp(os.path.join(
+        PROCESSED_DATA_FP, 'maps/inters_segments.shp'))
     non_inter = util.read_shp(
-        PROCESSED_DATA_FP + 'maps/non_inters_segments.shp')
+        os.path.join(PROCESSED_DATA_FP, 'maps/non_inters_segments.shp'))
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 
@@ -112,17 +112,8 @@ if __name__ == '__main__':
 
     # Read in atr lats
     atrs = util.csv_to_projected_records(
-        PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
+        os.path.join(PROCESSED_DATA_FP, 'geocoded_atrs.csv'), x='lng', y='lat')
     print "Read in data from {} atrs".format(len(atrs))
-
-    if args.graph:
-        # Generate sparkline graph of traffic distribution
-        files = [ATR_FP +
-                 atr['properties']['filename'] for atr in atrs]
-
-        all_counts = util.get_hourly_rates(files)
-        util.plot_hourly_rates(all_counts,
-                        os.path.abspath(PROCESSED_DATA_FP) + '/atr_dist.png')
 
     # Find nearest atr - 20 tolerance
     print "Snapping atr to segments"
@@ -221,7 +212,7 @@ if __name__ == '__main__':
 
     # write to csv
     print('Writing to CSV')
-    output_fp = PROCESSED_DATA_FP + 'atrs_predicted.csv'
+    output_fp = os.path.join(PROCESSED_DATA_FP, 'atrs_predicted.csv')
     # force id into string
     merged_df['id'] = merged_df['id'].astype(str)
     merged_df.to_csv(output_fp, index=False)

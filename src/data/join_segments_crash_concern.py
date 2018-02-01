@@ -19,15 +19,16 @@ BASE_DIR = os.path.dirname(
             os.path.abspath(__file__))))
 
 
-MAP_FP = BASE_DIR + '/data/processed/maps'
-RAW_DATA_FP = BASE_DIR + '/data/raw'
-PROCESSED_DATA_FP = BASE_DIR + '/data/processed'
+MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
+RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
+PROCESSED_DATA_FP = os.path.join(BASE_DIR, '/data/processed')
 # filepaths of raw crash data (hardcoded for now)
 CRASH_DATA_FPS = [
-    '/cad_crash_events_with_transport_2016_wgs84.csv',
-    '/2015motorvehicles_with_modetype.csv',
-    '/2017motorvehicles_with_modetype.csv'
+    'cad_crash_events_with_transport_2016_wgs84.csv',
+    '2015motorvehicles_with_modetype.csv',
+    '2017motorvehicles_with_modetype.csv'
 ]
+
 
 def make_schema(geometry, properties):
     """
@@ -54,22 +55,24 @@ if __name__ == '__main__':
 
     # Can override the hardcoded data directory
     if args.datadir:
-        RAW_DATA_FP = args.datadir + '/raw/'
-        PROCESSED_DATA_FP = args.datadir + '/processed/'
-        MAP_FP = args.datadir + '/processed/maps/'
+        RAW_DATA_FP = os.path.join(args.datadir, 'raw')
+        PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
+        MAP_FP = os.path.join(args.datadir, 'processed/maps')
     if args.crashfiles:
         CRASH_DATA_FPS = args.crashfiles
 
     # Read in CAD crash data
     crash = []
     for fp in CRASH_DATA_FPS:
-        tmp = util.csv_to_projected_records(RAW_DATA_FP + fp)
+        tmp = util.csv_to_projected_records(
+            os.path.join(RAW_DATA_FP, fp))
         crash = crash + tmp
     print "Read in data from {} crashes".format(len(crash))
 
     # Read in vision zero data
     # Have to use pandas read_csv, unicode trubs
-    concern_raw = pd.read_csv(RAW_DATA_FP + '/Vision_Zero_Entry.csv')
+    concern_raw = pd.read_csv(os.path.join(
+        RAW_DATA_FP, 'Vision_Zero_Entry.csv'))
     concern_raw = concern_raw.to_dict('records')
     concern = util.raw_to_record_list(concern_raw,
                                       pyproj.Proj(init='epsg:4326'))
@@ -87,19 +90,24 @@ if __name__ == '__main__':
 
     # Write concerns
     concern_schema = make_schema('Point', concern[0]['properties'])
-    print "output concerns shp to ", MAP_FP
-    util.write_shp(concern_schema, MAP_FP + '/concern_joined.shp',
-                       concern, 'point', 'properties')
-    print "output concerns data to ", PROCESSED_DATA_FP
-    with open(PROCESSED_DATA_FP + '/concern_joined.json', 'w') as f:
+    print "output concerns shp to", MAP_FP
+    util.write_shp(
+        concern_schema,
+        os.path.join(MAP_FP, 'concern_joined.shp'),
+        concern, 'point', 'properties')
+    print "output concerns data to", PROCESSED_DATA_FP
+    with open(
+            os.path.join(PROCESSED_DATA_FP, 'concern_joined.json'),
+            'w'
+    ) as f:
         json.dump([c['properties'] for c in concern], f)
 
     # Write crash
     crash_schema = make_schema('Point', crash[0]['properties'])
-    print "output crash shp to ", MAP_FP
-    util.write_shp(crash_schema, MAP_FP + '/crash_joined.shp',
-                       crash, 'point', 'properties')
-    print "output crash data to ", PROCESSED_DATA_FP
-    with open(PROCESSED_DATA_FP + '/crash_joined.json', 'w') as f:
+    print "output crash shp to", MAP_FP
+    util.write_shp(crash_schema, os.path.join(MAP_FP, 'crash_joined.shp'),
+                   crash, 'point', 'properties')
+    print "output crash data to", PROCESSED_DATA_FP
+    with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'), 'w') as f:
         json.dump([c['properties'] for c in crash], f)
 
