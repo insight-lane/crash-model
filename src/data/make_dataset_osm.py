@@ -2,8 +2,8 @@
 import os
 import subprocess
 
-# Just for testing, it's temporary that we're putting this in
-# a different directory than the regular data one
+# Until we're ready to switch over to using this data,
+# use osm-data as data directory instead of data
 DATA_FP = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
@@ -67,6 +67,14 @@ if __name__ == '__main__':
         DATA_FP + '/processed/maps/ma_cob_spatially_joined_streets.shp'
     ])
     
+    # Map the boston segments to the open street map segments and add features
+    subprocess.check_call([
+        'python',
+        '-m',
+        'data.add_map',
+        DATA_FP,
+        DATA_FP + '/processed/maps/boston/'
+    ])
 
     subprocess.check_call([
         'python',
@@ -88,4 +96,13 @@ if __name__ == '__main__':
         'data.TMC_scraping.parse_tmc',
         '-d',
         DATA_FP
+    ])
+    # Throw in make canonical dataset here too just to keep track
+    # of standardized features
+    subprocess.check_call([
+        'python',
+        '-m',
+        'features.make_canon_dataset',
+        '-f',
+        'AADT,SPEEDLIMIT,Struct_Cnd,Surface_Tp,F_F_Class,width,lanes,hwy_type,osm_speed',
     ])
