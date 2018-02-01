@@ -22,8 +22,8 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-MAP_FP = BASE_DIR + '/data/processed/maps'
-DATA_FP = BASE_DIR + '/data/processed'
+MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
+DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 
 def get_intersection_buffers(intersections, intersection_buffer_units):
@@ -110,12 +110,9 @@ def reproject_and_read(infile, outfile):
         inters - the reprojected intersections
     """
 
-    print "Map data at ", MAP_FP
-    print "Output intersection data to ", DATA_FP
-
     # Reproject to 3857
     # Necessary because original intersection extraction had null projection
-    print "reprojecting raw intersection shapefile"
+    print "Reprojecting map file " + infile
     inters = fiona.open(infile)
 
     reprojected_records = reproject_records(inters)
@@ -135,11 +132,8 @@ def reproject_and_read(infile, outfile):
 
 def create_segments(roads_shp_path):
 
-    print "Map data at ", MAP_FP
-    print "Output intersection data to ", DATA_FP
-
-    inters_shp_path_raw = MAP_FP + '/inters.shp'
-    inters_shp_path = MAP_FP + '/inters_3857.shp'
+    inters_shp_path_raw = os.path.join(MAP_FP, 'inters.shp')
+    inters_shp_path = os.path.join(MAP_FP, 'inters_3857.shp')
 
     inters = reproject_and_read(inters_shp_path_raw, inters_shp_path)
 
@@ -169,11 +163,14 @@ def create_segments(roads_shp_path):
         'geometry': 'LineString',
         'properties': {'id': 'int'},
     }
-    write_shp(inter_schema, MAP_FP + '/inters_segments.shp', union_inter, 1, 0)
+    write_shp(
+        inter_schema,
+        os.path.join(MAP_FP, 'inters_segments.shp'),
+        union_inter, 1, 0)
 
     # The inters_segments shapefile above only gives an id property
     # Store the other properties from inters_segments as json file
-    with open(DATA_FP + '/inters_data.json', 'w') as f:
+    with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_segments['data'], f)
 
     # add non_inter id format = 00+i
@@ -196,7 +193,7 @@ def create_segments(roads_shp_path):
     }
     write_shp(
         road_schema,
-        MAP_FP + '/non_inters_segments.shp',
+        os.path.join(MAP_FP, 'non_inters_segments.shp'),
         non_int_w_ids,
         0,
         1
@@ -232,7 +229,8 @@ def create_segments(roads_shp_path):
     # along with their new IDs
     write_shp(
         all_schema,
-        MAP_FP + '/inter_and_non_int.shp', inter_and_non_int, 1, 0)
+        os.path.join(MAP_FP, 'inter_and_non_int.shp'),
+        inter_and_non_int, 1, 0)
 
 if __name__ == '__main__':
 
@@ -249,17 +247,18 @@ if __name__ == '__main__':
 
     # Can override the hardcoded data directory
     if args.datadir:
-        DATA_FP = args.datadir + '/processed/'
-        MAP_FP = args.datadir + '/processed/maps/'
+        DATA_FP = os.path.join(args.datadir, 'processed')
+        MAP_FP = os.path.join(args.datadir, 'processed/maps')
     if args.newmap:
-        DATA_FP = MAP_FP + '/' + args.newmap
+        DATA_FP = os.path.join(MAP_FP, args.newmap)
         MAP_FP = DATA_FP
 
+    print "Creating segments..."
     print "Data directory: " + DATA_FP
     print "Map directory: " + MAP_FP
 
-    
-    roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
+    roads_shp_path = os.path.join(
+        MAP_FP, 'ma_cob_spatially_joined_streets.shp')
     if args.altroad:
         roads_shp_path = args.altroad
         

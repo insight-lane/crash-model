@@ -100,7 +100,7 @@ def write_intersections(inters):
             'id_2': 'int'
         }
     }
-    write_points(inters, schema, MAP_DATA_FP + 'inters.shp')
+    write_points(inters, schema, os.path.join(MAP_DATA_FP, 'inters.shp'))
 
 
 if __name__ == '__main__':
@@ -121,11 +121,11 @@ if __name__ == '__main__':
 
     # Can override the hardcoded maps directory
     if args.dir:
-        MAP_DATA_FP = args.dir + '/processed/maps/'
+        MAP_DATA_FP = os.path.join(args.dir, 'processed/maps')
     if args.newmap:
-        if not os.path.exists(MAP_DATA_FP + args.newmap):
-            os.mkdir(MAP_DATA_FP + args.newmap)
-        MAP_DATA_FP = MAP_DATA_FP + args.newmap + '/'
+        MAP_DATA_FP = os.path.join(MAP_DATA_FP, args.newmap)
+        if not os.path.exists(MAP_DATA_FP):
+            os.mkdir(MAP_DATA_FP)
 
     # Get all lines, dummy id
     lines = [
@@ -135,16 +135,17 @@ if __name__ == '__main__':
         ) for line in enumerate(fiona.open(shp))
     ]
 
-    print 'map data:' + MAP_DATA_FP
+    print 'Extracting intersections and writing into ' + MAP_DATA_FP
     inters = []
-    if not os.path.exists(MAP_DATA_FP + 'inters.pkl'):
-        print 'inters.pkl does not exist - generating intersections...'
+    pkl_file = os.path.join(MAP_DATA_FP, 'inters.pkl')
+    if not os.path.exists(pkl_file):
+        print pkl_file + ' does not exist - generating intersections...'
         inters = generate_intersections(lines)
         # Save to pickle in case script breaks
-        with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:
+        with open(pkl_file, 'w') as f:
             cPickle.dump(inters, f)
     else:
-        print 'reading from file'
-        with open(MAP_DATA_FP + 'inters.pkl', 'r') as f:
+        print 'Reading intersections from ' + pkl_file
+        with open(pkl_file, 'r') as f:
             inters = cPickle.load(f)
     write_intersections(inters)
