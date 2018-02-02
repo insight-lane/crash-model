@@ -239,28 +239,32 @@ def add_int_features(int_lines, dir1, dir2, featlist):
     with open(os.path.join(dir2, 'inters_data.json'), 'r') as f:
         inters_new = json.load(f)
     
-    inters_data_fp = os.path.join(dir1, 'inters_data.json')
+    inters_data_fp = os.path.join(dir1, 'inters_data_orig.json')
     with open(inters_data_fp, 'r') as f:
         inters_orig = json.load(f)
 
     for line in int_lines:
+
         orig_feats = inters_orig[str(line[1]['id'])]
+
         if line[2]:
             new_feats = inters_new[str(line[2]['id'])]
 
             # Since at the moment, the canonical dataset is created by only
             # looking at the max value of each feature, we can just append
-            # the max value of the new features to the first segment of the
-            # original feature list
+            # the same max value of the new features to the each segment of
+            # the original feature list
             for feat in featlist:
-                orig_feats[0][feat] = max([x[feat] for x in new_feats])
+                for orig_feat in orig_feats:
+                    orig_feat[feat] = max([x[feat] for x in new_feats])
         else:
-            for f in featlist:
-                orig_feats[0][feat] = 0
+            for feat in featlist:
+                for orig_feat in orig_feats:
+                    orig_feat[feat] = 0
 
-    with open(inters_data_fp, 'w') as f:
+    with open(os.path.join(dir1, 'inters_data.json'), 'w') as f:
         json.dump(inters_orig, f)
-
+            
 
 if __name__ == '__main__':
     # Read osm map file
@@ -353,6 +357,7 @@ if __name__ == '__main__':
         int_results,
         PROCESSED_DATA_FP,
         os.path.join(MAP_FP, args.map2dir), feats)
+
 
 
     
