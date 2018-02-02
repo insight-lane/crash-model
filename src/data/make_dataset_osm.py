@@ -128,13 +128,13 @@ if __name__ == '__main__':
         '-d',
         os.path.join(DATA_FP, 'processed')
     ])
-#    subprocess.check_call([
-#        'python',
-#        '-m',
-#        'data.TMC_scraping.parse_tmc',
-#        '-d',
-#        DATA_FP
-#    ])
+    subprocess.check_call([
+        'python',
+        '-m',
+        'data.TMC_scraping.parse_tmc',
+        '-d',
+        DATA_FP
+    ])
 
     if args.features:
         features = features + args.features
