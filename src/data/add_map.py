@@ -31,42 +31,22 @@ def write_test(props, geometry, values, filename):
 
 def add_match_features(line, features):
 
-    features = {}
-    unmatching_feats = []
     feats_list = {}
     for m in line['matches']:
         for k, v in m[1].items():
             if k in features:
-
                 if k not in feats_list:
                     feats_list[k] = []
                 if v:
                     feats_list[k].append(v)
-                    if k not in features.keys():
-                        features[k] = v
-                    elif features[k] != v:
-                        if k not in unmatching_feats:
-                            unmatching_feats.append(k)
-
-#    if not matching:
-#        orig = [(line['line'], line['properties'])]
-#        write_test(
-#            line['properties'],
-#            'LineString',
-#            orig,
-#            'orig.shp'
-#        )
-#        write_test(
-#            line['matches'][0][1],
-#            'LineString',
-#            line['matches'],
-#            'matches.shp'
-#        )
 
     # Add new features to existing ones
     for feat, values in feats_list.items():
         if values and len(set(values)) == 1:
             line['properties'][feat] = values[0]
+        else:
+            line['properties'][feat] = 0
+
 
 def get_mapping(lines, features):
     """
@@ -169,6 +149,8 @@ def get_mapping(lines, features):
                 matched.append((m[0], m[1]))
 
         else:
+            for f in features:
+                line['properties'][f] = 0
             result_counts[1] += 1
 
 #        write_test(
@@ -272,6 +254,9 @@ def add_int_features(int_lines, dir1, dir2, featlist):
             # original feature list
             for feat in featlist:
                 orig_feats[0][feat] = max([x[feat] for x in new_feats])
+        else:
+            for f in featlist:
+                orig_feats[0][feat] = 0
 
     with open(inters_data_fp, 'w') as f:
         json.dump(inters_orig, f)
