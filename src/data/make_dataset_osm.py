@@ -147,6 +147,5 @@ if __name__ == '__main__':
         'features.make_canon_dataset',
         '-d',
         DATA_FP,
-        '-f',
-        features
-    ])
+        '-features'
+    ] + features)
