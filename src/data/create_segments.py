@@ -174,21 +174,6 @@ def create_segments(roads_shp_path):
     with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_segments['data'], f)
 
-    # Copy files, since we'll be modifying if we add
-    # features from another source
-    shp_files = [
-        file for file in os.listdir(MAP_FP) if 'inters_segments' in file]
-    for file in shp_files:
-        file_segs = file.split('.')
-        shutil.copyfile(
-            os.path.join(MAP_FP, file),
-            os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1]))
-    # Also copy inters_data.json
-    shutil.copyfile(
-        os.path.join(DATA_FP, 'inters_data.json'),
-        os.path.join(DATA_FP, 'inters_data_orig.json')
-    )
-
     # add non_inter id format = 00+i
     non_int_w_ids = []
     i = 0
@@ -247,6 +232,26 @@ def create_segments(roads_shp_path):
         all_schema,
         os.path.join(MAP_FP, 'inter_and_non_int.shp'),
         inter_and_non_int, 1, 0)
+
+    # Copy files, since we'll be modifying if we add
+    # features from another source
+    shp_files = [
+        file for file in os.listdir(MAP_FP) if 'inters_segments.' in file]
+
+    for file in shp_files:
+        file_segs = file.split('.')
+        print "copying " + os.path.join(MAP_FP, file) + " to " \
+            + os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1])
+
+        shutil.copyfile(
+            os.path.join(MAP_FP, file),
+            os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1]))
+    # Also copy inters_data.json
+    shutil.copyfile(
+        os.path.join(DATA_FP, 'inters_data.json'),
+        os.path.join(DATA_FP, 'inters_data_orig.json')
+    )
+
 
 if __name__ == '__main__':
 
