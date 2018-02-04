@@ -45,11 +45,16 @@ parser.add_argument("-time", "--time_target", nargs="+",
 parser.add_argument("-features", "--features", nargs="+",
 					default=['AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
                     help="list of segment features to incude")
+parser.add_argument("-d", "--datadir", type=str,
+                    help="Can give alternate data directory")
+
 args = parser.parse_args()
 
 week, year = args.time_target
 SEG_CHARS = args.features
 
+if args.datadir:
+        DATA_FP = os.path.join(args.datadir, 'processed')
 
 # Read in data
 data = pd.read_csv(args.seg_data, dtype={'segment_id':'str'})
@@ -75,6 +80,7 @@ if args.atr_data!='':
 
 # add in tmcs conflicts if filepath present
 if args.tmc_data!='':
+
 	tmcs = pd.read_json(args.tmc_data,
 	                   dtype={'near_id':str})[['near_id','Conflict']]
 	data_segs = data_segs.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
