@@ -86,8 +86,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
-    parser.add_argument('-f', '--featlist', type=str,
-                        help='Alternate feature list as comma separated str')
+    parser.add_argument("-features", "--featlist", nargs="+", default=[
+        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
+        help="List of segment features to include")
 
     args = parser.parse_args()
 
@@ -101,7 +102,7 @@ if __name__ == '__main__':
              'Struct_Cnd', 'Surface_Tp',
              'F_F_Class']
     if args.featlist:
-        feats = args.featlist.split(',')
+        feats = args.featlist
 
     print "Data directory: " + DATA_FP
 

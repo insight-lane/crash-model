@@ -22,9 +22,7 @@ def simple_get_roads(city):
         None
     """
 
-    G = ox.graph_from_place(city, network_type='drive', simplify=False)
-    # Have to simplify as a separate call so it can be not strict
-    G = ox.simplify_graph(G, strict=False)
+    G = ox.graph_from_place(city, network_type='drive')
 
     # osmnx creates a directory for the nodes and edges
     ox.save_graph_shapefile(
