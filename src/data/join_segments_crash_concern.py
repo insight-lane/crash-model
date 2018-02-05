@@ -12,6 +12,7 @@ import pandas as pd
 import util
 import os
 import argparse
+from dateutil.parser import parse
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -94,6 +95,8 @@ if __name__ == '__main__':
                         help="column name in csv file containing longitude")
     parser.add_argument("-y", "--latitude", type=str,
                         help="column name in csv file containing latitude")
+    parser.add_argument("-t", "--datecol", type=str,
+                        help="col name in crash csv file containing date")
 
     args = parser.parse_args()
 
@@ -121,6 +124,12 @@ if __name__ == '__main__':
             y=latitude
         )
         crash = crash + tmp
+
+    if args.datecol:
+        for i in range(len(crash)):
+            d = parse(crash[i]['properties'][args.datecol]).isoformat()
+            crash[i]['properties']['CALENDAR_DATE'] = d
+
     print "Read in data from {} crashes".format(len(crash))
 
     combined_seg, segments_index = util.read_segments(dirname=MAP_FP)

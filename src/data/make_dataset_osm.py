@@ -10,11 +10,8 @@ DATA_FP = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/osm-data/'
 
-# For this pipeline to run with the boston data, files needed are:
-# osm-data/processed/maps/ma_cob*
-# osm-data/raw/Boston_Segments.shp
-# ATRs and TMCs in osm-data/raw/
-# crash data in osm-data/raw/
+# For this pipeline to run
+# crash data needs to be under raw in the data directory given
 
 # Plan is to make only the crash data required
 
@@ -37,9 +34,8 @@ if __name__ == '__main__':
                         help="Can give an additional shapefile")
 
     # if city file is given, need to also give a list of feats
-    parser.add_argument("-features", "--features", nargs="+", default=[
-        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
-        help="List of segment features to include")
+    parser.add_argument("-features", "--features", nargs="+",
+                        help="List of segment features to include")
     parser.add_argument("-o", "--outputdir", type=str,
                         help="Directory to write output from extramap")
     parser.add_argument("-p", "--extramap3857", type=str,
@@ -49,6 +45,8 @@ if __name__ == '__main__':
                         help="col name in crash csv file containing longitude")
     parser.add_argument("-y", "--latitude", type=str,
                         help="col name in crash csv file containing latitude")
+    parser.add_argument("-t", "--datecol", type=str,
+                        help="col name in crash csv file containing date")
 
     # Currently can only give one alternate crash file but may want to offer
     # option of list
@@ -156,7 +154,10 @@ if __name__ == '__main__':
         longitude,
         '-y',
         latitude,
-    ] + (['-c', args.crashfile] if args.crashfile else []))
+    ]
+        + (['-c', args.crashfile] if args.crashfile else [])
+        + (['-t', args.datecol] if args.datecol else [])
+    )
 
     subprocess.check_call([
         'python',
@@ -175,7 +176,7 @@ if __name__ == '__main__':
 
     if args.features:
         features = features + args.features
-        
+
     # Throw in make canonical dataset here too just to keep track
     # of standardized features
     subprocess.check_call([
@@ -186,3 +187,4 @@ if __name__ == '__main__':
         DATA_FP,
         '-features'
     ] + features)
+
