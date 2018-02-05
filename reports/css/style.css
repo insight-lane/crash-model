@@ -38,19 +38,21 @@ h4 {
     font-weight: normal;
 }
 
-.bigplot {
-    box-sizing: border-box;
-    width: 960px;
+.wrapper {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 5% 95%;
+    grid-gap: 10px;
     background-color: #fff;
-    margin: 10px;
-    padding: 10px ;
-    /*border: 1px solid #b2b2b2;*/
+    height: 600px;
+    margin: 20px 10px 10px 10px;
+    padding: 20px;
 }
 
 .plot {
     box-sizing: border-box;
     position: relative;
-    width: 470px;
+    /*width: 470px;*/
     float: left;
     background-color: #fff;
     margin: 10px;
@@ -58,16 +60,16 @@ h4 {
     /*border: 1px solid #b2b2b2;*/
 }
 
-#map {
+.map {
 	/*position: absolute;*/
-    margin-left: 20px;
-	width: 900px;
-	height: 600px;
+    margin: 10px;
+	/*width: 900px;*/
+	/*height: 100%;*/
 }
 
 .input_overlay {
-	width: 40%;
-	margin: 10px 0px 10px 30px;
+	width: 80%;
+	/*margin: 20px 0px 0px 20px;*/
 }
 
 input[type="range"] {
@@ -122,6 +124,16 @@ input[type="range"]::-ms-thumb {
     width: 16px;
     border-radius: 50%;
 }
+
+/*#select_compare_week{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+select {
+    margin: 10px;
+}*/
 
 #legend {
     position: absolute;
