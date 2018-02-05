@@ -9,6 +9,7 @@ import json
 import pyproj
 import os
 import argparse
+import sys
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -510,6 +511,15 @@ if __name__ == '__main__':
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
         ATR_FP = os.path.join(RAW_DATA_FP, 'AUTOMATED TRAFFICE RECORDING')
         TMC_FP = os.path.join(RAW_DATA_FP, 'TURNING MOVEMENT COUNT')
+
+    if not os.path.exists(TMC_FP):
+        print "No TMC directory, skipping..."
+        sys.exit()
+    if not os.path.exists(ATR_FP):
+        # At the moment this is true, but it probably can be skipped if
+        # not available
+        print "TMC parsing needs ATRs for normalization, skipping..."
+        sys.exit
 
     address_records = []
 
