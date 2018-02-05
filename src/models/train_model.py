@@ -31,7 +31,7 @@ parser.add_argument("-m", "--modelname", nargs="+",
 					default='LR_base',
                     help="name of the model, for consistency")
 parser.add_argument("-seg", "--seg_data", nargs="+", 
-					default=DATA_FP+'vz_predict_dataset.csv.gz',
+					default='vz_predict_dataset.csv.gz',
                     help="path to the segment data (see data standards) default vz_predict_dataset.csv.gz")
 parser.add_argument("-concern", "--concern_column", nargs="+", 
 					default='concern',
@@ -59,14 +59,15 @@ parser.add_argument("-f_cont", "--features_continuous", nargs="+",
                     help="list of segment features to incude")
 parser.add_argument("-d", "--datadir", type=str,
                     help="Can give alternate data directory")
-
-if args.datadir:
-        DATA_FP = os.path.join(args.datadir, 'processed')
-
 parser.add_argument("-process", "--process_features", nargs="+",
 					default=True,
                     help="Make categorical into dummies, standardize continuous")
 args = parser.parse_args()
+
+if args.datadir:
+    DATA_FP = os.path.join(args.datadir, 'processed')
+
+seg_data = os.path.join(DATA_FP, args.seg_data)
 
 week = int(args.time_target[0])
 year = int(args.time_target[1])
@@ -75,12 +76,22 @@ f_cont = args.features_continuous
 
 
 # Read in data
-data = pd.read_csv(args.seg_data, dtype={'segment_id':'str'})
+data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
 data.sort_values(['segment_id', 'year', 'week'], inplace=True)
 # get segments with non-zero crashes
 data_nonzero = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
 data_nonzero.reset_index(inplace=True)
 # segment chars
+
+# Dropping continuous features that don't exist
+new_feats = []
+for f in f_cont:
+    if f not in data_nonzero.columns.values:
+        print "Feature " + f + " not found, skipping"
+    else:
+        new_feats.append(f)
+f_cont = new_feats
+
 data_segs = data_nonzero.groupby('segment_id')[f_cont+f_cat].max()  # grab the highest values from each column
 data_segs.reset_index(inplace=True)
 
