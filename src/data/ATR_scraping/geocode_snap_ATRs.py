@@ -11,6 +11,7 @@ import pandas as pd
 from pandas.io.json import json_normalize
 import geopandas as gpd
 from sklearn.neighbors import KNeighborsRegressor
+import sys
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -82,15 +83,20 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
-                        help="Can give alternate data directory." +
-                        "For now this is just for the processed dir")
+                        help="Can give alternate data directory.")
     # Can force update
     parser.add_argument('--forceupdate', action='store_true',
                         help='Whether force update the maps')
 
     args = parser.parse_args()
     if args.datadir:
-        PROCESSED_DATA_FP = args.datadir
+        PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
+        ATR_FP = os.path.join(
+            args.datadir, 'raw/AUTOMATED TRAFFICE RECORDING')
+        if not os.path.exists(ATR_FP):
+            print "NO ATR directory found, skipping..."
+            sys.exit()
+        atrs = os.listdir(ATR_FP)
 
     geocode_and_parse(args.forceupdate)
     # Read in segments

@@ -21,10 +21,21 @@ DATA_FP = os.path.dirname(
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+
+    # So many args!  Need to do a yaml file or something instead!
+
+    # Can give a different city name
+    parser.add_argument("-c", "--city", type=str,
+                        help="Can give a different city (default Boston)")
+    # Can give an alternate directory
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory")
+
     # Can optionally give a new map file from which new features
     # can be generated
     parser.add_argument("-e", "--extramap", type=str,
                         help="Can give an additional shapefile")
+
     # if city file is given, need to also give a list of feats
     parser.add_argument("-features", "--features", nargs="+", default=[
         'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
@@ -34,7 +45,28 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--extramap3857", type=str,
                         help="Additional shapefile in 3857 projection")
 
+    parser.add_argument("-x", "--longitude", type=str,
+                        help="col name in crash csv file containing longitude")
+    parser.add_argument("-y", "--latitude", type=str,
+                        help="col name in crash csv file containing latitude")
+
+    # Currently can only give one alternate crash file but may want to offer
+    # option of list
+    parser.add_argument('-f', "--crashfile", type=str,
+                        help="Give alternate crash file")
+
     args = parser.parse_args()
+
+    if args.city:
+        city = args.city
+    if args.datadir:
+        DATA_FP = args.datadir
+    longitude = 'X'
+    latitude = 'Y'
+    if args.longitude:
+        longitude = args.longitude
+    if args.latitude:
+        latitude = args.latitude
 
     if args.extramap and (
             args.features is None
@@ -119,14 +151,19 @@ if __name__ == '__main__':
         '-m',
         'data.join_segments_crash_concern',
         '-d',
-        DATA_FP
-    ])
+        DATA_FP,
+        '-x',
+        longitude,
+        '-y',
+        latitude,
+    ] + (['-c', args.crashfile] if args.crashfile else []))
+
     subprocess.check_call([
         'python',
         '-m',
         'data.ATR_scraping.geocode_snap_ATRs',
         '-d',
-        os.path.join(DATA_FP, 'processed')
+        DATA_FP
     ])
     subprocess.check_call([
         'python',
