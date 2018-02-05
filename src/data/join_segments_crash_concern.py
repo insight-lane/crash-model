@@ -40,49 +40,28 @@ def make_schema(geometry, properties):
         'properties': properties_dict
     }
     return(schema)
-    
 
-if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--datadir", type=str,
-                        help="Can give alternate data directory")
-    parser.add_argument("-c", "--crashfiles", nargs='+',
-                        help="Can give alternate list of crash files. " +
-                        "Only use filename, don't include path")
-
-    args = parser.parse_args()
-
-    # Can override the hardcoded data directory
-    if args.datadir:
-        RAW_DATA_FP = os.path.join(args.datadir, 'raw')
-        PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
-        MAP_FP = os.path.join(args.datadir, 'processed/maps')
-    if args.crashfiles:
-        CRASH_DATA_FPS = args.crashfiles
-
-    # Read in CAD crash data
-    crash = []
-    for fp in CRASH_DATA_FPS:
-        tmp = util.csv_to_projected_records(
-            os.path.join(RAW_DATA_FP, fp))
-        crash = crash + tmp
-    print "Read in data from {} crashes".format(len(crash))
-
+def process_concerns():
     # Read in vision zero data
     # Have to use pandas read_csv, unicode trubs
+
+    path = os.path.join(
+        RAW_DATA_FP, 'Vision_Zero_Entry.csv')
+
+    # Only read in if the file exists
+    # Since at the moment, only Boston has concern data, this is
+    # still hard coded in, but should change this
+    if not os.path.exists(path):
+        print "No concern data found"
+        return
+
     concern_raw = pd.read_csv(os.path.join(
         RAW_DATA_FP, 'Vision_Zero_Entry.csv'))
     concern_raw = concern_raw.to_dict('records')
     concern = util.raw_to_record_list(concern_raw,
                                       pyproj.Proj(init='epsg:4326'))
     print "Read in data from {} concerns".format(len(concern))
-
-    combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
-
-    # Find nearest crashes - 30 tolerance
-    print "snapping crashes to segments"
-    util.find_nearest(crash, combined_seg, segments_index, 30)
 
     # Find nearest concerns - 20 tolerance
     print "snapping concerns to segments"
@@ -102,6 +81,54 @@ if __name__ == '__main__':
     ) as f:
         json.dump([c['properties'] for c in concern], f)
 
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory")
+    parser.add_argument("-c", "--crashfiles", nargs='+',
+                        help="Can give alternate list of crash files. " +
+                        "Only use filename, don't include path")
+    parser.add_argument("-x", "--longitude", type=str,
+                        help="column name in csv file containing longitude")
+    parser.add_argument("-y", "--latitude", type=str,
+                        help="column name in csv file containing latitude")
+
+    args = parser.parse_args()
+
+    # Can override the hardcoded data directory
+    if args.datadir:
+        RAW_DATA_FP = os.path.join(args.datadir, 'raw')
+        PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
+        MAP_FP = os.path.join(args.datadir, 'processed/maps')
+    if args.crashfiles:
+        CRASH_DATA_FPS = args.crashfiles
+
+    longitude = 'X'
+    latitude = 'Y'
+    if args.longitude:
+        longitude = args.longitude
+    if args.latitude:
+        latitude = args.latitude
+
+    # Read in CAD crash data
+    crash = []
+    for fp in CRASH_DATA_FPS:
+        tmp = util.csv_to_projected_records(
+            os.path.join(RAW_DATA_FP, fp),
+            x=longitude,
+            y=latitude
+        )
+        crash = crash + tmp
+    print "Read in data from {} crashes".format(len(crash))
+
+    combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
+
+    # Find nearest crashes - 30 tolerance
+    print "snapping crashes to segments"
+    util.find_nearest(crash, combined_seg, segments_index, 30)
+
     # Write crash
     crash_schema = make_schema('Point', crash[0]['properties'])
     print "output crash shp to", MAP_FP
@@ -111,3 +138,4 @@ if __name__ == '__main__':
     with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'), 'w') as f:
         json.dump([c['properties'] for c in crash], f)
 
+    process_concerns()
