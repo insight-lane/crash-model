@@ -109,12 +109,20 @@ if __name__ == '__main__':
     # read/aggregate crash/concerns
     crash = read_records(os.path.join(DATA_FP, 'crash_joined.json'),
                          'CALENDAR_DATE', 'near_id')
-    concern = read_records(os.path.join(DATA_FP, 'concern_joined.json'),
-                           'REQUESTDATE', 'near_id')
 
-    # join aggregated crash/concerns
-    cr_con = pd.concat([crash, concern], axis=1)
-    cr_con.columns = ['crash', 'concern']
+    # Since at the moment we expect only boston to have concern data,
+    # don't yet need to override column name
+    if os.path.exists(
+            os.path.join(os.path.join(DATA_FP, 'concern_joined.json'))):
+        concern = read_records(os.path.join(DATA_FP, 'concern_joined.json'),
+                               'REQUESTDATE', 'near_id')
+
+        # join aggregated crash/concerns
+        cr_con = pd.concat([crash, concern], axis=1)
+        cr_con.columns = ['crash', 'concern']
+    else:
+        cr_con = pd.concat([crash], axis=1)
+        cr_con.columns = ['crash']
 
     # if null for a certain week = 0 (no crash/concern)
     cr_con.reset_index(inplace=True)
@@ -169,14 +177,18 @@ if __name__ == '__main__':
 
     # output adjacency info
     # need to include ATRs
-    atrs = pd.read_json(os.path.join(DATA_FP, 'snapped_atrs.json'))
-    adjacent = adjacent.reset_index()
-    adjacent = adjacent.merge(
-        atrs[['near_id', 'orig']],
-        left_on='index',
-        right_on='near_id',
-        how='left'
-    )
-    adjacent.drop(['near_id'], axis=1, inplace=True)
-    adjacent.columns = ['segment_id', 'orig_id', 'atr_address']
-    adjacent.to_csv(os.path.join(DATA_FP, 'adjacency_info.csv'), index=False)
+    if os.path.exists(os.path.join(DATA_FP, 'snapped_atrs.json')):
+        atrs = pd.read_json(os.path.join(DATA_FP, 'snapped_atrs.json'))
+        adjacent = adjacent.reset_index()
+        adjacent = adjacent.merge(
+            atrs[['near_id', 'orig']],
+            left_on='index',
+            right_on='near_id',
+            how='left'
+        )
+        adjacent.drop(['near_id'], axis=1, inplace=True)
+        adjacent.columns = ['segment_id', 'orig_id', 'atr_address']
+        adjacent.to_csv(os.path.join(
+            DATA_FP, 'adjacency_info.csv'), index=False)
+    else:
+        print "No ATRs found, skipping..."
