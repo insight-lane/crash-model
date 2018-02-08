@@ -67,7 +67,9 @@ The simplest way to run the data generation scripts is `python -m data.make_data
 
 You can alternatively run each of the data generation scripts individually.  Each script is described below
 
-## 1) Extract intersections
+## 1) Create maps from open street maps
+
+## 2) Extract intersections
 - Reads in road segment data (data/raw/Boston_Segments.shp).  Boston_Segments is in EPSG:4326 projection
 - Finds point locations where roads intersect
 - Creates a shapefile of intersections (inters.shp)
@@ -76,7 +78,7 @@ You can alternatively run each of the data generation scripts individually.  Eac
     - data/processed/maps/inters.shp (and related files)
 
 
-## 2) Create segments
+## 3) Create segments
 - Reads in intersections and road segments
     - Creates unique ids for the road segments (orig_id) from ma\_co\_spatially\_joined\_streets.shp
 - Creates buffer (hard-coded 20m) around intersections
@@ -95,10 +97,10 @@ You can alternatively run each of the data generation scripts individually.  Eac
     - data/processed/inter_and_non_int.shp
     - data/processed/inters_data.json
 
-## 3) Add features from a new map
+## 4) Add features from a new map
 
 
-## 4) Join segments and point data
+## 5) Join segments and point data
 - Reads in crash/concern point data and intersection/non-intersection segments
 - Snaps points to nearest segment
     - Tolerance of 30m for crashes, 20m for concerns
@@ -113,7 +115,7 @@ You can alternatively run each of the data generation scripts individually.  Eac
     - crash_joined.shp
     - concern_joined.shp
 
-## 5) Process the ATRs
+## 6) Process the ATRs
 - Adds coordinates for the Automated traffic recordings, along with some of the traffic count information.
 - Also snaps them to match up to road segments
 - <b>Usage:</b> `python -m data.ATR_scraping.geocode_snap_ATRs`
@@ -125,7 +127,9 @@ You can alternatively run each of the data generation scripts individually.  Eac
     - data/processed/geocoded_atrs.csv
     - data/processed/snapped_atrs.json
 
-## 6) Make canonical dataset
+## 7) Process turning movement counts
+
+## 8) Make canonical dataset
 - Reads in crash/concern data
 - Aggregates crash/concern (default by week)
 - Reads in road features for intersections and non-intersections
