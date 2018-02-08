@@ -7,9 +7,7 @@ import os
 import re
 import csv
 
-PROCESSED_FP = None
 MAP_FP = None
-DOC_FP = None
 
 
 def simple_get_roads(city):
@@ -40,18 +38,21 @@ def simple_get_roads(city):
     shutil.rmtree(tempdir)
 
 
-def reproject_and_clean_feats():
+def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
     """
     Reads in osm_ways file, cleans up the features, and reprojects
     results into 3857 projection
     Additionally writes a key which shows the correspondence between
     highway type as a string and the resulting int feature
     Args:
-        None, reads from file
+        orig_file: Filename for original file
+        result_file: Filename for resulting file in 3857 projection
+        DOC_FP: directory to write highway keys file to
     Returns:
         None, writes to file
     """
-    way_results = fiona.open(os.path.join(MAP_FP, 'osm_ways.shp'))
+
+    way_results = fiona.open(orig_file)
 
     # Convert the map from above to 3857
     reprojected_way_lines = [
@@ -107,10 +108,12 @@ def reproject_and_clean_feats():
 
     util.write_shp(
         schema,
-        MAP_FP + '/osm_ways_3857.shp',
+        result_file,
         reprojected_way_lines, 0, 1, crs=fiona.crs.from_epsg(3857))
 
     # Write highway keys to docs if needed for reference
+    if not os.path.exists(DOC_FP):
+        os.makedirs(DOC_FP)
     with open(os.path.join(DOC_FP, 'highway_keys.csv'), 'wb') as f:
         w = csv.writer(f)
         w.writerow(['type', 'value'])
@@ -133,7 +136,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     city = args.city
 
-    PROCESSED_FP = os.path.join(args.datadir, 'processed')
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
     DOC_FP = os.path.join(args.datadir, 'docs')
 
@@ -146,4 +148,8 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways_3857.shp')) \
        or args.forceupdate:
         print "Reprojecting..."
-        reproject_and_clean_feats()
+        reproject_and_clean_feats(
+            os.path.join(MAP_FP, 'osm_ways.shp'),
+            os.path.join(MAP_FP, 'osm_ways_3857.shp'),
+            DOC_FP
+        )
