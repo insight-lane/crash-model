@@ -2,6 +2,8 @@
 import os
 import subprocess
 import argparse
+import yaml
+import sys
 
 # Until we're ready to switch over to using this data,
 # use osm-data as data directory instead of data
@@ -18,65 +20,57 @@ DATA_FP = os.path.dirname(
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-
-    # So many args!  Need to do a yaml file or something instead!
-
-    # Can give a different city name
-    parser.add_argument("-c", "--city", type=str,
-                        help="Can give a different city (default Boston)")
-    # Can give an alternate directory
-    parser.add_argument("-d", "--datadir", type=str,
-                        help="Can give alternate data directory")
-
-    # Can optionally give a new map file from which new features
-    # can be generated
-    parser.add_argument("-e", "--extramap", type=str,
-                        help="Can give an additional shapefile")
-
-    # if city file is given, need to also give a list of feats
-    parser.add_argument("-features", "--features", nargs="+",
-                        help="List of segment features to include")
-    parser.add_argument("-o", "--outputdir", type=str,
-                        help="Directory to write output from extramap")
-    parser.add_argument("-p", "--extramap3857", type=str,
-                        help="Additional shapefile in 3857 projection")
-
-    parser.add_argument("-x", "--longitude", type=str,
-                        help="col name in crash csv file containing longitude")
-    parser.add_argument("-y", "--latitude", type=str,
-                        help="col name in crash csv file containing latitude")
-    parser.add_argument("-t", "--datecol", type=str,
-                        help="col name in crash csv file containing date")
-
-    # Currently can only give one alternate crash file but may want to offer
-    # option of list
-    parser.add_argument('-f', "--crashfile", type=str,
-                        help="Give alternate crash file")
-
+    # Can give a config file
+    parser.add_argument("-c", "--config", type=str,
+                        help="Can give a different .yml config file")
     args = parser.parse_args()
+    config_file = 'data/config.yml'
+    if args.config:
+        config_file = args.config
+    with open(config_file) as f:
+        config = yaml.safe_load(f)
 
-    if args.city:
-        city = args.city
-    if args.datadir:
-        DATA_FP = args.datadir
+    if 'city' not in config.keys() or config['city'] is None:
+        sys.exit('City is required in config file')
+    city = config['city']
+
+    if 'data' in config.keys() and config['data']:
+        DATA_FP = config['data']
+
+    extra_map = None
+    additional_features = None
+    extra_map3857 = None
+    outputdir = city.split(',')[0]
+    if 'extra_map' in config.keys() and config['extra_map']:
+        # Require additional features and additional shapefile in 3857 proj
+        if 'additional_features' not in config.keys() \
+           or config['additional_features'] is None \
+           or 'extra_map3857' not in config.keys() \
+           or config['extra_map3857'] is None:
+            sys.exit("If extra_map is given, additional_features and" +
+                     "extra_map3857 are required.")
+            
+        extra_map = config['extra_map']
+        additional_features = config['additional_features']
+        extra_map3857 = config['extra_map3857']
+
     longitude = 'X'
     latitude = 'Y'
-    if args.longitude:
-        longitude = args.longitude
-    if args.latitude:
-        latitude = args.latitude
+    date_col = None
+    crash_file = None
+    if 'longitude' in config.keys() and config['longitude']:
+        longitude = config['longitude']
+    if 'latitude' in config.keys() and config['latitude']:
+        latitude = config['latitude']
 
-    if args.extramap and (
-            args.features is None
-            or args.outputdir is None
-            or args.extramap3857 is None
-    ):
-        parser.error(
-            "--extramap requires --features, --outputdir, and --extramap3857.")
+    if 'date_col' in config.keys() and config['date_col']:
+        date_col = config['date_col']
 
-    # Eventually make this an arg as well:
-    city = 'Boston, Massachusetts, USA'
-    # Original features, that args.features can add on to
+    if 'crash_file' in config.keys() and config['crash_file']:
+        crash_file = config['crash_file']
+
+    # Features drawn from open street maps
+    # additional_features from config file can add on to
     features = ['width', 'lanes', 'hwy_type', 'osm_speed']
 
     # Get the maps out of open street map, both projections
@@ -107,7 +101,7 @@ if __name__ == '__main__':
         os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp')
     ])
 
-    if args.extramap:
+    if extra_map:
         # Extract intersections from the new city file
         # Write to a subdirectory so files created from osm aren't overwritten
         # Eventually, directory of additional files should also be an argument
@@ -115,11 +109,11 @@ if __name__ == '__main__':
             'python',
             '-m',
             'data.extract_intersections',
-            os.path.join(args.extramap),
+            os.path.join(extra_map),
             '-d',
             DATA_FP,
             '-n',
-            args.outputdir
+            outputdir
         ])
         # Create segments from the Boston data
         subprocess.check_call([
@@ -129,9 +123,9 @@ if __name__ == '__main__':
             '-d',
             DATA_FP,
             '-n',
-            args.outputdir,
+            outputdir,
             '-r',
-            args.extramap3857
+            extra_map3857
         ])
 
         # Map the boston segments to the open street map segments
@@ -155,8 +149,8 @@ if __name__ == '__main__':
         '-y',
         latitude,
     ]
-        + (['-c', args.crashfile] if args.crashfile else [])
-        + (['-t', args.datecol] if args.datecol else [])
+        + (['-c', crash_file] if crash_file else [])
+        + (['-t', date_col] if date_col else [])
     )
 
     subprocess.check_call([
@@ -174,8 +168,8 @@ if __name__ == '__main__':
         DATA_FP
     ])
 
-    if args.features:
-        features = features + args.features
+    if additional_features:
+        features = features + additional_features
 
     # Throw in make canonical dataset here too just to keep track
     # of standardized features
