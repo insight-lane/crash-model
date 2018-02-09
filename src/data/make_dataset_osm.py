@@ -135,7 +135,7 @@ if __name__ == '__main__':
             '-m',
             'data.add_map',
             DATA_FP,
-            args.outputdir,
+            outputdir,
         ])
 
     subprocess.check_call([
