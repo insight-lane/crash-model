@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser(description="Train crash model.  Additional fea
 parser.add_argument("-m", "--modelname", nargs="+", 
 					default='LR_base',
                     help="name of the model, for consistency")
-parser.add_argument("-seg", "--seg_data", nargs="+", 
+parser.add_argument("-seg", "--seg_data", type=str, 
 					default=DATA_FP+'vz_predict_dataset.csv.gz',
                     help="path to the segment data (see data standards) default vz_predict_dataset.csv.gz")
 parser.add_argument("-concern", "--concern_column", nargs="+", 
@@ -88,7 +88,6 @@ data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment
 
 # add concern
 if args.concern_column!=['']:
-	print args.concern_column
 	print('Adding concerns')
 	concern_observed = data_nonzero[data_nonzero.year==2016].groupby('segment_id')[args.concern_column].max()
 	features.append(args.concern_column)
@@ -96,6 +95,7 @@ if args.concern_column!=['']:
 
 # add in atrs if filepath present
 if args.atr_data!=['']:
+	print('Adding atrs')
 	atrs = pd.read_csv(args.atr_data, dtype={'id':'str'})
 	# for some reason pandas reads the id as float before str conversions
 	atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
@@ -105,6 +105,7 @@ if args.atr_data!=['']:
 
 # add in tmcs if filepath present
 if args.tmc_data!=['']:
+	print('Adding tmcs')
 	tmcs = pd.read_json(args.tmc_data,
 	                   dtype={'near_id':str})[['near_id']+args.tmc_columns]
 	data_model = data_model.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
@@ -115,6 +116,7 @@ if args.tmc_data!=['']:
 lm_features = features
 
 if args.process_features!=['False']:
+	print('Processing categorical: {}'.format(f_cat))
 	for f in f_cat:
 	    t = pd.get_dummies(data_model[f])
 	    t.columns = [f+str(c) for c in t.columns]
@@ -123,6 +125,7 @@ if args.process_features!=['False']:
 	    # for linear model, allow for intercept
 	    lm_features += t.columns.tolist()[1:]
 	# aadt - log-transform
+	print('Processing continuous: {}'.format(f_cont))
 	for f in f_cont:
 		data_model['log_%s' % f] = np.log(data_model[f]+1)
 		features += ['log_%s' % f]
@@ -135,6 +138,8 @@ if args.process_features!=['False']:
 	# remove duplicated features
 	features = list(set(features) - set(f_cat+f_cont))
 	lm_features = list(set(lm_features) - set(f_cat+f_cont))
+
+print "full features:{}".format(features)
 
 #Initialize data
 df = Indata(data_model, 'target')
@@ -181,4 +186,9 @@ test = Tester(df)
 test.init_tuned(tune)
 test.run_tuned('LR_base', cal=False)
 test.run_tuned('XG_base', cal=False)
+
+# train, output trained model
+fit_model = test.rundict['LR_base']['m_fit'].fit(data_model[lm_features], data_model.target)
+data_model['preds'] = fit_model.predict_proba(data_model[lm_features])[::,1]
+data_model.to_pickle(DATA_FP+'vz_with_predicted.pkl.gz', compression='gzip')
 
