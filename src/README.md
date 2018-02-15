@@ -69,6 +69,20 @@ You can alternatively run each of the data generation scripts individually.  Eac
 
 ## 1) Create maps from open street maps
 
+- Given a city name, queries open street maps for the city segments.  Simplifies the street network by combining some ways.  Cleans up features, and writes the segments with their cleaned features out to shapefile
+- **Usage:** `python -m data.osm_create_maps 'Boston, Massachusetts, USA' ../data/` (can replace Boston with any other city, and can use a different data directory
+- **Results:**
+    - data/processed/maps/osm_ways.shp
+    - data/processed/maps/osm_nodes.shp
+    - data/processed/maps/osm_ways_3857.shp (this is the file where the cleaned features are attached to ways)
+    - data/docs/highway_keys.csv (a mapping from highway key number to the highway type string)
+- **Features generated from open street maps:**
+    - width (rounded to the nearest foot)
+    - lanes (number of lanes)
+    - hwy_type
+    - osm_speed
+    - Many others can be added.  In particular, one way still needs to be added
+
 ## 2) Extract intersections
 - Reads in road segment data (data/raw/Boston_Segments.shp).  Boston_Segments is in EPSG:4326 projection
 - Finds point locations where roads intersect
@@ -92,13 +106,17 @@ You can alternatively run each of the data generation scripts individually.  Eac
     - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp (Mercator projection:3857)
         - Descriptions of the attributes from ma_co_spatially_joined_streets.shp can be found in data/docs/MassDOTRoadInvDictionary.pdf
 - **Results:**
-    - data/processed/inters_segments.shp
-    - data/processed/non_inters_segments.shp
-    - data/processed/inter_and_non_int.shp
+    - data/processed/maps/inters_segments.shp
+    - data/processed/maps/non_inters_segments.shp
+    - data/processed/maps/inter_and_non_int.shp
     - data/processed/inters_data.json
 
 ## 4) Add features from a new map
-
+- Takes two different maps of intersection segments, non-intersection segments and their intersection data json files, and finds mappings between the maps.  Intersections are mapped to intersections, and non-intersection segments are mapped to non-intersection segments.  Features are written out to the non_inters_segments shapefile and to the inters_data.json file (inters_segments does not contain feature information).  The default features, pulled from the Boston data are AADT, SPEEDLIMIT, Struct_Cnd, Surface_Tp, and F_F_Class.
+- **Usage:** `python -m data.add_map ../data/ ../data/processed/maps/boston' (the second argument is the directory where the second set of shapefiles that you want to map to the open street map shapefiles are located)
+- **Results:**
+    - data/processed/maps/non_inters_segments.shp (modified with new features)
+    - data/processed/inters_data.json (modified with new features)
 
 ## 5) Join segments and point data
 - Reads in crash/concern point data and intersection/non-intersection segments
