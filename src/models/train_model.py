@@ -9,13 +9,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as ss
 from glob import glob
-from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 from scipy.stats import describe
 from model_utils import *
 from model_classes import *
 import os
 import argparse
+import random
+import pickle
 
 # all model outputs must be stored in the "data/processed/" directory
 BASE_DIR = os.path.dirname(
@@ -30,7 +32,7 @@ parser = argparse.ArgumentParser(description="Train crash model.  Additional fea
 parser.add_argument("-m", "--modelname", nargs="+", 
 					default='LR_base',
                     help="name of the model, for consistency")
-parser.add_argument("-seg", "--seg_data", nargs="+", 
+parser.add_argument("-seg", "--seg_data", type=str, 
 					default=DATA_FP+'vz_predict_dataset.csv.gz',
                     help="path to the segment data (see data standards) default vz_predict_dataset.csv.gz")
 parser.add_argument("-concern", "--concern_column", nargs="+", 
@@ -81,60 +83,70 @@ data_segs.reset_index(inplace=True)
 features = f_cont+f_cat
 print('Segment features included: {}'.format(features))
 
-# create lagged crash values
-crash_lags = format_crash_data(data_nonzero.set_index(['segment_id','year','week']), 'crash', 
-	week, year)
-data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment_id')
-
 # add concern
 if args.concern_column!=['']:
-	print args.concern_column
 	print('Adding concerns')
-	concern_observed = data_nonzero[data_nonzero.year==2016].groupby('segment_id')[args.concern_column].max()
+	concern_observed = data[data.year==2016].groupby('segment_id')[args.concern_column].max()
 	features.append(args.concern_column)
-	data_model = data_model.merge(concern_observed.reset_index(), on='segment_id')
+	data_segs = data_segs.merge(concern_observed.reset_index(), on='segment_id')
 
 # add in atrs if filepath present
 if args.atr_data!=['']:
+	print('Adding atrs')
 	atrs = pd.read_csv(args.atr_data, dtype={'id':'str'})
 	# for some reason pandas reads the id as float before str conversions
 	atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
-	data_model = data_model.merge(atrs[['id']+args.atr_columns], 
+	data_segs = data_segs.merge(atrs[['id']+args.atr_columns], 
 	                            left_on='segment_id', right_on='id')
 	features += args.atr_columns
 
 # add in tmcs if filepath present
 if args.tmc_data!=['']:
+	print('Adding tmcs')
 	tmcs = pd.read_json(args.tmc_data,
 	                   dtype={'near_id':str})[['near_id']+args.tmc_columns]
-	data_model = data_model.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
-	data_model[args.tmc_columns] = data_model[args.tmc_columns].fillna(0)
+	data_segs = data_segs.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
+	data_segs[args.tmc_columns] = data_segs[args.tmc_columns].fillna(0)
 	features += args.tmc_columns
 
 # features for linear model
 lm_features = features
 
+# add crash data
+# create lagged crash values
+crash_lags = format_crash_data(data_nonzero.set_index(['segment_id','year','week']), 'crash', 
+	week, year)
+# add to features
+crash_cols = ['pre_week','pre_month','pre_quarter','avg_week']
+features += crash_cols
+
 if args.process_features!=['False']:
+	print('Processing categorical: {}'.format(f_cat))
 	for f in f_cat:
-	    t = pd.get_dummies(data_model[f])
+	    t = pd.get_dummies(data_segs[f])
 	    t.columns = [f+str(c) for c in t.columns]
-	    data_model = pd.concat([data_model, t], axis=1)
+	    data_segs = pd.concat([data_segs, t], axis=1)
 	    features += t.columns.tolist()
 	    # for linear model, allow for intercept
 	    lm_features += t.columns.tolist()[1:]
 	# aadt - log-transform
+	print('Processing continuous: {}'.format(f_cont))
 	for f in f_cont:
-		data_model['log_%s' % f] = np.log(data_model[f]+1)
+		data_segs['log_%s' % f] = np.log(data_segs[f]+1)
 		features += ['log_%s' % f]
 		lm_features += ['log_%s' % f]
 	# add segment type
-	data_model['intersection'] = data_model.segment_id.map(lambda x: x[:2]!='00').astype(int)
+	data_segs['intersection'] = data_segs.segment_id.map(lambda x: x[:2]!='00').astype(int)
 	features += ['intersection']
 	lm_features += ['intersection']
 
 	# remove duplicated features
 	features = list(set(features) - set(f_cat+f_cont))
 	lm_features = list(set(lm_features) - set(f_cat+f_cont))
+
+# create model data
+data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment_id')
+print "full features:{}".format(features)
 
 #Initialize data
 df = Indata(data_model, 'target')
@@ -181,4 +193,27 @@ test = Tester(df)
 test.init_tuned(tune)
 test.run_tuned('LR_base', cal=False)
 test.run_tuned('XG_base', cal=False)
+
+# sensitivity analysis TODO
+# running this to test performance at different weeks
+tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
+# random sets
+#print "running sensitivity analysis"
+
+#for i in range(3):
+#	test_time = random.choice(data[['year','week']].values)
+#	print test_time[0]
+#	test_crash = format_crash_data(data_nonzero.set_index(['segment_id','year','week']), 'crash', 
+#		test_time[1], test_time[0])
+#	test_crash_segs = test_crash.merge(data_segs, left_on='segment_id', right_on='segment_id')
+#	tuned_model.fit(test_crash_segs[lm_features], test_crash_segs['target'])
+#	print roc_auc_score(test_crash_segs['target'], 
+#		tuned_model.predict_proba(test_crash_segs[lm_features])[::,1])
+
+# train, output predictions + model
+fit_model = test.rundict['LR_base']['m_fit'].fit(data_model[lm_features], data_model.target)
+data_model['preds'] = fit_model.predict_proba(data_model[lm_features])[::,1]
+data_model.to_pickle(DATA_FP+'vz_with_predicted.pkl.gz', compression='gzip')
+with open('trained_model.pkl', 'w') as f:
+	pickle.dump(fit_model, f)
 
