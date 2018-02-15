@@ -505,6 +505,11 @@ if __name__ == '__main__':
 
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
+
+    # Can force update
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether force update the maps')
+
     args = parser.parse_args()
     if args.datadir:
         RAW_DATA_FP = os.path.join(args.datadir, 'raw')
@@ -525,8 +530,8 @@ if __name__ == '__main__':
 
     print 'Parsing turning movement counts...'
     summary_file = os.path.join(PROCESSED_DATA_FP, 'tmc_summary.json')
-    if not path_exists(summary_file):
-        print 'No tmc_summary.json, parsing tmcs files now...'
+    if not path_exists(summary_file) or args.forceupdate:
+        print 'Parsing tmc files...'
 
         summary = parse_conflicts()
         address_records = snap_inter_and_non_inter(summary)

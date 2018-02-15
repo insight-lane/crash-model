@@ -163,14 +163,14 @@ if __name__ == '__main__':
         'data.ATR_scraping.geocode_snap_ATRs',
         '-d',
         DATA_FP
-    ])
+    ] + (['--forceupdate'] if recreate else []))
     subprocess.check_call([
         'python',
         '-m',
         'data.TMC_scraping.parse_tmc',
         '-d',
         DATA_FP
-    ])
+    ] + (['--forceupdate'] if recreate else []))
 
     if additional_features:
         features = features + additional_features
