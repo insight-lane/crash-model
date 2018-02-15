@@ -155,3 +155,5 @@ dependencies:
   - jupyter-core
   - prompt-toolkit
   - ratelim
+  - xlrd
+  - pyyaml

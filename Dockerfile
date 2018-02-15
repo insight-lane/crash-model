@@ -15,8 +15,12 @@ WORKDIR /app
 # (gcc) installed to enable conda to create virtual environments
 RUN apt-get update -qq && apt-get install -y \
 	gcc \
+	# apache for serving the visualisation
 	apache2 \
+	# easier management of services via supervisor
 	supervisor \
+	# base anaconda image seems to lack libgl support required for our virtual environment
+	libgl1-mesa-glx \
 	vim
 
 # Setup apache & supervisor
