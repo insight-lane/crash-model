@@ -5,12 +5,10 @@ import argparse
 import yaml
 import sys
 
-# Until we're ready to switch over to using this data,
-# use osm-data as data directory instead of data
 DATA_FP = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
-            os.path.abspath(__file__)))) + '/osm-data/'
+            os.path.abspath(__file__)))) + '/data/'
 
 # For this pipeline to run
 # crash data needs to be under raw in the data directory given
@@ -34,12 +32,13 @@ if __name__ == '__main__':
         sys.exit('City is required in config file')
     city = config['city']
 
-    if 'data' in config.keys() and config['data']:
-        DATA_FP = config['data']
+    if 'datadir' in config.keys() and config['datadir']:
+        DATA_FP = config['datadir']
 
     extra_map = None
     additional_features = None
     extra_map3857 = None
+    recreate = False
     outputdir = city.split(',')[0]
     if 'extra_map' in config.keys() and config['extra_map']:
         # Require additional features and additional shapefile in 3857 proj
@@ -69,18 +68,23 @@ if __name__ == '__main__':
     if 'crash_file' in config.keys() and config['crash_file']:
         crash_file = config['crash_file']
 
+    if 'recreate' in config.keys() and config['recreate']:
+        recreate = True
+
     # Features drawn from open street maps
     # additional_features from config file can add on to
     features = ['width', 'lanes', 'hwy_type', 'osm_speed']
 
+    print "Generating maps for " + city + ' in ' + DATA_FP
+    print recreate
     # Get the maps out of open street map, both projections
     subprocess.check_call([
         'python',
         '-m',
         'data.osm_create_maps',
         city,
-        DATA_FP
-    ])
+        DATA_FP,
+    ] + (['--forceupdate'] if recreate else []))
     # Extract intersections from the open street map data
     subprocess.check_call([
         'python',
@@ -89,7 +93,7 @@ if __name__ == '__main__':
         os.path.join(DATA_FP, 'processed/maps/osm_ways.shp'),
         '-d',
         DATA_FP
-    ])
+    ] + (['--forceupdate'] if recreate else []))
     # Create segments on the open street map data
     subprocess.check_call([
         'python',
@@ -114,7 +118,7 @@ if __name__ == '__main__':
             DATA_FP,
             '-n',
             outputdir
-        ])
+        ] + (['--forceupdate'] if recreate else []))
         # Create segments from the Boston data
         subprocess.check_call([
             'python',

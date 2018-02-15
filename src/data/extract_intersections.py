@@ -114,6 +114,10 @@ if __name__ == '__main__':
                         help="If given, write output to new directory" +
                         "within the maps directory")
 
+    # Can force update
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether to force update the maps')
+
     args = parser.parse_args()
 
     # Import shapefile specified at commandline
@@ -138,8 +142,8 @@ if __name__ == '__main__':
     print 'Extracting intersections and writing into ' + MAP_DATA_FP
     inters = []
     pkl_file = os.path.join(MAP_DATA_FP, 'inters.pkl')
-    if not os.path.exists(pkl_file):
-        print pkl_file + ' does not exist - generating intersections...'
+    if not os.path.exists(pkl_file) or args.forceupdate:
+        print 'Generating intersections...'
         inters = generate_intersections(lines)
         # Save to pickle in case script breaks
         with open(pkl_file, 'w') as f:
