@@ -50,7 +50,7 @@ if __name__ == '__main__':
                      "extra_map3857 are required.")
             
         extra_map = config['extra_map']
-        additional_features = config['additional_features']
+        additional_features = config['additional_features'].split()
         extra_map3857 = config['extra_map3857']
 
     longitude = 'X'
