@@ -53,7 +53,15 @@ You'll want to reproduce the packages and package versions required to run code 
     $ activate boston-crash-model
 
 If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/data_generation) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/benchmark) for running the benchmark model.
-    
+
+### Docker:
+A basic Dockerfile has been created to run the project in a container, using the ContinuumIO anaconda base image (Python 2.7). Right now the image simply installs the project code & its dependencies, creates the 'boston-crash-model' virtual environment and starts an apache2 webserver (via supervisor daemon) to serve the visualization. A pre-built image is not yet available but will be shortly. To build the image from scratch and run it in a container, execute the following (as root user) from the project's main directory:
+
+	$ docker build --tag boston-crash-modeling:latest .
+	$ docker run -d -p 8080:8080 --name bcm.local boston-crash-modeling:latest
+
+The visualization should now be visible at http://localhost:8080/visualization/historical_crash_map.html
+
 ### Data:
 
 At the moment, the [RF benchmark model](https://github.com/Data4Democracy/boston-crash-modeling/blob/master/notebooks/benchmark/crash_predict_benchmark.ipynb) is running off of a dataset of historical crashes in 2016 per street segment + week. All our processed data is in a private repository in data.world [here](https://data.world/data4democracy/boston-crash-model) -- ping a project lead or maintainer on Slack to get access. More detailed documentation is contained there.
