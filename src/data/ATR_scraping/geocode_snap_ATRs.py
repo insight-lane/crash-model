@@ -21,12 +21,11 @@ BASE_DIR = os.path.dirname(
 
 ATR_FP = os.path.join(BASE_DIR, 'data/raw/AUTOMATED TRAFFICE RECORDING')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
-atrs = os.listdir(ATR_FP)
 
 PROJ = pyproj.Proj(init='epsg:3857')
 
 
-def geocode_and_parse(forceupdate):
+def geocode_and_parse(atrs, forceupdate):
 
     if not os.path.exists(os.path.join(
             PROCESSED_DATA_FP, 'geocoded_atrs.csv')) or forceupdate:
@@ -96,9 +95,9 @@ if __name__ == '__main__':
         if not os.path.exists(ATR_FP):
             print "NO ATR directory found, skipping..."
             sys.exit()
-        atrs = os.listdir(ATR_FP)
+    atrs = os.listdir(ATR_FP)
 
-    geocode_and_parse(args.forceupdate)
+    geocode_and_parse(atrs, args.forceupdate)
     # Read in segments
     inter = util.read_shp(os.path.join(
         PROCESSED_DATA_FP, 'maps/inters_segments.shp'))
