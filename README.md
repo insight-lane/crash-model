@@ -60,7 +60,7 @@ A basic Dockerfile has been created to run the project in a container, using the
 	$ docker build --tag boston-crash-modeling:latest .
 	$ docker run -d -p 8080:8080 --name bcm.local boston-crash-modeling:latest
 
-The visualization should now be visible at http://localhost:8080/visualization/historical_crash_map.html
+The visualization should now be visible at http://localhost:8080/reports/historical_crash_map.html
 
 ### Data:
 

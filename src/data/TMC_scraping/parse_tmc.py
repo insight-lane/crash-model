@@ -121,7 +121,7 @@ def snap_inter_and_non_inter(summary):
             str(address['properties']['near_id'])
         address['properties']['near_id'] = ''
 
-    combined_seg, segments_index = util.read_segments()
+    combined_seg, segments_index = util.read_segments(os.path.join(PROCESSED_DATA_FP, 'maps'))
     util.find_nearest(address_records, combined_seg, segments_index, 30)
     return address_records
 
