@@ -15,22 +15,10 @@ PROCESSED_DATA_FP = None
 MAP_FP = None
 
 
-def write_test(props, geometry, values, filename):
-    keys = props.keys()
-    properties = {k: 'str' for k in keys}
-    schema = {
-        'geometry': geometry,
-        'properties': properties
-    }
-    print filename
-    util.write_shp(
-        schema,
-        MAP_FP + filename,
-        values, 0, 1)
-
-
 def add_match_features(line, features):
-
+    """
+    Add the properties from the features dict to the line
+    """
     feats_list = {}
     for m in line['matches']:
         for k, v in m[1].items():
@@ -153,13 +141,6 @@ def get_mapping(lines, features):
                 line['properties'][f] = 0
             result_counts[1] += 1
 
-#        write_test(
-#            line['properties'],
-#            'LineString',
-#            [(line['line'], line['properties'])],
-#            'orig.shp'
-#        )
-
     percent_matched = float(result_counts[0])/(
         float(result_counts[0]+result_counts[1])) * 100
     print 'Found matches for ' + str(percent_matched) + '% of segments'
@@ -168,7 +149,13 @@ def get_mapping(lines, features):
 
 
 def get_int_mapping(lines, buffered, buffered_index):
-
+    """
+    Gets the mappings between intersections
+    Args:
+        lines - the set of lines in an intersection
+        buffered - the buffered lines for the intersections in the other map
+        buffered_index - the rtree index
+    """
     print "Getting intersection mappings"
 
     line_results = []
@@ -202,7 +189,18 @@ def get_int_mapping(lines, buffered, buffered_index):
 
 
 def get_candidates(buffered, buffered_index, lines):
-
+    """
+    Gets candidate matches: lines that overlap the buffer of
+    lines from the other map
+    Args:
+        buffered - a list of tuples containing the buffer,
+            the linestring, and the properties for the lines for one map
+        buffered_index - the rtree index
+        lines - the lines for the other map
+    Returns:
+        a list of dicts containing a line, the properties,
+        and the candidate overlapping lines
+    """
     results = []
 
     print "Getting candidate overlapping lines"
@@ -235,7 +233,21 @@ def get_candidates(buffered, buffered_index, lines):
 
 
 def add_int_features(int_lines, dir1, dir2, featlist):
-
+    """
+    Adds the features to the intersections. Since intersection segments
+    are made up of the lines coming into an intersection, intersection
+    features are stored in a json file. Eventually the max value from all
+    the lines coming into the intersection is chosen for the feature.
+    Since we aren't mapping each individual line of the intersection,
+    (sometimes impossible, since the maps are often a little different)
+    we'll just take the max value here
+    Args:
+        int_lines - contains the ids for the original intersection lines,
+            and the new mapped intersection lines
+        dir1 - the directory the original inters data is in
+        dir2 - the directory the additional inters data is in
+        featlist - the features to add
+    """
     with open(os.path.join(dir2, 'inters_data.json'), 'r') as f:
         inters_new = json.load(f)
     
@@ -293,15 +305,10 @@ if __name__ == '__main__':
     print "Reading original map from " + non_inters_orig_file
     orig_map_non_inter = util.read_shp(non_inters_orig_file)
 
-#    orig_map_non_inter = [
-#        x for x in orig_map_non_inter if x[1]['name'] == 'Columbia Road']
-
     non_inters_new_file = os.path.join(
         MAP_FP, args.map2dir, 'non_inters_segments.shp')
     print "Reading new map from " + non_inters_new_file
     new_map_non_inter = util.read_shp(non_inters_new_file)
-#    new_map_non_inter = [x for x in new_map_non_inter if x[1]['ST_NAME'] in (
-#        'Columbia', 'Devon', 'Stanwood')]
 
     # Index for the new map
     new_buffered = []
@@ -315,10 +322,6 @@ if __name__ == '__main__':
 
     non_ints_with_candidates = get_candidates(
         new_buffered, new_index, orig_map_non_inter)
-
-# Try this later
-#    non_int_results = get_int_mapping(
-#        orig_map_non_inter, new_buffered, new_index)
 
     print "Adding features: " + ','.join(feats)
     get_mapping(non_ints_with_candidates, feats)
