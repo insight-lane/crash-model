@@ -76,7 +76,8 @@ if __name__ == '__main__':
     features = ['width', 'lanes', 'hwy_type', 'osm_speed']
 
     print "Generating maps for " + city + ' in ' + DATA_FP
-    print recreate
+    if recreate:
+        print "Overwriting existing data..."
     # Get the maps out of open street map, both projections
     subprocess.check_call([
         'python',
