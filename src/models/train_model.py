@@ -28,24 +28,25 @@ BASE_DIR = os.path.dirname(
 DATA_FP = BASE_DIR + '/data/processed/'
 
 # parse arguments
-parser = argparse.ArgumentParser(description="Train crash model.  Additional features specify '' to not include")
-parser.add_argument("-m", "--modelname", nargs="+", 
-					default='LR_base',
+parser = argparse.ArgumentParser(description="Train crash model.  "
+                                 + "Additional features specify "
+                                 + "'' to not include")
+parser.add_argument("-m", "--modelname", nargs="+", default='LR_base',
                     help="name of the model, for consistency")
-parser.add_argument("-seg", "--seg_data", type=str, 
-					default=DATA_FP+'vz_predict_dataset.csv.gz',
-                    help="path to the segment data (see data standards) default vz_predict_dataset.csv.gz")
-parser.add_argument("-concern", "--concern_column", nargs="+", 
-					default='concern',
-                    help="Feature name of concern data in segment data.  Let equal '' to not include. default 'concern'")
-parser.add_argument("-atr", "--atr_data", nargs="+", 
-					default=DATA_FP+'atrs_predicted.csv',
-                    help="path to the ATR data (see data standards) default atrs_predicted.csv")
-parser.add_argument("--atr_columns", nargs="+", 
-					default=['speed_coalesced', 'volume_coalesced'],
+parser.add_argument("-seg", "--seg_data", type=str,
+                    help="path to the segment data (see data standards)"
+                    + "default vz_predict_dataset.csv.gz")
+parser.add_argument("-concern", "--concern_column", nargs="+",
+                    default='concern',
+                    help="Feature name of concern data in segment data."
+                    + "Let equal '' to not include. default 'concern'")
+parser.add_argument("-atr", "--atr_data", nargs="+",
+                    help="path to the ATR data (see data standards)"
+                    + "default atrs_predicted.csv")
+parser.add_argument("--atr_columns", nargs="+",
+                    default=['speed_coalesced', 'volume_coalesced'],
                     help="features from atr file")
-parser.add_argument("-tmc", "--tmc_data", nargs="+", 
-					default=DATA_FP+'tmc_summary.json',
+parser.add_argument("-tmc", "--tmc_data", nargs="+",
                     help="path to the TMC data (see data standards) default tmc_summary.json")
 parser.add_argument("--tmc_columns", nargs="+", 
 					default=['Conflict'],
@@ -59,23 +60,61 @@ parser.add_argument("-f_cat", "--features_categorical", nargs="+",
 parser.add_argument("-f_cont", "--features_continuous", nargs="+",
 					default=['AADT'],
                     help="list of segment features to incude")
+parser.add_argument("-d", "--datadir", type=str,
+                    help="Can give alternate data directory")
 parser.add_argument("-process", "--process_features", nargs="+",
 					default=True,
                     help="Make categorical into dummies, standardize continuous")
 args = parser.parse_args()
+
+if args.datadir:
+    DATA_FP = os.path.join(args.datadir, 'processed')
+
+# Default
+seg_data = os.path.join(DATA_FP, 'vz_predict_dataset.csv.gz')
+# Override default if given
+if args.seg_data is not None:
+    seg_data = args.seg_data
+
+# Default
+atr_data = os.path.join(DATA_FP, 'atrs_predicted.csv')
+# Override default if given
+if args.atr_data == ['']:
+    atr_data = ['']
+elif args.atr_data is not None:
+    atr_data = args.atr_data
+
+# Default
+tmc_data = os.path.join(DATA_FP, 'tmc_summary.json')
+# Override default if given
+if args.tmc_data == ['']:
+    tmc_data = ['']
+elif args.tmc_data is not None:
+    tmc_data = args.tmc_data
 
 week = int(args.time_target[0])
 year = int(args.time_target[1])
 f_cat = args.features_categorical
 f_cont = args.features_continuous
 
+
 # Read in data
-data = pd.read_csv(args.seg_data, dtype={'segment_id':'str'})
+data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
 data.sort_values(['segment_id', 'year', 'week'], inplace=True)
 # get segments with non-zero crashes
 data_nonzero = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
 data_nonzero.reset_index(inplace=True)
 # segment chars
+
+# Dropping continuous features that don't exist
+new_feats = []
+for f in f_cont:
+    if f not in data_nonzero.columns.values:
+        print "Feature " + f + " not found, skipping"
+    else:
+        new_feats.append(f)
+f_cont = new_feats
+
 data_segs = data_nonzero.groupby('segment_id')[f_cont+f_cat].max()  # grab the highest values from each column
 data_segs.reset_index(inplace=True)
 
@@ -91,9 +130,9 @@ if args.concern_column!=['']:
 	data_segs = data_segs.merge(concern_observed.reset_index(), on='segment_id')
 
 # add in atrs if filepath present
-if args.atr_data!=['']:
+if atr_data!=['']:
 	print('Adding atrs')
-	atrs = pd.read_csv(args.atr_data, dtype={'id':'str'})
+	atrs = pd.read_csv(atr_data, dtype={'id':'str'})
 	# for some reason pandas reads the id as float before str conversions
 	atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
 	data_segs = data_segs.merge(atrs[['id']+args.atr_columns], 
@@ -101,9 +140,9 @@ if args.atr_data!=['']:
 	features += args.atr_columns
 
 # add in tmcs if filepath present
-if args.tmc_data!=['']:
+if tmc_data!=['']:
 	print('Adding tmcs')
-	tmcs = pd.read_json(args.tmc_data,
+	tmcs = pd.read_json(tmc_data,
 	                   dtype={'near_id':str})[['near_id']+args.tmc_columns]
 	data_segs = data_segs.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
 	data_segs[args.tmc_columns] = data_segs[args.tmc_columns].fillna(0)

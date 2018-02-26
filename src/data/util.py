@@ -4,7 +4,7 @@ import csv
 import rtree
 import geocoder
 from time import sleep
-from shapely.geometry import Point, shape, mapping
+from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
 import openpyxl
 from matplotlib import pyplot
 import os
@@ -150,15 +150,22 @@ def read_shp(fp):
     return(out)
 
 
-def write_shp(schema, fp, data, shape_key, prop_key):
+def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
     """ Write Shapefile
-    schema : schema dictionary
-    shape_key : column name or tuple index of Shapely shape
-    prop_key : column name or tuple index of properties
+    Args:
+        schema : schema dictionary
+        fp : file (.shp file)
+        data : a list of tuples
+            one element of the tuple is a shapely shape,
+            the other is a dict of properties
+        shape_key : column name or tuple index of Shapely shape
+        prop_key : column name or tuple index of properties
     """
 
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema) as c:
+    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
+
         for i in data:
+
             # some mismatch in yearly crash data
             # need to force it to conform to schema
             for k in schema['properties']:
@@ -325,3 +332,82 @@ def group_json_by_location(jsonfile, otherfields=[]):
             locations[str(item['near_id'])][field].append(item[field])
 
     return items, locations
+
+
+def track(index, step, tot):
+    """
+    Prints progress at interval
+    """
+    if index % step == 0:
+        print "finished {} of {}".format(index, tot)
+
+
+def write_points(points, schema, filename):
+    """
+    Given a list of shapely points,
+    de-dupe and write shape files
+
+    Args:
+        points: list of points indicating intersections
+        schema: schema of the shapefile
+        filename: filename for the shapefile
+    """
+
+    deduped_points = {}
+    # remove duplicate points
+    for pt, prop in points:
+        if (pt.x, pt.y) not in deduped_points.keys():
+            deduped_points[(pt.x, pt.y)] = pt, prop
+    with fiona.open(filename, 'w', 'ESRI Shapefile', schema) as output:
+        for i, (pt, prop) in enumerate(deduped_points.values()):
+            track(i, 500, len(deduped_points))
+            output.write({'geometry': mapping(pt), 'properties': prop})
+
+
+def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
+    """
+    Reprojects a set of records from one projection to another
+    Records can either be points, line strings, or multiline strings
+    Args:
+        records - list of records to reproject
+        inproj - defaults to 4326
+        outproj - defaults to 3857
+    Returns:
+        list of reprojected records
+    """
+    results = []
+    inproj = pyproj.Proj(init=inproj)
+    outproj = pyproj.Proj(init=outproj)
+    for record in records:
+
+        coords = record['geometry']['coordinates']
+        if record['geometry']['type'] == 'Point':
+            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+            point = Point(re_point)
+            results.append({'geometry': mapping(point),
+                            'properties': record['properties']})
+        elif record['geometry']['type'] == 'MultiLineString':
+            new_coords = []
+            print coords
+            for segment in coords:
+                print segment
+                new_segment = [
+                    pyproj.transform(
+                        inproj, outproj, segment[0][0], segment[0][1]),
+                    pyproj.transform(
+                        inproj, outproj, segment[1][0], segment[1][1])
+                ]
+                new_coords.append(new_segment)
+
+            results.append({'geometry': MultiLineString(new_coords),
+                            'properties': record['properties']})
+        elif record['geometry']['type'] == 'LineString':
+            new_coords = []
+            for coord in coords:
+                new_coords.append(
+                    pyproj.transform(inproj, outproj, coord[0], coord[1])
+                )
+            results.append({'geometry': LineString(new_coords),
+                            'properties': record['properties']})
+    return results
+

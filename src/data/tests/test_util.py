@@ -3,6 +3,7 @@ import os
 from shapely.geometry import Point
 import pyproj
 import csv
+import fiona
 import json
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
@@ -97,6 +98,20 @@ def test_read_segments():
     pass
 
 
+def test_write_points():
+    pass
+
+
+def test_reproject_records():
+    start_lines = fiona.open(
+        TEST_FP + '/data/processed/maps/test_line_convert.shp')
+    result = util.reproject_records(start_lines)
+
+    # Test makes sure that both the LineStrings and MultiLineStrings
+    # successfully get reprojected
+    assert len(start_lines) == len(result)
+
+
 def test_group_json_by_location(tmpdir):
     tmppath = tmpdir.strpath
     test_json = [{
@@ -136,4 +151,5 @@ def test_group_json_by_location(tmpdir):
         }, '2': {
             'count': 1, 'key1': ['test']}
     })
+
 

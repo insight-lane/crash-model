@@ -1,23 +1,16 @@
 import fiona
 import math
-from shapely.geometry import Point, shape, mapping
+from shapely.geometry import Point, shape
 import itertools
 import cPickle
 import os
 import argparse
+from util import track, write_points
 
 MAP_DATA_FP = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/data/processed/maps/'
-
-
-def track(index, step, tot):
-    """
-    Prints progress at interval
-    """
-    if index % step == 0:
-        print "finished {} of {}".format(index, tot)
 
 
 def extract_intersections(inter, prop):
@@ -58,7 +51,7 @@ def extract_intersections(inter, prop):
 
 def generate_intersections(lines):
     """
-    Runs extract_intersections on all combinations of points
+    Runs extract_intersections on all combinations of lines
     Writes the resulting intersections to file as well as returning
 
     Args:
@@ -107,17 +100,7 @@ def write_intersections(inters):
             'id_2': 'int'
         }
     }
-
-    points = {}
-    # remove duplicate points
-    for pt, prop in inters:
-        if (pt.x, pt.y) not in points.keys():
-            points[(pt.x, pt.y)] = pt, prop
-    with fiona.open(MAP_DATA_FP
-                    + 'inters.shp', 'w', 'ESRI Shapefile', schema) as output:
-        for i, (pt, prop) in enumerate(points.values()):
-            track(i, 500, len(points))
-            output.write({'geometry': mapping(pt), 'properties': prop})
+    write_points(inters, schema, os.path.join(MAP_DATA_FP, 'inters.shp'))
 
 
 if __name__ == '__main__':
@@ -127,6 +110,14 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--dir", type=str,
                         help="Can give alternate data directory")
 
+    parser.add_argument("-n", "--newmap", type=str,
+                        help="If given, write output to new directory" +
+                        "within the maps directory")
+
+    # Can force update
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether to force update the maps')
+
     args = parser.parse_args()
 
     # Import shapefile specified at commandline
@@ -134,7 +125,11 @@ if __name__ == '__main__':
 
     # Can override the hardcoded maps directory
     if args.dir:
-        MAP_DATA_FP = args.dir + '/processed/maps/'
+        MAP_DATA_FP = os.path.join(args.dir, 'processed/maps')
+    if args.newmap:
+        MAP_DATA_FP = os.path.join(MAP_DATA_FP, args.newmap)
+        if not os.path.exists(MAP_DATA_FP):
+            os.mkdir(MAP_DATA_FP)
 
     # Get all lines, dummy id
     lines = [
@@ -144,15 +139,17 @@ if __name__ == '__main__':
         ) for line in enumerate(fiona.open(shp))
     ]
 
-    print 'map data:' + MAP_DATA_FP
+    print 'Extracting intersections and writing into ' + MAP_DATA_FP
     inters = []
-    if not os.path.exists(MAP_DATA_FP + 'inters.pkl'):
-        print 'inters.pkl does not exist - generating intersections...'
+    pkl_file = os.path.join(MAP_DATA_FP, 'inters.pkl')
+    if not os.path.exists(pkl_file) or args.forceupdate:
+        print 'Generating intersections...'
         inters = generate_intersections(lines)
         # Save to pickle in case script breaks
-        with open(MAP_DATA_FP + 'inters.pkl', 'w') as f:
+        with open(pkl_file, 'w') as f:
             cPickle.dump(inters, f)
     else:
-        with open(MAP_DATA_FP + 'inters.pkl', 'r') as f:
+        print 'Reading intersections from ' + pkl_file
+        with open(pkl_file, 'r') as f:
             inters = cPickle.load(f)
     write_intersections(inters)

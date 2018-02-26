@@ -6,25 +6,25 @@
 # Developed by: bpben
 
 import fiona
-import pyproj
 import rtree
 import json
 import copy
 from fiona.crs import from_epsg
-from shapely.geometry import Point, shape, mapping
+from shapely.geometry import shape
 from shapely.ops import unary_union
 from collections import defaultdict
-from util import write_shp
+from util import write_shp, reproject_records
 import argparse
 import os
+import shutil
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-MAP_FP = BASE_DIR + '/data/processed/maps'
-DATA_FP = BASE_DIR + '/data/processed'
+MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
+DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 
 def get_intersection_buffers(intersections, intersection_buffer_units):
@@ -51,7 +51,13 @@ def find_non_ints(roads, int_buffers):
     Returns:
         tuple consisting of:
             non_int_lines - list in same format as input roads, just a subset
-            inter_segments
+                each element in the list is a tuple of LineString or
+                MultiLineString and dict of properties
+            inter_segments - dict of lists with keys data and lines
+                each element in the lines list is one of the lines
+                overlapping the intersection buffer, and each element
+                each element in the data list is a dict of properties
+                corresponding to the lines
     """
 
     # Create index for quick lookup
@@ -77,6 +83,7 @@ def find_non_ints(roads, int_buffers):
                 inter_segments['lines'][idx].append(
                     int_buffer.intersection(road[0]))
                 # Add intersecting road segment data
+                road[1]['inter'] = 1
                 inter_segments['data'][idx].append(road[1])
                 road_int_buffers.append(int_buffer)
         # If intersection buffers intersect roads
@@ -89,6 +96,7 @@ def find_non_ints(roads, int_buffers):
                 non_int_lines.extend([(line, road[1]) for line in diff])
         else:
             non_int_lines.append(road)
+
     return non_int_lines, inter_segments
 
 
@@ -103,28 +111,18 @@ def reproject_and_read(infile, outfile):
         inters - the reprojected intersections
     """
 
-    MAP_FP = '../../data/processed/maps'
-    DATA_FP = '../../data/processed'
-
-    print "Map data at ", MAP_FP
-    print "Output intersection data to ", DATA_FP
-
     # Reproject to 3857
     # Necessary because original intersection extraction had null projection
-    print "reprojecting raw intersection shapefile"
+    print "Reprojecting map file " + infile
     inters = fiona.open(infile)
-    inproj = pyproj.Proj(init='epsg:4326')
-    outproj = pyproj.Proj(init='epsg:3857')
 
-    # Write the intersection with projection 3857 to file
+    reprojected_records = reproject_records(inters)
+
+    # Write the reprojected (to 3857) intersections to file
     with fiona.open(outfile, 'w', crs=from_epsg(3857),
                     schema=inters.schema, driver='ESRI Shapefile') as output:
-        for inter in inters:
-            coords = inter['geometry']['coordinates']
-            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
-            point = Point(re_point)
-            output.write({'geometry': mapping(point),
-                          'properties': inter['properties']})
+        for record in reprojected_records:
+            output.write(record)
 
     # Read in reprojected intersection
     reprojected_inters = [(shape(inter['geometry']), inter['properties'])
@@ -133,18 +131,14 @@ def reproject_and_read(infile, outfile):
     return reprojected_inters
 
 
-def create_segments():
+def create_segments(roads_shp_path):
 
-    print "Map data at ", MAP_FP
-    print "Output intersection data to ", DATA_FP
-
-    inters_shp_path_raw = MAP_FP + '/inters.shp'
-    inters_shp_path = MAP_FP + '/inters_3857.shp'
+    inters_shp_path_raw = os.path.join(MAP_FP, 'inters.shp')
+    inters_shp_path = os.path.join(MAP_FP, 'inters_3857.shp')
 
     inters = reproject_and_read(inters_shp_path_raw, inters_shp_path)
 
     # Read in boston segments + mass DOT join
-    roads_shp_path = MAP_FP + '/ma_cob_spatially_joined_streets.shp'
     roads = [(shape(road['geometry']), road['properties'])
              for road in fiona.open(roads_shp_path)]
     print "read in {} road segments".format(len(roads))
@@ -162,6 +156,7 @@ def create_segments():
     # Turns the list of LineStrings into a MultiLineString
     union_inter = [({'id': idx}, unary_union(l))
                    for idx, l in inter_segments['lines'].items()]
+
     print "extracted {} intersection segments".format(len(union_inter))
 
     # Intersections shapefile
@@ -169,10 +164,14 @@ def create_segments():
         'geometry': 'LineString',
         'properties': {'id': 'int'},
     }
-    write_shp(inter_schema, MAP_FP + '/inters_segments.shp', union_inter, 1, 0)
+    write_shp(
+        inter_schema,
+        os.path.join(MAP_FP, 'inters_segments.shp'),
+        union_inter, 1, 0)
 
-    # Output inters_segments properties as json
-    with open(DATA_FP + '/inters_data.json', 'w') as f:
+    # The inters_segments shapefile above only gives an id property
+    # Store the other properties from inters_segments as json file
+    with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_segments['data'], f)
 
     # add non_inter id format = 00+i
@@ -182,6 +181,7 @@ def create_segments():
     for l in non_int_lines:
         prop = copy.deepcopy(l[1])
         prop['id'] = '00' + str(i)
+        prop['inter'] = 0
         non_int_w_ids.append(tuple([l[0], prop]))
         i += 1
     print "extracted {} non-intersection segments".format(len(non_int_w_ids))
@@ -194,7 +194,7 @@ def create_segments():
     }
     write_shp(
         road_schema,
-        MAP_FP + '/non_inters_segments.shp',
+        os.path.join(MAP_FP, 'non_inters_segments.shp'),
         non_int_w_ids,
         0,
         1
@@ -230,21 +230,58 @@ def create_segments():
     # along with their new IDs
     write_shp(
         all_schema,
-        MAP_FP + '/inter_and_non_int.shp', inter_and_non_int, 1, 0)
+        os.path.join(MAP_FP, 'inter_and_non_int.shp'),
+        inter_and_non_int, 1, 0)
+
+    # Copy files, since we'll be modifying if we add
+    # features from another source
+    shp_files = [
+        file for file in os.listdir(MAP_FP) if 'inters_segments.' in file]
+
+    for file in shp_files:
+        file_segs = file.split('.')
+        print "copying " + os.path.join(MAP_FP, file) + " to " \
+            + os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1])
+
+        shutil.copyfile(
+            os.path.join(MAP_FP, file),
+            os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1]))
+    # Also copy inters_data.json
+    shutil.copyfile(
+        os.path.join(DATA_FP, 'inters_data.json'),
+        os.path.join(DATA_FP, 'inters_data_orig.json')
+    )
+
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
+    parser.add_argument("-r", "--altroad", type=str,
+                        help="Can give alternate road shape file")
+    parser.add_argument("-n", "--newmap", type=str,
+                        help="If given, write output to new directory" +
+                        "within the maps directory")
+
     args = parser.parse_args()
 
     # Can override the hardcoded data directory
     if args.datadir:
-        DATA_FP = args.datadir + '/processed/'
-        MAP_FP = args.datadir + '/processed/maps/'
+        DATA_FP = os.path.join(args.datadir, 'processed')
+        MAP_FP = os.path.join(args.datadir, 'processed/maps')
+    if args.newmap:
+        DATA_FP = os.path.join(MAP_FP, args.newmap)
+        MAP_FP = DATA_FP
 
+    print "Creating segments..."
     print "Data directory: " + DATA_FP
     print "Map directory: " + MAP_FP
-    create_segments()
+
+    roads_shp_path = os.path.join(
+        MAP_FP, 'ma_cob_spatially_joined_streets.shp')
+    if args.altroad:
+        roads_shp_path = args.altroad
+        
+    create_segments(roads_shp_path)
 

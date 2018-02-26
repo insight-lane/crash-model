@@ -1,15 +1,15 @@
 import xlrd
-import pandas as pd
 from os import listdir, path
 from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
 from .. import util
 import rtree
-import folium
 import json
 import pyproj
 import os
+import argparse
+import sys
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -17,10 +17,10 @@ BASE_DIR = os.path.dirname(
             os.path.dirname(
                 os.path.abspath(__file__)))))
 
-RAW_DATA_FP = BASE_DIR + '/data/raw/'
-PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
-ATR_FP = BASE_DIR + '/data/raw/AUTOMATED TRAFFICE RECORDING/'
-TMC_FP = RAW_DATA_FP + '/TURNING MOVEMENT COUNT/'
+RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
+PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
+ATR_FP = os.path.join(RAW_DATA_FP, 'AUTOMATED TRAFFICE RECORDING')
+TMC_FP = os.path.join(RAW_DATA_FP, 'TURNING MOVEMENT COUNT')
 
 
 def num_hours(filename):
@@ -100,7 +100,8 @@ def find_address_from_filename(filename, cached):
 
 
 def snap_inter_and_non_inter(summary):
-    inter = util.read_shp(PROCESSED_DATA_FP + 'maps/inters_segments.shp')
+    inter = util.read_shp(
+        os.path.join(PROCESSED_DATA_FP, 'maps/inters_segments.shp'))
 
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
@@ -120,7 +121,7 @@ def snap_inter_and_non_inter(summary):
             str(address['properties']['near_id'])
         address['properties']['near_id'] = ''
 
-    combined_seg, segments_index = util.read_segments()
+    combined_seg, segments_index = util.read_segments(os.path.join(PROCESSED_DATA_FP, 'maps'))
     util.find_nearest(address_records, combined_seg, segments_index, 30)
     return address_records
 
@@ -137,10 +138,10 @@ def get_normalization_factor():
     """
     # Read in atr lats
     atrs = util.csv_to_projected_records(
-        PROCESSED_DATA_FP + 'geocoded_atrs.csv', x='lng', y='lat')
+        os.path.join(PROCESSED_DATA_FP, 'geocoded_atrs.csv'), x='lng', y='lat')
 
-    files = [ATR_FP +
-             atr['properties']['filename'] for atr in atrs]
+    files = [os.path.join(ATR_FP,
+             atr['properties']['filename']) for atr in atrs]
     all_counts = util.get_hourly_rates(files)
     counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
 
@@ -404,11 +405,11 @@ def parse_conflicts():
     n_11, n_12 = get_normalization_factor()
 
     # Read geocoded cache
-    geocoded_file = PROCESSED_DATA_FP + 'geocoded_addresses.csv'
+    geocoded_file = os.path.join(PROCESSED_DATA_FP, 'geocoded_addresses.csv')
     cached = {}
     if path_exists(geocoded_file):
         print 'reading geocoded cache file'
-        cached = util.read_geocode_cache()
+        cached = util.read_geocode_cache(filename=geocoded_file)
 
     summary = []
     for filename in listdir(TMC_FP):
@@ -493,24 +494,50 @@ def parse_conflicts():
                     summary.append(value)
 
     # Write out the cached file
-    util.write_geocode_cache(cached)
+    util.write_geocode_cache(cached, filename=geocoded_file)
 
     print "parsed " + str(count) + " TMC files"
     return summary
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Can give alternate data directory")
+
+    # Can force update
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether force update the maps')
+
+    args = parser.parse_args()
+    if args.datadir:
+        RAW_DATA_FP = os.path.join(args.datadir, 'raw')
+        PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
+        ATR_FP = os.path.join(RAW_DATA_FP, 'AUTOMATED TRAFFICE RECORDING')
+        TMC_FP = os.path.join(RAW_DATA_FP, 'TURNING MOVEMENT COUNT')
+
+    if not os.path.exists(TMC_FP):
+        print "No TMC directory, skipping..."
+        sys.exit()
+    if not os.path.exists(ATR_FP):
+        # At the moment this is true, but it probably can be skipped if
+        # not available
+        print "TMC parsing needs ATRs for normalization, skipping..."
+        sys.exit
+
     address_records = []
 
-    summary_file = PROCESSED_DATA_FP + 'tmc_summary.json'
-    if not path_exists(summary_file):
-        print 'No tmc_summary.json, parsing tmcs files now...'
+    print 'Parsing turning movement counts...'
+    summary_file = os.path.join(PROCESSED_DATA_FP, 'tmc_summary.json')
+    if not path_exists(summary_file) or args.forceupdate:
+        print 'Parsing tmc files...'
 
         summary = parse_conflicts()
         address_records = snap_inter_and_non_inter(summary)
 
         all_crashes, crashes_by_location = util.group_json_by_location(
-            PROCESSED_DATA_FP + 'crash_joined.json')
+            os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'))
 
         for record in address_records:
             if record['properties']['near_id'] \
@@ -526,9 +553,6 @@ if __name__ == '__main__':
         address_records = json.load(open(summary_file))
         print "Read in " + str(len(address_records)) + " records"
 
-    # to do
-    # tests?
-    # add any features to model?  what do we add from atrs?
 
 
 

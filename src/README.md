@@ -21,17 +21,69 @@ rtree additionally requires download and installation of [libspatialindex](http:
 
 Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download.html) might be helpful to visualize shape files and easily see their attributes
 
+## Code conventions
+
 ## Testing
 
 Before submitting PRs for code in the data directory, you should run the tests.  In the src directory: `py.test`
 
+## Overview
+
+We use open street map to generate basic information about a city.  Then we find intersections and segments in between intersections.  We take one or more csv files of crash data and map crashes to the intersection or non-intersection segments on our map.  And we have the ability to add a number of other data sources to generate features beyond those from open street map.  Most of the additional features are currently Boston-specific.
+These features include
+- Concerns submitted to the city of Boston's vision zero platform http://app01.cityofboston.gov/VZSafety/
+- Automated traffic counts in some locations
+- Turning movement counts in some locations
+
+We also can map city-specific maps (and features associated with their roads) to the base open street map.
+
+## Running data generation
+
+Although the processed data exists on data.world, you may wish to generate the data from scratch, or you may be interested in generating data for a new city.  To do that, the easiest way is to use or modify a configuration file in boston-crash-modeling/src/data.
+
+The configuration files are yml files that include all the arguments you'll need to run all of the data generation steps.  In src/data/config.yml you can find an example.
+
+city (required), e.g. 'Boston, Massachusetts, USA'
+
+datadir: The directory you want all of your output to end up in.  This directory will need at an absolute minimum to have a raw/ directory in it, containing at least the csv file(s) of crash data.  This is an optional argument, and defaults to ../data/
+
+crash_files: In ../data/raw/ if your crash csv files aren't the default Boston ones, you need to provide the names.  Right now, they must live in this directory.
+
+If you want to add features from another map (not required), you need all of the following arguments to be filled out:
+extra_map: A map in 4326 projection
+extra_map3857: A map in 3857 projection
+additional_features: any features you want to grab from extra_map3857
+
+And finally, if you're using a crash file with columns named things we aren't expecting, you need to tell us about it:
+longitude: If the column for the longitude is not labeled 'X', you need to give this
+latitude: If the column for the latitude is not labeled 'Y', you need to give this
+time_col: If the column for the date/time is not labeled 'CALENDAR_DATE', you need to give this
+
 ## Process map
 
-All of the python data generation scripts should be run from the src directory (boston-crash-modeling/src/) using the following scheme: `python -m <import path> <args>`.  See below for specific examples.
+All of the python data generation scripts should be run from the src directory (boston-crash-modeling/src/) using the following scheme: `python -m <import path> <args>`.
 
-If you add a new feature, create a new directory for the code.  Any utilities that are specific to that feature can go in a utility in that directory, but any shared functions should go in the top util.py.
+The simplest way to run the data generation scripts is `python -m data.make_dataset_osm`.  This will run each data generation script with the arguments you provide in a .yml file.  No arguments are required unless you want to use a different .yml configuration file from src/data/config.yml.
 
-## 1) Extract intersections
+You can alternatively run each of the data generation scripts individually.  Each script is described below
+
+## 1) Create maps from open street maps
+
+- Given a city name, queries open street maps for the city segments.  Simplifies the street network by combining some ways.  Cleans up features, and writes the segments with their cleaned features out to shapefile
+- **Usage:** `python -m data.osm_create_maps 'Boston, Massachusetts, USA' ../data/` (can replace Boston with any other city, and can use a different data directory
+- **Results:**
+    - data/processed/maps/osm_ways.shp
+    - data/processed/maps/osm_nodes.shp
+    - data/processed/maps/osm_ways_3857.shp (this is the file where the cleaned features are attached to ways)
+    - data/docs/highway_keys.csv (a mapping from highway key number to the highway type string)
+- **Features generated from open street maps:**
+    - width (rounded to the nearest foot)
+    - lanes (number of lanes)
+    - hwy_type
+    - osm_speed
+    - Many others can be added.  In particular, one way still needs to be added
+
+## 2) Extract intersections
 - Reads in road segment data (data/raw/Boston_Segments.shp).  Boston_Segments is in EPSG:4326 projection
 - Finds point locations where roads intersect
 - Creates a shapefile of intersections (inters.shp)
@@ -40,7 +92,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - data/processed/maps/inters.shp (and related files)
 
 
-## 2) Create segments
+## 3) Create segments
 - Reads in intersections and road segments
     - Creates unique ids for the road segments (orig_id) from ma\_co\_spatially\_joined\_streets.shp
 - Creates buffer (hard-coded 20m) around intersections
@@ -54,13 +106,19 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - data/processed/maps/ma\_co\_spatially\_joined\_streets.shp (Mercator projection:3857)
         - Descriptions of the attributes from ma_co_spatially_joined_streets.shp can be found in data/docs/MassDOTRoadInvDictionary.pdf
 - **Results:**
-    - data/processed/inters_segments.shp
-    - data/processed/non_inters_segments.shp
-    - data/processed/inter_and_non_int.shp
+    - data/processed/maps/inters_segments.shp
+    - data/processed/maps/non_inters_segments.shp
+    - data/processed/maps/inter_and_non_int.shp
     - data/processed/inters_data.json
 
+## 4) Add features from a new map
+- Takes two different maps of intersection segments, non-intersection segments and their intersection data json files, and finds mappings between the maps.  Intersections are mapped to intersections, and non-intersection segments are mapped to non-intersection segments.  Features are written out to the non_inters_segments shapefile and to the inters_data.json file (inters_segments does not contain feature information).  The default features, pulled from the Boston data are AADT, SPEEDLIMIT, Struct_Cnd, Surface_Tp, and F_F_Class.
+- **Usage:** `python -m data.add_map ../data/ ../data/processed/maps/boston' (the second argument is the directory where the second set of shapefiles that you want to map to the open street map shapefiles are located)
+- **Results:**
+    - data/processed/maps/non_inters_segments.shp (modified with new features)
+    - data/processed/inters_data.json (modified with new features)
 
-## 3) Join segments and point data
+## 5) Join segments and point data
 - Reads in crash/concern point data and intersection/non-intersection segments
 - Snaps points to nearest segment
     - Tolerance of 30m for crashes, 20m for concerns
@@ -75,7 +133,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - crash_joined.shp
     - concern_joined.shp
 
-## 4) Process the ATRs
+## 6) Process the ATRs
 - Adds coordinates for the Automated traffic recordings, along with some of the traffic count information.
 - Also snaps them to match up to road segments
 - <b>Usage:</b> `python -m data.ATR_scraping.geocode_snap_ATRs`
@@ -87,7 +145,9 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - data/processed/geocoded_atrs.csv
     - data/processed/snapped_atrs.json
 
-## 5) Make canonical dataset
+## 7) Process turning movement counts
+
+## 8) Make canonical dataset
 - Reads in crash/concern data
 - Aggregates crash/concern (default by week)
 - Reads in road features for intersections and non-intersections
@@ -100,7 +160,7 @@ If you add a new feature, create a new directory for the code.  Any utilities th
     - crash/concern_joined
     - inters/non_inters
 - <b>Results:</b>
-    - vz_perdict_dataset.csv.gz
+    - vz_predict_dataset.csv.gz
 
 # Data Standards
 
