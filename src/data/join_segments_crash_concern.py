@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(
 
 MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
 RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
-PROCESSED_DATA_FP = os.path.join(BASE_DIR, '/data/processed')
+PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 # filepaths of raw crash data (hardcoded for now)
 CRASH_DATA_FPS = [
     'cad_crash_events_with_transport_2016_wgs84.csv',
