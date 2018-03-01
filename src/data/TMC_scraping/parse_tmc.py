@@ -409,7 +409,7 @@ def parse_conflicts():
     cached = {}
     if path_exists(geocoded_file):
         print 'reading geocoded cache file'
-        cached = util.read_geocode_cache()
+        cached = util.read_geocode_cache(filename=geocoded_file)
 
     summary = []
     for filename in listdir(TMC_FP):
@@ -494,7 +494,7 @@ def parse_conflicts():
                     summary.append(value)
 
     # Write out the cached file
-    util.write_geocode_cache(cached)
+    util.write_geocode_cache(cached, filename=geocoded_file)
 
     print "parsed " + str(count) + " TMC files"
     return summary
