@@ -59,17 +59,17 @@ A basic Docker image has been created to run the project in a container, using C
 
 To run the Docker image, you need to first install the Docker engine on your local machine (Community Edition is sufficient). Instructions are available at https://docs.docker.com/install/ or contact @terryf82 in the project Slack channel for help =)
 
-The latest pre-built image is available from Data4Democracy's Docker Hub account at https://hub.docker.com/r/datafordemocracy/boston-crash-model/ by running the following command:
+The latest pre-built image is available from Data4Democracy's Docker Hub account at https://hub.docker.com/r/datafordemocracy/boston-crash-modeling/ by running the following command:
 
-    $ docker pull datafordemocracy/boston-crash-model:latest
+    $ docker pull datafordemocracy/boston-crash-modeling:latest
 
 or you can build the image from scratch by running the following from within the project repo:
 
-    $ docker build --tag datafordemocracy/boston-crash-model:latest .
+    $ docker build --tag datafordemocracy/boston-crash-modeling:latest .
 
 Once you've downloaded or built the image, you can run it in a container. The osm-data directory needs to be on your local machine and made available to the container. The same can optionally be done for the project repo, which is useful if you want to run the project and test new code on your local machine in realtime:
 
-	$ docker run -d -p 8080:8080 -v /local/path/to/osm-data:/osm-data [-v /local/path/to/project/repo:/app] --name bcm.local datafordemocracy/boston-crash-modeling:latest
+	$ docker run -d -p 8080:8080 -v /local/path/to/osm-data:/osm-data [-v /local/path/to/project/repo:/app] --name bcm.local datafordemocracy/boston-crash-modelinging:latest
 
 The visualization should now be visible at http://localhost:8080/reports/historical_crash_map.html
 
