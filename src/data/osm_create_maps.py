@@ -20,9 +20,15 @@ def simple_get_roads(city):
         None
     """
 
-    G = ox.graph_from_place(city, network_type='drive')
+    G1 = ox.graph_from_place(city, network_type='drive', simplify=False)
+    G = ox.simplify_graph(G1)
 
     # osmnx creates a directory for the nodes and edges
+    # Store all nodes
+    ox.save_graph_shapefile(
+        G, filename='all_nodes', folder=MAP_FP)
+
+    # Store simplified network
     ox.save_graph_shapefile(
         G, filename='temp', folder=MAP_FP)
     # Copy and remove temp directory
@@ -36,6 +42,26 @@ def simple_get_roads(city):
         shutil.move(os.path.join(tempdir, 'nodes', filename),
                     os.path.join(MAP_FP, 'osm_nodes.' + extension))
     shutil.rmtree(tempdir)
+
+
+def get_signals():
+    nodes = util.read_shp(
+        os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'))
+    signals = [
+        node for node in nodes if node[1]['highway'] == 'traffic_signals'
+    ]
+    schema = {
+        'geometry': 'Point',
+        'properties': {
+            'highway': 'str',
+            'osmid': 'str',
+            'ref': 'str'
+        }
+    }
+    util.write_shp(
+        schema,
+        os.path.join(MAP_FP, 'osm_signals.shp'),
+        signals, 0, 1, crs=fiona.crs.from_epsg(3857))
 
 
 def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
@@ -62,7 +88,6 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
 
     highway_keys = {}
     for way_line in reprojected_way_lines:
-
         # All features need to be ints, so convert them here
 
         # Use speed limit if given in osm
@@ -145,6 +170,9 @@ if __name__ == '__main__':
         print 'Generating map from open street map...'
         simple_get_roads(city)
 
+    if not os.path.exists(os.path.join(MAP_FP, 'osm_signals.shp')):
+        get_signals()
+
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways_3857.shp')) \
        or args.forceupdate:
         print "Reprojecting..."
@@ -153,3 +181,5 @@ if __name__ == '__main__':
             os.path.join(MAP_FP, 'osm_ways_3857.shp'),
             DOC_FP
         )
+
+
