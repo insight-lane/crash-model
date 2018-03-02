@@ -8,7 +8,7 @@ city: Boston, Massachusetts, USA
 
 # Data directory to look in and output results to
 # This is optional, and if not given, defaults to ../data/
-datadir: /osm-data/
+datadir: ../osm-data/
 
 # If recreate is True, regenerates ALL processed files from scratch
 recreate: False
