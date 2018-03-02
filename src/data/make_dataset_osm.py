@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     # Features drawn from open street maps
     # additional_features from config file can add on to
-    features = ['width', 'lanes', 'hwy_type', 'osm_speed']
+    features = ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal']
 
     print "Generating maps for " + city + ' in ' + DATA_FP
     if recreate:

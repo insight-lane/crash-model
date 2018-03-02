@@ -70,6 +70,12 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
     results into 3857 projection
     Additionally writes a key which shows the correspondence between
     highway type as a string and the resulting int feature
+    Features:
+        width
+        lanes
+        hwy_type
+        osm_speed
+        signal
     Args:
         orig_file: Filename for original file
         result_file: Filename for resulting file in 3857 projection
@@ -121,6 +127,7 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
             'lanes': int(lanes),
             'hwy_type': highway_keys[way_line[1]['highway']],
             'osm_speed': speed,
+            'signal': 0
         })
     schema = way_results.schema
 
@@ -129,6 +136,7 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
         # Add highway type key and osm_speed to the schema
         'hwy_type': 'int',
         'osm_speed': 'int',
+        'signal': 'int',
     })
 
     util.write_shp(

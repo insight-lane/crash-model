@@ -31,18 +31,6 @@ CRASH_DATA_FPS = [
 ]
 
 
-def make_schema(geometry, properties):
-    """
-    Utility for making schema with 'str' value for each key in properties
-    """
-    properties_dict = {k: 'str' for k, v in properties.items()}
-    schema = {
-        'geometry': geometry,
-        'properties': properties_dict
-    }
-    return(schema)
-
-
 def process_concerns():
     # Read in vision zero data
     # Have to use pandas read_csv, unicode trubs
@@ -69,7 +57,7 @@ def process_concerns():
     util.find_nearest(concern, combined_seg, segments_index, 20)
 
     # Write concerns
-    concern_schema = make_schema('Point', concern[0]['properties'])
+    concern_schema = util.make_schema('Point', concern[0]['properties'])
     print "output concerns shp to", MAP_FP
     util.write_shp(
         concern_schema,
@@ -136,10 +124,11 @@ if __name__ == '__main__':
 
     # Find nearest crashes - 30 tolerance
     print "snapping crashes to segments"
+
     util.find_nearest(crash, combined_seg, segments_index, 30)
 
     # Write crash
-    crash_schema = make_schema('Point', crash[0]['properties'])
+    crash_schema = util.make_schema('Point', crash[0]['properties'])
     print "output crash shp to", MAP_FP
     util.write_shp(crash_schema, os.path.join(MAP_FP, 'crash_joined.shp'),
                    crash, 'point', 'properties')
