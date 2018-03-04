@@ -69,7 +69,7 @@ or you can build the image from scratch by running the following from within the
 
 Once you've downloaded or built the image, you can run it in a container. The osm-data directory needs to be on your local machine and made available to the container. The same can optionally be done for the project repo, which is useful if you want to run the project and test new code on your local machine in realtime:
 
-	$ docker run -d -p 8080:8080 -v /local/path/to/osm-data:/osm-data [-v /local/path/to/project/repo:/app] --name bcm.local datafordemocracy/boston-crash-modelinging:latest
+	$ docker run -d -p 8080:8080 -v /local/path/to/osm-data:/osm-data [-v /local/path/to/project/repo:/app] --name bcm.local datafordemocracy/boston-crash-modeling:latest
 
 The visualization should now be visible at http://localhost:8080/reports/historical_crash_map.html
 
