@@ -336,6 +336,8 @@ if __name__ == '__main__':
 
     # Once the intersections and non_intersection segments exist,
     # other features can be added
-    add_signals(inter_data, os.path.join(MAP_FP, 'osm_signals.shp'))
+    signal_file = os.path.join(MAP_FP, 'osm_signals.shp')
+    if os.path.exists(signal_file):
+        add_signals(inter_data, signal_file)
 
     backup_files()
