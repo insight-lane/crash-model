@@ -23,14 +23,21 @@ def simple_get_roads(city):
     G1 = ox.graph_from_place(city, network_type='drive', simplify=False)
     G = ox.simplify_graph(G1)
 
+    # Label endpoints
+    streets_per_node = ox.count_streets_per_node(G)
+    for node, count in streets_per_node.items():
+        if count <= 1:
+            G.nodes()[node]['dead_end'] = True
+
     # osmnx creates a directory for the nodes and edges
-    # Store all nodes
+    # Store all nodes, since they can be other features
     ox.save_graph_shapefile(
         G, filename='all_nodes', folder=MAP_FP)
 
     # Store simplified network
     ox.save_graph_shapefile(
         G, filename='temp', folder=MAP_FP)
+
     # Copy and remove temp directory
     tempdir = os.path.join(MAP_FP, 'temp')
     for filename in os.listdir(os.path.join(tempdir, 'edges')):
