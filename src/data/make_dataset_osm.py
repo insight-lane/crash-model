@@ -86,15 +86,7 @@ if __name__ == '__main__':
         city,
         DATA_FP,
     ] + (['--forceupdate'] if recreate else []))
-    # Extract intersections from the open street map data
-    subprocess.check_call([
-        'python',
-        '-m',
-        'data.extract_intersections',
-        os.path.join(DATA_FP, 'processed/maps/osm_ways.shp'),
-        '-d',
-        DATA_FP
-    ] + (['--forceupdate'] if recreate else []))
+
     # Create segments on the open street map data
     subprocess.check_call([
         'python',
@@ -103,7 +95,9 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-r',
-        os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp')
+        os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp'),
+        '-i',
+        os.path.join(DATA_FP, 'processed/maps/osm_nodes.shp')
     ])
 
     if extra_map:

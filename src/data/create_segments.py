@@ -302,6 +302,23 @@ def add_signals(inter_data, filename):
         json.dump(inter_data, f)
 
 
+def strip_endpoints(filename):
+    """
+    If we are using an osm node file, strip out endpoints and write out
+    to inters.shp
+    """
+    nodes = fiona.open(filename)
+    intersections = [(
+        Point(n['geometry']['coordinates']),
+        n['properties']
+    ) for n in nodes if not n['properties']['dead_end']]
+
+    util.write_shp(
+        nodes.schema,
+        os.path.join(MAP_FP, 'inters.shp'),
+        intersections, 0, 1, crs=nodes.crs)
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -312,6 +329,8 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--newmap", type=str,
                         help="If given, write output to new directory" +
                         "within the maps directory")
+    parser.add_argument("-i", "--intersections", type=str,
+                        help="Can give osm nodes instead of intersections")
 
     args = parser.parse_args()
 
@@ -322,6 +341,9 @@ if __name__ == '__main__':
     if args.newmap:
         DATA_FP = os.path.join(MAP_FP, args.newmap)
         MAP_FP = DATA_FP
+
+    if args.intersections:
+        strip_endpoints(args.intersections)
 
     print "Creating segments..."
     print "Data directory: " + DATA_FP
