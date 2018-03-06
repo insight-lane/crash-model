@@ -6,11 +6,11 @@ import csv
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import scipy.stats as ss
 from glob import glob
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
+from datetime import datetime
 from scipy.stats import describe
 from model_utils import *
 from model_classes import *
@@ -234,6 +234,15 @@ test.run_tuned('LR_base', cal=False)
 test.run_tuned('XG_base', cal=False)
 
 # sensitivity analysis TODO
+def predict_forward(split_week, split_year, seg_data, crash_data):
+	test_crash = format_crash_data(crash_data.set_index(['segment_id','year','week']), 'crash', 
+		split_week, split_year)
+	test_crash_segs = test_crash.merge(seg_data, left_on='segment_id', right_on='segment_id')
+	tuned_model.fit(test_crash_segs[lm_features], test_crash_segs['target'])
+	print roc_auc_score(test_crash_segs['target'], 
+		tuned_model.predict_proba(test_crash_segs[lm_features])[::,1])
+	return(tuned_model.predict_proba(test_crash_segs[lm_features])[::,1])
+
 # running this to test performance at different weeks
 tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 # random sets
@@ -249,10 +258,18 @@ tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 #	print roc_auc_score(test_crash_segs['target'], 
 #		tuned_model.predict_proba(test_crash_segs[lm_features])[::,1])
 
+import pdb
+pdb.set_trace()
+# predict for all weeks
+all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values
+for y, w in all_weeks:
+	pred = predict_forward(w, y, data_segs, data_nonzero)
+	break
+
 # train, output predictions + model
-fit_model = test.rundict['LR_base']['m_fit'].fit(data_model[lm_features], data_model.target)
-data_model['preds'] = fit_model.predict_proba(data_model[lm_features])[::,1]
-data_model.to_pickle(DATA_FP+'vz_with_predicted.pkl.gz', compression='gzip')
-with open('trained_model.pkl', 'w') as f:
-	pickle.dump(fit_model, f)
+#fit_model = test.rundict['LR_base']['m_fit'].fit(data_model[lm_features], data_model.target)
+#data_model['preds'] = fit_model.predict_proba(data_model[lm_features])[::,1]
+#data_model.to_pickle(DATA_FP+'vz_with_predicted.pkl.gz', compression='gzip')
+#with open('trained_model.pkl', 'w') as f:
+	#pickle.dump(fit_model, f)
 

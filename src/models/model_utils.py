@@ -8,6 +8,8 @@ def format_crash_data(data, col, target_week, target_year):
     note: data must be available for 4 months prior to target
     gets previous week count, previous month count, previous quarter count, avg per week
     """
+    sliced = data.loc[(slice(None),slice(None,target_year), slice(1, target_week)),:]
+
     assert target_week>16
     pre_week = target_week - 1
     pre_month = range(pre_week-4, target_week)
