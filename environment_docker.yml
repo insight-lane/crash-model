@@ -133,6 +133,7 @@ dependencies:
 - sqlalchemy
 - sqlite
 - statsmodels
+- unicodecsv
 - testpath
 - tornado
 - traitlets

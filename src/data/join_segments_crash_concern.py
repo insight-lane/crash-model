@@ -114,9 +114,18 @@ if __name__ == '__main__':
         crash = crash + tmp
 
     if args.datecol:
+        crash_with_date = []
+        count = 0
         for i in range(len(crash)):
-            d = parse(crash[i]['properties'][args.datecol]).isoformat()
-            crash[i]['properties']['CALENDAR_DATE'] = d
+            if crash[i]['properties'][args.datecol]:
+                d = parse(crash[i]['properties'][args.datecol]).isoformat()
+                crash[i]['properties']['CALENDAR_DATE'] = d
+                crash_with_date.append(crash[i])
+            else:
+                count += 1
+        print str(count) + " out of " + str(len(crash)) \
+            + " don't have a date, skipping"
+        crash = crash_with_date
 
     print "Read in data from {} crashes".format(len(crash))
 

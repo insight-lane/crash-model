@@ -1,6 +1,6 @@
 import fiona
 import pyproj
-import csv
+import unicodecsv as csv
 import rtree
 import geocoder
 from time import sleep
