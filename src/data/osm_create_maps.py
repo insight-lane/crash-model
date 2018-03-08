@@ -129,12 +129,18 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
         if way_line[1]['highway'] not in highway_keys.keys():
             highway_keys[way_line[1]['highway']] = len(highway_keys)
 
+        # Use oneway
+        oneway = 0
+        if way_line[1]['oneway'] == 'True':
+            oneway = 1
+
         way_line[1].update({
             'width': width,
             'lanes': int(lanes),
             'hwy_type': highway_keys[way_line[1]['highway']],
             'osm_speed': speed,
-            'signal': 0
+            'signal': 0,
+            'oneway': oneway
         })
     schema = way_results.schema
 
@@ -144,6 +150,7 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
         'hwy_type': 'int',
         'osm_speed': 'int',
         'signal': 'int',
+        'oneway': 'int',
     })
 
     util.write_shp(
