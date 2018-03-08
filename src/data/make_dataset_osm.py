@@ -56,7 +56,7 @@ if __name__ == '__main__':
     longitude = 'X'
     latitude = 'Y'
     date_col = None
-    crash_file = None
+    crash_files = None
     if 'longitude' in config.keys() and config['longitude']:
         longitude = config['longitude']
     if 'latitude' in config.keys() and config['latitude']:
@@ -65,15 +65,16 @@ if __name__ == '__main__':
     if 'date_col' in config.keys() and config['date_col']:
         date_col = config['date_col']
 
-    if 'crash_file' in config.keys() and config['crash_file']:
-        crash_file = config['crash_file']
+    if 'crashfiles' in config.keys() and config['crashfiles']:
+        crash_files = config['crashfiles']
 
     if 'recreate' in config.keys() and config['recreate']:
         recreate = True
 
     # Features drawn from open street maps
     # additional_features from config file can add on to
-    features = ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal']
+    features = [
+        'width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway']
 
     print "Generating maps for " + city + ' in ' + DATA_FP
     if recreate:
@@ -148,7 +149,7 @@ if __name__ == '__main__':
         '-y',
         latitude,
     ]
-        + (['-c', crash_file] if crash_file else [])
+        + (['-c', ' '.join(crash_files)] if crash_files else [])
         + (['-t', date_col] if date_col else [])
     )
 
