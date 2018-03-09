@@ -1,5 +1,6 @@
 ## helper functions for training/predicting
 # Developed by: bpben
+import pandas as pd
 
 def format_crash_data(data, col, target_week, target_year):
     """ formats crash data for train/test 
@@ -8,36 +9,24 @@ def format_crash_data(data, col, target_week, target_year):
     note: data must be available for 4 months prior to target
     gets previous week count, previous month count, previous quarter count, avg per week
     """
-    sliced = data.loc[(slice(None),slice(None,target_year), slice(1, target_week)),:]
+    all_dates = data[['year','week']].drop_duplicates()
+    all_dates.reset_index(drop=True, inplace=True)
+    target_idx = all_dates[(all_dates.year==target_year)&(all_dates.week==target_week)].index.values[0]
 
-    assert target_week>16
-    pre_week = target_week - 1
-    pre_month = range(pre_week-4, target_week)
-    pre_quarter = range(pre_month[0]-12, target_week)
-    
-    # week interval for each segment
-    # full range = pre_quarter : target
-    sliced = data.loc[(slice(None),slice(target_year,target_year), slice(1, target_week)),:]
-    week_data = sliced[col].unstack(2)
-    week_data.reset_index(level=1, inplace=True)
-    
-    # aggregate
-    week_data['pre_month'] = week_data[pre_month].sum(axis=1)
-    week_data['pre_quarter'] = week_data[pre_quarter].sum(axis=1)
-    week_data['pre_week'] = week_data[pre_week]
+    pre_week = tuple(all_dates.loc[target_idx-1].values)
+    pre_month = all_dates.loc[range(target_idx-4, target_idx)].values
+    pre_quarter = all_dates.loc[range(target_idx-12, target_idx)].values
 
-    # avg as of target week
-    except_target = data.loc[(slice(None),
-                       slice(target_year,target_year),
-                       slice(target_week,None)),:].index
-    avg_week = data.drop(except_target)
-    avg_week = avg_week.reset_index().groupby('segment_id')[col].mean()
-    avg_week.name = 'avg_week'
-    # join to week data
-    week_data = week_data.join(avg_week)
+    # format data to take in intervals defined above
+    formatted_data = data.set_index(['segment_id','year','week'])[col].unstack(level=[1,2])
+    week_data = pd.DataFrame(formatted_data[pre_week])
+    week_data.columns = ['pre_week']
+    week_data['pre_month'] = formatted_data[pre_month].max(axis=1)
+    week_data['pre_quarter'] = formatted_data[pre_quarter].max(axis=1)
+    week_data['avg_week'] = formatted_data[all_dates.loc[:target_idx-1].values].mean(axis=1)
 
     # binarize target
-    week_data['target'] = (week_data[target_week]>0).astype(int)
+    week_data['target'] = (formatted_data[tuple(all_dates.loc[target_idx].values)]>0).astype(int)
     week_data = week_data.reset_index()
 
     return(week_data[['segment_id','target', 'pre_week',

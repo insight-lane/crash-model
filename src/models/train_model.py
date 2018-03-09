@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as ss
+import json
 from glob import glob
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
@@ -153,8 +154,7 @@ lm_features = features
 
 # add crash data
 # create lagged crash values
-crash_lags = format_crash_data(data_nonzero.set_index(['segment_id','year','week']), 'crash', 
-	week, year)
+crash_lags = format_crash_data(data_nonzero, 'crash', week, year)
 # add to features
 crash_cols = ['pre_week','pre_month','pre_quarter','avg_week']
 features += crash_cols
@@ -235,41 +235,25 @@ test.run_tuned('XG_base', cal=False)
 
 # sensitivity analysis TODO
 def predict_forward(split_week, split_year, seg_data, crash_data):
-	test_crash = format_crash_data(crash_data.set_index(['segment_id','year','week']), 'crash', 
-		split_week, split_year)
+	test_crash = format_crash_data(crash_data, 'crash', split_week, split_year)
 	test_crash_segs = test_crash.merge(seg_data, left_on='segment_id', right_on='segment_id')
 	tuned_model.fit(test_crash_segs[lm_features], test_crash_segs['target'])
-	print roc_auc_score(test_crash_segs['target'], 
-		tuned_model.predict_proba(test_crash_segs[lm_features])[::,1])
-	return(tuned_model.predict_proba(test_crash_segs[lm_features])[::,1])
+	preds = tuned_model.predict_proba(test_crash_segs[lm_features])[::,1]
+	print roc_auc_score(test_crash_segs['target'], preds)
+	return(preds)
 
 # running this to test performance at different weeks
 tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
-# random sets
-#print "running sensitivity analysis"
 
-#for i in range(3):
-#	test_time = random.choice(data[['year','week']].values)
-#	print test_time[0]
-#	test_crash = format_crash_data(data_nonzero.set_index(['segment_id','year','week']), 'crash', 
-#		test_time[1], test_time[0])
-#	test_crash_segs = test_crash.merge(data_segs, left_on='segment_id', right_on='segment_id')
-#	tuned_model.fit(test_crash_segs[lm_features], test_crash_segs['target'])
-#	print roc_auc_score(test_crash_segs['target'], 
-#		tuned_model.predict_proba(test_crash_segs[lm_features])[::,1])
-
-import pdb
-pdb.set_trace()
-# predict for all weeks
-all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values
-for y, w in all_weeks:
-	pred = predict_forward(w, y, data_segs, data_nonzero)
-	break
-
-# train, output predictions + model
-#fit_model = test.rundict['LR_base']['m_fit'].fit(data_model[lm_features], data_model.target)
-#data_model['preds'] = fit_model.predict_proba(data_model[lm_features])[::,1]
-#data_model.to_pickle(DATA_FP+'vz_with_predicted.pkl.gz', compression='gzip')
-#with open('trained_model.pkl', 'w') as f:
-	#pickle.dump(fit_model, f)
-
+# predict for all weeks past 4 months
+all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values[16:]
+pred_all_weeks = np.zeros([all_weeks.shape[0], data_segs.shape[0]])
+for i, yw in enumerate(all_weeks):
+	print yw
+	preds = predict_forward(yw[1], yw[0], data_segs, data_nonzero)
+	pred_all_weeks[i] = preds
+print pred_all_weeks.shape
+df_pred = pd.DataFrame(pred_all_weeks.T,
+	index=data_segs.segment_id.values,
+	columns=[tuple(x) for x in all_weeks])
+df_pred.to_csv(DATA_FP+'seg_with_predicted.csv')
