@@ -10,10 +10,10 @@ import rtree
 import json
 import copy
 from fiona.crs import from_epsg
-from shapely.geometry import shape
+from shapely.geometry import shape, Point
 from shapely.ops import unary_union
 from collections import defaultdict
-from util import write_shp, reproject_records
+import util
 import argparse
 import os
 import shutil
@@ -116,7 +116,7 @@ def reproject_and_read(infile, outfile):
     print "Reprojecting map file " + infile
     inters = fiona.open(infile)
 
-    reprojected_records = reproject_records(inters)
+    reprojected_records = util.reproject_records(inters)
 
     # Write the reprojected (to 3857) intersections to file
     with fiona.open(outfile, 'w', crs=from_epsg(3857),
@@ -164,7 +164,7 @@ def create_segments(roads_shp_path):
         'geometry': 'LineString',
         'properties': {'id': 'int'},
     }
-    write_shp(
+    util.write_shp(
         inter_schema,
         os.path.join(MAP_FP, 'inters_segments.shp'),
         union_inter, 1, 0)
@@ -192,7 +192,7 @@ def create_segments(roads_shp_path):
         'geometry': 'LineString',
         'properties': road_properties
     }
-    write_shp(
+    util.write_shp(
         road_schema,
         os.path.join(MAP_FP, 'non_inters_segments.shp'),
         non_int_w_ids,
@@ -228,13 +228,19 @@ def create_segments(roads_shp_path):
 
     # write out shapefile that has intersection and non-intersection segments
     # along with their new IDs
-    write_shp(
+    util.write_shp(
         all_schema,
         os.path.join(MAP_FP, 'inter_and_non_int.shp'),
         inter_and_non_int, 1, 0)
 
-    # Copy files, since we'll be modifying if we add
-    # features from another source
+    return inter_segments['data']
+
+
+def backup_files():
+    """
+    Make a copy of inters_segments, non_inters_segments, and inters_data
+    Since we'll be modifying these files if we add features from another source
+    """
     shp_files = [
         file for file in os.listdir(MAP_FP) if 'inters_segments.' in file]
 
@@ -253,6 +259,66 @@ def create_segments(roads_shp_path):
     )
 
 
+def add_signals(inter_data, filename):
+    """
+    Add traffic signal feature to inter_data, write it back out
+    to inter_data.json
+    Args:
+        inter_data
+        filename - shape file for the osm signals data
+    """
+    signals = fiona.open(filename)
+    signals = util.reproject_records(signals)
+    records = [{
+        'point': Point(x['geometry']['coordinates']),
+        'properties': x['properties']
+    } for x in signals]
+
+    seg, segments_index = util.read_segments(
+        dirname=MAP_FP,
+        get_non_inter=False
+    )
+
+    util.find_nearest(records, seg, segments_index, 20)
+
+    matches = {}
+    for record in records:
+        near = record['properties']['near_id']
+        if near:
+            matches[near] = 1
+
+    new_inter_data = {}
+    for key, segments in inter_data.iteritems():
+        updated_segments = []
+        for segment in segments:
+            signal = '0'
+            if key in matches.keys():
+                signal = '1'
+            segment.update({'signal': signal})
+            updated_segments.append(segment)
+        new_inter_data[key] = updated_segments
+
+    with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
+        json.dump(inter_data, f)
+
+
+def strip_endpoints(filename):
+    """
+    If we are using an osm node file, strip out endpoints and write out
+    to inters.shp
+    """
+    nodes = fiona.open(filename)
+    intersections = [(
+        Point(n['geometry']['coordinates']),
+        n['properties']
+    ) for n in nodes if not n['properties']['dead_end']]
+
+    util.write_shp(
+        nodes.schema,
+        os.path.join(MAP_FP, 'inters.shp'),
+        intersections, 0, 1, crs=nodes.crs)
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -263,6 +329,8 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--newmap", type=str,
                         help="If given, write output to new directory" +
                         "within the maps directory")
+    parser.add_argument("-i", "--intersections", type=str,
+                        help="Can give osm nodes instead of intersections")
 
     args = parser.parse_args()
 
@@ -274,6 +342,9 @@ if __name__ == '__main__':
         DATA_FP = os.path.join(MAP_FP, args.newmap)
         MAP_FP = DATA_FP
 
+    if args.intersections:
+        strip_endpoints(args.intersections)
+
     print "Creating segments..."
     print "Data directory: " + DATA_FP
     print "Map directory: " + MAP_FP
@@ -283,5 +354,12 @@ if __name__ == '__main__':
     if args.altroad:
         roads_shp_path = args.altroad
         
-    create_segments(roads_shp_path)
+    inter_data = create_segments(roads_shp_path)
 
+    # Once the intersections and non_intersection segments exist,
+    # other features can be added
+    signal_file = os.path.join(MAP_FP, 'osm_signals.shp')
+    if os.path.exists(signal_file):
+        add_signals(inter_data, signal_file)
+
+    backup_files()

@@ -153,3 +153,9 @@ def test_group_json_by_location(tmpdir):
     })
 
 
+def test_make_schema():
+    test_schema = {'X': 1, 'NAME': 'foo'}
+    result_schema = util.make_schema(
+        'Point', test_schema)
+    assert result_schema == {'geometry': 'Point', 'properties':
+                             {'X': 'str', 'NAME': 'str'}}

@@ -260,9 +260,11 @@ def find_nearest(records, segments, segments_index, tolerance):
     print "Using tolerance {}".format(tolerance)
 
     for record in records:
+
         record_point = record['point']
         record_buffer_bounds = record_point.buffer(tolerance).bounds
         nearby_segments = segments_index.intersection(record_buffer_bounds)
+
         segment_id_with_distance = [
             # Get db index and distance to point
             (
@@ -271,6 +273,7 @@ def find_nearest(records, segments, segments_index, tolerance):
             )
             for segment_id in nearby_segments
         ]
+
         # Find nearest segment
         if len(segment_id_with_distance):
             nearest = min(segment_id_with_distance, key=lambda tup: tup[1])
@@ -282,19 +285,26 @@ def find_nearest(records, segments, segments_index, tolerance):
             record['properties']['near_id'] = ''
 
 
-def read_segments(dirname=MAP_FP):
+def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     """
     Reads in the intersection and non intersection segments, and
     makes a spatial index for lookup
 
     Args:
         Optional directory (defaults to MAP_FP)
+        get_inter - if given, return inter segments; defaults to True
+        get_non_inter - if given, return non inter segments; defaults to True
     Returns:
-        The combined segments and spatial index
+        The segments and spatial index
     """
     # Read in segments
-    inter = read_shp(dirname + '/inters_segments.shp')
-    non_inter = read_shp(dirname + '/non_inters_segments.shp')
+    inter = []
+    non_inter = []
+
+    if get_inter:
+        inter = read_shp(dirname + '/inters_segments.shp')
+    if get_non_inter:
+        non_inter = read_shp(dirname + '/non_inters_segments.shp')
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 
@@ -410,4 +420,16 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
             results.append({'geometry': LineString(new_coords),
                             'properties': record['properties']})
     return results
+
+
+def make_schema(geometry, properties):
+    """
+    Utility for making schema with 'str' value for each key in properties
+    """
+    properties_dict = {k: 'str' for k, v in properties.items()}
+    schema = {
+        'geometry': geometry,
+        'properties': properties_dict
+    }
+    return(schema)
 
