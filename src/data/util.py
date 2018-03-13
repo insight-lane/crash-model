@@ -1,6 +1,6 @@
 import fiona
 import pyproj
-import unicodecsv as csv
+import csv
 import rtree
 import geocoder
 from time import sleep
@@ -171,12 +171,15 @@ def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
             for k in schema['properties']:
                 if k not in i[prop_key]:
                     i[prop_key][k] = ''
-            c.write({
+
+            entry = {
                 'geometry': mapping(i[shape_key]),
                 # need to maintain key order because of fiona persnicketiness
-                'properties': {
-                    k: i[prop_key][k] for k in schema['properties']},
-            })
+                'properties': {k: i[prop_key][k]
+                               for k in schema['properties']},
+            }
+
+            c.write(entry)
 
 
 def record_to_csv(filename, records):

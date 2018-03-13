@@ -31,12 +31,12 @@ CRASH_DATA_FPS = [
 ]
 
 
-def process_concerns():
+def process_concerns(concernfile):
     # Read in vision zero data
     # Have to use pandas read_csv, unicode trubs
 
     path = os.path.join(
-        RAW_DATA_FP, 'Vision_Zero_Entry.csv')
+        RAW_DATA_FP, concernfile)
 
     # Only read in if the file exists
     # Since at the moment, only Boston has concern data, this is
@@ -46,10 +46,11 @@ def process_concerns():
         return
 
     concern_raw = pd.read_csv(os.path.join(
-        RAW_DATA_FP, 'Vision_Zero_Entry.csv'))
+        RAW_DATA_FP, concernfile))
     concern_raw = concern_raw.to_dict('records')
     concern = util.raw_to_record_list(concern_raw,
                                       pyproj.Proj(init='epsg:4326'))
+
     print "Read in data from {} concerns".format(len(concern))
 
     # Find nearest concerns - 20 tolerance
@@ -79,6 +80,9 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--crashfiles", nargs='+',
                         help="Can give alternate list of crash files. " +
                         "Only use filename, don't include path")
+    parser.add_argument("-s", "--safetyconcern", type=str,
+                        help="Can give alternate concern file." +
+                        "Only use filename, don't include path")
     parser.add_argument("-x", "--longitude", type=str,
                         help="column name in csv file containing longitude")
     parser.add_argument("-y", "--latitude", type=str,
@@ -95,6 +99,10 @@ if __name__ == '__main__':
         MAP_FP = os.path.join(args.datadir, 'processed/maps')
     if args.crashfiles:
         CRASH_DATA_FPS = args.crashfiles
+
+    safetyconcern = 'Vision_Zero_Entry.csv'
+    if args.safetyconcern:
+        safetyconcern = args.safetyconcern
 
     longitude = 'X'
     latitude = 'Y'
@@ -145,4 +153,4 @@ if __name__ == '__main__':
     with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'), 'w') as f:
         json.dump([c['properties'] for c in crash], f)
 
-    process_concerns()
+    process_concerns(safetyconcern)

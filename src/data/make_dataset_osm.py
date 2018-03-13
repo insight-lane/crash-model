@@ -57,6 +57,7 @@ if __name__ == '__main__':
     latitude = 'Y'
     date_col = None
     crash_files = None
+    concern = None
     if 'longitude' in config.keys() and config['longitude']:
         longitude = config['longitude']
     if 'latitude' in config.keys() and config['latitude']:
@@ -70,6 +71,9 @@ if __name__ == '__main__':
 
     if 'recreate' in config.keys() and config['recreate']:
         recreate = True
+
+    if 'concern' in config.keys() and config['concern']:
+        concern = config['concern']
 
     # Features drawn from open street maps
     # additional_features from config file can add on to
@@ -151,6 +155,7 @@ if __name__ == '__main__':
     ]
         + (['-c', ' '.join(crash_files)] if crash_files else [])
         + (['-t', date_col] if date_col else [])
+        + (['-s', concern] if concern else [])
     )
 
     subprocess.check_call([
