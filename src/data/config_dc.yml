@@ -36,15 +36,18 @@ extra_map3857:
 # This is required if extra_map is given
 additional_features:
 
-# If the crash file has longitude column named something other than 'X',
-# give column name here
-longitude: LONGITUDE
+# If the crash/concern files have longitude column named something other
+# than 'X', give column name here
+longitude_crash:
+longitude_concern:
 
 # If the crash file has latitude column named something other than 'Y',
 # give column name here
-latitude: LATITUDE
+latitude_crash:
+latitude_concern: 
 
-# If the crash file has a date column named something other than 'CAlENDAR_DATE',
+# If the crash file has a date column named something other than 'CALENDAR_DATE',
 # give column name here
-date_col: REPORTDATE
-
+date_col_crash: REPORTDATE
+# And anything other than REQUESTDATE, put it here
+date_col_concern:
