@@ -246,9 +246,6 @@ def backup_files():
 
     for file in shp_files:
         file_segs = file.split('.')
-        print "copying " + os.path.join(MAP_FP, file) + " to " \
-            + os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1])
-
         shutil.copyfile(
             os.path.join(MAP_FP, file),
             os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1]))

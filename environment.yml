@@ -137,6 +137,7 @@ dependencies:
 - tornado
 - traitlets
 - typing
+- unicodecsv
 - vincent
 - wcwidth
 - wheel

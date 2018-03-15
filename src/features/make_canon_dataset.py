@@ -28,6 +28,7 @@ def read_records(fp, date_col, id_col, agg='week'):
     with open(fp, 'r') as f:
         data = json.load(f)
     df = pd.DataFrame(data)
+
     df[date_col] = pd.to_datetime(df[date_col])
     print "total number of records in {}:{}".format(fp, len(df))
     
@@ -109,9 +110,6 @@ if __name__ == '__main__':
     # read/aggregate crash/concerns
     crash = read_records(os.path.join(DATA_FP, 'crash_joined.json'),
                          'CALENDAR_DATE', 'near_id')
-
-    # Since at the moment we expect only boston to have concern data,
-    # don't yet need to override column name
     if os.path.exists(
             os.path.join(os.path.join(DATA_FP, 'concern_joined.json'))):
         concern = read_records(os.path.join(DATA_FP, 'concern_joined.json'),

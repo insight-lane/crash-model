@@ -31,12 +31,12 @@ CRASH_DATA_FPS = [
 ]
 
 
-def process_concerns():
+def process_concerns(concernfile, date_col, x, y):
     # Read in vision zero data
     # Have to use pandas read_csv, unicode trubs
 
     path = os.path.join(
-        RAW_DATA_FP, 'Vision_Zero_Entry.csv')
+        RAW_DATA_FP, concernfile)
 
     # Only read in if the file exists
     # Since at the moment, only Boston has concern data, this is
@@ -46,10 +46,17 @@ def process_concerns():
         return
 
     concern_raw = pd.read_csv(os.path.join(
-        RAW_DATA_FP, 'Vision_Zero_Entry.csv'))
+        RAW_DATA_FP, concernfile))
+    concern_all = concern_raw.fillna(value="")
+    concern_raw = concern_all[concern_all[date_col] != '']
+
+    if concern_all.size != concern_raw.size:
+        print str(concern_all.size - concern_raw.size) + \
+            " concerns did not have date, skipping"
     concern_raw = concern_raw.to_dict('records')
     concern = util.raw_to_record_list(concern_raw,
-                                      pyproj.Proj(init='epsg:4326'))
+                                      pyproj.Proj(init='epsg:4326'), x=x, y=y)
+
     print "Read in data from {} concerns".format(len(concern))
 
     # Find nearest concerns - 20 tolerance
@@ -79,15 +86,23 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--crashfiles", nargs='+',
                         help="Can give alternate list of crash files. " +
                         "Only use filename, don't include path")
-    parser.add_argument("-x", "--longitude", type=str,
+    parser.add_argument("-s", "--safetyconcern", type=str,
+                        help="Can give alternate concern file." +
+                        "Only use filename, don't include path")
+    parser.add_argument("-x_crash", "--x_crash", type=str,
                         help="column name in csv file containing longitude")
-    parser.add_argument("-y", "--latitude", type=str,
+    parser.add_argument("-y_crash", "--y_crash", type=str,
                         help="column name in csv file containing latitude")
-    parser.add_argument("-t", "--datecol", type=str,
+    parser.add_argument("-t_crash", "--date_col_crash", type=str,
                         help="col name in crash csv file containing date")
+    parser.add_argument("-t_concern", "--date_col_concern", type=str,
+                        help="col name in concern csv file containing date")
+    parser.add_argument("-x_concern", "--x_concern", type=str,
+                        help="column name in csv file containing longitude")
+    parser.add_argument("-y_concern", "--y_concern", type=str,
+                        help="column name in csv file containing latitude")
 
     args = parser.parse_args()
-
     # Can override the hardcoded data directory
     if args.datadir:
         RAW_DATA_FP = os.path.join(args.datadir, 'raw')
@@ -96,27 +111,52 @@ if __name__ == '__main__':
     if args.crashfiles:
         CRASH_DATA_FPS = args.crashfiles
 
-    longitude = 'X'
-    latitude = 'Y'
-    if args.longitude:
-        longitude = args.longitude
-    if args.latitude:
-        latitude = args.latitude
+    x_crash = 'X'
+    y_crash = 'Y'
+    y_concern = 'Y'
+    x_concern = 'X'
+    if args.x_concern:
+        x_concern = args.x_concern
+    if args.x_crash:
+        x_crash = args.x_crash
+    if args.y_crash:
+        y_crash = args.y_crash
+    if args.y_concern:
+        y_concern = args.y_concern
+
+    safetyconcern = 'Vision_Zero_Entry.csv'
+    if args.safetyconcern:
+        safetyconcern = args.safetyconcern
 
     # Read in CAD crash data
     crash = []
     for fp in CRASH_DATA_FPS:
+
         tmp = util.csv_to_projected_records(
             os.path.join(RAW_DATA_FP, fp),
-            x=longitude,
-            y=latitude
+            x=x_crash,
+            y=y_crash
         )
         crash = crash + tmp
 
-    if args.datecol:
+    if args.date_col_crash:
+        crash_with_date = []
+        count = 0
+
         for i in range(len(crash)):
-            d = parse(crash[i]['properties'][args.datecol]).isoformat()
-            crash[i]['properties']['CALENDAR_DATE'] = d
+            # If the date column given in the crash data isn't
+            # 'CALENDAR_DATE', copy the date column to 'CALENDAR_DATE'
+            # for standardization
+            if crash[i]['properties'][args.date_col_crash]:
+                d = parse(
+                    crash[i]['properties'][args.date_col_crash]).isoformat()
+                crash[i]['properties']['CALENDAR_DATE'] = d
+                crash_with_date.append(crash[i])
+            else:
+                count += 1
+        print str(count) + " out of " + str(len(crash)) \
+            + " don't have a date, skipping"
+        crash = crash_with_date
 
     print "Read in data from {} crashes".format(len(crash))
 
@@ -136,4 +176,5 @@ if __name__ == '__main__':
     with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'), 'w') as f:
         json.dump([c['properties'] for c in crash], f)
 
-    process_concerns()
+    date_col_concern = args.date_col_concern or 'REQUESTDATE'
+    process_concerns(safetyconcern, date_col_concern, x_concern, y_concern)
