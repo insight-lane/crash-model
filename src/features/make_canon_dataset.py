@@ -90,6 +90,10 @@ if __name__ == '__main__':
     parser.add_argument("-features", "--featlist", nargs="+", default=[
         'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
         help="List of segment features to include")
+    parser.add_argument("-t_crash", "--date_col_crash", type=str,
+                        help="col name in crash csv file containing date")
+    parser.add_argument("-t_concern", "--date_col_concern", type=str,
+                        help="col name in concern csv file containing date")
 
     args = parser.parse_args()
 
@@ -109,11 +113,11 @@ if __name__ == '__main__':
 
     # read/aggregate crash/concerns
     crash = read_records(os.path.join(DATA_FP, 'crash_joined.json'),
-                         'CALENDAR_DATE', 'near_id')
+                         args.date_col_crash or 'CALENDAR_DATE', 'near_id')
     if os.path.exists(
             os.path.join(os.path.join(DATA_FP, 'concern_joined.json'))):
         concern = read_records(os.path.join(DATA_FP, 'concern_joined.json'),
-                               'REQUESTDATE', 'near_id')
+                        args.date_col_concern or 'REQUESTDATE', 'near_id')
 
         # join aggregated crash/concerns
         cr_con = pd.concat([crash, concern], axis=1)
