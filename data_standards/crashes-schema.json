@@ -1,0 +1,50 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "title": "Crashes",
+    "description": "Defines the structure of a set of crashes",
+    "type": "array",
+    "items": {
+        "title": "Crash",
+        "description": "Defines the structure of a crash",
+        "type": "object",
+        "properties": {
+            "id": {
+                "description": "Unique identifier of crash",
+                "type": "number"
+            },
+            "dateOccurred": {
+                "description": "Date crash occurred, ISO8601 formatted",
+                "type": "string",
+                "format": "date-time"
+            },
+            "type": {
+                "description": "Type of crash",
+                "type": "string",
+                "enum": ["car", "bike", "pedestrian", "other"]
+            },
+            "location": {
+                "description": "Coordinates of crash, WGS84 formatted",
+                "type": "object",
+                "properties": {
+                    "latitude": {
+                        "description": "Latitude of crash",
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "description": "Longitude of crash",
+                        "type": "number"
+                    }
+                }
+            },
+            "address": {
+                "description": "Address of crash",
+                "type": "string"
+            },
+            "summary": {
+                "description": "Summary of crash",
+                "type": "string"
+            }
+        },
+        "required": ["id", "dateOccurred", "type", "location"]
+    }
+}
