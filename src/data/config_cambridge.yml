@@ -20,6 +20,10 @@ recreate: False
 crashfiles:
 - Police_Department_Crash_Data_-_Historical.csv
 
+# If you have a vision zero concern file, give it here
+# Optional
+concern: Commonwealth_Connect_Service_Requests.csv
+
 # If you are adding another map and its features to the open street map,
 # give it here:
 extra_map:
@@ -44,3 +48,8 @@ latitude_crash: Latitude
 # give column name here
 date_col_crash: Date Time
 
+longitude_concern: lng
+
+latitude_concern: lat
+
+date_col_concern: ticket_created_date_time

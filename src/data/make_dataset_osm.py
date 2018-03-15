@@ -196,5 +196,7 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-features'
-    ] + features)
+    ] + features
+        + (['-t_crash', date_col_crash] if date_col_crash else [])
+        + (['-t_concern', date_col_concern] if date_col_concern else []))
 
