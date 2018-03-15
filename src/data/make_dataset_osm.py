@@ -151,9 +151,7 @@ if __name__ == '__main__':
             DATA_FP,
             outputdir,
         ])
-    print "crashes.................."
-    print crash_files
-    print ' ,'.join(crash_files)
+
     subprocess.check_call([
         'python',
         '-m',

@@ -7,6 +7,8 @@
 # Developed by: bpben
 
 import json
+import pyproj
+import pandas as pd
 import util
 import os
 import argparse
@@ -43,15 +45,17 @@ def process_concerns(concernfile, date_col, x, y):
         print "No concern data found"
         return
 
-    concern_all = util.csv_to_projected_records(
-        os.path.join(RAW_DATA_FP, concernfile),
-        x=x,
-        y=y
-    )
-    concern = [c for c in concern_all if c['properties'][date_col]]
-    if len(concern) != len(concern_all):
-        print str(len(concern_all) - len(concern)) + " concerns had " + \
-            "no date given, skipping"
+    concern_raw = pd.read_csv(os.path.join(
+        RAW_DATA_FP, concernfile))
+    concern_all = concern_raw.fillna(value="")
+    concern_raw = concern_all[concern_all[date_col] != '']
+
+    if concern_all.size != concern_raw.size:
+        print str(concern_all.size - concern_raw.size) + \
+            " concerns did not have date, skipping"
+    concern_raw = concern_raw.to_dict('records')
+    concern = util.raw_to_record_list(concern_raw,
+                                      pyproj.Proj(init='epsg:4326'), x=x, y=y)
 
     print "Read in data from {} concerns".format(len(concern))
 
