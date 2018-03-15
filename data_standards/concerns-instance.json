@@ -3,7 +3,7 @@
         "id": 67658,
         "dateCreated": "2016-02-12T21:22:30.000Z",
         "status": "Unassigned",
-        "tags": ["poor signange", "drivers ignoring signage"],
+        "tags": ["poorSignange", "driversIgnoreSignage"],
         "location": {
             "latitude": 42.341146333981548,
             "longitude": -71.07689857738815
@@ -15,7 +15,7 @@
         "id": 17674,
         "dateCreated": "2016-01-22T17:01:16.000Z",
         "status": "Unassigned",
-        "tags": ["drivers ignoring signage"],
+        "tags": ["driversIgnoreSignage"],
         "location": {
             "latitude": 42.346418898652274,
             "longitude": -71.105465175899695
@@ -27,7 +27,7 @@
         "id": 17452,
         "dateCreated": "2016-01-22T21:20:57.000Z",
         "status": "Unassigned",
-        "tags": ["drivers ignoring signage", "misuse of bus lane"],
+        "tags": ["driversIgnoringSignage", "misuseOfBusLane"],
         "location": {
             "latitude": 42.352435140312387,
             "longitude": -71.061978521716284
