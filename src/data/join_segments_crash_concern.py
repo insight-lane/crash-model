@@ -145,6 +145,9 @@ if __name__ == '__main__':
 
     crash_with_date = []
     count = 0
+    # Keep track of the earliest and latest crash date used
+    start = None
+    end = None
     for i in range(len(crash)):
         # If the date column given in the crash data isn't
         # 'CALENDAR_DATE', copy the date column to 'CALENDAR_DATE'
@@ -162,22 +165,31 @@ if __name__ == '__main__':
             count += 1
         else:
             year = parse(
-                crash[i]['properties']['CALENDAR_DATE']).isocalendar()[0]
+                crash[i]['properties']['CALENDAR_DATE']).year
+
             # If the start year given is earlier than the crash year, skip
             if args.startyear and int(args.startyear) > year:
                 match_date = False
             # Or the end year is later than the crash year, skip
-            elif args.endyear and (args.endyear) < year:
+            elif args.endyear and int(args.endyear) < year:
                 match_date = False
 
         if match_date:
+
             crash_with_date.append(crash[i])
+
+            if not start or start > crash[i]['properties']['CALENDAR_DATE']:
+                start = crash[i]['properties']['CALENDAR_DATE']
+            if not end or end < crash[i]['properties']['CALENDAR_DATE']:
+                end = crash[i]['properties']['CALENDAR_DATE']
+
     if count:
         print str(count) + " out of " + str(len(crash)) \
             + " don't have a date, skipping"
     crash = crash_with_date
 
-    print "Read in data from {} crashes".format(len(crash))
+    print "Read in data from {} crashes from {} to {}".format(
+        len(crash), parse(start).date(), parse(end).date())
 
     combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
 
