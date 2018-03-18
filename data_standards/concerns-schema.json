@@ -31,6 +31,7 @@
                 "items": {
                     "type": "string"
                 },
+                "minItems": 1,
                 "uniqueItems": true
             },
             "location": {
@@ -56,6 +57,6 @@
                 "type": "string"
             }
         },
-        "required": ["id", "dateCreated", "status", "location"]
+        "required": ["id", "dateCreated", "status", "tags", "location"]
     }
 }
