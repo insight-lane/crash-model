@@ -12,8 +12,6 @@ def test_aggregate_roads():
 
     cr_con_roads = make_canon_dataset.group_by_date(cr_con, aggregated)
 
-    # Currently, this test fails, so commenting out
-    # It's here for debugging year weirdness in make_canon_dataset
-    # assert cr_con_roads.year.unique() == [2014, 2015]
+    assert len(cr_con_roads.year.unique()) == 2
     
 
