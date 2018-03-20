@@ -21,10 +21,22 @@ if __name__ == '__main__':
     # Can give a config file
     parser.add_argument("-c", "--config", type=str,
                         help="Can give a different .yml config file")
+    parser.add_argument("-s", "--startyear", type=str,
+                        help="Can limit data to crashes this year or later")
+    parser.add_argument("-e", "--endyear", type=str,
+                        help="Can limit data to crashes this year or earlier")
+
     args = parser.parse_args()
     config_file = 'data/config.yml'
     if args.config:
         config_file = args.config
+    start_year = None
+    end_year = None
+    if args.startyear:
+        start_year = args.startyear
+    if args.endyear:
+        end_year = args.endyear
+
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
@@ -167,6 +179,8 @@ if __name__ == '__main__':
         + (['-y_concern', latitude_concern] if latitude_concern else [])
         + (['-t_crash', date_col_crash] if date_col_crash else [])
         + (['-t_concern', date_col_concern] if date_col_concern else [])
+        + (['-start', start_year] if start_year else [])
+        + (['-end', end_year] if end_year else [])
     )
 
     subprocess.check_call([

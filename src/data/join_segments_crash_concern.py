@@ -101,6 +101,10 @@ if __name__ == '__main__':
                         help="column name in csv file containing longitude")
     parser.add_argument("-y_concern", "--y_concern", type=str,
                         help="column name in csv file containing latitude")
+    parser.add_argument("-start", "--startyear", type=str,
+                        help="Can limit data to crashes this year or later")
+    parser.add_argument("-end", "--endyear", type=str,
+                        help="Can limit data to crashes this year or earlier")
 
     args = parser.parse_args()
     # Can override the hardcoded data directory
@@ -139,26 +143,53 @@ if __name__ == '__main__':
         )
         crash = crash + tmp
 
-    if args.date_col_crash:
-        crash_with_date = []
-        count = 0
-
-        for i in range(len(crash)):
-            # If the date column given in the crash data isn't
-            # 'CALENDAR_DATE', copy the date column to 'CALENDAR_DATE'
-            # for standardization
+    crash_with_date = []
+    count = 0
+    # Keep track of the earliest and latest crash date used
+    start = None
+    end = None
+    for i in range(len(crash)):
+        # If the date column given in the crash data isn't
+        # 'CALENDAR_DATE', copy the date column to 'CALENDAR_DATE'
+        # for standardization
+        match_date = True
+        if args.date_col_crash:
             if crash[i]['properties'][args.date_col_crash]:
                 d = parse(
                     crash[i]['properties'][args.date_col_crash]).isoformat()
                 crash[i]['properties']['CALENDAR_DATE'] = d
-                crash_with_date.append(crash[i])
-            else:
-                count += 1
+
+        # If there's no date given
+        if not crash[i]['properties']['CALENDAR_DATE']:
+            match_date = False
+            count += 1
+        else:
+            year = parse(
+                crash[i]['properties']['CALENDAR_DATE']).year
+
+            # If the start year given is earlier than the crash year, skip
+            if args.startyear and int(args.startyear) > year:
+                match_date = False
+            # Or the end year is later than the crash year, skip
+            elif args.endyear and int(args.endyear) < year:
+                match_date = False
+
+        if match_date:
+
+            crash_with_date.append(crash[i])
+
+            if not start or start > crash[i]['properties']['CALENDAR_DATE']:
+                start = crash[i]['properties']['CALENDAR_DATE']
+            if not end or end < crash[i]['properties']['CALENDAR_DATE']:
+                end = crash[i]['properties']['CALENDAR_DATE']
+
+    if count:
         print str(count) + " out of " + str(len(crash)) \
             + " don't have a date, skipping"
-        crash = crash_with_date
+    crash = crash_with_date
 
-    print "Read in data from {} crashes".format(len(crash))
+    print "Read in data from {} crashes from {} to {}".format(
+        len(crash), parse(start).date(), parse(end).date())
 
     combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
 
