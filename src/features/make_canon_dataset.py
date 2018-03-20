@@ -131,6 +131,9 @@ def group_by_date(cr_con, aggregated):
             yr_max = cr_con[cr_con.year==2017].week.max()
         else:
             yr_max = pd.Timestamp('12-31-{}'.format(y)).week
+            # some years the last week = 1, make it 52 in that case
+            if yr_max==1:
+                yr_max = 52
         # if this is the first year
         # doing this because multiindex is hard to set up placeholder
         if y == all_years[0]:
