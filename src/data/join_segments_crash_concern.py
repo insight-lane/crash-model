@@ -13,6 +13,7 @@ import util
 import os
 import argparse
 from dateutil.parser import parse
+import datetime
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -31,7 +32,9 @@ CRASH_DATA_FPS = [
 ]
 
 
-def process_concerns(concernfile, date_col, x, y):
+def process_concerns(
+        concernfile, date_col, x, y, start_year=None, end_year=None):
+
     # Read in vision zero data
     # Have to use pandas read_csv, unicode trubs
 
@@ -47,12 +50,27 @@ def process_concerns(concernfile, date_col, x, y):
 
     concern_raw = pd.read_csv(os.path.join(
         RAW_DATA_FP, concernfile))
+
     concern_all = concern_raw.fillna(value="")
+
+    # First filter out empty dates
     concern_raw = concern_all[concern_all[date_col] != '']
 
-    if concern_all.size != concern_raw.size:
-        print str(concern_all.size - concern_raw.size) + \
-            " concerns did not have date, skipping"
+    # If a start year was passed in, filter everything before that year
+    if start_year:
+        concern_raw = concern_raw[
+            pd.to_datetime(concern_all[date_col])
+            >= datetime.datetime(year=int(start_year), month=1, day=1)
+        ]
+    # If an end year is passed in, filter everything after the end of that year
+    if end_year:
+        concern_raw = concern_raw[
+            pd.to_datetime(concern_all[date_col])
+            < datetime.datetime(year=int(end_year)+1, month=1, day=1)
+        ]
+
+    print "Found " + str(len(concern_raw)) + " concerns"
+
     concern_raw = concern_raw.to_dict('records')
     concern = util.raw_to_record_list(concern_raw,
                                       pyproj.Proj(init='epsg:4326'), x=x, y=y)
@@ -208,4 +226,7 @@ if __name__ == '__main__':
         json.dump([c['properties'] for c in crash], f)
 
     date_col_concern = args.date_col_concern or 'REQUESTDATE'
-    process_concerns(safetyconcern, date_col_concern, x_concern, y_concern)
+    process_concerns(
+        safetyconcern, date_col_concern, x_concern, y_concern,
+        start_year=args.startyear, end_year=args.endyear
+    )
