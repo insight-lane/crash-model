@@ -42,6 +42,13 @@ parser.add_argument("-n", "--name", nargs="+",
                     help="name of the layer, must be unique")
 parser.add_argument("-f", "--filename", nargs="+",
                     help="name of the dataset file to be plotted on the map, must specify at least 1")
+parser.add_argument("-lat", "--latitude",
+                    help="alternate latitude for the base map")
+parser.add_argument("-lon", "--longitude",
+                    help="alternate longitude for the base map")
+parser.add_argument("-dir", "--datadir",
+                    help="alternate data directory for the files")
+
 args = parser.parse_args()
 
 # zip layer names and filenames
@@ -50,7 +57,11 @@ if len(args.name) == len(args.filename):
 else:
     raise Exception("Number of layers and files must match")
 
+latitude = args.latitude or 42.3601
+longitude = args.longitude or -71.0589
 
+if args.datadir:
+    DATA_FP = args.datadir
 
 def process_data(filename):
     """Preps data for plotting on a map
@@ -101,7 +112,8 @@ def add_layer(dataset, layername, mapname, color):
 ### Make map
 
 # First create basemap
-boston_map = folium.Map([42.3601, -71.0589], tiles='Cartodb dark_matter', zoom_start=12)
+boston_map = folium.Map(
+    [latitude, longitude], tiles='Cartodb dark_matter', zoom_start=12)
 folium.TileLayer('Cartodb Positron').add_to(boston_map)
 
 # Create sequence of colors so different layers appear in different colors
