@@ -26,6 +26,14 @@
 	</div>
 
 	<div id="content">
+		<div id="city_selection">
+			<label for="city_selector">Select Your City:</label>
+			<select id="city_selector" autocomplete="off">
+				<option value="boston">Boston, MA</option>
+				<option value="cambridge">Cambridge, MA</option>
+				<option value="dc">Washington, DC</option>
+			</select>
+		</div>
 		<div class="wrapper">
 			<div class="box input_overlay">
 				<label for="week_selector">Week: </label>
@@ -89,145 +97,168 @@
 		  zoom: 11
 		});
 
-		beforeMap.on('load', function() {
-		  	beforeMap.addLayer({
-				id: 'predictions',
-				type: 'line',
-				source: {
-				  type: 'geojson',
-				  data: 'car_preds_named.json'
-				},
-				paint: {
-				  'line-color': {
-					property: 'pred',
-					stops: [
-					  [0.02, '#ffffb2'],
-					  [0.03, '#fecc5c'],
-					  [0.04, '#fd8d3c'],
-					  [0.05, '#e31a1c']
-					]
-				  },
-				  'line-width': [
-						'interpolate', ['linear'], ['zoom'], 
-						11, 2,
-						15, 3,
-					],
-				  'line-opacity': 1
-				},
-				filter: ['==', 'week', 1]
-			}, 'admin-2-boundaries-dispute');
+		// beforeMap.on('load', function() {
+		//   	beforeMap.addLayer({
+		// 		id: 'predictions',
+		// 		type: 'line',
+		// 		source: {
+		// 		  type: 'geojson',
+		// 		  data: 'car_preds_named.json'
+		// 		},
+		// 		paint: {
+		// 		  'line-color': {
+		// 			property: 'pred',
+		// 			stops: [
+		// 			  [0.02, '#ffffb2'],
+		// 			  [0.03, '#fecc5c'],
+		// 			  [0.04, '#fd8d3c'],
+		// 			  [0.05, '#e31a1c']
+		// 			]
+		// 		  },
+		// 		  'line-width': [
+		// 				'interpolate', ['linear'], ['zoom'], 
+		// 				11, 2,
+		// 				15, 3,
+		// 			],
+		// 		  'line-opacity': 1
+		// 		},
+		// 		filter: ['==', 'week', 1]
+		// 	}, 'admin-2-boundaries-dispute');
 		 
-			beforeMap.addLayer({
-				id: 'crashes',
-				type: 'circle', 
-				source: {
-					type: 'geojson', 
-					data: 'cad.geojson'
-				},
-				paint: {
-					'circle-radius': [
-						'interpolate', ['linear'], ['zoom'], 
-						12, 4,
-						15, 8,
-					],
-					'circle-color': '#d500f9',
-					'circle-stroke-color': '#9e00c5',
-					'circle-opacity': 0.8
-				},
-				filter: ['==', 'week', 1]
-			}, 'admin-2-boundaries-dispute');
+		// 	beforeMap.addLayer({
+		// 		id: 'crashes',
+		// 		type: 'circle', 
+		// 		source: {
+		// 			type: 'geojson', 
+		// 			data: 'cad.geojson'
+		// 		},
+		// 		paint: {
+		// 			'circle-radius': [
+		// 				'interpolate', ['linear'], ['zoom'], 
+		// 				12, 4,
+		// 				15, 8,
+		// 			],
+		// 			'circle-color': '#d500f9',
+		// 			'circle-stroke-color': '#9e00c5',
+		// 			'circle-opacity': 0.8
+		// 		},
+		// 		filter: ['==', 'week', 1]
+		// 	}, 'admin-2-boundaries-dispute');
 
-			// add popup for predictions
-			beforeMap.on('click', 'predictions', function(e) {
-				var popupText = (e.features[0].properties.st_name !== "null") ? (e.features[0].properties.st_name + "<br / > Predicted Probability for Week " +  e.features[0].properties.week + ": " + e.features[0].properties.pred) : ("Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.pred);
+		// 	// add popup for predictions
+		// 	beforeMap.on('click', 'predictions', function(e) {
+		// 		var popupText = (e.features[0].properties.st_name !== "null") ? (e.features[0].properties.st_name + "<br / > Predicted Probability for Week " +  e.features[0].properties.week + ": " + e.features[0].properties.pred) : ("Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.pred);
 
-				new mapboxgl.Popup()
-					.setLngLat(e.lngLat)
-					.setHTML(popupText)
-					.addTo(beforeMap);
-			});
+		// 		new mapboxgl.Popup()
+		// 			.setLngLat(e.lngLat)
+		// 			.setHTML(popupText)
+		// 			.addTo(beforeMap);
+		// 	});
 
-			beforeMap.on('mouseenter', 'predictions', function () {
-				beforeMap.getCanvas().style.cursor = 'pointer';
-			});
+		// 	beforeMap.on('mouseenter', 'predictions', function () {
+		// 		beforeMap.getCanvas().style.cursor = 'pointer';
+		// 	});
 
-			beforeMap.on('mouseleave', 'predictions', function () {
-				beforeMap.getCanvas().style.cursor = '';
-			});
-		});
+		// 	beforeMap.on('mouseleave', 'predictions', function () {
+		// 		beforeMap.getCanvas().style.cursor = '';
+		// 	});
+		// });
 		
-		afterMap.on('load', function() {
-		  	afterMap.addLayer({
-				id: 'predictions',
-				type: 'line',
-				source: {
-				  type: 'geojson',
-				  data: 'car_preds_named.json'
-				},
-				paint: {
-				  'line-color': {
-					property: 'pred',
-					stops: [
-					  [0.02, '#ffffb2'],
-					  [0.03, '#fecc5c'],
-					  [0.04, '#fd8d3c'],
-					  [0.05, '#e31a1c']
-					]
-				  },
-				  'line-width': [
-						'interpolate', ['linear'], ['zoom'], 
-						11, 2,
-						15, 3,
-					],
-				  'line-opacity': 1
-				},
-				filter: ['==', 'week', 10]
-			}, 'admin-2-boundaries-dispute');
+		// afterMap.on('load', function() {
+		//   	afterMap.addLayer({
+		// 		id: 'predictions',
+		// 		type: 'line',
+		// 		source: {
+		// 		  type: 'geojson',
+		// 		  data: 'car_preds_named.json'
+		// 		},
+		// 		paint: {
+		// 		  'line-color': {
+		// 			property: 'pred',
+		// 			stops: [
+		// 			  [0.02, '#ffffb2'],
+		// 			  [0.03, '#fecc5c'],
+		// 			  [0.04, '#fd8d3c'],
+		// 			  [0.05, '#e31a1c']
+		// 			]
+		// 		  },
+		// 		  'line-width': [
+		// 				'interpolate', ['linear'], ['zoom'], 
+		// 				11, 2,
+		// 				15, 3,
+		// 			],
+		// 		  'line-opacity': 1
+		// 		},
+		// 		filter: ['==', 'week', 10]
+		// 	}, 'admin-2-boundaries-dispute');
 		 
-			afterMap.addLayer({
-					id: 'crashes',
-					type: 'circle', 
-					source: {
-						type: 'geojson', 
-						data: 'cad.geojson'
-					},
-					paint: {
-						'circle-radius': [
-							'interpolate', ['linear'], ['zoom'], 
-							12, 4,
-							15, 8,
-						],
-						'circle-color': '#d500f9',
-						'circle-stroke-color': '#9e00c5',
-						'circle-opacity': 0.8
-					},
-					filter: ['==', 'week', 10]
-				}, 'admin-2-boundaries-dispute');
+		// 	afterMap.addLayer({
+		// 			id: 'crashes',
+		// 			type: 'circle', 
+		// 			source: {
+		// 				type: 'geojson', 
+		// 				data: 'cad.geojson'
+		// 			},
+		// 			paint: {
+		// 				'circle-radius': [
+		// 					'interpolate', ['linear'], ['zoom'], 
+		// 					12, 4,
+		// 					15, 8,
+		// 				],
+		// 				'circle-color': '#d500f9',
+		// 				'circle-stroke-color': '#9e00c5',
+		// 				'circle-opacity': 0.8
+		// 			},
+		// 			filter: ['==', 'week', 10]
+		// 		}, 'admin-2-boundaries-dispute');
 
-			// add popup for predictions
-			afterMap.on('click', 'predictions', function(e) {
-				var popupText = (e.features[0].properties.st_name !== "null") ? (e.features[0].properties.st_name + "<br / > Predicted Probability for Week " +  e.features[0].properties.week + ": " + e.features[0].properties.pred) : ("Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.pred);
+		// 	// add popup for predictions
+		// 	afterMap.on('click', 'predictions', function(e) {
+		// 		var popupText = (e.features[0].properties.st_name !== "null") ? (e.features[0].properties.st_name + "<br / > Predicted Probability for Week " +  e.features[0].properties.week + ": " + e.features[0].properties.pred) : ("Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.pred);
 
-				new mapboxgl.Popup()
-					.setLngLat(e.lngLat)
-					.setHTML(popupText)
-					.addTo(afterMap);
-			});
+		// 		new mapboxgl.Popup()
+		// 			.setLngLat(e.lngLat)
+		// 			.setHTML(popupText)
+		// 			.addTo(afterMap);
+		// 	});
 
-			afterMap.on('mouseenter', 'predictions', function () {
-				afterMap.getCanvas().style.cursor = 'pointer';
-			});
+		// 	afterMap.on('mouseenter', 'predictions', function () {
+		// 		afterMap.getCanvas().style.cursor = 'pointer';
+		// 	});
 
-			afterMap.on('mouseleave', 'predictions', function () {
-				afterMap.getCanvas().style.cursor = '';
-			});
-		});
+		// 	afterMap.on('mouseleave', 'predictions', function () {
+		// 		afterMap.getCanvas().style.cursor = '';
+		// 	});
+		// });
 
 		var map = new mapboxgl.Compare(beforeMap, afterMap, {});
 
 		// Add zoom controls to map
 		beforeMap.addControl(new mapboxgl.NavigationControl());
 		afterMap.addControl(new mapboxgl.NavigationControl());
+
+		//Pan map to different city based on selection
+		$('#city_selector').change(function() {
+			city = $('#city_selector').val();
+			if(city === 'boston') {
+				beforeMap.flyTo({
+					center: [-71.0589, 42.3301],
+					zoom: 11
+				});
+			}
+			else if(city === 'cambridge') {
+				beforeMap.flyTo({
+					center: [-71.1097, 42.3736],
+					zoom: 11
+				});
+			}
+			else {
+				beforeMap.flyTo({
+					center: [-77.0369, 38.9072],
+					zoom: 11
+				});
+			}
+		});
 	</script>
 
 </body>
