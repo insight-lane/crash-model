@@ -10,6 +10,8 @@ from matplotlib import pyplot
 import os
 from os.path import exists as path_exists
 import json
+from dateutil.parser import parse
+
 
 PROJ = pyproj.Proj(init='epsg:3857')
 BASE_DIR = os.path.dirname(
@@ -321,7 +323,8 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return combined_seg, segments_index
 
 
-def group_json_by_location(jsonfile, otherfields=[]):
+def group_json_by_location(
+        jsonfile, years=None, yearfield=None, otherfields=[]):
     """
     Get both the json data from file as well as a dict where the keys
     are the segment id and the values are count, and a list of the values
@@ -335,14 +338,16 @@ def group_json_by_location(jsonfile, otherfields=[]):
     locations = {}
 
     for item in items:
-        if str(item['near_id']) not in locations.keys():
-            d = {'count': 0}
+        if not years or (
+                years and yearfield and parse(item[yearfield]).year in years):
+            if str(item['near_id']) not in locations.keys():
+                d = {'count': 0}
+                for field in otherfields:
+                    d[field] = []
+                locations[str(item['near_id'])] = d
+            locations[str(item['near_id'])]['count'] += 1
             for field in otherfields:
-                d[field] = []
-            locations[str(item['near_id'])] = d
-        locations[str(item['near_id'])]['count'] += 1
-        for field in otherfields:
-            locations[str(item['near_id'])][field].append(item[field])
+                locations[str(item['near_id'])][field].append(item[field])
 
     return items, locations
 
