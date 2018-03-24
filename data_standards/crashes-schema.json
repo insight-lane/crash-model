@@ -17,11 +17,6 @@
                 "type": "string",
                 "format": "date-time"
             },
-            "type": {
-                "description": "Type of crash",
-                "type": "string",
-                "enum": ["car", "bike", "pedestrian", "other"]
-            },
             "location": {
                 "description": "Coordinates of crash, WGS84 formatted",
                 "type": "object",
@@ -36,6 +31,55 @@
                     }
                 }
             },
+            "vehicles": {
+                "description": "Vehicles involved in crash",
+                "type": "array",
+                "items": {
+                    "title": "Vehicle",
+                    "description": "Defines the structure of a vehicle",
+                    "type": "object",
+                    "properties": {
+                        "category": {
+                            "description": "Category of vehicle",
+                            "type": "string",
+                            "enum": ["car", "bike", "taxi", "bus", "truck"]
+                        },
+                        "quantity": {
+                            "description": "Quantity of vehicles of this category",
+                            "type": "number"
+                        }
+                    },
+                    "required": ["category"]
+                },
+                "uniqueItems": true
+            },
+            "persons": {
+                "description": "Persons involved in crash",
+                "type": "array",
+                "items": {
+                    "title": "Person",
+                    "description": "Defines the structure of a person",
+                    "type": "object",
+                    "properties": {
+                        "category": {
+                            "description": "Category of person",
+                            "type": "string",
+                            "enum": ["driver", "pedestrian", "cyclist", "other"]
+                        },
+                        "quantity": {
+                            "description": "Quantity of persons",
+                            "type": "number"
+                        },
+                        "injuryType": {
+                            "description": "Type of injury",
+                            "type": "string",
+                            "enum": ["minor", "major", "fatal", "unknown"]
+                        }
+                    },
+                    "required": ["category"]
+                },
+                "uniqueItems": true
+            },
             "address": {
                 "description": "Address of crash",
                 "type": "string"
@@ -45,6 +89,6 @@
                 "type": "string"
             }
         },
-        "required": ["id", "dateOccurred", "type", "location"]
+        "required": ["id", "dateOccurred", "location"]
     }
 }

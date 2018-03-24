@@ -3,44 +3,59 @@
 
 import json
 import os
+import argparse
 import pandas as pd
 from collections import OrderedDict
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.abspath(__file__))))
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--destination", type=str,
+                    help="destination name")
+parser.add_argument("-f", "--file", type=str,
+                    help="absolute path to concerns file")
 
-DATA_DIR = os.path.join(BASE_DIR, "src/osm-data/dc/raw")
+args = parser.parse_args()
 
-concerns_path = os.path.join(DATA_DIR, "concerns.csv")
+if not os.path.exists(args.file):
+    print args.file+" not found, exiting"
+    exit(1)
 
-if not os.path.exists(concerns_path):
-    print "concerns input not found, skipping"
+print "converting "+args.file+" to json"
+df_concerns = pd.read_csv(args.file, na_filter=False)
+dict_concerns = df_concerns.to_dict("records")
 
-else:
-    print "converting concerns csv to json"
-    raw_concerns_df = pd.read_csv(concerns_path)
-    raw_concerns_dict = raw_concerns_df.to_dict("records")
+valid_concerns = []
 
-    valid_concerns = []
+for key in dict_concerns:
 
-    for key in raw_concerns_dict:
-        valid_concern = OrderedDict([
-            ("id", key["OBJECTID"]),
-            ("dateCreated", key["REQUESTDATE"]),
-            ("status", key["STATUS"]),
-            ("tags", [key["REQUESTTYPE"]]),
-            ("location", OrderedDict([
-                ("latitude", key["X"]),
-                ("longitude", key["Y"])
-            ])),
-            ("summary", key["COMMENTS"])
-        ])
+    if args.destination == "dc" or args.destination == "boston":
+        # skip concerns that don't have a date
+        if key["REQUESTDATE"] != "":
+            valid_concern = OrderedDict([
+                ("id", key["OBJECTID"]),
+                ("dateCreated", key["REQUESTDATE"]),
+                ("status", key["STATUS"]),
+                ("tags", [key["REQUESTTYPE"]]),
+                ("location", OrderedDict([
+                    ("latitude", key["X"]),
+                    ("longitude", key["Y"])
+                ]))
+            ])
 
-        valid_concerns.append(valid_concern)
+            # only add summary property if data exists
+            if key["COMMENTS"] != "":
+                valid_concern.update({"summary": key["COMMENTS"]})
 
-    with open(os.path.join(BASE_DIR, "src/osm-data/dc/validated/concerns.json"), "w") as f:
-        json.dump(valid_concerns, f)
+            valid_concerns.append(valid_concern)
 
-    print "done, {} valid concerns loaded".format(len(valid_concerns))
+    elif args.destination == "cambridge":
+        print "transformation of cambridge concerns not yet implemented"
+        exit(1)
+
+print "done, {} valid concerns loaded".format(len(valid_concerns))
+
+concerns_output = os.path.join(os.path.dirname(os.path.abspath(args.file)), args.destination+"_concerns.json")
+
+with open(concerns_output, "w") as f:
+    json.dump(valid_concerns, f)
+
+print "output written to {}".format(concerns_output)
