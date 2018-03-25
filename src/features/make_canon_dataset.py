@@ -150,21 +150,27 @@ def group_by_date(cr_con, aggregated):
             # some years the last week = 1, make it 52 in that case
             if yr_max==1:
                 yr_max = 52
+
+        # We might have data that starts midyear
+        yr_min = cr_con[cr_con.year == y].week.min()
+
         # if this is the first year
         # doing this because multiindex is hard to set up placeholder
         if y == all_years[0]:
             all_weeks = pd.MultiIndex.from_product(
-                [aggregated.index, [y], range(1, yr_max)], 
-                names=['segment_id', 'year', 'week'])            
+                [aggregated.index, [y], range(yr_min, yr_max)],
+                names=['segment_id', 'year', 'week'])
         else:
             yr_index = pd.MultiIndex.from_product(
-                [aggregated.index, [y], range(1, yr_max)], 
+                [aggregated.index, [y], range(yr_min, yr_max)],
                 names=['segment_id', 'year', 'week'])
             all_weeks = all_weeks.union(yr_index)
 
-    # crash/concern for each week, for each year for each segment    
+    # crash/concern for each week, for each year for each segment
     cr_con = cr_con.set_index(
         ['near_id', 'year', 'week']).reindex(all_weeks, fill_value=0)
+
+
 
     cr_con.reset_index(inplace=True)
 
