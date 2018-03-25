@@ -124,7 +124,6 @@ def group_by_date(cr_con, aggregated):
     # for each year, get iso week max, observation for each segment
 
     all_years = cr_con.year.unique()
-
     for y in all_years:
         # 2017 doesn't have full year, use last obs
         if y == 2017:
@@ -145,18 +144,17 @@ def group_by_date(cr_con, aggregated):
                 [aggregated.index, [y], range(1, yr_max)], 
                 names=['segment_id', 'year', 'week'])
             all_weeks = all_weeks.union(yr_index)
-#    import ipdb; ipdb.set_trace()
 
     # crash/concern for each week, for each year for each segment    
     cr_con = cr_con.set_index(
         ['near_id', 'year', 'week']).reindex(all_weeks, fill_value=0)
 
     cr_con.reset_index(inplace=True)
-#    import ipdb; ipdb.set_trace()
+
     # join segment features to crash/concern
     cr_con_roads = cr_con.merge(
         aggregated, left_on='segment_id', right_index=True, how='outer')
-#    import ipdb; ipdb.set_trace()
+
     return cr_con_roads
 
 
@@ -189,7 +187,12 @@ if __name__ == '__main__':
 
     print "Data directory: " + DATA_FP
 
-    aggregated, adjacent, cr_con = aggregate_roads(feats, DATA_FP)
+    aggregated, adjacent, cr_con = aggregate_roads(
+        feats,
+        DATA_FP,
+        crash_col_date=args.date_col_crash or 'CALENDAR_DATE',
+        concern_col_date=args.date_col_concern or 'REQUESTDATE'
+    )
 
     # Need to rename?
     cr_con_roads = group_by_date(cr_con, aggregated)
