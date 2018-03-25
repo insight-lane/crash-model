@@ -4,7 +4,7 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from data.util import read_shp
+from data.util import read_shp, group_json_by_location
 import os
 import argparse
 
@@ -84,23 +84,27 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     return(aggregated(), combined['orig_id'])
 
 
+def read_spatial_features(fp, id_col, feature_name):
+    """
+    Turns a json file of spatial only features into a pandas dataframe
+    """
+    items, grouped = group_json_by_location(fp)
+
+    segments = [k for k in grouped.keys() if k]
+    items = {feature_name: [grouped[k]['count'] for k in segments]}
+    df = pd.DataFrame(items, index=segments)
+
+    return df
+
+
 def aggregate_roads(feats, datadir,
         crash_col_date='CALENDAR_DATE', concern_col_date='REQUESTDATE'):
 
     # read/aggregate crash/concerns
     crash = read_records(os.path.join(datadir, 'crash_joined.json'),
-                         crash_col_date, 'near_id')
-    if os.path.exists(
-            os.path.join(os.path.join(datadir, 'concern_joined.json'))):
-        concern = read_records(os.path.join(datadir, 'concern_joined.json'),
-                               concern_col_date, 'near_id')
-
-        # join aggregated crash/concerns
-        cr_con = pd.concat([crash, concern], axis=1)
-        cr_con.columns = ['crash', 'concern']
-    else:
-        cr_con = pd.concat([crash], axis=1)
-        cr_con.columns = ['crash']
+                          crash_col_date, 'near_id')
+    cr_con = pd.concat([crash], axis=1)
+    cr_con.columns = ['crash']
 
     # if null for a certain week = 0 (no crash/concern)
     cr_con.reset_index(inplace=True)
@@ -115,8 +119,21 @@ def aggregate_roads(feats, datadir,
     # create combined road feature dataset
     aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
     print "road features being included: ", ', '.join(feats)
+
+    # Add concerns if applicable
+    if os.path.exists(
+            os.path.join(os.path.join(datadir, 'concern_joined.json'))):
+
+        concern = read_spatial_features(
+            os.path.join(datadir, 'concern_joined.json'),
+            'near_id', 'concern'
+        )
+        aggregated = aggregated.assign(concern=concern)
+        aggregated = aggregated.fillna(0)
+
     # All features as int
     aggregated = aggregated.apply(lambda x: x.astype('int'))
+
     return aggregated, adjacent, cr_con
 
 
