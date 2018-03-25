@@ -69,13 +69,15 @@ def process_concerns(
             < datetime.datetime(year=int(end_year)+1, month=1, day=1)
         ]
 
-    print "Found " + str(len(concern_raw)) + " concerns"
-
+    min_date = parse(min(concern_raw[date_col])).date()
+    max_date = parse(max(concern_raw[date_col])).date()
     concern_raw = concern_raw.to_dict('records')
     concern = util.raw_to_record_list(concern_raw,
                                       pyproj.Proj(init='epsg:4326'), x=x, y=y)
 
-    print "Read in data from {} concerns".format(len(concern))
+    print "Read in data from {} concerns from {} to {}".format(
+        len(concern), min_date, max_date
+    )
 
     # Find nearest concerns - 20 tolerance
     print "snapping concerns to segments"
