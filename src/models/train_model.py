@@ -233,12 +233,23 @@ test.init_tuned(tune)
 test.run_tuned('LR_base', cal=False)
 test.run_tuned('XG_base', cal=False)
 
-# sensitivity analysis TODO
+# choose best performing model
+# TODO: considerations of choosing LR vs XG
+best_perf = 0
+best_model = None
+for m in test.rundict:
+	if test.rundict[m]['roc_auc']>best_perf:
+		best_perf = test.rundict[m]['roc_auc']
+		best_model = test.rundict[m]['model']
+		best_model_features = test.rundict[m]['features']
+# train on full data
+trained_model = best_model.fit(data_model[best_model_features], data_model['target'])
+
 def predict_forward(split_week, split_year, seg_data, crash_data):
+	"""simple function to predict crashes for specific week/year"""
 	test_crash = format_crash_data(crash_data, 'crash', split_week, split_year)
 	test_crash_segs = test_crash.merge(seg_data, left_on='segment_id', right_on='segment_id')
-	tuned_model.fit(test_crash_segs[lm_features], test_crash_segs['target'])
-	preds = tuned_model.predict_proba(test_crash_segs[lm_features])[::,1]
+	preds = trained_model.predict_proba(test_crash_segs[best_model_features])[::,1]
 	print roc_auc_score(test_crash_segs['target'], preds)
 	return(preds)
 
@@ -249,11 +260,15 @@ tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values[16:]
 pred_all_weeks = np.zeros([all_weeks.shape[0], data_segs.shape[0]])
 for i, yw in enumerate(all_weeks):
-	print yw
 	preds = predict_forward(yw[1], yw[0], data_segs, data_nonzero)
 	pred_all_weeks[i] = preds
-print pred_all_weeks.shape
-df_pred = pd.DataFrame(pred_all_weeks.T,
-	index=data_segs.segment_id.values,
-	columns=[tuple(x) for x in all_weeks])
-df_pred.to_csv(DATA_FP+'seg_with_predicted.csv')
+
+# create dataframe with segment-year-week index
+df_pred = pd.DataFrame(pred_all_weeks.T, 
+	index=data_segs.segment_id.values, 
+	columns=pd.MultiIndex.from_tuples([tuple(w) for w in all_weeks]))
+# has year-week column index, need to stack for year-week index
+df_pred = df_pred.stack(level=[0,1])
+df_pred = df_pred.reset_index()
+df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
+df_pred.to_csv(DATA_FP+'seg_with_predicted.csv', index=False)
