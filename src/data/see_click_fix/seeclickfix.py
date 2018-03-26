@@ -34,11 +34,15 @@ def convert_to_csv(filename):
                 })
 
 
-def get_tickets(place_url, outfile):
+def get_tickets(place_url, outfile, statuses=[
+        'open', 'acknowledged', 'closed', 'archived']):
+    print outfile
     if not os.path.exists(outfile):
+        status_str = ','.join(statuses)
+
         request_str = 'https://seeclickfix.com/api/v2/issues?place_url=' \
                       + place_url \
-                      + '&status=open,acknowledged,closed,archived'
+                      + '&status=' + status_str
         curr_page = requests.get(request_str)
         md = curr_page.json()['metadata']['pagination']
         print "Getting " + str(md['pages']) + " pages of see click fix data"
@@ -54,7 +58,7 @@ def get_tickets(place_url, outfile):
             next_page_url = md['next_page_url']
             time.sleep(.5)
 
-        with open(args.outputfile, 'w') as f:
+        with open(outfile, 'w') as f:
             json.dump(all, f)
     else:
         print "See click fix file already exists, skipping query..."
@@ -62,8 +66,12 @@ def get_tickets(place_url, outfile):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+
     parser.add_argument("outputfile", type=str,
                         help="output file prefix")
+    parser.add_argument("-c", "--city", type=str, default='Boston')
+    parser.add_argument("-s", "--status_list", nargs="+",
+                        default=['open', 'acknowledged', 'closed', 'archived'])
 
     # Todo: add ability to grab other cities; boston was easy, but some
     # cities don't have obvious place_urls, and haven't yet looked into
@@ -71,5 +79,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     filename = args.outputfile
-    get_tickets('boston', filename + '.json')
+    city = args.city
+
+    get_tickets(city, filename + '.json', statuses=args.status_list)
     convert_to_csv(filename)
