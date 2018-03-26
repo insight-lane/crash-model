@@ -63,13 +63,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("outputfile", type=str,
-                        help="Can give alternate data directory")
+                        help="output file prefix")
 
     # Todo: add ability to grab other cities; boston was easy, but some
     # cities don't have obvious place_urls, and haven't yet looked into
     # how to best look that up
     args = parser.parse_args()
 
-    filename = 'bos_scf'
+    filename = args.outputfile
     get_tickets('boston', filename + '.json')
     convert_to_csv(filename)
