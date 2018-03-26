@@ -5,6 +5,7 @@ import json
 import os
 import argparse
 import pandas as pd
+import datetime
 from collections import OrderedDict
 
 parser = argparse.ArgumentParser()
@@ -29,12 +30,11 @@ for key in dict_crashes:
 
     if args.destination == "boston":
         # skip crashes that don't have a date & time
-        if key["CALENDAR_DATE"] != "" and key["TIME"] != "":
-
+        if key["CALENDAR_DATE"] != "" and key["TIME,"] != "":
             valid_crash = OrderedDict([
                 ("id", key["CAD_EVENT_REL_COMMON_ID"]),
                 # assuming all crashes are timestamped in local time (GMT - 5)
-                ("dateOccurred", key["CALENDAR_DATE"].split(" ")[0]+"T"+key["TIME"]+"-05:00"),
+                ("dateOccurred", key["CALENDAR_DATE"]+"T"+key["TIME"]+"-05:00"),
                 ("location", OrderedDict([
                     ("latitude", key["X"]),
                     ("longitude", key["Y"])
@@ -43,10 +43,26 @@ for key in dict_crashes:
                 # TODO persons
                 ("summary", key["FIRST_EVENT_SUBTYPE"])
             ])
-
             valid_crashes.append(valid_crash)
 
-    elif args.destination == "dc" or args.destination == "cambridge":
+    elif args.destination == "cambridge":
+		# skip crashes that don't have a date & time
+		valid_crash = OrderedDict([
+			("id", key["CAD_EVENT_REL_COMMON_ID"]),
+			# time values are supplied as epoch, assume they are in local time (GMT - 5)
+			("dateOccurred", key["CALENDAR_DATE"]."T"+datetime.timedelta(seconds=key["TIME"])+"-05:00"),
+			("location", OrderedDict([
+				("latitude", key["X"]),
+				("longitude", key["Y"])
+			])),
+			# TODO vehicles
+			# TODO persons
+			("summary", key["FIRST_EVENT_SUBTYPE"])
+		])
+
+		valid_crashes.append(valid_crash)
+
+	else:
         print "transformation of "+args.destination+" crashes not yet implemented"
         exit(1)
 
