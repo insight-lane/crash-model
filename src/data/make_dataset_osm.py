@@ -37,7 +37,7 @@ def add_concern_args(config):
             concern_arg += concern_file['time']
         concern_args.append(concern_arg)
 
-    return ' '.join(concern_args)
+    return concern_args
 
 
 if __name__ == '__main__':
@@ -196,7 +196,7 @@ if __name__ == '__main__':
         + (['-t_crash', date_col_crash] if date_col_crash else [])
         + (['-start', start_year] if start_year else [])
         + (['-end', end_year] if end_year else [])
-        + (['--concern', concern_args] if concern_args else [])
+        + (['--concern'] + concern_args if concern_args else [])
     )
 
     subprocess.check_call([
@@ -228,4 +228,4 @@ if __name__ == '__main__':
         '-features'
     ] + features
         + (['-t_crash', date_col_crash] if date_col_crash else [])
-        + (['--concern', concern_args] if concern_args else []))
+        + (['--concern'] + concern_args if concern_args else []))

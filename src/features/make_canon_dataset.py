@@ -121,7 +121,6 @@ def aggregate_roads(feats, datadir, concerns=[],
     print "road features being included: ", ', '.join(feats)
 
     # Add any concern files if applicable
-
     for concern in concerns:
         name, concernfile, y, x, date_col = concern.split(',')
         # Default column names
@@ -134,7 +133,8 @@ def aggregate_roads(feats, datadir, concerns=[],
             result = read_spatial_features(
                 filename, 'near_id', name
             )
-            aggregated = aggregated.assign(concern=result)
+            f = {name: result}
+            aggregated = aggregated.assign(**f)
             aggregated = aggregated.fillna(0)
 
     # All features as int

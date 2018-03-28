@@ -58,3 +58,8 @@ concern_files:
     latitude:
     longitude: 
     time: 
+  - name: see_click_fix
+    filename: bos_scf.csv
+    latitude:
+    longitude:
+    time: created
