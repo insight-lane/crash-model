@@ -123,13 +123,6 @@ data_segs.reset_index(inplace=True)
 features = f_cont+f_cat
 print('Segment features included: {}'.format(features))
 
-# add concern
-if args.concern_column!=['']:
-	print('Adding concerns')
-	concern_observed = data[data.year==2016].groupby('segment_id')[args.concern_column].max()
-	features.append(args.concern_column)
-	data_segs = data_segs.merge(concern_observed.reset_index(), on='segment_id')
-
 # add in atrs if filepath present
 if atr_data!=['']:
 	print('Adding atrs')
@@ -271,4 +264,4 @@ df_pred = pd.DataFrame(pred_all_weeks.T,
 df_pred = df_pred.stack(level=[0,1])
 df_pred = df_pred.reset_index()
 df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
-df_pred.to_csv(DATA_FP+'seg_with_predicted.csv', index=False)
+df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
