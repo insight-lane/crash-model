@@ -33,7 +33,13 @@ CRASH_DATA_FPS = [
 
 
 def process_concerns(
-        concernfile, date_col, x, y, start_year=None, end_year=None):
+        concern_args, start_year=None, end_year=None):
+
+    name, concernfile, y, x, date_col = concern_args.split(',')
+    # Default column names
+    y = y or 'Y'
+    x = x or 'X'
+    date_col = date_col or 'REQUESTDATE'
 
     # Read in vision zero data
     # Have to use pandas read_csv, unicode trubs
@@ -48,8 +54,7 @@ def process_concerns(
         print "No concern data found"
         return
 
-    concern_raw = pd.read_csv(os.path.join(
-        RAW_DATA_FP, concernfile))
+    concern_raw = pd.read_csv(path)
 
     concern_all = concern_raw.fillna(value="")
 
@@ -91,10 +96,9 @@ def process_concerns(
         os.path.join(MAP_FP, 'concern_joined.shp'),
         concern, 'point', 'properties')
     print "output concerns data to", PROCESSED_DATA_FP
-    with open(
-            os.path.join(PROCESSED_DATA_FP, 'concern_joined.json'),
-            'w'
-    ) as f:
+
+    outfile = os.path.join(PROCESSED_DATA_FP, name + '_joined.json')
+    with open(outfile, 'w') as f:
         json.dump([c['properties'] for c in concern], f)
 
 
@@ -103,11 +107,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
-    parser.add_argument("-c", "--crashfiles", nargs='+',
+    parser.add_argument("-crash", "--crashfiles", nargs='+',
                         help="Can give alternate list of crash files. " +
-                        "Only use filename, don't include path")
-    parser.add_argument("-s", "--safetyconcern", type=str,
-                        help="Can give alternate concern file." +
                         "Only use filename, don't include path")
     parser.add_argument("-x_crash", "--x_crash", type=str,
                         help="column name in csv file containing longitude")
@@ -115,16 +116,16 @@ if __name__ == '__main__':
                         help="column name in csv file containing latitude")
     parser.add_argument("-t_crash", "--date_col_crash", type=str,
                         help="col name in crash csv file containing date")
-    parser.add_argument("-t_concern", "--date_col_concern", type=str,
-                        help="col name in concern csv file containing date")
-    parser.add_argument("-x_concern", "--x_concern", type=str,
-                        help="column name in csv file containing longitude")
-    parser.add_argument("-y_concern", "--y_concern", type=str,
-                        help="column name in csv file containing latitude")
     parser.add_argument("-start", "--startyear", type=str,
                         help="Can limit data to crashes this year or later")
     parser.add_argument("-end", "--endyear", type=str,
                         help="Can limit data to crashes this year or earlier")
+
+    parser.add_argument('-concerns', '--concern_info', nargs="+",
+                        help="A list of comma separated concern info, " +
+                        "containing filename, latitude, longitude and " +
+                        "time columns",
+                        default=['concern,Vision_Zero_Entry.csv,,,'])
 
     args = parser.parse_args()
     # Can override the hardcoded data directory
@@ -137,20 +138,10 @@ if __name__ == '__main__':
 
     x_crash = 'X'
     y_crash = 'Y'
-    y_concern = 'Y'
-    x_concern = 'X'
-    if args.x_concern:
-        x_concern = args.x_concern
     if args.x_crash:
         x_crash = args.x_crash
     if args.y_crash:
         y_crash = args.y_crash
-    if args.y_concern:
-        y_concern = args.y_concern
-
-    safetyconcern = 'Vision_Zero_Entry.csv'
-    if args.safetyconcern:
-        safetyconcern = args.safetyconcern
 
     # Read in CAD crash data
     crash = []
@@ -227,8 +218,9 @@ if __name__ == '__main__':
     with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'), 'w') as f:
         json.dump([c['properties'] for c in crash], f)
 
-    date_col_concern = args.date_col_concern or 'REQUESTDATE'
-    process_concerns(
-        safetyconcern, date_col_concern, x_concern, y_concern,
-        start_year=args.startyear, end_year=args.endyear
-    )
+    concerns = args.concern_info
+
+    for concern in concerns:
+        process_concerns(
+            concern, start_year=args.startyear, end_year=args.endyear
+        )

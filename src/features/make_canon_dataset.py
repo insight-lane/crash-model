@@ -97,16 +97,16 @@ def read_spatial_features(fp, id_col, feature_name):
     return df
 
 
-def aggregate_roads(feats, datadir,
-        crash_col_date='CALENDAR_DATE', concern_col_date='REQUESTDATE'):
+def aggregate_roads(feats, datadir, concerns=[],
+                    crash_col_date='CALENDAR_DATE'):
 
     # read/aggregate crash/concerns
     crash = read_records(os.path.join(datadir, 'crash_joined.json'),
-                          crash_col_date, 'near_id')
+                         crash_col_date, 'near_id')
     cr_con = pd.concat([crash], axis=1)
     cr_con.columns = ['crash']
 
-    # if null for a certain week = 0 (no crash/concern)
+    # if null for a certain week = 0 (no crash)
     cr_con.reset_index(inplace=True)
     cr_con = cr_con.fillna(0)
     # Make near_id string (for matching to segments)
@@ -120,16 +120,22 @@ def aggregate_roads(feats, datadir,
     aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
     print "road features being included: ", ', '.join(feats)
 
-    # Add concerns if applicable
-    if os.path.exists(
-            os.path.join(os.path.join(datadir, 'concern_joined.json'))):
+    # Add any concern files if applicable
 
-        concern = read_spatial_features(
-            os.path.join(datadir, 'concern_joined.json'),
-            'near_id', 'concern'
-        )
-        aggregated = aggregated.assign(concern=concern)
-        aggregated = aggregated.fillna(0)
+    for concern in concerns:
+        name, concernfile, y, x, date_col = concern.split(',')
+        # Default column names
+        y = y or 'Y'
+        x = x or 'X'
+        date_col = date_col or 'REQUESTDATE'
+        filename = os.path.join(datadir, name + '_joined.json')
+        if os.path.exists(filename):
+
+            result = read_spatial_features(
+                filename, 'near_id', name
+            )
+            aggregated = aggregated.assign(concern=result)
+            aggregated = aggregated.fillna(0)
 
     # All features as int
     aggregated = aggregated.apply(lambda x: x.astype('int'))
@@ -170,8 +176,6 @@ def group_by_date(cr_con, aggregated):
     cr_con = cr_con.set_index(
         ['near_id', 'year', 'week']).reindex(all_weeks, fill_value=0)
 
-
-
     cr_con.reset_index(inplace=True)
 
     # join segment features to crash/concern
@@ -191,8 +195,12 @@ if __name__ == '__main__':
         help="List of segment features to include")
     parser.add_argument("-t_crash", "--date_col_crash", type=str,
                         help="col name in crash csv file containing date")
-    parser.add_argument("-t_concern", "--date_col_concern", type=str,
-                        help="col name in concern csv file containing date")
+
+    parser.add_argument('-concerns', '--concern_info', nargs="+",
+                        help="A list of comma separated concern info, " +
+                        "containing filename, latitude, longitude and " +
+                        "time columns",
+                        default=['concern,Vision_Zero_Entry.csv,,,'])
 
     args = parser.parse_args()
 
@@ -214,7 +222,7 @@ if __name__ == '__main__':
         feats,
         DATA_FP,
         crash_col_date=args.date_col_crash or 'CALENDAR_DATE',
-        concern_col_date=args.date_col_concern or 'REQUESTDATE'
+        concerns=args.concern_info
     )
 
     # Need to rename?
