@@ -25,13 +25,16 @@
                 "description": "Status of concern",
                 "type": "string"
             },
-            "tags": {
-                "description": "Tags applied to concern",
+            "category": {
+                "description": "Primary category of concern",
+                "type": "string"
+            },
+            "subCategories": {
+                "description": "Subcategories of concern",
                 "type": "array",
                 "items": {
                     "type": "string"
                 },
-                "minItems": 1,
                 "uniqueItems": true
             },
             "location": {
@@ -57,6 +60,6 @@
                 "type": "string"
             }
         },
-        "required": ["id", "dateCreated", "status", "tags", "location"]
+        "required": ["id", "dateCreated", "status", "category", "location"]
     }
 }

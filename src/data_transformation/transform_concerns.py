@@ -10,31 +10,36 @@ from collections import OrderedDict
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--destination", type=str,
                     help="destination name")
-parser.add_argument("-f", "--file", type=str,
-                    help="absolute path to concerns file")
+parser.add_argument("-f", "--folder", type=str,
+                    help="absolute path to destination folder")
 
 args = parser.parse_args()
 
-if not os.path.exists(args.file):
-    print args.file+" not found, exiting"
+raw_path = os.path.join(args.folder, "raw")
+if not os.path.exists(raw_path):
+    print raw_path+" not found, exiting"
     exit(1)
-
-print "converting "+args.file+" to json"
-df_concerns = pd.read_csv(args.file, na_filter=False)
-dict_concerns = df_concerns.to_dict("records")
 
 valid_concerns = []
 
-for key in dict_concerns:
+print "searching "+raw_path+" for raw concerns file(s)"
 
-    if args.destination == "dc" or args.destination == "boston":
-        # skip concerns that don't have a date
-        if key["REQUESTDATE"] != "":
+for csv_file in os.listdir(raw_path):
+    print csv_file
+    df_concerns = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
+    dict_concerns = df_concerns.to_dict("records")
+
+    for key in dict_concerns:
+        if args.destination == "dc" or args.destination == "boston":
+            # skip concerns that don't have a date or request type
+            if key["REQUESTDATE"] == "" or key["REQUESTTYPE"] == "":
+                continue
+
             valid_concern = OrderedDict([
                 ("id", key["OBJECTID"]),
                 ("dateCreated", key["REQUESTDATE"]),
                 ("status", key["STATUS"]),
-                ("tags", [key["REQUESTTYPE"]]),
+                ("category", key["REQUESTTYPE"]),
                 ("location", OrderedDict([
                     ("latitude", key["X"]),
                     ("longitude", key["Y"])
@@ -47,13 +52,13 @@ for key in dict_concerns:
 
             valid_concerns.append(valid_concern)
 
-    elif args.destination == "cambridge":
-        print "transformation of cambridge concerns not yet implemented"
-        exit(1)
+        elif args.destination == "cambridge":
+            print "transformation of cambridge concerns not yet implemented"
+            exit(1)
 
 print "done, {} valid concerns loaded".format(len(valid_concerns))
 
-concerns_output = os.path.join(os.path.dirname(os.path.abspath(args.file)), args.destination+"_concerns.json")
+concerns_output = os.path.join(args.folder, "transformed/concerns.json")
 
 with open(concerns_output, "w") as f:
     json.dump(valid_concerns, f)
