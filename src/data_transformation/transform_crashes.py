@@ -107,7 +107,6 @@ for csv_file in os.listdir(raw_path):
                 valid_crash["summary"] = key["V1 First Event"]
 
             valid_crashes.append(valid_crash)
-
             manual_crash_id += 1
 
         elif args.destination == "dc":

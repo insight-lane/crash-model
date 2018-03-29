@@ -22,16 +22,70 @@ if not os.path.exists(raw_path):
     exit(1)
 
 valid_concerns = []
+manual_concern_id = 1
 
 print "searching "+raw_path+" for raw concerns file(s)"
 
 for csv_file in os.listdir(raw_path):
     print csv_file
+
+
     df_concerns = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
     dict_concerns = df_concerns.to_dict("records")
 
     for key in dict_concerns:
-        if args.destination == "dc" or args.destination == "boston":
+        if args.destination == "boston":
+            # Boston presently has concerns from two sources - VisionZero and SeeClickFix
+            if csv_file == "Vision_Zero_Entry.csv":
+                source = "visionzero"
+                # skip concerns that don't have a date or request type
+                if key["REQUESTDATE"] == "" or key["REQUESTTYPE"] == "":
+                    continue
+
+                else:
+                    valid_concern = OrderedDict([
+                        ("id", key["OBJECTID"]),
+                        ("source", "visionzero"),
+                        ("dateCreated", key["REQUESTDATE"]),
+                        ("status", key["STATUS"]),
+                        ("category", key["REQUESTTYPE"]),
+                        ("location", OrderedDict([
+                            ("latitude", key["X"]),
+                            ("longitude", key["Y"])
+                        ]))
+                    ])
+
+                    # only add summary property if data exists
+                    if key["COMMENTS"] != "":
+                        valid_concern.update({"summary": key["COMMENTS"]})
+
+            elif csv_file == "bos_scf.csv":
+                source = "seeclickfix"
+                # skip concerns that don't have a date or request type
+                if key["created"] == "" or key["summary"] == "":
+                    continue
+
+                else:
+                    valid_concern = OrderedDict([
+                        ("id", manual_concern_id),
+                        ("source", "seeclickfix"),
+                        ("dateCreated", key["created"]),
+                        ("status", "unknown"),
+                        ("category", key["summary"]),
+                        ("location", OrderedDict([
+                            ("latitude", key["Y"]),
+                            ("longitude", key["X"])
+                        ]))
+                    ])
+
+                    # only add summary property if data exists
+                    if key["description"] != "":
+                        valid_concern.update({"summary": key["description"]})
+
+            valid_concerns.append(valid_concern)
+            manual_concern_id += 1
+
+        if args.destination == "dc":
             # skip concerns that don't have a date or request type
             if key["REQUESTDATE"] == "" or key["REQUESTTYPE"] == "":
                 continue
@@ -42,8 +96,8 @@ for csv_file in os.listdir(raw_path):
                 ("status", key["STATUS"]),
                 ("category", key["REQUESTTYPE"]),
                 ("location", OrderedDict([
-                    ("latitude", key["X"]),
-                    ("longitude", key["Y"])
+                    ("latitude", key["Y"]),
+                    ("longitude", key["X"])
                 ]))
             ])
 
