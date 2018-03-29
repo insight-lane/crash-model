@@ -218,6 +218,8 @@ if __name__ == '__main__':
     )
 
     # Need to rename?
+    import pdb
+    pdb.set_trace()
     cr_con_roads = group_by_date(cr_con, aggregated)
 
     # output canon dataset
