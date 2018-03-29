@@ -1,9 +1,10 @@
 # Transform a concerns CSV into compatible JSON document.
 # Author terryf82 https://github.com/terryf82
 
+import argparse
+import dateutil.parser as date_parser
 import json
 import os
-import argparse
 import pandas as pd
 from collections import OrderedDict
 
@@ -53,8 +54,26 @@ for csv_file in os.listdir(raw_path):
             valid_concerns.append(valid_concern)
 
         elif args.destination == "cambridge":
-            print "transformation of cambridge concerns not yet implemented"
-            exit(1)
+            # skip concerns that don't have a date or issue type
+            if key["ticket_created_date_time"] == "" or key["issue_type"] == "":
+                continue
+
+            valid_concern = OrderedDict([
+                ("id", key["ticket_id"]),
+                ("dateCreated", str(date_parser.parse(key["ticket_created_date_time"]))+"-05:00"),
+                ("status", key["ticket_status"]),
+                ("category", key["issue_type"]),
+                ("location", OrderedDict([
+                    ("latitude", key["lat"]),
+                    ("longitude", key["lng"])
+                ]))
+            ])
+
+            # only add summary property if data exists
+            if key["issue_description"] != "":
+                valid_concern.update({"summary": key["issue_description"]})
+
+            valid_concerns.append(valid_concern)
 
 print "done, {} valid concerns loaded".format(len(valid_concerns))
 

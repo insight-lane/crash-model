@@ -3,19 +3,19 @@
 
 import argparse
 import datetime
-import dateutil.parser as parser
+import dateutil.parser as date_parser
 import json
 import os
 import pandas as pd
 from collections import OrderedDict
 
-cmd_parser = argparse.ArgumentParser()
-cmd_parser.add_argument("-d", "--destination", type=str,
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--destination", type=str,
                     help="destination name")
-cmd_parser.add_argument("-f", "--folder", type=str,
+parser.add_argument("-f", "--folder", type=str,
                     help="absolute path to destination folder")
 
-args = cmd_parser.parse_args()
+args = parser.parse_args()
 
 raw_path = os.path.join(args.folder, "raw")
 if not os.path.exists(raw_path):
@@ -94,7 +94,7 @@ for csv_file in os.listdir(raw_path):
             valid_crash = OrderedDict([
                 ("id", manual_crash_id),
                 # assume all crashes are in local time (GMT-5)
-                ("dateOccurred", str(parser.parse(key["Date Time"]))+"-05:00"),
+                ("dateOccurred", str(date_parser.parse(key["Date Time"]))+"-05:00"),
                 ("location", OrderedDict([
                     ("latitude", float(key["Y"])),
                     ("longitude", float(key["X"]))
