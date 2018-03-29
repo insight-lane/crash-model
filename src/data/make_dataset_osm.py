@@ -21,10 +21,22 @@ if __name__ == '__main__':
     # Can give a config file
     parser.add_argument("-c", "--config", type=str,
                         help="Can give a different .yml config file")
+    parser.add_argument("-s", "--startyear", type=str,
+                        help="Can limit data to crashes this year or later")
+    parser.add_argument("-e", "--endyear", type=str,
+                        help="Can limit data to crashes this year or earlier")
+
     args = parser.parse_args()
     config_file = 'data/config.yml'
     if args.config:
         config_file = args.config
+    start_year = None
+    end_year = None
+    if args.startyear:
+        start_year = args.startyear
+    if args.endyear:
+        end_year = args.endyear
+
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
@@ -53,23 +65,37 @@ if __name__ == '__main__':
         additional_features = config['additional_features'].split()
         extra_map3857 = config['extra_map3857']
 
-    longitude = 'X'
-    latitude = 'Y'
-    date_col = None
-    crash_files = None
-    if 'longitude' in config.keys() and config['longitude']:
-        longitude = config['longitude']
-    if 'latitude' in config.keys() and config['latitude']:
-        latitude = config['latitude']
+    longitude_crash = None
+    latitude_crash = None
+    date_col_crash = None
+    longitude_concern = None
+    latitude_concern = None
+    date_col_concern = None
 
-    if 'date_col' in config.keys() and config['date_col']:
-        date_col = config['date_col']
+    crash_files = None
+    concern = None
+    if 'longitude_crash' in config.keys() and config['longitude_crash']:
+        longitude_crash = config['longitude_crash']
+    if 'latitude_crash' in config.keys() and config['latitude_crash']:
+        latitude_crash = config['latitude_crash']
+    if 'date_col_crash' in config.keys() and config['date_col_crash']:
+        date_col_crash = config['date_col_crash']
+
+    if 'longitude_concern' in config.keys() and config['longitude_concern']:
+        longitude_concern = config['longitude_concern']
+    if 'latitude_concern' in config.keys() and config['latitude_concern']:
+        latitude_concern = config['latitude_concern']
+    if 'date_col_concern' in config.keys() and config['date_col_concern']:
+        date_col_concern = config['date_col_concern']
 
     if 'crashfiles' in config.keys() and config['crashfiles']:
         crash_files = config['crashfiles']
 
     if 'recreate' in config.keys() and config['recreate']:
         recreate = True
+
+    if 'concern' in config.keys() and config['concern']:
+        concern = config['concern']
 
     # Features drawn from open street maps
     # additional_features from config file can add on to
@@ -143,14 +169,18 @@ if __name__ == '__main__':
         '-m',
         'data.join_segments_crash_concern',
         '-d',
-        DATA_FP,
-        '-x',
-        longitude,
-        '-y',
-        latitude,
+        DATA_FP
     ]
-        + (['-c', ' '.join(crash_files)] if crash_files else [])
-        + (['-t', date_col] if date_col else [])
+        + (['-c'] + (crash_files if crash_files else []))
+        + (['-s', concern] if concern else [])
+        + (['-x_crash', longitude_crash] if longitude_crash else [])
+        + (['-y_crash', latitude_crash] if latitude_crash else [])
+        + (['-x_concern', longitude_concern] if longitude_concern else [])
+        + (['-y_concern', latitude_concern] if latitude_concern else [])
+        + (['-t_crash', date_col_crash] if date_col_crash else [])
+        + (['-t_concern', date_col_concern] if date_col_concern else [])
+        + (['-start', start_year] if start_year else [])
+        + (['-end', end_year] if end_year else [])
     )
 
     subprocess.check_call([
@@ -180,5 +210,7 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-features'
-    ] + features)
+    ] + features
+        + (['-t_crash', date_col_crash] if date_col_crash else [])
+        + (['-t_concern', date_col_concern] if date_col_concern else []))
 
