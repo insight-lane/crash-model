@@ -149,6 +149,94 @@ def concern_percentages(sorted_matching):
     return results
 
 
+def concern_counts_by_type(
+        concern_data, crashes, category_field='REQUESTTYPE'):
+
+    requests = {}
+    locations = {}
+    for concern in concern_data:
+
+        if concern['near_id'] not in locations.keys():
+            locations[concern['near_id']] = {}
+
+        request = concern[category_field]
+        # Clean up badly formatted request types
+        vals = request.split('nbsp;')
+        if len(vals) > 1:
+            request = vals[1]
+
+        if request not in requests.keys():
+            requests[request] = {
+                'crashes': 0,
+                'total': 0,
+                'inter_crashes': 0,
+                'inter_total': 0,
+                'non_inter_crashes': 0,
+                'non_inter_total': 0,
+            }
+
+        # Only count this request if we haven't seen it in this location
+        # before.  We might eventually want to count the number of certain
+        # types of requests, but not doing that here
+        if request not in locations[concern['near_id']].keys():
+
+            # count totals
+            if str(concern['near_id']) in crashes.keys():
+                requests[request]['crashes'] += 1
+            requests[request]['total'] += 1
+
+            # count intersection totals
+            if is_inter(concern['near_id']):
+                if str(concern['near_id']) in crashes.keys():
+                    requests[request]['inter_crashes'] += 1
+                requests[request]['inter_total'] += 1
+            # count non-intersection totals
+            else:
+                if str(concern['near_id']) in crashes.keys():
+                    requests[request]['non_inter_crashes'] += 1
+                requests[request]['non_inter_total'] += 1
+
+        if request not in locations[concern['near_id']].keys():
+            locations[concern['near_id']][request] = 0
+        locations[concern['near_id']][request] += 1
+
+    return requests
+
+
+def concern_percentages_by_type(
+        requests, cutoff=100):
+
+    results = []
+    for k, v in requests.iteritems():
+        if requests[k]['total'] >= cutoff:
+            total_percent = round(100 * float(
+                requests[k]['crashes'])/float(requests[k]['total']))
+
+            inter_percent = round(100 * float(
+                requests[k]['inter_crashes'])/float(requests[k]['inter_total'])
+                if requests[k]['inter_total'] else 0
+            )
+            non_inter_percent = round(100 * float(
+                requests[k]['non_inter_crashes'])/float(
+                requests[k]['non_inter_total'])
+                if requests[k]['non_inter_total'] else 0
+            )
+            results.append([
+                k,
+                total_percent,
+                requests[k]['crashes'],
+                requests[k]['total'],
+                inter_percent,
+                requests[k]['inter_crashes'],
+                requests[k]['inter_total'],
+                non_inter_percent,
+                requests[k]['non_inter_crashes'],
+                requests[k]['non_inter_total'],
+            ])
+
+    return results
+
+
 def get_analysis_for_city(
         mapdir, crash_file, concern_file,
         category_field='REQUESTTYPE', years=None):
