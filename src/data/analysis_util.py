@@ -89,10 +89,10 @@ def summary_concern_counts(crashes, concerns):
     ]
 
 
-def concern_percentages(sorted_matching):
+def concern_percentages(concern_summary):
 
     results = []
-    for key, value in sorted_matching:
+    for key, value in concern_summary:
         # Do the 1+,2+ stats as well as 1, 2
         # Still need to break it out by int/non-int
         counts = {
@@ -108,7 +108,7 @@ def concern_percentages(sorted_matching):
         }
         # Add all the data for segments with more complaints
         # than the current complaint we're on
-        for key2, value2 in sorted_matching[key:len(sorted_matching)]:
+        for key2, value2 in concern_summary[key:len(concern_summary)]:
 
             if key2 > key:
                 counts['total'] += value2['inter']['crash'] \
@@ -239,7 +239,8 @@ def concern_percentages_by_type(
 
 def get_analysis_for_city(
         mapdir, crash_file, concern_file,
-        category_field='REQUESTTYPE', years=None):
+        category_field='REQUESTTYPE', years=None,
+        cutoff=100):
     
     crash_data, crashes = util.group_json_by_location(
         crash_file, years=years, yearfield='CALENDAR_DATE')
@@ -247,23 +248,32 @@ def get_analysis_for_city(
     concern_data, concerns = util.group_json_by_location(
         concern_file,
         otherfields=[category_field])
-    print 'len concern data:' + str(len(concern_data))
 
-#    inters = util.read_segments(mapdir, get_non_inter=False)
-#    non_inters = util.read_segments(mapdir, get_inter=False)
-#    inter_count = len(inters[0])
-#    non_inter_count = len(non_inters[0])
-    
-#    total_crashes, results = summary_crash_rate(crashes)
-#    print total_crashes
-    summary_concern_counts(crashes, concerns)
+    total_crashes, crash_locations, results = summary_crash_rate(crashes)
 
-    summary(crashes, concerns)
-#    concerns_by_type(concerns, concern_data, crashes, category_field)
+    total_count, total_loc, inter_total, inter_loc, non_inter_total, \
+        non_inter_loc, concern_summary = summary_concern_counts(
+            crashes, concerns)
+
+    concern_percent = concern_percentages(concern_summary)
+    concerns_by_type = concern_counts_by_type(
+        concern_data, crashes, category_field)
+    concern_percent_by_type = concern_percentages_by_type(
+        concerns_by_type, cutoff)
+    return [
+        total_crashes,
+        crash_locations,
+        results,
+        concern_summary,
+        concern_percent,
+        concerns_by_type,
+        concern_percent_by_type
+    ]
 
 if __name__ == '__main__':
 
     get_analysis_for_city(
         'tests/data/processed/maps',
-        'tests/data/crash_test_dummy..json',
-        '../../osm-data/processed/concern_joined.json')
+        'tests/data/crash_test_dummy.json',
+        'tests/data/concern_test_dummy.json')
+#        '../../osm-data/processed/concern_joined.json')
