@@ -238,7 +238,7 @@ def concern_percentages_by_type(
 
 
 def get_analysis_for_city(
-        mapdir, crash_file, concern_file,
+        crash_file, concern_file,
         category_field='REQUESTTYPE', years=None,
         cutoff=100):
     
@@ -267,7 +267,9 @@ def get_analysis_for_city(
         concern_summary,
         concern_percent,
         concerns_by_type,
-        concern_percent_by_type
+        concern_percent_by_type,
+        crashes,
+        concerns
     ]
 
 if __name__ == '__main__':
