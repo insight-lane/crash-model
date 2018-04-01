@@ -22,10 +22,6 @@ crashfiles:
 - 2015motorvehicles_with_modetype.csv
 - 2017motorvehicles_with_modetype.csv
 
-# If you have a vision zero concern file, give it here
-# Optional
-concern:
-
 # If you are adding another map and its features to the open street map,
 # give it here:
 extra_map:
@@ -38,18 +34,32 @@ extra_map3857:
 # This is required if extra_map is given
 additional_features:
 
-# If the crash/concern files have longitude column named something other
+# If the crash files have longitude column named something other
 # than 'X', give column name here
 longitude_crash:
-longitude_concern:
 
 # If the crash file has latitude column named something other than 'Y',
 # give column name here
 latitude_crash:
-latitude_concern: 
 
 # If the crash file has a date column named something other than 'CALENDAR_DATE',
 # give column name here
 date_col_crash:
-date_col_concern:
 
+# If you have a vision zero concern file, or similar, give it here,
+# and include the feature name and filename (under the raw/ directory)
+# If the latitude column is different than Y, the longitude column is different
+# than X, give them here as well
+
+# List of concern type information
+concern_files:
+  - name: concern
+    filename: Vision_Zero_Entry.csv
+    latitude:
+    longitude: 
+    time: 
+  - name: see_click_fix
+    filename: bos_scf.csv
+    latitude:
+    longitude:
+    time: created

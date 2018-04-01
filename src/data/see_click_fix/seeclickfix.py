@@ -4,6 +4,7 @@ import time
 import json
 import os
 import csv
+from dateutil.parser import parse
 
 
 def convert_to_csv(filename):
@@ -35,7 +36,7 @@ def convert_to_csv(filename):
 
 
 def get_tickets(place_url, outfile, statuses=[
-        'open', 'acknowledged', 'closed', 'archived']):
+        'open', 'acknowledged', 'closed', 'archived'], start_date=None):
     print outfile
     if not os.path.exists(outfile):
         status_str = ','.join(statuses)
@@ -43,7 +44,11 @@ def get_tickets(place_url, outfile, statuses=[
         request_str = 'https://seeclickfix.com/api/v2/issues?place_url=' \
                       + place_url \
                       + '&status=' + status_str
+        if start_date:
+            start_date = parse(start_date).isoformat()
+            request_str += '&after=' + start_date
         curr_page = requests.get(request_str)
+
         md = curr_page.json()['metadata']['pagination']
         print "Getting " + str(md['pages']) + " pages of see click fix data"
 
@@ -70,16 +75,19 @@ if __name__ == '__main__':
     parser.add_argument("outputfile", type=str,
                         help="output file prefix")
     parser.add_argument("-c", "--city", type=str, default='Boston')
-    parser.add_argument("-s", "--status_list", nargs="+",
+    parser.add_argument("-status", "--status_list", nargs="+",
                         default=['open', 'acknowledged', 'closed', 'archived'])
+    parser.add_argument("-start", "--start_date")
 
-    # Todo: add ability to grab other cities; boston was easy, but some
-    # cities don't have obvious place_urls, and haven't yet looked into
-    # how to best look that up
     args = parser.parse_args()
 
     filename = args.outputfile
     city = args.city
 
-    get_tickets(city, filename + '.json', statuses=args.status_list)
+    get_tickets(
+        city,
+        filename + '.json',
+        statuses=args.status_list,
+        start_date=args.start_date
+    )
     convert_to_csv(filename)
