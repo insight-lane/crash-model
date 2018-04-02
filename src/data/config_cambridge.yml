@@ -1,7 +1,5 @@
-# This is a configuration file that generates data from open street maps for Boston,
-# reads in any concern data, automated traffic records and turning movement counts,
-# but does not use Boston_Segments or ma_cob_spatially_joined_features to
-# add additional features
+# This is a configuration file that generates data from open street maps
+# for Cambridge, including any see click fix data
 
 # City is the only required argument
 city: Cambridge, Massachusetts, USA
@@ -18,38 +16,21 @@ recreate: False
 # given above as 'datadir'
 # This is optional, because the default Boston files are hardcoded
 crashfiles:
-- Police_Department_Crash_Data_-_Historical.csv
-
-# If you have a vision zero concern file, give it here
-# Optional
-concern: Commonwealth_Connect_Service_Requests.csv
-
-# If you are adding another map and its features to the open street map,
-# give it here:
-extra_map:
-
-# Also need to give a map in 3857 projection.
-# This is required if extra_map is given
-extra_map3857:
-
-# Additional features to add from the additional map.
-# This is required if extra_map is given
-additional_features:
-
-# If the crash/concern files have longitude column named something other
-# than 'X', give column name here
-# give column name here
-longitude_crash: Longitude
-
-# give column name here
-latitude_crash: Latitude
+- crash_data.csv
 
 # If the crash file has a date column named something other than 'CALENDAR_DATE',
 # give column name here
 date_col_crash: Date Time
 
-longitude_concern: lng
+# If you have a vision zero concern file, or similar, give it here,
+# and include the feature name and filename (under the raw/ directory)
+# If the latitude column is different than Y, the longitude column is different
+# than X, give them here as well
 
-latitude_concern: lat
-
-date_col_concern: ticket_created_date_time
+# List of concern type information
+concern_files:
+  - name: concern
+    filename: Commonwealth_Connect_Service_Requests.csv
+    latitude: lat
+    longitude: lng
+    time: ticket_created_date_time

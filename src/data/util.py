@@ -441,3 +441,8 @@ def make_schema(geometry, properties):
     }
     return(schema)
 
+
+def is_inter(id):
+    if len(str(id)) > 1 and str(id)[0:2] == '00':
+        return False
+    return True

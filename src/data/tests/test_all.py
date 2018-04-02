@@ -37,7 +37,7 @@ def test_all(tmpdir):
         'data.join_segments_crash_concern',
         '-d',
         path,
-        '-c',
+        '-crash',
         'crashes.csv'
     ])
     data = json.load(open(path + '/processed/crash_joined.json'))
