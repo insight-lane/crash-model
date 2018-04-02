@@ -50,8 +50,8 @@ for csv_file in os.listdir(raw_path):
                         ("status", key["STATUS"]),
                         ("category", key["REQUESTTYPE"]),
                         ("location", OrderedDict([
-                            ("latitude", key["X"]),
-                            ("longitude", key["Y"])
+                            ("latitude", key["Y"]),
+                            ("longitude", key["X"])
                         ]))
                     ])
 
