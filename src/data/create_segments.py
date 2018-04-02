@@ -131,7 +131,7 @@ def reproject_and_read(infile, outfile):
     return reprojected_inters
 
 
-def create_segments(roads_shp_path):
+def create_segments(roads_shp_path, print_buffers=False):
 
     inters_shp_path_raw = os.path.join(MAP_FP, 'inters.shp')
     inters_shp_path = os.path.join(MAP_FP, 'inters_3857.shp')
@@ -149,6 +149,18 @@ def create_segments(roads_shp_path):
 
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
+    if print_buffers:
+        # create new schema that has only an 'id' property of type string
+        buff_schema = {
+            'geometry': 'Polygon',
+            'properties': {},
+        }
+        # write out shapefile that has intersection buffers
+        util.write_shp(
+            buff_schema,
+            os.path.join(MAP_FP, 'int_buffers.shp'),
+            [(x, {}) for x in int_buffers], 0, 1)
+
     non_int_lines, inter_segments = find_non_ints(
         roads, int_buffers)
 
@@ -328,6 +340,9 @@ if __name__ == '__main__':
                         "within the maps directory")
     parser.add_argument("-i", "--intersections", type=str,
                         help="Can give osm nodes instead of intersections")
+    parser.add_argument("-p", "--print_buffers", type=str,
+                        help="Output a shape file with intersection buffers",
+                        default=False)
 
     args = parser.parse_args()
 
@@ -351,7 +366,7 @@ if __name__ == '__main__':
     if args.altroad:
         roads_shp_path = args.altroad
         
-    inter_data = create_segments(roads_shp_path)
+    inter_data = create_segments(roads_shp_path, args.print_buffers)
 
     # Once the intersections and non_intersection segments exist,
     # other features can be added
