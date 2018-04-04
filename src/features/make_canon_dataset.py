@@ -97,12 +97,11 @@ def read_spatial_features(fp, id_col, feature_name):
     return df
 
 
-def aggregate_roads(feats, datadir, concerns=[],
-                    crash_col_date='CALENDAR_DATE'):
+def aggregate_roads(feats, datadir, concerns=[]):
 
     # read/aggregate crash/concerns
     crash = read_records(os.path.join(datadir, 'crash_joined.json'),
-                         crash_col_date, 'near_id')
+                         'dateOccurred', 'near_id')
     cr_con = pd.concat([crash], axis=1)
     cr_con.columns = ['crash']
 
@@ -193,9 +192,6 @@ if __name__ == '__main__':
     parser.add_argument("-features", "--featlist", nargs="+", default=[
         'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
         help="List of segment features to include")
-    parser.add_argument("-t_crash", "--date_col_crash", type=str,
-                        help="col name in crash csv file containing date")
-
     parser.add_argument('-concerns', '--concern_info', nargs="+",
                         help="A list of comma separated concern info, " +
                         "containing filename, latitude, longitude and " +
@@ -221,13 +217,10 @@ if __name__ == '__main__':
     aggregated, adjacent, cr_con = aggregate_roads(
         feats,
         DATA_FP,
-        crash_col_date=args.date_col_crash or 'CALENDAR_DATE',
         concerns=args.concern_info
     )
 
     # Need to rename?
-    import pdb
-    pdb.set_trace()
     cr_con_roads = group_by_date(cr_con, aggregated)
 
     # output canon dataset

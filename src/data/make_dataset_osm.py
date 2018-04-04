@@ -190,10 +190,6 @@ if __name__ == '__main__':
         '-d',
         DATA_FP
     ]
-        + (['-crash'] + (crash_files if crash_files else []))
-        + (['-x_crash', longitude_crash] if longitude_crash else [])
-        + (['-y_crash', latitude_crash] if latitude_crash else [])
-        + (['-t_crash', date_col_crash] if date_col_crash else [])
         + (['-start', start_year] if start_year else [])
         + (['-end', end_year] if end_year else [])
         + (['--concern'] + concern_args if concern_args else [])
@@ -227,5 +223,4 @@ if __name__ == '__main__':
         DATA_FP,
         '-features'
     ] + features
-        + (['-t_crash', date_col_crash] if date_col_crash else [])
         + (['--concern'] + concern_args if concern_args else []))

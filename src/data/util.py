@@ -23,6 +23,124 @@ MAP_FP = BASE_DIR + '/data/processed/maps'
 PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
 
 
+class Record():
+    "A record contains a dict of properties and a point in 4326 projection"
+
+    def __init__(self):
+        self.point = None
+        self.near_id = None
+
+        # timestamp is what we consider sorting on/limiting by
+        # At the moment, only the timestamp field are we able
+        # to sort by
+        self.timestamp = None
+        self.schema = {
+            'geometry': 'Point',
+            'properties': {
+                'id': 'str',
+                'near_id': 'str',
+            }
+        }
+
+    def add_properties(self, properties):
+        self.id = properties['id']
+
+    def add_reproject_point(self, location):
+        """
+        Turn a 4326 projection into 3857
+        """
+        lon, lat = pyproj.transform(
+            pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'),
+            location['longitude'], location['latitude']
+        )
+        self.point = Point(float(lon), float(lat))
+
+    # For writing to shapefile
+    def get_properties(self):
+        properties = {}
+        for attr, value in self.__dict__.iteritems():
+            if attr not in ('point', 'schema', 'timestamp'):
+                properties[attr] = str(value)
+        return properties
+
+
+class Crash(Record):
+    def __init__(self):
+        Record.__init__(self)
+        self.id = id
+        self.dateOccurred = None
+        self.summary = None
+        self.persons = {}
+        self.vehicles = {}
+        self.address = None
+
+        self.schema['properties'].update({
+            'dateOccurred': 'str',
+            'summary': 'str',
+            'persons': 'str',
+            'vehicles': 'str',
+            'address': 'str',
+        })
+
+    def add_properties(self, properties):
+        self.id = properties['id']
+        self.dateOccurred = parse(properties['dateOccurred'])
+        self.timestamp = self.dateOccurred
+        self.summary = properties['summary']
+
+        # Probably want to get into more detail with vehicles/persons
+        # but leaving this for later since we don't currently use these
+        # fields
+        if 'persons' in properties.keys():
+            self.persons = properties['persons']
+        if 'vehicles' in properties.keys():
+            self.vehicles = properties['vehicles']
+        if 'address' in properties.keys():
+            self.vehicles = properties['address']
+
+
+class Concern(Record):
+    def __init__(self):
+        Record.__init__(self)
+        self.id = id
+        self.source = None
+        self.dateCreated = None
+        self.dateResolved = None
+        self.status = None
+        self.category = None
+        self.subcategories = []
+        self.address = None
+        self.summary = None
+
+        self.schema['properties'].update({
+            'source': 'str',
+            'dateCreated': 'str',
+            'dateResolved': 'str',
+            'status': 'str',
+            'category': 'str',
+            'subcategories': 'str',
+            'address': 'str',
+            'summary': 'str',
+        })
+
+    def add_properties(self, properties):
+        self.id = properties['id']
+        self.dateCreated = parse(properties['dateCreated'])
+        self.timestamp = self.dateCreated
+        self.source = properties['source']
+        self.status = properties['status']
+        self.category = properties['category']
+
+        if 'summary' in properties.keys():
+            self.summary = properties['summary']
+        if 'dateResolved' in properties.keys():
+            self.dateResolved = properties['dateResolved']
+        if 'subcategories' in properties.keys():
+            self.subcategories = properties['subcategories']
+        if 'address' in properties.keys():
+            self.vehicles = properties['address']
+
+
 def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
     """
     Read in a csv file with columns:
@@ -184,6 +302,17 @@ def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
             c.write(entry)
 
 
+def records_to_shapefile(schema, fp, records, crs={}):
+
+    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
+
+        for record in records:
+            c.write({
+                'geometry': mapping(record.point),
+                'properties': record.get_properties()
+            })
+
+
 def record_to_csv(filename, records):
     """
     Write a csv file from records
@@ -254,10 +383,53 @@ def csv_to_projected_records(filename, x='X', y='Y'):
                     read_record(r, r[x], r[y],
                                 orig=pyproj.Proj(init='epsg:4326'))
                 )
+
     return records
 
 
-def find_nearest(records, segments, segments_index, tolerance):
+def read_records(filename, record_type, startyear=None, endyear=None):
+    """
+    Reads appropriately formatted json file,
+    pulls out currently relevant features,
+    converts latitude and longitude to projection 4326, and turns into
+    a Crash object
+    Args:
+        filename - json file
+        start - optionally give start for date range of crashes
+        end - optionally give end for date range of crashes
+    Returns:
+        A list of Crashes
+    """
+
+    records = []
+    items = json.load(open(filename))
+    for item in items:
+        record = None
+        if record_type == 'crash':
+            record = Crash()
+        elif record_type == 'concern':
+            record = Concern()
+        else:
+            record = Record()
+        record.add_reproject_point(item['location'])
+        record.add_properties(item)
+        records.append(record)
+
+    if startyear:
+        records = [x for x in records if x.timestamp >= parse(startyear)]
+    if endyear:
+        records = [x for x in records if x.timestamp < parse(endyear)]
+
+    # Keep track of the earliest and latest crash date used
+    start = min([x.dateOccurred for x in records])
+    end = max([x.dateOccurred for x in records])
+    print "Read in data from {} crashes from {} to {}".format(
+        len(records), start.date(), end.date())
+    return records
+
+
+def find_nearest(records, segments, segments_index, tolerance,
+                 type_record=False):
     """ Finds nearest segment to records
     tolerance : max units distance from record point to consider
     """
@@ -266,7 +438,15 @@ def find_nearest(records, segments, segments_index, tolerance):
 
     for record in records:
 
-        record_point = record['point']
+        # We are in process of transition to using Record class
+        # but haven't converted it everywhere, so until we do, need
+        # to look at whether the records are of type record or not
+        record_point = None
+        if type_record:
+            record_point = record.point
+
+        else:
+            record_point = record['point']
         record_buffer_bounds = record_point.buffer(tolerance).bounds
         nearby_segments = segments_index.intersection(record_buffer_bounds)
 
@@ -284,10 +464,16 @@ def find_nearest(records, segments, segments_index, tolerance):
             nearest = min(segment_id_with_distance, key=lambda tup: tup[1])
             db_segment_id = nearest[0]
             # Add db_segment_id to record
-            record['properties']['near_id'] = db_segment_id
+            if type_record:
+                record.near_id = db_segment_id
+            else:
+                record['properties']['near_id'] = db_segment_id
         # If no segment matched, populate key = ''
         else:
-            record['properties']['near_id'] = ''
+            if type_record:
+                record.near_id = ''
+            else:
+                record['properties']['near_id'] = ''
 
 
 def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
