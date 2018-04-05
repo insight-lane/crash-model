@@ -536,8 +536,10 @@ if __name__ == '__main__':
         summary = parse_conflicts()
         address_records = snap_inter_and_non_inter(summary)
 
-        all_crashes, crashes_by_location = util.group_json_by_location(
-            os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'))
+        items = json.load(
+            open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json')))
+
+        all_crashes, crashes_by_location = util.group_json_by_location(items)
 
         for record in address_records:
             if record['properties']['near_id'] \
