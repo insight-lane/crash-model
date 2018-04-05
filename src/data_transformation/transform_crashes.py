@@ -2,12 +2,12 @@
 # Author terryf82 https://github.com/terryf82
 
 import argparse
-import datetime
 import dateutil.parser as date_parser
 import json
 import os
 import pandas as pd
 from collections import OrderedDict
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--destination", type=str,
@@ -94,7 +94,7 @@ for csv_file in os.listdir(raw_path):
             valid_crash = OrderedDict([
                 ("id", manual_crash_id),
                 # assume all crashes are in local time (GMT-5)
-                ("dateOccurred", str(date_parser.parse(key["Date Time"]))+"-05:00"),
+                ("dateOccurred", datetime.strftime(date_parser.parse(key["Date Time"]), "%Y-%m-%dT%H:%M:%S")+"-05:00"),
                 ("location", OrderedDict([
                     ("latitude", float(key["Y"])),
                     ("longitude", float(key["X"]))

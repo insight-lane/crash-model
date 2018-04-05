@@ -7,6 +7,7 @@ import json
 import os
 import pandas as pd
 from collections import OrderedDict
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--destination", type=str,
@@ -114,7 +115,7 @@ for csv_file in os.listdir(raw_path):
 
             valid_concern = OrderedDict([
                 ("id", key["ticket_id"]),
-                ("dateCreated", str(date_parser.parse(key["ticket_created_date_time"]))+"-05:00"),
+                ("dateCreated", datetime.strftime(date_parser.parse(key["ticket_created_date_time"]), "%Y-%m-%dT%H:%M:%S")+"-05:00"),
                 ("status", key["ticket_status"]),
                 ("category", key["issue_type"]),
                 ("location", OrderedDict([
