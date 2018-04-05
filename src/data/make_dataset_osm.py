@@ -192,7 +192,6 @@ if __name__ == '__main__':
     ]
         + (['-start', start_year] if start_year else [])
         + (['-end', end_year] if end_year else [])
-        + (['--concern'] + concern_args if concern_args else [])
     )
 
     subprocess.check_call([
@@ -222,5 +221,4 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-features'
-    ] + features
-        + (['--concern'] + concern_args if concern_args else []))
+    ] + features)

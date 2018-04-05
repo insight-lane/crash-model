@@ -55,12 +55,6 @@ if __name__ == '__main__':
     parser.add_argument("-end", "--endyear", type=str,
                         help="Can limit data to crashes this year or earlier")
 
-    parser.add_argument('-concerns', '--concern_info', nargs="+",
-                        help="A list of comma separated concern info, " +
-                        "containing filename, latitude, longitude and " +
-                        "time columns",
-                        default=['concern,Vision_Zero_Entry.csv,,,'])
-
     args = parser.parse_args()
     # Can override the hardcoded data directory
     if args.datadir:

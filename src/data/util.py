@@ -510,8 +510,17 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return combined_seg, segments_index
 
 
+def group_json_by_field(items, field):
+    results = {}
+    for item in items:
+        if item[field] not in results.keys():
+            results[item[field]] = []
+        results[item[field]].append(item)
+    return results
+
+
 def group_json_by_location(
-        jsonfile, years=None, yearfield=None, otherfields=[]):
+        items, years=None, yearfield=None, otherfields=[]):
     """
     Get both the json data from file as well as a dict where the keys
     are the segment id and the values are count, and a list of the values
@@ -521,7 +530,6 @@ def group_json_by_location(
         otherfields - optional list of keys of things you want to include
                       in the grouped by segment results
     """
-    items = json.load(open(jsonfile))
     locations = {}
 
     for item in items:
