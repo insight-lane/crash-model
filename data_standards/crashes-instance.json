@@ -2,40 +2,43 @@
     {
         "id": 1403832,
         "dateOccurred": "2016-01-01T00:56:45-05:00",
-        "vehicles": [
-            { "category": "car" }
-        ],
         "location": {
-            "latitude": 42.300864811284519,
-            "longitude": -71.071316786983303
+            "latitude": 42.300864811284534,
+            "longitude": -71.0713167869833
         },
-        "address": "14 Corona Street",
-        "summary": "REPORTED INJURIES (P) (E) (F)"
+        "vehicles": [
+            {
+                "category": "car"
+            }
+        ],
+        "summary": "REPORTED INJURIES   (P) (E) (F)"
     },
     {
-        "id": 1410434,
-        "dateOccurred": "2016-01-04T15:11:11-05:00",
-        "type": "pedestrian",
-        "persons": [
-            { "category": "pedestrian", "quantity": 1 }
-        ],
+        "id": 1404159,
+        "dateOccurred": "2016-01-01T02:30:23-05:00",
         "location": {
-            "latitude": 42.332547160943271,
-            "longitude": -71.072124196868316
+            "latitude": 42.317987926802246,
+            "longitude": -71.06188127008645
         },
-        "summary": "PEDESTRIAN STRUCK (P) (E) (F)"
+        "vehicles": [
+            {
+                "category": "car"
+            }
+        ],
+        "summary": "REPORTED INJURIES   (P) (E) (F)"
     },
     {
-        "id": 1410816,
-        "dateOccurred": "2016-01-04T18:42:24-05:00",
-        "vehicles": [
-            { "category": "car" }
-        ],
+        "id": 1404194,
+        "dateOccurred": "2016-01-01T02:49:56-05:00",
         "location": {
-            "latitude": 42.311376108568268,
-            "longitude": -71.081614220307372
+            "latitude": 42.356046190978454,
+            "longitude": -71.13132169601725
         },
-        "address": "67 Brunswick Street, Boston",
-        "summary": "UNKNOWN IF INJURIES - ADVISE NEED FOR EMS (P) (E) (F)"
+        "vehicles": [
+            {
+                "category": "car"
+            }
+        ],
+        "summary": "PEDESTRIAN STRUCK   (P) (E) (F)"
     }
 ]

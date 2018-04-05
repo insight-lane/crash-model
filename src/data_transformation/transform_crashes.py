@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from collections import OrderedDict
 from datetime import datetime
+from jsonschema import validate
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--destination", type=str,
@@ -22,7 +23,7 @@ if not os.path.exists(raw_path):
     print raw_path+" not found, exiting"
     exit(1)
 
-valid_crashes = []
+crashes = []
 manual_crash_id = 1
 
 print "searching "+raw_path+" for raw crash file(s)"
@@ -60,7 +61,7 @@ for csv_file in os.listdir(raw_path):
                 else:
                     continue
 
-            valid_crash = OrderedDict([
+            crash = OrderedDict([
                 ("id", key["CAD_EVENT_REL_COMMON_ID"]),
                 # assume all crashes are in local time (GMT-5)
                 ("dateOccurred", formatted_date+"T"+formatted_time+"-05:00"),
@@ -71,27 +72,27 @@ for csv_file in os.listdir(raw_path):
             ])
 
             # very basic transformation of mode_type into vehicles
-            valid_crash["vehicles"] = []
+            crash["vehicles"] = []
 
             # all crashes are assumed to have involved a car
-            valid_crash["vehicles"].append({"category": "car"})
+            crash["vehicles"].append({"category": "car"})
 
             if key["mode_type"] == "bike":
-                valid_crash["vehicles"].append({"category": "bike"})
+                crash["vehicles"].append({"category": "bike"})
 
             # TODO persons
 
             if key["FIRST_EVENT_SUBTYPE"] != "":
-                valid_crash["summary"] = key["FIRST_EVENT_SUBTYPE"]
+                crash["summary"] = key["FIRST_EVENT_SUBTYPE"]
 
-            valid_crashes.append(valid_crash)
+            crashes.append(crash)
 
         elif args.destination == "cambridge":
             # skip crashes that don't have a date, X and Y
             if key["Date Time"] == "" or key["X"] == "" or key["Y"] == "":
                 continue
 
-            valid_crash = OrderedDict([
+            crash = OrderedDict([
                 ("id", manual_crash_id),
                 # assume all crashes are in local time (GMT-5)
                 ("dateOccurred", datetime.strftime(date_parser.parse(key["Date Time"]), "%Y-%m-%dT%H:%M:%S")+"-05:00"),
@@ -104,9 +105,9 @@ for csv_file in os.listdir(raw_path):
             # TODO persons
 
             if key["V1 First Event"] != "":
-                valid_crash["summary"] = key["V1 First Event"]
+                crash["summary"] = key["V1 First Event"]
 
-            valid_crashes.append(valid_crash)
+            crashes.append(crash)
             manual_crash_id += 1
 
         elif args.destination == "dc":
@@ -114,7 +115,7 @@ for csv_file in os.listdir(raw_path):
             if key["REPORTDATE"] == "" or key["X"] == "" or key["Y"] == "":
                 continue
 
-            valid_crash = OrderedDict([
+            crash = OrderedDict([
                 ("id", key["OBJECTID"]),
                 ("dateOccurred", key["REPORTDATE"]),
                 ("location", OrderedDict([
@@ -124,30 +125,34 @@ for csv_file in os.listdir(raw_path):
             ])
 
             if key["TOTAL_VEHICLES"] != 0 or key["TOTAL_BICYCLES"] != 0:
-                valid_crash["vehicles"] = []
+                crash["vehicles"] = []
 
-                if key["TOTAL_VEHICLES"] != 0:
-                    valid_crash["vehicles"].append({"category": "car", "quantity": key["TOTAL_VEHICLES"]})
+                if key["TOTAL_VEHICLES"] != 0 and key["TOTAL_VEHICLES"] != "":
+                    crash["vehicles"].append({"category": "car", "quantity": int(key["TOTAL_VEHICLES"])})
 
-                if key["TOTAL_BICYCLES"] != 0:
-                    valid_crash["vehicles"].append({"category": "bike", "quantity": key["TOTAL_BICYCLES"]})
+                if key["TOTAL_BICYCLES"] != 0 and key["TOTAL_BICYCLES"] != "":
+                    crash["vehicles"].append({"category": "bike", "quantity": int(key["TOTAL_BICYCLES"])})
 
             # TODO persons
 
             if key["ADDRESS"] != "":
-                valid_crash["address"] = key["ADDRESS"]
+                crash["address"] = key["ADDRESS"]
 
-            valid_crashes.append(valid_crash)
+            crashes.append(crash)
 
         else:
             print "transformation of "+args.destination+" crashes not yet implemented"
             exit(1)
 
-print "done, {} valid crashes loaded".format(len(valid_crashes))
+print "done, {} crashes loaded, validating against schema".format(len(crashes))
+
+schema_path = "/app/data_standards/crashes-schema.json"
+with open(schema_path) as crashes_schema:
+    validate(crashes, json.load(crashes_schema))
 
 crashes_output = os.path.join(args.folder, "transformed/crashes.json")
 
 with open(crashes_output, "w") as f:
-    json.dump(valid_crashes, f)
+    json.dump(crashes, f)
 
 print "output written to {}".format(crashes_output)
