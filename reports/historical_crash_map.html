@@ -47,7 +47,7 @@
 			</div>
 			<div id="before" class="map">
 				<div id="legend">
-					<h4>Predicted Crash Probability:</h4>
+					<h4>Risk Score:</h4>
 					<div class="row colors"></div>
 					<div class="row labels">
 						<div class="label">0.2</div>
@@ -110,10 +110,10 @@
 				  'line-color': {
 					property: 'prediction',
 					stops: [
-					  [0.2, '#ffffb2'],
-					  [0.4, '#fecc5c'],
-					  [0.6, '#fd8d3c'],
-					  [0.8, '#e31a1c']
+					  [0.2, '#ffe0b2'],
+					  [0.4, '#ffb74d'],
+					  [0.6, '#ff9800'],
+					  [0.8, '#f57c00']
 					]
 				  },
 				  'line-width': [
@@ -148,7 +148,7 @@
 
 			// add popup for predictions
 			beforeMap.on('click', 'predictions', function(e) {
-				var popupText = "Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.prediction.toFixed(2);
+				var popupText = "Risk Score for Week " + e.features[0].properties.week + ": " + e.features[0].properties.prediction.toFixed(2);
 
 				new mapboxgl.Popup()
 					.setLngLat(e.lngLat)
@@ -177,10 +177,10 @@
 				  'line-color': {
 					property: 'prediction',
 					stops: [
-					  [0.2, '#ffffb2'],
-					  [0.4, '#fecc5c'],
-					  [0.6, '#fd8d3c'],
-					  [0.8, '#e31a1c']
+					  [0.2, '#ffe0b2'],
+					  [0.4, '#ffb74d'],
+					  [0.6, '#ff9800'],
+					  [0.8, '#f57c00']
 					]
 				  },
 				  'line-width': [
@@ -215,7 +215,7 @@
 
 			// add popup for predictions
 			afterMap.on('click', 'predictions', function(e) {
-				var popupText = "Predicted Probability for Week " + e.features[0].properties.week + ": " + e.features[0].properties.prediction.toFixed(2);
+				var popupText = "Risk Score for Week " + e.features[0].properties.week + ": " + e.features[0].properties.prediction.toFixed(2);
 
 				new mapboxgl.Popup()
 					.setLngLat(e.lngLat)

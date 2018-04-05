@@ -155,7 +155,7 @@ select {
 }
 
 .colors {
-    background: linear-gradient(to right, #ffffb2, #fecc5c, #fd8d3c, #e31a1c);
+    background: linear-gradient(to right, #ffe0b2, #ffb74d, #ff9800, #f57c00);
 }
 
 .label {
