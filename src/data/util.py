@@ -96,7 +96,7 @@ class Crash(Record):
         if 'vehicles' in properties.keys():
             self.vehicles = properties['vehicles']
         if 'address' in properties.keys():
-            self.vehicles = properties['address']
+            self.address = properties['address']
 
 
 class Concern(Record):
@@ -129,16 +129,17 @@ class Concern(Record):
         self.timestamp = self.dateCreated
         self.source = properties['source']
         self.status = properties['status']
-        self.category = properties['category']
 
-        if 'summary' in properties.keys():
-            self.summary = properties['summary']
+# Leaving these out pending ascii encoding on transformation side
+#        self.category = properties['category']
+#        if 'summary' in properties.keys():
+#            self.summary = properties['summary']
         if 'dateResolved' in properties.keys():
             self.dateResolved = properties['dateResolved']
         if 'subcategories' in properties.keys():
             self.subcategories = properties['subcategories']
         if 'address' in properties.keys():
-            self.vehicles = properties['address']
+            self.address = properties['address']
 
 
 def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
@@ -421,8 +422,8 @@ def read_records(filename, record_type, startyear=None, endyear=None):
         records = [x for x in records if x.timestamp < parse(endyear)]
 
     # Keep track of the earliest and latest crash date used
-    start = min([x.dateOccurred for x in records])
-    end = max([x.dateOccurred for x in records])
+    start = min([x.timestamp for x in records])
+    end = max([x.timestamp for x in records])
     print "Read in data from {} crashes from {} to {}".format(
         len(records), start.date(), end.date())
     return records
