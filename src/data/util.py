@@ -11,6 +11,7 @@ import os
 from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
+from record import Crash, Concern, Record
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -21,125 +22,6 @@ BASE_DIR = os.path.dirname(
 
 MAP_FP = BASE_DIR + '/data/processed/maps'
 PROCESSED_DATA_FP = BASE_DIR + '/data/processed/'
-
-
-class Record():
-    "A record contains a dict of properties and a point in 4326 projection"
-
-    def __init__(self):
-        self.point = None
-        self.near_id = None
-
-        # timestamp is what we consider sorting on/limiting by
-        # At the moment, only the timestamp field are we able
-        # to sort by
-        self.timestamp = None
-        self.schema = {
-            'geometry': 'Point',
-            'properties': {
-                'id': 'str',
-                'near_id': 'str',
-            }
-        }
-
-    def add_properties(self, properties):
-        self.id = properties['id']
-
-    def add_reproject_point(self, location):
-        """
-        Turn a 4326 projection into 3857
-        """
-        lon, lat = pyproj.transform(
-            pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'),
-            location['longitude'], location['latitude']
-        )
-        self.point = Point(float(lon), float(lat))
-
-    # For writing to shapefile
-    def get_properties(self):
-        properties = {}
-        for attr, value in self.__dict__.iteritems():
-            if attr not in ('point', 'schema', 'timestamp'):
-                properties[attr] = str(value)
-        return properties
-
-
-class Crash(Record):
-    def __init__(self):
-        Record.__init__(self)
-        self.id = id
-        self.dateOccurred = None
-        self.summary = None
-        self.persons = {}
-        self.vehicles = {}
-        self.address = None
-
-        self.schema['properties'].update({
-            'dateOccurred': 'str',
-            'summary': 'str',
-            'persons': 'str',
-            'vehicles': 'str',
-            'address': 'str',
-        })
-
-    def add_properties(self, properties):
-        self.id = properties['id']
-        self.dateOccurred = parse(properties['dateOccurred'])
-        self.timestamp = self.dateOccurred
-        self.summary = properties['summary']
-
-        # Probably want to get into more detail with vehicles/persons
-        # but leaving this for later since we don't currently use these
-        # fields
-        if 'persons' in properties.keys():
-            self.persons = properties['persons']
-        if 'vehicles' in properties.keys():
-            self.vehicles = properties['vehicles']
-        if 'address' in properties.keys():
-            self.address = properties['address']
-
-
-class Concern(Record):
-    def __init__(self):
-        Record.__init__(self)
-        self.id = id
-        self.source = None
-        self.dateCreated = None
-        self.dateResolved = None
-        self.status = None
-        self.category = None
-        self.subcategories = []
-        self.address = None
-        self.summary = None
-
-        self.schema['properties'].update({
-            'source': 'str',
-            'dateCreated': 'str',
-            'dateResolved': 'str',
-            'status': 'str',
-            'category': 'str',
-            'subcategories': 'str',
-            'address': 'str',
-            'summary': 'str',
-        })
-
-    def add_properties(self, properties):
-        self.id = properties['id']
-        self.dateCreated = parse(properties['dateCreated'])
-        self.timestamp = self.dateCreated
-        self.source = properties['source']
-        self.status = properties['status']
-
-# Leaving these out pending ascii encoding on transformation side
-#        self.category = properties['category']
-#        if 'summary' in properties.keys():
-#            self.summary = properties['summary']
-        if 'dateResolved' in properties.keys():
-            self.dateResolved = properties['dateResolved']
-        if 'subcategories' in properties.keys():
-            self.subcategories = properties['subcategories']
-        if 'address' in properties.keys():
-            self.address = properties['address']
 
 
 def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
@@ -310,7 +192,8 @@ def records_to_shapefile(schema, fp, records, crs={}):
         for record in records:
             c.write({
                 'geometry': mapping(record.point),
-                'properties': record.get_properties()
+                'properties': {
+                    k: str(v) for (k, v) in record.properties.items()}
             })
 
 
@@ -407,13 +290,11 @@ def read_records(filename, record_type, startyear=None, endyear=None):
     for item in items:
         record = None
         if record_type == 'crash':
-            record = Crash()
+            record = Crash(item)
         elif record_type == 'concern':
-            record = Concern()
+            record = Concern(item)
         else:
-            record = Record()
-        record.add_reproject_point(item['location'])
-        record.add_properties(item)
+            record = Record(item)
         records.append(record)
 
     if startyear:
@@ -445,9 +326,9 @@ def find_nearest(records, segments, segments_index, tolerance,
         record_point = None
         if type_record:
             record_point = record.point
-
         else:
             record_point = record['point']
+
         record_buffer_bounds = record_point.buffer(tolerance).bounds
         nearby_segments = segments_index.intersection(record_buffer_bounds)
 

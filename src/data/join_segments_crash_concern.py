@@ -42,7 +42,7 @@ def snap_records(
     )
     print "output " + record_type + " data to" + outfile
     with open(outfile, 'w') as f:
-        json.dump([r.get_properties() for r in records], f)
+        json.dump([r.properties for r in records], f)
 
 
 if __name__ == '__main__':
