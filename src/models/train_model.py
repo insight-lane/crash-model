@@ -30,61 +30,24 @@ BASE_DIR = os.path.dirname(
 DATA_FP = BASE_DIR + '/data/processed/'
 
 # parse arguments
-parser = argparse.ArgumentParser(description="Train crash model.  "
-								 + "Additional features specify "
-								 + "'' to not include")
-parser.add_argument("-m", "--modelname", nargs="+", default='LR_base',
-					help="name of the model, for consistency")
-parser.add_argument("-seg", "--seg_data", type=str,
-					help="path to the segment data (see data standards)"
-					+ "default vz_predict_dataset.csv.gz")
-parser.add_argument("-concern", "--concern_column", nargs="+",
-					default='concern',
-					help="Feature name of concern data in segment data."
-					+ "Let equal '' to not include. default 'concern'")
-parser.add_argument("-atr", "--atr_data", nargs="+",
-					help="path to the ATR data (see data standards)"
-					+ "default atrs_predicted.csv")
-parser.add_argument("--atr_columns", nargs="+",
-					default=['speed_coalesced', 'volume_coalesced'],
-					help="features from atr file")
-parser.add_argument("-tmc", "--tmc_data", nargs="+",
-					help="path to the TMC data (see data standards) default tmc_summary.json")
-parser.add_argument("--tmc_columns", nargs="+", 
-					default=['Conflict'],
-					help="features from tmc file")
-parser.add_argument("-time", "--time_target", nargs="+",
-					default=tuple([19,2017]),
-					help="tuple (week,year) for prediction target")
-parser.add_argument("-f_cat", "--features_categorical", nargs="+",
-					default=['SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
-					help="list of categorical segment features")
-parser.add_argument("-f_cont", "--features_continuous", nargs="+",
-					default=['AADT'],
-					help="list of segment features to incude")
-parser.add_argument("-d", "--datadir", type=str,
-					help="Can give alternate data directory")
-parser.add_argument("-process", "--process_features", nargs="+",
-					default=True,
-					help="Make categorical into dummies, standardize continuous")
 parser.add_argument("-c", "--config", type=str,
 						help="Can give a different .yml config file")
 
 args = parser.parse_args()
-config_file = 'config_cambridge_model.yml'
+config_file = 'config_model.yml'
 if args.config:
 	config_file = args.config
 with open(config_file) as f:
 	config = yaml.safe_load(f)
 
-DATA_FP = os.path.join(config['datadir'], 'processed')
+DATA_FP = os.path.join(config['datadir'], 'processed/')
 print('Outputting to: %s' % DATA_FP)
 
 # Default
 seg_data = os.path.join(DATA_FP, 'vz_predict_dataset.csv.gz')
 # Override default if given
 if config['seg_data'] is not None:
-	seg_data = os.path.join(DATA_FP, config['seg_data'][0])
+	seg_data = os.path.join(DATA_FP, config['seg_data'])
 
 # Default
 atr_data = os.path.join(DATA_FP, 'atrs_predicted.csv')
@@ -139,23 +102,23 @@ if config['concern']!='':
 	data_segs = data_segs.merge(concern_observed.reset_index(), on='segment_id')
 
 # add in atrs if filepath present
-if atr_data!='':
+if config['atr']!='':
 	print('Adding atrs')
-	atrs = pd.read_csv(atr_data, dtype={'id':'str'})
+	atrs = pd.read_csv(DATA_FP+config['atr'], dtype={'id':'str'})
 	# for some reason pandas reads the id as float before str conversions
 	atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
-	data_segs = data_segs.merge(atrs[['id']+args.atr_columns], 
+	data_segs = data_segs.merge(atrs[['id']+config['atr_cols']], 
 								left_on='segment_id', right_on='id')
-	features += config['atr']
+	features += config['atr_cols']
 
 # add in tmcs if filepath present
-if tmc_data!='':
+if config['tmc']!='':
 	print('Adding tmcs')
-	tmcs = pd.read_json(tmc_data,
-					   dtype={'near_id':str})[['near_id']+args.tmc_columns]
+	tmcs = pd.read_json(DATA_FP+config['tmc'],
+					   dtype={'near_id':str})[['near_id']+config['tmc_cols']]
 	data_segs = data_segs.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
-	data_segs[config['tmc']] = data_segs[config['tmc']].fillna(0)
-	features += config['tmc']
+	data_segs[config['tmc_cols']] = data_segs[config['tmc_cols']].fillna(0)
+	features += config['tmc_cols']
 
 # features for linear model
 lm_features = features
@@ -195,9 +158,6 @@ if config['process']:
 # create model data
 data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment_id')
 print "full features:{}".format(features)
-
-import pdb
-pdb.set_trace()
 
 #Initialize data
 df = Indata(data_model, 'target')
