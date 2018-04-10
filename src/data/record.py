@@ -40,6 +40,10 @@ class Crash(Record):
     def __init__(self, properties):
         Record.__init__(self, properties)
 
+        # Leaving this out pending standarizing schema
+        # to always include summary
+        self.properties['summary'] = ''
+
     @property
     def timestamp(self):
         return parse(self.properties['dateOccurred'])
