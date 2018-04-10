@@ -46,7 +46,7 @@ def make_dir_structure(city, filename):
     # dir name of the city?
     # if raw, processed, docs subdirs don't exist, create them
     # copy filename into raw directory
-
+    pass
 # In main:
 # handle args
 # make_dir_structure
