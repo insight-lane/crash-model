@@ -6,6 +6,8 @@ import shutil
 import os
 import re
 import csv
+import geojson
+
 
 MAP_FP = None
 
@@ -168,6 +170,40 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
             w.writerow(item)
 
 
+def write_geojson(way_file, node_file, all_nodes_file, outfp):
+    way_results = fiona.open(way_file)
+    feats = []
+
+    # Add the ways
+    for way_result in way_results:
+
+        feats.append({
+            'type': 'Feature',
+            'geometry': {
+                'type': way_result['geometry']['type'],
+                'coordinates': way_result['geometry']['coordinates']
+            },
+            'properties': way_result['properties']
+        })
+
+    # Add the nodes
+    node_results = fiona.open(node_file)
+    for node in node_results:
+        feats.append({
+            'type': 'Feature',
+            'geometry': {
+                'type': node['geometry']['type'],
+                'coordinates': node['geometry']['coordinates']
+            },
+            'properties': node['properties']
+        })
+
+    with open(outfp, 'w') as outfile:
+        geojson.dump({
+            'type': 'FeatureCollection',
+            'features': feats
+        }, outfile)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("city", help="e.g. 'Boston, Massachusetts, USA'")
@@ -192,7 +228,8 @@ if __name__ == '__main__':
         print 'Generating map from open street map...'
         simple_get_roads(city)
 
-    if not os.path.exists(os.path.join(MAP_FP, 'osm_signals.shp')):
+    if not os.path.exists(os.path.join(MAP_FP, 'osm_signals.shp')) \
+       or args.forceupdate:
         get_signals()
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways_3857.shp')) \
@@ -203,5 +240,12 @@ if __name__ == '__main__':
             os.path.join(MAP_FP, 'osm_ways_3857.shp'),
             DOC_FP
         )
+
+    write_geojson(
+        os.path.join(MAP_FP, 'osm_ways.shp'),
+        os.path.join(MAP_FP, 'osm_nodes.shp'),
+        os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'),
+        os.path.join(MAP_FP, 'osm_ways.geojson')
+    )
 
 
