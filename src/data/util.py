@@ -11,6 +11,7 @@ import os
 from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
+from record import Crash, Concern, Record
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -184,6 +185,18 @@ def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
             c.write(entry)
 
 
+def records_to_shapefile(schema, fp, records, crs={}):
+
+    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
+
+        for record in records:
+            c.write({
+                'geometry': mapping(record.point),
+                'properties': {
+                    k: str(v) for (k, v) in record.properties.items()}
+            })
+
+
 def record_to_csv(filename, records):
     """
     Write a csv file from records
@@ -254,10 +267,51 @@ def csv_to_projected_records(filename, x='X', y='Y'):
                     read_record(r, r[x], r[y],
                                 orig=pyproj.Proj(init='epsg:4326'))
                 )
+
     return records
 
 
-def find_nearest(records, segments, segments_index, tolerance):
+def read_records(filename, record_type, startyear=None, endyear=None):
+    """
+    Reads appropriately formatted json file,
+    pulls out currently relevant features,
+    converts latitude and longitude to projection 4326, and turns into
+    a Crash object
+    Args:
+        filename - json file
+        start - optionally give start for date range of crashes
+        end - optionally give end for date range of crashes
+    Returns:
+        A list of Crashes
+    """
+
+    records = []
+    items = json.load(open(filename))
+    for item in items:
+        record = None
+        if record_type == 'crash':
+            record = Crash(item)
+        elif record_type == 'concern':
+            record = Concern(item)
+        else:
+            record = Record(item)
+        records.append(record)
+
+    if startyear:
+        records = [x for x in records if x.timestamp >= parse(startyear)]
+    if endyear:
+        records = [x for x in records if x.timestamp < parse(endyear)]
+
+    # Keep track of the earliest and latest crash date used
+    start = min([x.timestamp for x in records])
+    end = max([x.timestamp for x in records])
+    print "Read in data from {} crashes from {} to {}".format(
+        len(records), start.date(), end.date())
+    return records
+
+
+def find_nearest(records, segments, segments_index, tolerance,
+                 type_record=False):
     """ Finds nearest segment to records
     tolerance : max units distance from record point to consider
     """
@@ -266,7 +320,15 @@ def find_nearest(records, segments, segments_index, tolerance):
 
     for record in records:
 
-        record_point = record['point']
+        # We are in process of transition to using Record class
+        # but haven't converted it everywhere, so until we do, need
+        # to look at whether the records are of type record or not
+        record_point = None
+        if type_record:
+            record_point = record.point
+        else:
+            record_point = record['point']
+
         record_buffer_bounds = record_point.buffer(tolerance).bounds
         nearby_segments = segments_index.intersection(record_buffer_bounds)
 
@@ -284,10 +346,16 @@ def find_nearest(records, segments, segments_index, tolerance):
             nearest = min(segment_id_with_distance, key=lambda tup: tup[1])
             db_segment_id = nearest[0]
             # Add db_segment_id to record
-            record['properties']['near_id'] = db_segment_id
+            if type_record:
+                record.near_id = db_segment_id
+            else:
+                record['properties']['near_id'] = db_segment_id
         # If no segment matched, populate key = ''
         else:
-            record['properties']['near_id'] = ''
+            if type_record:
+                record.near_id = ''
+            else:
+                record['properties']['near_id'] = ''
 
 
 def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
@@ -323,8 +391,17 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return combined_seg, segments_index
 
 
+def group_json_by_field(items, field):
+    results = {}
+    for item in items:
+        if item[field] not in results.keys():
+            results[item[field]] = []
+        results[item[field]].append(item)
+    return results
+
+
 def group_json_by_location(
-        jsonfile, years=None, yearfield=None, otherfields=[]):
+        items, years=None, yearfield=None, otherfields=[]):
     """
     Get both the json data from file as well as a dict where the keys
     are the segment id and the values are count, and a list of the values
@@ -334,7 +411,6 @@ def group_json_by_location(
         otherfields - optional list of keys of things you want to include
                       in the grouped by segment results
     """
-    items = json.load(open(jsonfile))
     locations = {}
 
     for item in items:

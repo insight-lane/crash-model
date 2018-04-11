@@ -148,34 +148,3 @@ def concern_percentages(sorted_matching):
 
     return results
 
-
-def get_analysis_for_city(
-        mapdir, crash_file, concern_file,
-        category_field='REQUESTTYPE', years=None):
-    
-    crash_data, crashes = util.group_json_by_location(
-        crash_file, years=years, yearfield='CALENDAR_DATE')
-
-    concern_data, concerns = util.group_json_by_location(
-        concern_file,
-        otherfields=[category_field])
-    print 'len concern data:' + str(len(concern_data))
-
-#    inters = util.read_segments(mapdir, get_non_inter=False)
-#    non_inters = util.read_segments(mapdir, get_inter=False)
-#    inter_count = len(inters[0])
-#    non_inter_count = len(non_inters[0])
-    
-#    total_crashes, results = summary_crash_rate(crashes)
-#    print total_crashes
-    summary_concern_counts(crashes, concerns)
-
-    summary(crashes, concerns)
-#    concerns_by_type(concerns, concern_data, crashes, category_field)
-
-if __name__ == '__main__':
-
-    get_analysis_for_city(
-        'tests/data/processed/maps',
-        'tests/data/crash_test_dummy..json',
-        '../../osm-data/processed/concern_joined.json')
