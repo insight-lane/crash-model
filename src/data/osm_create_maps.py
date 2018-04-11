@@ -34,7 +34,7 @@ def simple_get_roads(city):
     # osmnx creates a directory for the nodes and edges
     # Store all nodes, since they can be other features
     ox.save_graph_shapefile(
-        G, filename='all_nodes', folder=MAP_FP)
+        G1, filename='all_nodes', folder=MAP_FP)
 
     # Store simplified network
     ox.save_graph_shapefile(
@@ -186,18 +186,51 @@ def write_geojson(way_file, node_file, all_nodes_file, outfp):
             'properties': way_result['properties']
         })
 
-    # Add the nodes
+    # Add the nodes, in a dict, ordered by id
     node_results = fiona.open(node_file)
+    node_dict = {}
     for node in node_results:
-        feats.append({
+
+        if not node['properties']['dead_end']:
+            node['properties']['intersection'] = 1
+        if node['properties']['highway'] == 'traffic_signals':
+            node['properties']['signal'] = 1
+
+        node_dict[node['properties']['osmid']] = {
             'type': 'Feature',
             'geometry': {
                 'type': node['geometry']['type'],
                 'coordinates': node['geometry']['coordinates']
             },
             'properties': node['properties']
-        })
+        }
 
+    all_node_results = fiona.open(all_nodes_file)
+    non_int_nodes = [x for x in all_node_results
+                     if x['properties']['osmid'] not in node_dict.keys()]
+
+    # Go through the rest of the nodes, and add any of them that have
+    # (hardcoded) open street map features that we care about
+    # For the moment, all_nodes only contains street nodes, so we'll
+    # only look at crosswalks
+    for node in non_int_nodes:
+        add_node = False
+        if node['properties']['highway'] == 'crossing':
+            node['properties']['crossing'] = 1
+            add_node = True
+        elif node['properties']['highway'] == 'traffic_signals':
+            node['properties']['traffic_signals'] = 1
+            add_node = True
+        if add_node:
+            node_dict[node['properties']['osmid']] = {
+                'type': 'Feature',
+                'geometry': {
+                    'type': node['geometry']['type'],
+                    'coordinates': node['geometry']['coordinates']
+                },
+                'properties': node['properties']
+            }
+    feats = feats + node_dict.values()
     with open(outfp, 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
