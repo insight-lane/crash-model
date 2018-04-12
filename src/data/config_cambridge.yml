@@ -34,3 +34,17 @@ concern_files:
     latitude: lat
     longitude: lng
     time: ticket_created_date_time
+
+# crash file configurations
+crashes_files:
+  - name: through_2017_crashes
+    filename: crash_data_through_2017.csv
+    id: ID
+    latitude: X
+    longitude: Y
+    date_and_time: Date Time
+    date_only:
+    time_only:
+    summary: V1 First Event
+    vehicles:
+    bikes:

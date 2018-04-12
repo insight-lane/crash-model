@@ -56,10 +56,46 @@ concern_files:
   - name: concern
     filename: Vision_Zero_Entry.csv
     latitude:
-    longitude: 
-    time: 
+    longitude:
+    time:
   - name: see_click_fix
     filename: bos_scf.csv
     latitude:
     longitude:
     time: created
+
+# crash file configurations
+crashes_files:
+  - name: 2015_crashes
+    filename: 2015motorvehicles_with_modetype.csv
+    id: CAD_EVENT_REL_COMMON_ID
+    latitude: X
+    longitude: Y
+    date_and_time:
+    date_only: CALENDAR_DATE
+    time_only: TIME,
+    summary: FIRST_EVENT_SUBTYPE
+    vehicles: mode_type
+    bikes: mode_type
+  - name: 2016_crashes
+    filename: cad_crash_events_with_transport_2016_wgs84_with_modetype.csv
+    id: CAD_EVENT_REL_COMMON_ID
+    latitude: X
+    longitude: Y
+    date_and_time:
+    date_only: CALENDAR_DATE
+    time_only: TIME
+    summary: FIRST_EVENT_SUBTYPE
+    vehicles: mode_type
+    bikes: mode_type
+  - name: 2017_crashes
+    filename: 2017motorvehicles_with_modetype.csv
+    id: CAD_EVENT_REL_COMMON_ID
+    latitude: X
+    longitude: Y
+    date_and_time:
+    date_only: CALENDAR_DATE
+    time_only: TIME,
+    summary: FIRST_EVENT_SUBTYPE
+    vehicles: mode_type
+    bikes: mode_type

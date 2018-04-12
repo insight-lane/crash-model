@@ -6,153 +6,199 @@ import dateutil.parser as date_parser
 import json
 import os
 import pandas as pd
+import re
+import yaml
 from collections import OrderedDict
 from datetime import datetime
 from jsonschema import validate
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--destination", type=str,
-                    help="destination name")
-parser.add_argument("-f", "--folder", type=str,
-                    help="absolute path to destination folder")
 
-args = parser.parse_args()
+def read_standardized_fields(filename, config):
 
-raw_path = os.path.join(args.folder, "raw/crashes")
-if not os.path.exists(raw_path):
-    print raw_path+" not found, exiting"
-    exit(1)
+    df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
+    dict_crashes = df_crashes.to_dict("records")
 
-crashes = []
-manual_crash_id = 1
+    crashes = {}
 
-print "searching "+raw_path+" for raw crash file(s)"
+    for key in dict_crashes:
 
-for csv_file in os.listdir(raw_path):
-    print csv_file
+        # skip any crashes that don't have coordinates
+        if key[config["latitude"]] == "" or key[config["longitude"]] == "":
+            continue
+
+        # crash data & time exist in a single field
+        if config["date_and_time"] != None:
+
+            # skip any crashes that don't have a date_time
+            if key[config["date_and_time"]] == "":
+                continue
+
+            # values matching this regex require no transformation
+            if re.match(r"\d{4}-\d{2}-\d{2}T.+", str(key[config["date_and_time"]])):
+                date_time = key[config["date_and_time"]]
+
+            else:
+                date_time = datetime.strftime(date_parser.parse(key[config["Date Time"]]), "%Y-%m-%dT%H:%M:%S")+"Z"
+
+        # date and time exist in separate fields
+        else:
+            # some dates arrive as 'YYYY-MM-DD 00:00:00.000', remove useless timestamp
+            if key[config["date_only"]].endswith(' 00:00:00.000'):
+                date = key[config["date_only"]][:-13]
+
+            else:
+                date = key[config["date_only"]]
+
+            # some times arrive as 'HH:MM:SS'
+            if re.match(r"\d{2}:\d{2}:\d{2}", str(key[config["time_only"]])):
+                time = key[config["time_only"]]
+
+            # others are seconds since midnight
+            else:
+                m, s = divmod(int(key[config["time_only"]]), 60)
+                h, m = divmod(m, 60)
+                time = str("%02d:%02d:%02d" % (h, m, s))
+
+            # TODO add timezone to config ("Z" is UTC)
+            date_time = date+"T"+time+"Z"
+
+        crash = OrderedDict([
+            ("id", key[config["id"]]),
+            ("dateOccurred", date_time),
+            ("location", OrderedDict([
+                ("latitude", float(key[config["latitude"]])),
+                ("longitude", float(key[config["longitude"]]))
+            ]))
+        ])
+
+        crash["summary"] = key[config["summary"]]
+
+        crashes[crash["id"]] = crash
+
+    return crashes
+
+def read_city_specific_fields(filename, crashes, config):
+
     df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
     dict_crashes = df_crashes.to_dict("records")
 
     for key in dict_crashes:
-        if args.destination == "boston":
-            # skip crashes that don't have X, Y and date details
-            if key["X"] == "" or key["Y"] == "" or key["CALENDAR_DATE"] == "":
-                continue
 
-            # 2015 and 2017 files
-            # date requires no modification
-            # time exists as seconds since midnight
-            if "TIME," in key:
-                if key["TIME,"] != "":
-                    formatted_date = key["CALENDAR_DATE"]
-                    m, s = divmod(int(key["TIME,"]), 60)
-                    h, m = divmod(m, 60)
-                    formatted_time = str("%02d:%02d:%02d" % (h, m, s))
-                else:
-                    continue
+        # crash may not have made it through standardized function if it was missing required data
+        if crashes.has_key(key[config["id"]]) == False:
+            # print "crash "+str(key[config["id"]])+" not present in standardized crashes, skipping"
+            continue
 
-            # 2016 file
-            # date requires splitting
-            # time requires no modification
-            if "TIME" in key:
-                if key["TIME"] != "":
-                    formatted_date = key["CALENDAR_DATE"].split(" ")[0]
-                    formatted_time = key["TIME"]
-                else:
-                    continue
+        # setup a vehicles list for each crash
+        crashes[key[config["id"]]]["vehicles"] = []
 
-            crash = OrderedDict([
-                ("id", key["CAD_EVENT_REL_COMMON_ID"]),
-                # assume all crashes are in local time (GMT-5)
-                ("dateOccurred", formatted_date+"T"+formatted_time+"-05:00"),
-                ("location", OrderedDict([
-                    ("latitude", float(key["Y"])),
-                    ("longitude", float(key["X"]))
-                ]))
-            ])
+        # check for car involvement
+        if config["vehicles"] == "mode_type":
+            # this needs work, but for now any of these mode types translates to a car being involved, quantity unknown
+            if key[config["vehicles"]] == "mv" or key[config["vehicles"]] == "ped" or key[config["vehicles"]] == "":
+                crashes[key[config["id"]]]["vehicles"].append({ "category": "car" })
 
-            # very basic transformation of mode_type into vehicles
-            crash["vehicles"] = []
+        elif config["vehicles"] == "TOTAL_VEHICLES":
+            if key[config["vehicles"]] != 0 and key[config["vehicles"]] != "":
+                crashes[key[config["id"]]]["vehicles"].append({ "category": "car", "quantity": int(key[config["vehicles"]]) })
 
-            if key["mode_type"] == "mv" or key["mode_type"] == "ped" or key["mode_type"] == "":
-                crash["vehicles"].append({"category": "car"})
+        # check for bike involvement
+        if config["bikes"] == "mode_type":
+            # assume bike and car involved, quantities unknown
+            if key[config["bikes"]] == "bike":
+                crashes[key[config["id"]]]["vehicles"].append({ "category": "car" })
+                crashes[key[config["id"]]]["vehicles"].append({ "category": "bike" })
 
-            if key["mode_type"] == "bike":
-                crash["vehicles"].append({"category": "bike"})
+        elif config["bikes"] == "TOTAL_BICYCLES":
+            if key[config["bikes"]] != 0 and key[config["bikes"]] != "":
+                crashes[key[config["id"]]]["vehicles"].append({ "category": "bike", "quantity": int(key[config["bikes"]]) })
 
-            # TODO persons
 
-            if key["FIRST_EVENT_SUBTYPE"] != "":
-                crash["summary"] = key["FIRST_EVENT_SUBTYPE"]
+    return crashes
 
-            crashes.append(crash)
+    # Unfortunately, since we need to handle these separately,
+    # We'll have to iterate through each row of each file again,
+    # and compare it against the existing structure
 
-        elif args.destination == "cambridge":
-            # skip crashes that don't have a date, X and Y
-            if key["Date Time"] == "" or key["X"] == "" or key["Y"] == "":
-                continue
+    # Here's where you do the hardcoded if city == 'boston' etc handling
 
-            crash = OrderedDict([
-                ("id", manual_crash_id),
-                # assume all crashes are in local time (GMT-5)
-                ("dateOccurred", datetime.strftime(date_parser.parse(key["Date Time"]), "%Y-%m-%dT%H:%M:%S")+"-05:00"),
-                ("location", OrderedDict([
-                    ("latitude", float(key["Y"])),
-                    ("longitude", float(key["X"]))
-                ]))
-            ])
+    # I recommend making read_standardized_fields return a dict indexed on
+    # id but also including id (passed in as crashes).
+    # Then convert to a list using a list comprehension
+    pass
 
-            # TODO persons
 
-            if key["V1 First Event"] != "":
-                crash["summary"] = key["V1 First Event"]
+def make_dir_structure(city, filename):
+    # if the directory name doesn't exist, create it
+    # dir name of the city?
+    # if raw, processed, docs subdirs don't exist, create them
+    # copy filename into raw directory
+    pass
 
-            crashes.append(crash)
-            manual_crash_id += 1
+# In main:
+# handle args
+# make_dir_structure
+# read_standardized_fields
+# read city specific fields
+# dump transformed fields
 
-        elif args.destination == "dc":
-            # skip crashes that don't have a date, X and Y
-            if key["REPORTDATE"] == "" or key["X"] == "" or key["Y"] == "":
-                continue
 
-            crash = OrderedDict([
-                ("id", key["OBJECTID"]),
-                ("dateOccurred", key["REPORTDATE"]),
-                ("location", OrderedDict([
-                    ("latitude", float(key["Y"])),
-                    ("longitude", float(key["X"]))
-                ]))
-            ])
+if __name__ == '__main__':
 
-            if key["TOTAL_VEHICLES"] != 0 or key["TOTAL_BICYCLES"] != 0:
-                crash["vehicles"] = []
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--destination", type=str,
+                        help="destination name")
+    parser.add_argument("-f", "--folder", type=str,
+                        help="path to destination's data folder")
 
-                if key["TOTAL_VEHICLES"] != 0 and key["TOTAL_VEHICLES"] != "":
-                    crash["vehicles"].append({"category": "car", "quantity": int(key["TOTAL_VEHICLES"])})
+    args = parser.parse_args()
 
-                if key["TOTAL_BICYCLES"] != 0 and key["TOTAL_BICYCLES"] != "":
-                    crash["vehicles"].append({"category": "bike", "quantity": int(key["TOTAL_BICYCLES"])})
+    raw_path = os.path.join(args.folder, "raw/crashes")
+    if not os.path.exists(raw_path):
+        print raw_path+" not found, exiting"
+        exit(1)
 
-            # TODO persons
+    # load config for this city
+    config_file = "/app/src/data/config_"+args.destination+".yml"
+    with open(config_file) as f:
+        config = yaml.safe_load(f)
 
-            if key["ADDRESS"] != "":
-                crash["address"] = key["ADDRESS"]
+    dict_city_crashes = {}
 
-            crashes.append(crash)
+    print "searching "+raw_path+" for raw files:\n"
 
-        else:
-            print "transformation of "+args.destination+" crashes not yet implemented"
-            exit(1)
+    for csv_file in os.listdir(raw_path):
 
-print "done, {} crashes loaded, validating against schema".format(len(crashes))
+        # find the config for this crash file
+        crash_config = None
+        for crash_file in config['crashes_files']:
+            if (crash_file['filename'] == csv_file):
+                crash_config = crash_file
+                break
 
-schema_path = "/app/standards/crashes-schema.json"
-with open(schema_path) as crashes_schema:
-    validate(crashes, json.load(crashes_schema))
+        if crash_config is None:
+            print "- could not find config for crash file "+csv_file+", skipping"
+            continue
 
-crashes_output = os.path.join(args.folder, "standardized/crashes.json")
+        print "processing "+csv_file
+        std_crashes = read_standardized_fields(csv_file, crash_config)
+        print "- {} crashes loaded with standardized fields, checking for specific fields\n".format(len(std_crashes))
 
-with open(crashes_output, "w") as f:
-    json.dump(crashes, f)
+        spc_crashes = read_city_specific_fields(csv_file, std_crashes, crash_config)
 
-print "output written to {}".format(crashes_output)
+        dict_city_crashes.update(spc_crashes)
+
+    print "all crash files processed"
+    print "- {} {} crashes loaded, validating against schema".format(len(dict_city_crashes), args.destination)
+
+    schema_path = "/app/standards/crashes-schema.json"
+    list_city_crashes = dict_city_crashes.values()
+    with open(schema_path) as crashes_schema:
+        validate(list_city_crashes, json.load(crashes_schema))
+
+    crashes_output = os.path.join(args.folder, "standardized/crashes.json")
+
+    with open(crashes_output, "w") as f:
+        json.dump(list_city_crashes, f)
+
+    print "- output written to {}".format(crashes_output)
