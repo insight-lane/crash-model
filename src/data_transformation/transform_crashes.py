@@ -18,7 +18,7 @@ parser.add_argument("-f", "--folder", type=str,
 
 args = parser.parse_args()
 
-raw_path = os.path.join(args.folder, "raw")
+raw_path = os.path.join(args.folder, "raw/crashes")
 if not os.path.exists(raw_path):
     print raw_path+" not found, exiting"
     exit(1)
@@ -74,8 +74,8 @@ for csv_file in os.listdir(raw_path):
             # very basic transformation of mode_type into vehicles
             crash["vehicles"] = []
 
-            # all crashes are assumed to have involved a car
-            crash["vehicles"].append({"category": "car"})
+            if key["mode_type"] == "mv" or key["mode_type"] == "ped" or key["mode_type"] == "":
+                crash["vehicles"].append({"category": "car"})
 
             if key["mode_type"] == "bike":
                 crash["vehicles"].append({"category": "bike"})
@@ -146,11 +146,11 @@ for csv_file in os.listdir(raw_path):
 
 print "done, {} crashes loaded, validating against schema".format(len(crashes))
 
-schema_path = "/app/data_standards/crashes-schema.json"
+schema_path = "/app/standards/crashes-schema.json"
 with open(schema_path) as crashes_schema:
     validate(crashes, json.load(crashes_schema))
 
-crashes_output = os.path.join(args.folder, "transformed/crashes.json")
+crashes_output = os.path.join(args.folder, "standardized/crashes.json")
 
 with open(crashes_output, "w") as f:
     json.dump(crashes, f)

@@ -18,7 +18,7 @@ parser.add_argument("-f", "--folder", type=str,
 
 args = parser.parse_args()
 
-raw_path = os.path.join(args.folder, "raw")
+raw_path = os.path.join(args.folder, "raw/concerns")
 if not os.path.exists(raw_path):
     print raw_path+" not found, exiting"
     exit(1)
@@ -39,13 +39,12 @@ for csv_file in os.listdir(raw_path):
         if args.destination == "boston":
             # Boston presently has concerns from two sources - VisionZero and SeeClickFix
             if csv_file == "Vision_Zero_Entry.csv":
-                source = "visionzero"
                 # skip concerns that don't have a date or request type
                 if key["REQUESTDATE"] == "" or key["REQUESTTYPE"] == "":
                     continue
 
                 else:
-                    concern = OrderedDict([
+                    concerns.append(OrderedDict([
                         ("id", key["OBJECTID"]),
                         ("source", "visionzero"),
                         ("dateCreated", key["REQUESTDATE"]),
@@ -54,21 +53,17 @@ for csv_file in os.listdir(raw_path):
                         ("location", OrderedDict([
                             ("latitude", key["Y"]),
                             ("longitude", key["X"])
-                        ]))
-                    ])
-
-                    # only add summary property if data exists
-                    if key["COMMENTS"] != "":
-                        concern.update({"summary": key["COMMENTS"]})
+                        ])),
+                        ("summary", key["COMMENTS"])
+                    ]))
 
             elif csv_file == "bos_scf.csv":
-                source = "seeclickfix"
                 # skip concerns that don't have a date or request type
                 if key["created"] == "" or key["summary"] == "":
                     continue
 
                 else:
-                    concern = OrderedDict([
+                    concerns.append(OrderedDict([
                         ("id", manual_concern_id),
                         ("source", "seeclickfix"),
                         ("dateCreated", key["created"]),
@@ -77,22 +72,18 @@ for csv_file in os.listdir(raw_path):
                         ("location", OrderedDict([
                             ("latitude", key["Y"]),
                             ("longitude", key["X"])
-                        ]))
-                    ])
+                        ])),
+                        ("summary", key["description"])
+                    ]))
 
-                    # only add summary property if data exists
-                    if key["description"] != "":
-                        concern.update({"summary": key["description"]})
-
-            concerns.append(concern)
-            manual_concern_id += 1
+                manual_concern_id += 1
 
         if args.destination == "dc":
             # skip concerns that don't have a date or request type
             if key["REQUESTDATE"] == "" or key["REQUESTTYPE"] == "":
                 continue
 
-            concern = OrderedDict([
+            concerns.append(OrderedDict([
                 ("id", key["OBJECTID"]),
                 ("source", "visionzero"),
                 ("dateCreated", key["REQUESTDATE"]),
@@ -101,21 +92,16 @@ for csv_file in os.listdir(raw_path):
                 ("location", OrderedDict([
                     ("latitude", key["Y"]),
                     ("longitude", key["X"])
-                ]))
-            ])
-
-            # only add summary property if data exists
-            if key["COMMENTS"] != "":
-                concern.update({"summary": key["COMMENTS"]})
-
-            concerns.append(concern)
+                ])),
+                ("summary", key["COMMENTS"])
+            ]))
 
         elif args.destination == "cambridge":
             # skip concerns that don't have a date or issue type
             if key["ticket_created_date_time"] == "" or key["issue_type"] == "":
                 continue
 
-            concern = OrderedDict([
+            concerns.append(OrderedDict([
                 ("id", key["ticket_id"]),
                 ("source", "seeclickfix"),
                 ("dateCreated", datetime.strftime(date_parser.parse(key["ticket_created_date_time"]), "%Y-%m-%dT%H:%M:%S")+"-05:00"),
@@ -124,22 +110,17 @@ for csv_file in os.listdir(raw_path):
                 ("location", OrderedDict([
                     ("latitude", key["lat"]),
                     ("longitude", key["lng"])
-                ]))
-            ])
-
-            # only add summary property if data exists
-            if key["issue_description"] != "":
-                concern.update({"summary": key["issue_description"]})
-
-            concerns.append(concern)
+                ])),
+                ("summary", key["issue_description"])
+            ]))
 
 print "done, {} concerns loaded, validating against schema".format(len(concerns))
 
-schema_path = "/app/data_standards/concerns-schema.json"
+schema_path = "/app/standards/concerns-schema.json"
 with open(schema_path) as concerns_schema:
     validate(concerns, json.load(concerns_schema))
 
-concerns_output = os.path.join(args.folder, "transformed/concerns.json")
+concerns_output = os.path.join(args.folder, "standardized/concerns.json")
 
 with open(concerns_output, "w") as f:
     json.dump(concerns, f)
