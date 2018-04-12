@@ -6,7 +6,7 @@ city: Cambridge, Massachusetts, USA
 
 # Data directory to look in and output results to
 # This is optional, and if not given, defaults to ../data/
-datadir: ../osm-cambridge/
+datadir: ../data/cambridge/
 
 # If recreate is True, regenerates ALL processed files from scratch
 recreate: False

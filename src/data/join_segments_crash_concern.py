@@ -18,12 +18,12 @@ BASE_DIR = os.path.dirname(
 
 
 MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
-RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
+RAW_DATA_FP = os.path.join(BASE_DIR, 'data/standardized')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 
 def snap_records(
-        combined_seg, segments_index, infile, record_type, outfile,
+        combined_seg, segments_index, infile, record_type,
         startyear=None, endyear=None):
 
     records = util.read_records(infile, record_type, startyear, endyear)
@@ -35,13 +35,15 @@ def snap_records(
 
     # Write out snapped records
     schema = records[0].schema
-    print "output crash shp to", MAP_FP
-    util.records_to_shapefile(
-        schema, os.path.join(MAP_FP, 'crash_joined.shp'),
-        records
-    )
-    print "output " + record_type + " data to" + outfile
-    with open(outfile, 'w') as f:
+    shpfile = os.path.join(MAP_FP, record_type + '_joined.shp')
+    print "output " + record_type + " data to " + shpfile
+    util.records_to_shapefile(schema, shpfile, records)
+
+    jsonfile = os.path.join(
+        PROCESSED_DATA_FP, record_type + '_joined.json')
+
+    print "output " + record_type + " data to " + jsonfile
+    with open(jsonfile, 'w') as f:
         json.dump([r.properties for r in records], f)
 
 
@@ -58,19 +60,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # Can override the hardcoded data directory
     if args.datadir:
-        RAW_DATA_FP = os.path.join(args.datadir, 'raw')
+        RAW_DATA_FP = os.path.join(args.datadir, 'standardized')
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
         MAP_FP = os.path.join(args.datadir, 'processed/maps')
 
     combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
-
     snap_records(
         combined_seg, segments_index,
         os.path.join(RAW_DATA_FP, 'crashes.json'), 'crash',
-        os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'),
         startyear=args.startyear, endyear=args.endyear)
 
     snap_records(
         combined_seg, segments_index,
-        os.path.join(RAW_DATA_FP, 'concerns.json'), 'concern',
-        os.path.join(PROCESSED_DATA_FP, 'concern_joined.json'))
+        os.path.join(RAW_DATA_FP, 'concerns.json'), 'concern')

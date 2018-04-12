@@ -19,8 +19,8 @@ BASE_DIR = os.path.dirname(
 
 RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
-ATR_FP = os.path.join(RAW_DATA_FP, 'AUTOMATED TRAFFICE RECORDING')
-TMC_FP = os.path.join(RAW_DATA_FP, 'TURNING MOVEMENT COUNT')
+ATR_FP = os.path.join(RAW_DATA_FP, 'volume', 'ATRs')
+TMC_FP = os.path.join(RAW_DATA_FP, 'volume', 'TMCs')
 
 
 def num_hours(filename):
@@ -514,8 +514,8 @@ if __name__ == '__main__':
     if args.datadir:
         RAW_DATA_FP = os.path.join(args.datadir, 'raw')
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
-        ATR_FP = os.path.join(RAW_DATA_FP, 'AUTOMATED TRAFFICE RECORDING')
-        TMC_FP = os.path.join(RAW_DATA_FP, 'TURNING MOVEMENT COUNT')
+        ATR_FP = os.path.join(RAW_DATA_FP, 'volume', 'ATRs')
+        TMC_FP = os.path.join(RAW_DATA_FP, 'TMCs')
 
     if not os.path.exists(TMC_FP):
         print "No TMC directory, skipping..."
