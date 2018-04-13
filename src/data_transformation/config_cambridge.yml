@@ -1,32 +1,3 @@
-# This is a configuration file that generates data from open street maps
-# for Cambridge, including any see click fix data
-
-# City is the only required argument
-city: Cambridge, Massachusetts, USA
-
-# Data directory to look in and output results to
-# This is optional, and if not given, defaults to ../data/
-datadir: ../osm-cambridge/
-
-# If recreate is True, regenerates ALL processed files from scratch
-recreate: False
-
-# Give the city's crash file list
-# This must be in a directory named 'raw' in the data directory
-# given above as 'datadir'
-# This is optional, because the default Boston files are hardcoded
-crashfiles:
-- crash_data.csv
-
-# If the crash file has a date column named something other than 'CALENDAR_DATE',
-# give column name here
-date_col_crash: Date Time
-
-# If you have a vision zero concern file, or similar, give it here,
-# and include the feature name and filename (under the raw/ directory)
-# If the latitude column is different than Y, the longitude column is different
-# than X, give them here as well
-
 # List of concern type information
 concern_files:
   - name: concern
@@ -37,14 +8,13 @@ concern_files:
 
 # crash file configurations
 crashes_files:
-  - name: through_2017_crashes
-    filename: crash_data_through_2017.csv
-    id: ID
-    latitude: X
-    longitude: Y
-    date_and_time: Date Time
-    date_only:
-    time_only:
-    summary: V1 First Event
-    vehicles:
-    bikes:
+  crash_data_through_2017.csv:
+    required:
+      id: ID
+      latitude: X
+      longitude: Y
+      date: Date Time
+    optional:
+      summary: V1 First Event
+      vehicles:
+      bikes:

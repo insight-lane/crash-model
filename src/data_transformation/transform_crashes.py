@@ -9,127 +9,107 @@ import pandas as pd
 import re
 import yaml
 from collections import OrderedDict
-from datetime import datetime
+from datetime import timedelta
 from jsonschema import validate
+import csv
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
-def read_standardized_fields(filename, config):
+def read_standardized_fields(filename, fields):
 
     df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
-    dict_crashes = df_crashes.to_dict("records")
+    raw_crashes = df_crashes.to_dict("records")
 
     crashes = {}
 
-    for key in dict_crashes:
+    for crash in raw_crashes:
 
-        # skip any crashes that don't have coordinates
-        if key[config["latitude"]] == "" or key[config["longitude"]] == "":
+        # skip any crashes that don't have coordinates or date
+        if crash[fields["latitude"]] == "" or crash[fields["longitude"]] == "" \
+           or crash[fields['date']] == "":
             continue
 
-        # crash data & time exist in a single field
-        if config["date_and_time"] != None:
+        # Date can either be a date or a date time
+        date = date_parser.parse(crash[fields['date']])
+        # If there's no time in the date given, look at the time field
+        # if available
+        if date.hour == 0 and date.minute == 0 and date.second == 0 \
+           and 'time' in fields and fields['time']:
 
-            # skip any crashes that don't have a date_time
-            if key[config["date_and_time"]] == "":
-                continue
-
-            # values matching this regex require no transformation
-            if re.match(r"\d{4}-\d{2}-\d{2}T.+", str(key[config["date_and_time"]])):
-                date_time = key[config["date_and_time"]]
-
-            else:
-                date_time = datetime.strftime(date_parser.parse(key[config["Date Time"]]), "%Y-%m-%dT%H:%M:%S")+"Z"
-
-        # date and time exist in separate fields
-        else:
-            # some dates arrive as 'YYYY-MM-DD 00:00:00.000', remove useless timestamp
-            if key[config["date_only"]].endswith(' 00:00:00.000'):
-                date = key[config["date_only"]][:-13]
+            # special case of seconds past midnight
+            time = crash[fields['time']]
+            if re.match(r"^\d+$", str(time)) and int(time) >= 0 \
+               and int(time) < 86400:
+                date = date + timedelta(seconds=int(crash[fields['time']]))
 
             else:
-                date = key[config["date_only"]]
+                date = date_parser.parse(
+                    date.strftime('%Y-%m-%d ') + str(time)
+                )
 
-            # some times arrive as 'HH:MM:SS'
-            if re.match(r"\d{2}:\d{2}:\d{2}", str(key[config["time_only"]])):
-                time = key[config["time_only"]]
+        # TODO add timezone to config ("Z" is UTC)
+        date_time = date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            # others are seconds since midnight
-            else:
-                m, s = divmod(int(key[config["time_only"]]), 60)
-                h, m = divmod(m, 60)
-                time = str("%02d:%02d:%02d" % (h, m, s))
-
-            # TODO add timezone to config ("Z" is UTC)
-            date_time = date+"T"+time+"Z"
-
-        crash = OrderedDict([
-            ("id", key[config["id"]]),
+        formatted_crash = OrderedDict([
+            ("id", crash[fields["id"]]),
             ("dateOccurred", date_time),
             ("location", OrderedDict([
-                ("latitude", float(key[config["latitude"]])),
-                ("longitude", float(key[config["longitude"]]))
+                ("latitude", float(crash[fields["latitude"]])),
+                ("longitude", float(crash[fields["longitude"]]))
             ]))
         ])
 
-        crash["summary"] = key[config["summary"]]
-
-        crashes[crash["id"]] = crash
+        crashes[formatted_crash["id"]] = formatted_crash
 
     return crashes
 
-def read_city_specific_fields(filename, crashes, config):
+
+def read_city_specific_fields(filename, crashes, fields, id_field):
 
     df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
     dict_crashes = df_crashes.to_dict("records")
 
-    for key in dict_crashes:
+    for crash in dict_crashes:
 
         # crash may not have made it through standardized function if it was missing required data
-        if crashes.has_key(key[config["id"]]) == False:
+        if crash[id_field] not in crashes.keys():
             # print "crash "+str(key[config["id"]])+" not present in standardized crashes, skipping"
             continue
 
+        # Add summary
+        crashes[crash[id_field]]["summary"] = crash[fields["summary"]]
+        if crash[fields['summary']] == 0:
+            import ipdb; ipdb.set_trace()
+
+
         # setup a vehicles list for each crash
-        crashes[key[config["id"]]]["vehicles"] = []
+        crashes[crash[id_field]]["vehicles"] = []
 
         # check for car involvement
-        if config["vehicles"] == "mode_type":
+        if fields["vehicles"] == "mode_type":
             # this needs work, but for now any of these mode types translates to a car being involved, quantity unknown
-            if key[config["vehicles"]] == "mv" or key[config["vehicles"]] == "ped" or key[config["vehicles"]] == "":
-                crashes[key[config["id"]]]["vehicles"].append({ "category": "car" })
+            if crash[fields["vehicles"]] == "mv" or crash[fields["vehicles"]] == "ped" or crash[fields["vehicles"]] == "":
+                crashes[crash[id_field]]["vehicles"].append({ "category": "car" })
 
-        elif config["vehicles"] == "TOTAL_VEHICLES":
-            if key[config["vehicles"]] != 0 and key[config["vehicles"]] != "":
-                crashes[key[config["id"]]]["vehicles"].append({ "category": "car", "quantity": int(key[config["vehicles"]]) })
+        elif fields["vehicles"] == "TOTAL_VEHICLES":
+            if crash[fields["vehicles"]] != 0 and crash[fields["vehicles"]] != "":
+                crashes[crash[id_field]]["vehicles"].append({ "category": "car", "quantity": int(crash[fields["vehicles"]]) })
 
         # check for bike involvement
-        if config["bikes"] == "mode_type":
+        if fields["bikes"] == "mode_type":
             # assume bike and car involved, quantities unknown
-            if key[config["bikes"]] == "bike":
-                crashes[key[config["id"]]]["vehicles"].append({ "category": "car" })
-                crashes[key[config["id"]]]["vehicles"].append({ "category": "bike" })
+            if crash[fields["bikes"]] == "bike":
+                crashes[crash[id_field]]["vehicles"].append({ "category": "car" })
+                crashes[crash[id_field]]["vehicles"].append({ "category": "bike" })
 
-        elif config["bikes"] == "TOTAL_BICYCLES":
-            if key[config["bikes"]] != 0 and key[config["bikes"]] != "":
-                crashes[key[config["id"]]]["vehicles"].append({ "category": "bike", "quantity": int(key[config["bikes"]]) })
-
+        elif fields["bikes"] == "TOTAL_BICYCLES":
+            if crash[fields["bikes"]] != 0 and crash[fields["bikes"]] != "":
+                crashes[crash[id_field]]["vehicles"].append({ "category": "bike", "quantity": int(crash[fields["bikes"]]) })
 
     return crashes
-
-    # Unfortunately, since we need to handle these separately,
-    # We'll have to iterate through each row of each file again,
-    # and compare it against the existing structure
-
-    # Here's where you do the hardcoded if city == 'boston' etc handling
-
-    # I recommend making read_standardized_fields return a dict indexed on
-    # id but also including id (passed in as crashes).
-    # Then convert to a list using a list comprehension
-    pass
 
 
 def make_dir_structure(city, filename):
@@ -139,15 +119,29 @@ def make_dir_structure(city, filename):
     # copy filename into raw directory
     pass
 
-# In main:
-# handle args
-# make_dir_structure
-# read_standardized_fields
-# read city specific fields
-# dump transformed fields
 
-def parse_config(filename):
-    pass
+def add_id(csv_file, id_field):
+    """
+    If the csv_file does not contain an id, create one
+    """
+
+    rows = []
+    with open(os.path.join(raw_path, csv_file)) as f:
+        csv_reader = csv.DictReader(f)
+        count = 1
+        for row in csv_reader:
+            if id_field in row:
+                break
+            row.update({id_field: count})
+            rows.append(row)
+            count += 1
+    if rows:
+        with open(os.path.join(raw_path, csv_file), 'w') as f:
+            writer = csv.DictWriter(f, rows[0].keys())
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+
 
 if __name__ == '__main__':
 
@@ -165,33 +159,33 @@ if __name__ == '__main__':
         exit(1)
 
     # load config for this city
-    print CURR_FP
     config_file = os.path.join(CURR_FP, "config_"+args.destination+".yml")
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
     dict_city_crashes = {}
-
     print "searching "+raw_path+" for raw files:\n"
 
-    for csv_file in os.listdir(raw_path):
+    for csv_file in config['crashes_files'].keys():
 
+        if not os.path.exists(os.path.join(raw_path, csv_file)):
+            raise SystemExit(csv_file + " not found, exiting")
         # find the config for this crash file
-        crash_config = None
-        for crash_file in config['crashes_files']:
-            if (crash_file['filename'] == csv_file):
-                crash_config = crash_file
-                break
-
+        crash_config = config['crashes_files'][csv_file]
         if crash_config is None:
             print "- could not find config for crash file "+csv_file+", skipping"
             continue
 
-        print "processing "+csv_file
-        std_crashes = read_standardized_fields(csv_file, crash_config)
-        print "- {} crashes loaded with standardized fields, checking for specific fields\n".format(len(std_crashes))
+        add_id(csv_file, crash_config['required']['id'])
 
-        spc_crashes = read_city_specific_fields(csv_file, std_crashes, crash_config)
+        print "processing "+csv_file
+        std_crashes = read_standardized_fields(
+            csv_file, crash_config['required'])
+        print "- {} crashes loaded with standardized fields, checking for specific fields\n".format(len(std_crashes))
+        spc_crashes = read_city_specific_fields(
+            csv_file, std_crashes, crash_config['optional'],
+            crash_config['required']['id']
+        )
 
         dict_city_crashes.update(spc_crashes)
 
