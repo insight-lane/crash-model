@@ -1,0 +1,67 @@
+# This is a configuration file that generates data from open street maps for Boston,
+# reads in any concern data, automated traffic records and turning movement counts,
+# but does not use Boston_Segments or ma_cob_spatially_joined_features to
+# add additional features
+
+# City is the only required argument
+city: Washington, DC, USA
+
+# Data directory to look in and output results to
+# This is optional, and if not given, defaults to ../data/
+datadir: ../osm-dc/
+
+# If recreate is True, regenerates ALL processed files from scratch
+recreate: False
+
+# Give the city's crash file list
+# This must be in a directory named 'raw' in the data directory
+# given above as 'datadir'
+# This is optional, because the default Boston files are hardcoded
+crashfiles:
+- Crashes_in_DC.csv
+
+# If you have a vision zero concern file, give it here
+# Optional
+concern: Vision_Zero_Safety.csv
+
+# If you are adding another map and its features to the open street map,
+# give it here:
+extra_map:
+
+# Also need to give a map in 3857 projection.
+# This is required if extra_map is given
+extra_map3857:
+
+# Additional features to add from the additional map.
+# This is required if extra_map is given
+additional_features:
+
+# If the crash/concern files have longitude column named something other
+# than 'X', give column name here
+longitude_crash:
+longitude_concern:
+
+# If the crash file has latitude column named something other than 'Y',
+# give column name here
+latitude_crash:
+latitude_concern:
+
+# If the crash file has a date column named something other than 'CALENDAR_DATE',
+# give column name here
+date_col_crash: REPORTDATE
+# And anything other than REQUESTDATE, put it here
+date_col_concern:
+
+# crash file configurations
+crashes_files:
+  - name: 2015_2017_crashes
+    filename: Crashes_in_DC.csv
+    id: OBJECTID
+    latitude: X
+    longitude: Y
+    date_and_time: REPORTDATE
+    date_only:
+    time_only:
+    summary: MAR_ADDRESS
+    vehicles: TOTAL_VEHICLES
+    bikes: TOTAL_BICYCLES
