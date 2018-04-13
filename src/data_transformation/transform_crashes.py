@@ -12,6 +12,10 @@ from collections import OrderedDict
 from datetime import datetime
 from jsonschema import validate
 
+CURR_FP = os.path.dirname(
+    os.path.abspath(__file__))
+BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
+
 
 def read_standardized_fields(filename, config):
 
@@ -142,12 +146,14 @@ def make_dir_structure(city, filename):
 # read city specific fields
 # dump transformed fields
 
+def parse_config(filename):
+    pass
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--destination", type=str,
-                        help="destination name")
+                        help="destination name, e.g. boston")
     parser.add_argument("-f", "--folder", type=str,
                         help="path to destination's data folder")
 
@@ -159,7 +165,8 @@ if __name__ == '__main__':
         exit(1)
 
     # load config for this city
-    config_file = "/app/src/data/config_"+args.destination+".yml"
+    print CURR_FP
+    config_file = os.path.join(CURR_FP, "config_"+args.destination+".yml")
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
@@ -191,7 +198,7 @@ if __name__ == '__main__':
     print "all crash files processed"
     print "- {} {} crashes loaded, validating against schema".format(len(dict_city_crashes), args.destination)
 
-    schema_path = "/app/standards/crashes-schema.json"
+    schema_path = os.path.join(BASE_FP, "standards", "crashes-schema.json")
     list_city_crashes = dict_city_crashes.values()
     with open(schema_path) as crashes_schema:
         validate(list_city_crashes, json.load(crashes_schema))
