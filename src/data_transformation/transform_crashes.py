@@ -126,7 +126,7 @@ def add_id(csv_file, id_field):
     """
 
     rows = []
-    with open(os.path.join(raw_path, csv_file)) as f:
+    with open(csv_file) as f:
         csv_reader = csv.DictReader(f)
         count = 1
         for row in csv_reader:
@@ -136,7 +136,7 @@ def add_id(csv_file, id_field):
             rows.append(row)
             count += 1
     if rows:
-        with open(os.path.join(raw_path, csv_file), 'w') as f:
+        with open(csv_file, 'w') as f:
             writer = csv.DictWriter(f, rows[0].keys())
             writer.writeheader()
             for row in rows:
@@ -176,7 +176,8 @@ if __name__ == '__main__':
             print "- could not find config for crash file "+csv_file+", skipping"
             continue
 
-        add_id(csv_file, crash_config['required']['id'])
+        add_id(
+            os.path.join(raw_path, csv_file), crash_config['required']['id'])
 
         print "processing "+csv_file
         std_crashes = read_standardized_fields(
