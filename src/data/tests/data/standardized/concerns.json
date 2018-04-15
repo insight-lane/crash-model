@@ -1,0 +1,14 @@
+[
+    {
+        "id": 67658,
+        "dateCreated": "2016-02-12T21:22:30.000Z",
+        "status": "Unassigned",
+        "tags": ["poorSignange", "driversIgnoreSignage"],
+        "location": {
+            "latitude": 42.236677,
+	    "longitude": -71.129924
+        },
+        "address": "685 Tremont Street, Boston",
+        "summary": "Drivers do not stop for pedestrians in the designated crosswalks"
+    }
+]

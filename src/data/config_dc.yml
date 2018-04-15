@@ -8,7 +8,7 @@ city: Washington, DC, USA
 
 # Data directory to look in and output results to
 # This is optional, and if not given, defaults to ../data/
-datadir: ../osm-dc/
+datadir: ../data/dc/
 
 # If recreate is True, regenerates ALL processed files from scratch
 recreate: False

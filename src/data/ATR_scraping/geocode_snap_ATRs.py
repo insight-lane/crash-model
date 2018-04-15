@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(
             os.path.dirname(
                 os.path.abspath(__file__)))))
 
-ATR_FP = os.path.join(BASE_DIR, 'data/raw/AUTOMATED TRAFFICE RECORDING')
+ATR_FP = os.path.join(BASE_DIR, 'data/raw/volume/ATRs')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     if args.datadir:
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
         ATR_FP = os.path.join(
-            args.datadir, 'raw/AUTOMATED TRAFFICE RECORDING')
+            args.datadir, 'raw', 'volume', 'ATRs')
         if not os.path.exists(ATR_FP):
             print "NO ATR directory found, skipping..."
             sys.exit()
