@@ -230,6 +230,8 @@ def write_geojson(way_file, node_file, all_nodes_file, outfp):
                 },
                 'properties': node['properties']
             }
+
+    # Add node features to the way features
     feats = feats + node_dict.values()
     with open(outfp, 'w') as outfile:
         geojson.dump({

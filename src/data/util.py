@@ -458,6 +458,18 @@ def write_points(points, schema, filename):
             output.write({'geometry': mapping(pt), 'properties': prop})
 
 
+def reproject(coords, inproj='epsg:4326', outproj='epsg:3857'):
+    new_coords = []
+    inproj = pyproj.Proj(init=inproj)
+    outproj = pyproj.Proj(init=outproj)
+
+    for coord in coords:
+        re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+        point = Point(re_point)
+        new_coords.append(mapping(point))
+    return new_coords
+
+
 def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     """
     Reprojects a set of records from one projection to another
