@@ -1,0 +1,20 @@
+# List of concern type information
+concern_files:
+  - name: concern
+    filename: Commonwealth_Connect_Service_Requests.csv
+    latitude: lat
+    longitude: lng
+    time: ticket_created_date_time
+
+# crash file configurations
+crashes_files:
+  crash_data_through_2017.csv:
+    required:
+      id: ID
+      latitude: X
+      longitude: Y
+      date: Date Time
+    optional:
+      summary: V1 First Event
+      vehicles:
+      bikes:

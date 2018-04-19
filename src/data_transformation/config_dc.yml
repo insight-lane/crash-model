@@ -1,0 +1,12 @@
+# crash file configurations
+crashes_files:
+  Crashes_in_DC.csv:
+    required:
+      id: OBJECTID
+      latitude: X
+      longitude: Y
+      date: REPORTDATE
+    optional:
+      summary: MAR_ADDRESS
+      vehicles: TOTAL_VEHICLES
+      bikes: TOTAL_BICYCLES
