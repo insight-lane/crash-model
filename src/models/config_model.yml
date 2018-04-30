@@ -1,8 +1,8 @@
 # This is a configuration file for running the model training and prediction
 
 # Data directory to look in and output results to
-# This is optional, and if not given, defaults to ../data/
-datadir: ../../data/
+# This is optional, and if not given, defaults to Boston data
+datadir: ../data/boston
 
 # name of the dataset from output of make_dataset scripts
 # should be in the processed subfolder of datadir
@@ -10,7 +10,7 @@ seg_data: vz_predict_dataset.csv.gz
 
 # concern column name
 # leave as '' if not adding concerns
-concern: concern
+concern: 'visionzero'
 
 # atr filepath (should be in processed subfolder)
 # leave as '' if not adding atrs

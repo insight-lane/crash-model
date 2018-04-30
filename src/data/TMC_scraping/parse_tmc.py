@@ -515,7 +515,7 @@ if __name__ == '__main__':
         RAW_DATA_FP = os.path.join(args.datadir, 'raw')
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
         ATR_FP = os.path.join(RAW_DATA_FP, 'volume', 'ATRs')
-        TMC_FP = os.path.join(RAW_DATA_FP, 'TMCs')
+        TMC_FP = os.path.join(RAW_DATA_FP, 'volume', 'TMCs')
 
     if not os.path.exists(TMC_FP):
         print "No TMC directory, skipping..."
