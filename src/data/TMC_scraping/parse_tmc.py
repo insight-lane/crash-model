@@ -19,8 +19,8 @@ BASE_DIR = os.path.dirname(
 
 RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
-ATR_FP = os.path.join(RAW_DATA_FP, 'AUTOMATED TRAFFICE RECORDING')
-TMC_FP = os.path.join(RAW_DATA_FP, 'TURNING MOVEMENT COUNT')
+ATR_FP = os.path.join(RAW_DATA_FP, 'volume', 'ATRs')
+TMC_FP = os.path.join(RAW_DATA_FP, 'volume', 'TMCs')
 
 
 def num_hours(filename):
@@ -514,8 +514,8 @@ if __name__ == '__main__':
     if args.datadir:
         RAW_DATA_FP = os.path.join(args.datadir, 'raw')
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
-        ATR_FP = os.path.join(RAW_DATA_FP, 'AUTOMATED TRAFFICE RECORDING')
-        TMC_FP = os.path.join(RAW_DATA_FP, 'TURNING MOVEMENT COUNT')
+        ATR_FP = os.path.join(RAW_DATA_FP, 'volume', 'ATRs')
+        TMC_FP = os.path.join(RAW_DATA_FP, 'volume', 'TMCs')
 
     if not os.path.exists(TMC_FP):
         print "No TMC directory, skipping..."
@@ -536,8 +536,10 @@ if __name__ == '__main__':
         summary = parse_conflicts()
         address_records = snap_inter_and_non_inter(summary)
 
-        all_crashes, crashes_by_location = util.group_json_by_location(
-            os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'))
+        items = json.load(
+            open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json')))
+
+        all_crashes, crashes_by_location = util.group_json_by_location(items)
 
         for record in address_records:
             if record['properties']['near_id'] \

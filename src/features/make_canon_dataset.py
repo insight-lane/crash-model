@@ -4,7 +4,7 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from data.util import read_shp, group_json_by_location
+from data.util import read_shp, group_json_by_location, group_json_by_field
 import os
 import argparse
 
@@ -84,25 +84,29 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     return(aggregated(), combined['orig_id'])
 
 
-def read_spatial_features(fp, id_col, feature_name):
+def read_concerns(fp, id_col):
     """
     Turns a json file of spatial only features into a pandas dataframe
     """
-    items, grouped = group_json_by_location(fp)
 
-    segments = [k for k in grouped.keys() if k]
-    items = {feature_name: [grouped[k]['count'] for k in segments]}
-    df = pd.DataFrame(items, index=segments)
+    items = json.load(open(fp))
+    grouped_by_source = group_json_by_field(items, 'source')
 
-    return df
+    data_frames = []
+    for source, items in grouped_by_source.iteritems():
+        results, grouped = group_json_by_location(items)
+        segments = [k for k in grouped.keys() if k]
+        results = {source: [grouped[k]['count'] for k in segments]}
+        df = pd.DataFrame(results, index=segments)
+        data_frames.append((source, df))
+    return data_frames
 
 
-def aggregate_roads(feats, datadir, concerns=[],
-                    crash_col_date='CALENDAR_DATE'):
+def aggregate_roads(feats, datadir, concerns=[]):
 
     # read/aggregate crash/concerns
     crash = read_records(os.path.join(datadir, 'crash_joined.json'),
-                         crash_col_date, 'near_id')
+                         'dateOccurred', 'near_id')
     cr_con = pd.concat([crash], axis=1)
     cr_con.columns = ['crash']
 
@@ -120,20 +124,16 @@ def aggregate_roads(feats, datadir, concerns=[],
     aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
     print "road features being included: ", ', '.join(feats)
 
-    # Add any concern files if applicable
-    for concern in concerns:
-        name, concernfile, y, x, date_col = concern.split(',')
-        # Default column names
-        y = y or 'Y'
-        x = x or 'X'
-        date_col = date_col or 'REQUESTDATE'
-        filename = os.path.join(datadir, name + '_joined.json')
-        if os.path.exists(filename):
+    # Add any concern types if applicable
+    filename = os.path.join(datadir, 'concern_joined.json')
+    if os.path.exists(filename):
 
-            result = read_spatial_features(
-                filename, 'near_id', name
-            )
-            f = {name: result}
+        concerns = read_concerns(
+            filename, 'near_id'
+        )
+        for concern_type, result in concerns:
+
+            f = {concern_type: result}
             aggregated = aggregated.assign(**f)
             aggregated = aggregated.fillna(0)
 
@@ -193,9 +193,6 @@ if __name__ == '__main__':
     parser.add_argument("-features", "--featlist", nargs="+", default=[
         'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
         help="List of segment features to include")
-    parser.add_argument("-t_crash", "--date_col_crash", type=str,
-                        help="col name in crash csv file containing date")
-
     parser.add_argument('-concerns', '--concern_info', nargs="+",
                         help="A list of comma separated concern info, " +
                         "containing filename, latitude, longitude and " +
@@ -221,13 +218,10 @@ if __name__ == '__main__':
     aggregated, adjacent, cr_con = aggregate_roads(
         feats,
         DATA_FP,
-        crash_col_date=args.date_col_crash or 'CALENDAR_DATE',
         concerns=args.concern_info
     )
 
     # Need to rename?
-    import pdb
-    pdb.set_trace()
     cr_con_roads = group_by_date(cr_con, aggregated)
 
     # output canon dataset

@@ -7,13 +7,9 @@
 # Developed by: bpben
 
 import json
-import pyproj
-import pandas as pd
 import util
 import os
 import argparse
-from dateutil.parser import parse
-import datetime
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -22,84 +18,33 @@ BASE_DIR = os.path.dirname(
 
 
 MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
-RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
+RAW_DATA_FP = os.path.join(BASE_DIR, 'data/standardized')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
-# filepaths of raw crash data (hardcoded for now)
-CRASH_DATA_FPS = [
-    'cad_crash_events_with_transport_2016_wgs84.csv',
-    '2015motorvehicles_with_modetype.csv',
-    '2017motorvehicles_with_modetype.csv'
-]
 
 
-def process_concerns(
-        concern_args, start_year=None, end_year=None):
+def snap_records(
+        combined_seg, segments_index, infile, record_type,
+        startyear=None, endyear=None):
 
-    name, concernfile, y, x, date_col = concern_args.split(',')
-    # Default column names
-    y = y or 'Y'
-    x = x or 'X'
-    date_col = date_col or 'REQUESTDATE'
+    records = util.read_records(infile, record_type, startyear, endyear)
 
-    # Read in vision zero data
-    # Have to use pandas read_csv, unicode trubs
+    # Find nearest crashes - 30 tolerance
+    print "snapping " + record_type + " records to segments"
+    util.find_nearest(
+        records, combined_seg, segments_index, 30, type_record=True)
 
-    path = os.path.join(
-        RAW_DATA_FP, concernfile)
+    # Write out snapped records
+    schema = records[0].schema
+    shpfile = os.path.join(MAP_FP, record_type + '_joined.shp')
+    print "output " + record_type + " data to " + shpfile
+    util.records_to_shapefile(schema, shpfile, records)
 
-    # Only read in if the file exists
-    # Since at the moment, only Boston has concern data, this is
-    # still hard coded in, but should change this
-    if not os.path.exists(path):
-        print "No concern data found"
-        return
+    jsonfile = os.path.join(
+        PROCESSED_DATA_FP, record_type + '_joined.json')
 
-    concern_raw = pd.read_csv(path)
-
-    concern_all = concern_raw.fillna(value="")
-
-    # First filter out empty dates
-    concern_raw = concern_all[concern_all[date_col] != '']
-
-    # If a start year was passed in, filter everything before that year
-    if start_year:
-        concern_raw = concern_raw[
-            pd.to_datetime(concern_all[date_col])
-            >= datetime.datetime(year=int(start_year), month=1, day=1)
-        ]
-    # If an end year is passed in, filter everything after the end of that year
-    if end_year:
-        concern_raw = concern_raw[
-            pd.to_datetime(concern_all[date_col])
-            < datetime.datetime(year=int(end_year)+1, month=1, day=1)
-        ]
-
-    min_date = parse(min(concern_raw[date_col])).date()
-    max_date = parse(max(concern_raw[date_col])).date()
-    concern_raw = concern_raw.to_dict('records')
-    concern = util.raw_to_record_list(concern_raw,
-                                      pyproj.Proj(init='epsg:4326'), x=x, y=y)
-
-    print "Read in data from {} concerns from {} to {}".format(
-        len(concern), min_date, max_date
-    )
-
-    # Find nearest concerns - 20 tolerance
-    print "snapping concerns to segments"
-    util.find_nearest(concern, combined_seg, segments_index, 20)
-
-    # Write concerns
-    concern_schema = util.make_schema('Point', concern[0]['properties'])
-    print "output concerns shp to", MAP_FP
-    util.write_shp(
-        concern_schema,
-        os.path.join(MAP_FP, 'concern_joined.shp'),
-        concern, 'point', 'properties')
-    print "output concerns data to", PROCESSED_DATA_FP
-
-    outfile = os.path.join(PROCESSED_DATA_FP, name + '_joined.json')
-    with open(outfile, 'w') as f:
-        json.dump([c['properties'] for c in concern], f)
+    print "output " + record_type + " data to " + jsonfile
+    with open(jsonfile, 'w') as f:
+        json.dump([r.properties for r in records], f)
 
 
 if __name__ == '__main__':
@@ -107,120 +52,24 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
-    parser.add_argument("-crash", "--crashfiles", nargs='+',
-                        help="Can give alternate list of crash files. " +
-                        "Only use filename, don't include path")
-    parser.add_argument("-x_crash", "--x_crash", type=str,
-                        help="column name in csv file containing longitude")
-    parser.add_argument("-y_crash", "--y_crash", type=str,
-                        help="column name in csv file containing latitude")
-    parser.add_argument("-t_crash", "--date_col_crash", type=str,
-                        help="col name in crash csv file containing date")
     parser.add_argument("-start", "--startyear", type=str,
                         help="Can limit data to crashes this year or later")
     parser.add_argument("-end", "--endyear", type=str,
                         help="Can limit data to crashes this year or earlier")
 
-    parser.add_argument('-concerns', '--concern_info', nargs="+",
-                        help="A list of comma separated concern info, " +
-                        "containing filename, latitude, longitude and " +
-                        "time columns",
-                        default=['concern,Vision_Zero_Entry.csv,,,'])
-
     args = parser.parse_args()
     # Can override the hardcoded data directory
     if args.datadir:
-        RAW_DATA_FP = os.path.join(args.datadir, 'raw')
+        RAW_DATA_FP = os.path.join(args.datadir, 'standardized')
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
         MAP_FP = os.path.join(args.datadir, 'processed/maps')
-    if args.crashfiles:
-        CRASH_DATA_FPS = args.crashfiles
-
-    x_crash = 'X'
-    y_crash = 'Y'
-    if args.x_crash:
-        x_crash = args.x_crash
-    if args.y_crash:
-        y_crash = args.y_crash
-
-    # Read in CAD crash data
-    crash = []
-    for fp in CRASH_DATA_FPS:
-
-        tmp = util.csv_to_projected_records(
-            os.path.join(RAW_DATA_FP, fp),
-            x=x_crash,
-            y=y_crash
-        )
-        crash = crash + tmp
-
-    crash_with_date = []
-    count = 0
-    # Keep track of the earliest and latest crash date used
-    start = None
-    end = None
-    for i in range(len(crash)):
-        # If the date column given in the crash data isn't
-        # 'CALENDAR_DATE', copy the date column to 'CALENDAR_DATE'
-        # for standardization
-        match_date = True
-        if args.date_col_crash:
-            if crash[i]['properties'][args.date_col_crash]:
-                d = parse(
-                    crash[i]['properties'][args.date_col_crash]).isoformat()
-                crash[i]['properties']['CALENDAR_DATE'] = d
-
-        # If there's no date given
-        if not crash[i]['properties']['CALENDAR_DATE']:
-            match_date = False
-            count += 1
-        else:
-            year = parse(
-                crash[i]['properties']['CALENDAR_DATE']).year
-
-            # If the start year given is earlier than the crash year, skip
-            if args.startyear and int(args.startyear) > year:
-                match_date = False
-            # Or the end year is later than the crash year, skip
-            elif args.endyear and int(args.endyear) < year:
-                match_date = False
-
-        if match_date:
-
-            crash_with_date.append(crash[i])
-
-            if not start or start > crash[i]['properties']['CALENDAR_DATE']:
-                start = crash[i]['properties']['CALENDAR_DATE']
-            if not end or end < crash[i]['properties']['CALENDAR_DATE']:
-                end = crash[i]['properties']['CALENDAR_DATE']
-
-    if count:
-        print str(count) + " out of " + str(len(crash)) \
-            + " don't have a date, skipping"
-    crash = crash_with_date
-
-    print "Read in data from {} crashes from {} to {}".format(
-        len(crash), parse(start).date(), parse(end).date())
 
     combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
+    snap_records(
+        combined_seg, segments_index,
+        os.path.join(RAW_DATA_FP, 'crashes.json'), 'crash',
+        startyear=args.startyear, endyear=args.endyear)
 
-    # Find nearest crashes - 30 tolerance
-    print "snapping crashes to segments"
-
-    util.find_nearest(crash, combined_seg, segments_index, 30)
-
-    # Write crash
-    crash_schema = util.make_schema('Point', crash[0]['properties'])
-    print "output crash shp to", MAP_FP
-    util.write_shp(crash_schema, os.path.join(MAP_FP, 'crash_joined.shp'),
-                   crash, 'point', 'properties')
-    print "output crash data to", PROCESSED_DATA_FP
-    with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json'), 'w') as f:
-        json.dump([c['properties'] for c in crash], f)
-
-    concerns = args.concern_info
-
-    for concern in concerns:
-        process_concerns(
-            concern, start_year=args.startyear, end_year=args.endyear
-        )
+    snap_records(
+        combined_seg, segments_index,
+        os.path.join(RAW_DATA_FP, 'concerns.json'), 'concern')
