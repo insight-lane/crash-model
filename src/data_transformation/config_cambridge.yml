@@ -11,8 +11,8 @@ crashes_files:
   crash_data_through_2017.csv:
     required:
       id: ID
-      latitude: X
-      longitude: Y
+      latitude: Y
+      longitude: X
       date: Date Time
     optional:
       summary: V1 First Event

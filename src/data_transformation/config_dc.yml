@@ -3,8 +3,8 @@ crashes_files:
   Crashes_in_DC.csv:
     required:
       id: OBJECTID
-      latitude: X
-      longitude: Y
+      latitude: Y
+      longitude: X
       date: REPORTDATE
     optional:
       summary: MAR_ADDRESS

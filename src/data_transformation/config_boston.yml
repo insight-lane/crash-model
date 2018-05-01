@@ -16,8 +16,8 @@ crashes_files:
   2015motorvehicles_with_modetype.csv:
     required:
       id: CAD_EVENT_REL_COMMON_ID
-      latitude: X
-      longitude: Y
+      latitude: Y
+      longitude: X
       date: CALENDAR_DATE
       time: TIME,
     optional:
@@ -27,8 +27,8 @@ crashes_files:
   cad_crash_events_with_transport_2016_wgs84_with_modetype.csv:
     required:
       id: CAD_EVENT_REL_COMMON_ID
-      latitude: X
-      longitude: Y
+      latitude: Y
+      longitude: X
       date: CALENDAR_DATE
       time: TIME
     optional:
@@ -38,8 +38,8 @@ crashes_files:
   2017motorvehicles_with_modetype.csv:
     required:
       id: CAD_EVENT_REL_COMMON_ID
-      latitude: X
-      longitude: Y
+      latitude: Y
+      longitude: X
       date: CALENDAR_DATE
       time: TIME,
     optional:
