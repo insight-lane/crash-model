@@ -400,15 +400,17 @@ def create_segments_from_json(roads_shp_path):
 
     # add non_inter id format = 00+i
     non_int_w_ids = []
-    i = 0
-    import ipdb; ipdb.set_trace()
+    for i, l in enumerate(non_int_lines):
+        value = copy.deepcopy(l)
 
-    for l in non_int_lines:
-        prop = copy.deepcopy(l['properties'])
-        prop['id'] = '00' + str(i)
-        prop['inter'] = 0
-        non_int_w_ids.append(tuple([l[0], prop]))
-        i += 1
+        print i
+        if i == 12:
+            import ipdb; ipdb.set_trace()
+
+        value['properties']['id'] = '00' + str(i)
+        value['properties']['inter'] = 0
+        value['type'] = 'Feature'
+        non_int_w_ids.append(value)
     print "extracted {} non-intersection segments".format(len(non_int_w_ids))
 
     # Non-intersection shapefile
@@ -496,7 +498,7 @@ if __name__ == '__main__':
         MAP_FP, 'ma_cob_spatially_joined_streets.shp')
     if args.altroad:
         roads_shp_path = args.altroad
-        
+
     results = create_segments_from_json(
         os.path.join(MAP_FP, 'osm_ways.geojson'))
 
