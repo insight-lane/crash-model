@@ -81,9 +81,6 @@ def read_city_specific_fields(filename, crashes, fields, id_field):
 
         # Add summary
         crashes[crash[id_field]]["summary"] = crash[fields["summary"]]
-        if crash[fields['summary']] == 0:
-            import ipdb; ipdb.set_trace()
-
 
         # setup a vehicles list for each crash
         crashes[crash[id_field]]["vehicles"] = []
