@@ -79,8 +79,10 @@ def read_city_specific_fields(filename, crashes, fields, id_field):
             # print "crash "+str(key[config["id"]])+" not present in standardized crashes, skipping"
             continue
 
-        # Add summary
+        # Add summary and address
         crashes[crash[id_field]]["summary"] = crash[fields["summary"]]
+        if "address" in fields.keys():
+            crashes[crash[id_field]]["address"] = crash[fields["address"]]
 
         # setup a vehicles list for each crash
         crashes[crash[id_field]]["vehicles"] = []
