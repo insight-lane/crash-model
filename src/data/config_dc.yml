@@ -44,10 +44,24 @@ longitude_concern:
 # If the crash file has latitude column named something other than 'Y',
 # give column name here
 latitude_crash:
-latitude_concern: 
+latitude_concern:
 
 # If the crash file has a date column named something other than 'CALENDAR_DATE',
 # give column name here
 date_col_crash: REPORTDATE
 # And anything other than REQUESTDATE, put it here
 date_col_concern:
+
+# crash file configurations
+crashes_files:
+  - name: 2015_2017_crashes
+    filename: Crashes_in_DC.csv
+    id: OBJECTID
+    latitude: X
+    longitude: Y
+    date_and_time: REPORTDATE
+    date_only:
+    time_only:
+    summary: MAR_ADDRESS
+    vehicles: TOTAL_VEHICLES
+    bikes: TOTAL_BICYCLES

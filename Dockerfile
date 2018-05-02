@@ -9,6 +9,10 @@ ENV TERM xterm-256color
 # Use bash for the entrypoint rather than sh, for 'conda activate' compatibility
 ENTRYPOINT ["/bin/bash", "-c"]
 
+# the default PS1 has issues with long outputs, replace it
+RUN echo "swapping to a PS1 that better handles long outputs" >> /etc/bash.bashrc
+RUN echo "PS1='\h:\W \u\$ '" >> /etc/bash.bashrc
+
 WORKDIR /app
 
 # Install packges
