@@ -10,7 +10,7 @@ seg_data: vz_predict_dataset.csv.gz
 
 # concern column name
 # leave as '' if not adding concerns
-concern: concern
+concern: seeclickfix
 
 # atr filepath (should be in processed subfolder)
 # leave as '' if not adding atrs

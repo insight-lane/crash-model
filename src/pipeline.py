@@ -48,7 +48,7 @@ def data_transformation(config, DATA_FP, forceupdate=False):
         if not config['concern_files']:
             print "No concerns defined in config file"
         elif not forceupdate:
-            print "Already transformed crash data, skipping"
+            print "Already transformed concern data, skipping"
 
 
 def data_generation(config_file, DATA_FP, start_year=None, end_year=None,

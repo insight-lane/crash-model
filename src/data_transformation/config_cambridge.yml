@@ -1,3 +1,12 @@
+# City name
+city: Cambridge, Massachusetts, USA
+# The folder under data where this city's data is stored
+name: cambridge
+# If given, limit crashes to after start_year and before end_year
+start_year: 
+end_year:
+
+
 # List of concern type information
 concern_files:
   - name: concern
