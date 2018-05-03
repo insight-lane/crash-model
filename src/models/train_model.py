@@ -67,6 +67,32 @@ mp['XGBClassifier']['learning_rate'] = ss.beta(a=2,b=15)
 # generally, if the model isn't better than chance, it's not worth reporting
 perf_cutoff = 0.5
 
+
+def set_defaults(config={}):
+    """
+    Sets defaults if not given in the config file.
+    Default is just to use the open street map features and crash file
+    args:
+        config - dict
+    """
+    if 'seg_data' not in config.keys():
+        config['seg_data'] = 'vz_predict_dataset.csv.gz'
+    if 'concern' not in config.keys():
+        config['concern'] = ''
+    if 'atr' not in config.keys():
+        config['atr'] = ''
+    if 'tmc' not in config.keys():
+        config['tmc'] = ''
+    if 'f_cont' not in config.keys():
+        config['f_cont'] = ['width']
+    if 'f_cat' not in config.keys():
+        config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway']
+    if 'process' not in config.keys():
+        config['process'] = True
+    if 'time_target' not in config.keys():
+        config['time_target'] = [15, 2017]
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -79,11 +105,13 @@ if __name__ == '__main__':
                         help="data directory")
 
     args = parser.parse_args()
-    config_file = 'config_defaults.yml'
+
+    config = {}
     if args.config:
         config_file = args.config
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
+        with open(config_file) as f:
+            config = yaml.safe_load(f)
+    set_defaults(config)
 
     DATA_FP = os.path.join(args.datadir, 'processed/')
     print('Outputting to: %s' % DATA_FP)
