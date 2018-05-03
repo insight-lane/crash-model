@@ -72,16 +72,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # parse arguments
     parser.add_argument("-c", "--config", type=str,
-                                                    help="yml file for model config, default is Bostn")
+                        help="yml file for model config, default is a " + 
+                        "base config with open street map data and crashes only"
+    )
+    parser.add_argument('-d', '--datadir', type=str,
+                        help="data directory")
 
     args = parser.parse_args()
-    config_file = 'models/config_model.yml'
+    config_file = 'config_defaults.yml'
     if args.config:
         config_file = args.config
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
-    DATA_FP = os.path.join(config['datadir'], 'processed/')
+    DATA_FP = os.path.join(args.datadir, 'processed/')
     print('Outputting to: %s' % DATA_FP)
 
     # Default

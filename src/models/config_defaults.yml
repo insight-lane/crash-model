@@ -1,0 +1,41 @@
+# This is a configuration file that sets defaults for running the model training
+# and prediction.  It is overridden if another config file is passed in
+
+# name of the dataset from output of make_dataset scripts
+# should be in the processed subfolder of datadir
+seg_data: vz_predict_dataset.csv.gz
+
+# concern column name
+# leave as '' if not adding concerns
+concern: ''
+
+# atr filepath (should be in processed subfolder)
+# leave as '' if not adding atrs
+atr: ''
+
+# tmc filepath (should be in processed subfolder)
+# leave as '' if not adding tmcs
+tmc: ''
+
+# week on which to predict crashes (week, year)
+# as is, will end up outputting predictions for all weeks up to this week
+# TODO: Make this more relevant for control
+time_target: [15, 2017]
+
+# continuous features
+f_cont:
+- width
+
+# categorical features
+f_cat:
+- lanes
+- hwy_type
+- osm_speed
+- oneway
+
+# make categorical into dummies, standardize continuous
+# usually necessary/important if want to use linear models
+process: True
+
+
+
