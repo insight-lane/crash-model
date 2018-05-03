@@ -158,7 +158,8 @@ if __name__ == '__main__':
         exit(1)
 
     # load config for this city
-    config_file = os.path.join(CURR_FP, "config_"+args.destination+".yml")
+    config_file = os.path.join(BASE_FP, 'src/config',
+                               "config_"+args.destination+".yml")
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
