@@ -10,16 +10,22 @@ DATA_FP = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/data/'
 
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     # Can give a config file
     parser.add_argument("-c", "--config", type=str,
-                        help="Can give a different .yml config file")
+                        help="Config file")
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="Data directory")
+    
     parser.add_argument("-s", "--startyear", type=str,
                         help="Can limit data to crashes this year or later")
     parser.add_argument("-e", "--endyear", type=str,
                         help="Can limit data to crashes this year or earlier")
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether to force update the maps')
 
     args = parser.parse_args()
     config_file = 'data/config.yml'
@@ -40,8 +46,7 @@ if __name__ == '__main__':
         sys.exit('City is required in config file')
     city = config['city']
 
-    if 'datadir' in config.keys() and config['datadir']:
-        DATA_FP = config['datadir']
+    DATA_FP = args.datadir
 
     # This block handles any extra map info as we have in Boston
     extra_map = None
@@ -63,7 +68,7 @@ if __name__ == '__main__':
         extra_map3857 = config['extra_map3857']
 
     # Whether to regenerate maps from open street map
-    if 'recreate' in config.keys() and config['recreate']:
+    if args.forceupdate:
         recreate = True
 
     # Features drawn from open street maps
