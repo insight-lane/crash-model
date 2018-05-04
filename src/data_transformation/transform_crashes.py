@@ -12,16 +12,15 @@ from collections import OrderedDict
 from datetime import timedelta
 from jsonschema import validate
 import csv
+import datetime
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
-def read_standardized_fields(filename, fields):
+def read_standardized_fields(raw_crashes, fields, opt_fields):
 
-    df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
-    raw_crashes = df_crashes.to_dict("records")
     crashes = {}
 
     for i, crash in enumerate(raw_crashes):
@@ -61,65 +60,51 @@ def read_standardized_fields(filename, fields):
                 ("longitude", float(crash[fields["longitude"]]))
             ]))
         ])
-
+        formatted_crash = add_city_specific_fields(crash, formatted_crash,
+                                                   opt_fields)
         crashes[formatted_crash["id"]] = formatted_crash
     return crashes
 
 
-def read_city_specific_fields(filename, crashes, fields, id_field):
+def add_city_specific_fields(crash, formatted_crash, fields):
 
-    df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
-    dict_crashes = df_crashes.to_dict("records")
+    # Add summary and address
+    if "summary" in fields.keys() and fields["summary"]:
+        formatted_crash["summary"] = crash[fields["summary"]]
+    if "address" in fields.keys() and fields["address"]:
+        formatted_crash["address"] = crash[fields["address"]]
 
-    for i, crash in enumerate(dict_crashes):
+    # setup a vehicles list for each crash
+    formatted_crash["vehicles"] = []
 
-        if i % 10000 == 0:
-            print i
+    # check for car involvement
+    if "vehicles" in fields.keys() and fields["vehicles"] == "mode_type":
+        # this needs work, but for now any of these mode types
+        # translates to a car being involved, quantity unknown
+        if crash[fields["vehicles"]] == "mv" or crash[fields["vehicles"]] == "ped" or crash[fields["vehicles"]] == "":
+            formatted_crash["vehicles"].append({"category": "car"})
 
-        # crash may not have made it through standardized function if it was missing required data
-        if crash[id_field] not in crashes.keys():
-            # print "crash "+str(key[config["id"]])+" not present in standardized crashes, skipping"
-            continue
+    elif "vehicles" in fields.keys() and fields["vehicles"] == "TOTAL_VEHICLES":
+        if crash[fields["vehicles"]] != 0 and crash[fields["vehicles"]] != "":
+            formatted_crash["vehicles"].append({
+                "category": "car",
+                "quantity": int(crash[fields["vehicles"]])
+            })
 
-        # Add summary and address
-        if "summary" in fields.keys() and fields["summary"]:
-            crashes[crash[id_field]]["summary"] = crash[fields["summary"]]
-        if "address" in fields.keys() and fields["address"]:
-            crashes[crash[id_field]]["address"] = crash[fields["address"]]
+    # check for bike involvement
+    if "bikes" in fields.keys() and fields["bikes"] == "mode_type":
+        # assume bike and car involved, quantities unknown
+        if crash[fields["bikes"]] == "bike":
+            formatted_crash["vehicles"].append({"category": "car"})
+            formatted_crash["vehicles"].append({"category": "bike"})
 
-        # setup a vehicles list for each crash
-        crashes[crash[id_field]]["vehicles"] = []
-
-        # check for car involvement
-        if "vehicles" in fields.keys() and fields["vehicles"] == "mode_type":
-            # this needs work, but for now any of these mode types translates to a car being involved, quantity unknown
-            if crash[fields["vehicles"]] == "mv" or crash[fields["vehicles"]] == "ped" or crash[fields["vehicles"]] == "":
-                crashes[crash[id_field]]["vehicles"].append({ "category": "car" })
-
-        elif "vehicles" in fields.keys() and fields["vehicles"] == "TOTAL_VEHICLES":
-            if crash[fields["vehicles"]] != 0 and crash[fields["vehicles"]] != "":
-                crashes[crash[id_field]]["vehicles"].append({ "category": "car", "quantity": int(crash[fields["vehicles"]]) })
-
-        # check for bike involvement
-        if "bikes" in fields.keys() and fields["bikes"] == "mode_type":
-            # assume bike and car involved, quantities unknown
-            if crash[fields["bikes"]] == "bike":
-                crashes[crash[id_field]]["vehicles"].append({ "category": "car" })
-                crashes[crash[id_field]]["vehicles"].append({ "category": "bike" })
-
-        elif "bikes" in fields.keys() and fields["bikes"] == "TOTAL_BICYCLES":
-            if crash[fields["bikes"]] != 0 and crash[fields["bikes"]] != "":
-                crashes[crash[id_field]]["vehicles"].append({ "category": "bike", "quantity": int(crash[fields["bikes"]]) })
-
-    return crashes
-
-
-def make_dir_structure(city, filename):
-    # if the directory name doesn't exist, create it
-    # dir name of the city?
-    # if raw, processed, docs subdirs don't exist, create them
-    # copy filename into raw directory
-    pass
+    elif "bikes" in fields.keys() and fields["bikes"] == "TOTAL_BICYCLES":
+        if crash[fields["bikes"]] != 0 and crash[fields["bikes"]] != "":
+            formatted_crash.append({
+                "category": "bike",
+                "quantity": int(crash[fields["bikes"]])
+            })
+    return formatted_crash
 
 
 def add_id(csv_file, id_field):
@@ -183,15 +168,14 @@ if __name__ == '__main__':
             os.path.join(raw_path, csv_file), crash_config['required']['id'])
 
         print "processing "+csv_file
-        std_crashes = read_standardized_fields(
-            csv_file, crash_config['required'])
-        print "- {} crashes loaded with standardized fields, checking for specific fields\n".format(len(std_crashes))
-        spc_crashes = read_city_specific_fields(
-            csv_file, std_crashes, crash_config['optional'],
-            crash_config['required']['id']
-        )
 
-        dict_city_crashes.update(spc_crashes)
+        df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
+        raw_crashes = df_crashes.to_dict("records")
+
+        std_crashes = read_standardized_fields(raw_crashes,
+                            crash_config['required'], crash_config['optional'])
+        print "- {} crashes loaded with standardized fields, checking for specific fields\n".format(len(std_crashes))
+        dict_city_crashes.update(std_crashes)
 
     print "all crash files processed"
     print "- {} {} crashes loaded, validating against schema".format(len(dict_city_crashes), args.destination)
