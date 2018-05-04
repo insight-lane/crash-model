@@ -6,6 +6,9 @@ name: boston
 start_year: 
 end_year:
 
+##############################################################################
+# Configuration for data transformation
+
 # List of concern type information
 concern_files:
   - name: concern
@@ -55,6 +58,7 @@ crashes_files:
       vehicles: mode_type
       bikes: mode_type
 
+##############################################################################
 
 # Additional city-specific features can be added from maps by setting
 # these variables below
@@ -70,3 +74,46 @@ extra_map3857: ../data/boston/processed/maps/ma_cob_spatially_joined_streets.shp
 # Additional features to add from the additional map.
 # This is required if extra_map is given
 additional_features: AADT SPEEDLIMIT Struct_Cnd Surface_Tp F_F_Class
+
+##############################################################################
+
+# configuration for running the model training and prediction
+
+# concern column name
+# leave as '' if not adding concerns
+concern: 'visionzero'
+
+# atr filepath (should be in processed subfolder)
+# leave as '' if not adding atrs
+atr: 'atrs_predicted.csv'
+# atr column names as list
+atr_cols:
+- speed_coalesced
+- volume_coalesced
+
+# tmc filepath (should be in processed subfolder)
+# leave as '' if not adding tmcs
+tmc: 'tmc_summary.json'
+# tmc column names as list
+tmc_cols:
+- Conflict
+
+# week on which to predict crashes (week, year)
+# as is, will end up outputting predictions for all weeks up to this week
+# TODO: Make this more relevant for control
+time_target: [15, 2017]
+
+# continuous features
+f_cont:
+- AADT
+
+# categorical features
+f_cat:
+- 'SPEEDLIMIT'
+- 'Struct_Cnd'
+- 'Surface_Tp'
+- 'F_F_Class'
+
+# make categorical into dummies, standardize continuous
+# usually necessary/important if want to use linear models
+process: True
