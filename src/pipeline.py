@@ -33,7 +33,8 @@ def data_transformation(config, DATA_FP, forceupdate=False):
         print "Already transformed crash data, skipping"
 
     # There has to be concern data in the config file to try processing it
-    if (config['concern_files'] and not os.path.exists(os.path.join(
+    if ('concern_files' in config.keys()
+        and config['concern_files'] and not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'concerns.json'))) or forceupdate:
         subprocess.check_call([
             'python',
@@ -45,7 +46,7 @@ def data_transformation(config, DATA_FP, forceupdate=False):
             DATA_FP
         ])
     else:
-        if not config['concern_files']:
+        if 'concern_files' not in config.keys() or not config['concern_files']:
             print "No concerns defined in config file"
         elif not forceupdate:
             print "Already transformed concern data, skipping"
@@ -62,8 +63,8 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
         '-d',
         DATA_FP
     ]
-        + (['-s', start_year] if start_year else [])
-        + (['-e', end_year] if end_year else [])
+        + (['-s', str(start_year)] if start_year else [])
+        + (['-e', str(end_year)] if end_year else [])
     )
 
 
@@ -90,7 +91,6 @@ if __name__ == '__main__':
                         help="Give list of steps to run, as comma-separated " +
                         "string.  Has to be among 'transformation'," +
                         "'generation', 'model', 'visualization'")
-
 
     args = parser.parse_args()
     if args.onlysteps:

@@ -17,6 +17,7 @@ def make_config_file(city, folder, crash, concern):
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n".format(folder) +
         "# If given, limit crashes to after start_year and before end_year\n" +
+        "# Recommended to limit to just a few years for now\n" +
         "start_year: \n" +
         "end_year: \n\n\n" +
         "#################################################################\n" +
@@ -29,6 +30,8 @@ def make_config_file(city, folder, crash, concern):
         "      latitude: \n" +
         "      longitude: \n" +
         "      date: \n" +
+        " # Time is only required if date and time are in different columns" +
+        "      time: \n" +
         "    optional:\n" +
         "      summary: \n" +
         "      address: \n\n"
