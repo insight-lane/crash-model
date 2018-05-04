@@ -22,11 +22,11 @@ def read_standardized_fields(filename, fields):
 
     df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
     raw_crashes = df_crashes.to_dict("records")
-
     crashes = {}
 
-    for crash in raw_crashes:
-
+    for i, crash in enumerate(raw_crashes):
+        if i % 10000 == 0:
+            print i
         # skip any crashes that don't have coordinates or date
         if crash[fields["latitude"]] == "" or crash[fields["longitude"]] == "" \
            or crash[fields['date']] == "":
@@ -63,7 +63,6 @@ def read_standardized_fields(filename, fields):
         ])
 
         crashes[formatted_crash["id"]] = formatted_crash
-
     return crashes
 
 
@@ -72,7 +71,10 @@ def read_city_specific_fields(filename, crashes, fields, id_field):
     df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
     dict_crashes = df_crashes.to_dict("records")
 
-    for crash in dict_crashes:
+    for i, crash in enumerate(dict_crashes):
+
+        if i % 10000 == 0:
+            print i
 
         # crash may not have made it through standardized function if it was missing required data
         if crash[id_field] not in crashes.keys():
@@ -80,31 +82,32 @@ def read_city_specific_fields(filename, crashes, fields, id_field):
             continue
 
         # Add summary and address
-        crashes[crash[id_field]]["summary"] = crash[fields["summary"]]
-        if "address" in fields.keys():
+        if "summary" in fields.keys() and fields["summary"]:
+            crashes[crash[id_field]]["summary"] = crash[fields["summary"]]
+        if "address" in fields.keys() and fields["address"]:
             crashes[crash[id_field]]["address"] = crash[fields["address"]]
 
         # setup a vehicles list for each crash
         crashes[crash[id_field]]["vehicles"] = []
 
         # check for car involvement
-        if fields["vehicles"] == "mode_type":
+        if "vehicles" in fields.keys() and fields["vehicles"] == "mode_type":
             # this needs work, but for now any of these mode types translates to a car being involved, quantity unknown
             if crash[fields["vehicles"]] == "mv" or crash[fields["vehicles"]] == "ped" or crash[fields["vehicles"]] == "":
                 crashes[crash[id_field]]["vehicles"].append({ "category": "car" })
 
-        elif fields["vehicles"] == "TOTAL_VEHICLES":
+        elif "vehicles" in fields.keys() and fields["vehicles"] == "TOTAL_VEHICLES":
             if crash[fields["vehicles"]] != 0 and crash[fields["vehicles"]] != "":
                 crashes[crash[id_field]]["vehicles"].append({ "category": "car", "quantity": int(crash[fields["vehicles"]]) })
 
         # check for bike involvement
-        if fields["bikes"] == "mode_type":
+        if "bikes" in fields.keys() and fields["bikes"] == "mode_type":
             # assume bike and car involved, quantities unknown
             if crash[fields["bikes"]] == "bike":
                 crashes[crash[id_field]]["vehicles"].append({ "category": "car" })
                 crashes[crash[id_field]]["vehicles"].append({ "category": "bike" })
 
-        elif fields["bikes"] == "TOTAL_BICYCLES":
+        elif "bikes" in fields.keys() and fields["bikes"] == "TOTAL_BICYCLES":
             if crash[fields["bikes"]] != 0 and crash[fields["bikes"]] != "":
                 crashes[crash[id_field]]["vehicles"].append({ "category": "bike", "quantity": int(crash[fields["bikes"]]) })
 
