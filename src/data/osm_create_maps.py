@@ -113,11 +113,13 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
             speed = 0
 
         # round width
-        width = way_line[1]['width']
-        if not width or ';' in width or '[' in width:
-            width = 0
-        else:
-            width = round(float(width))
+        width = 0
+        if ['width'] in way_line[1].keys():
+            width = way_line[1]['width']
+            if not width or ';' in width or '[' in width:
+                width = 0
+            else:
+                width = round(float(width))
 
         lanes = way_line[1]['lanes']
         if lanes:
