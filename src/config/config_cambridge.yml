@@ -6,6 +6,8 @@ name: cambridge
 start_year: 
 end_year:
 
+##############################################################################
+# Configuration for data transformation
 
 # List of concern type information
 concern_files:
@@ -28,3 +30,13 @@ crashes_files:
       vehicles:
       bikes:
       address: Location
+
+
+# concern column name
+# leave as '' if not adding concerns
+concern: seeclickfix
+
+# week on which to predict crashes (week, year)
+# as is, will end up outputting predictions for all weeks up to this week
+# TODO: Make this more relevant for control
+time_target: [30, 2017]
