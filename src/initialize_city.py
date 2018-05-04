@@ -9,7 +9,51 @@ BASE_DIR = os.path.dirname(
 
 
 def make_config_file(city, folder, crash, concern):
-    pass
+    yml_file = os.path.join(BASE_DIR, 'src/config/config_' + folder + '.yml')
+    f = open(yml_file, 'w')
+    f.write(
+        "# City name\n" +
+        "city: {}\n".format(city) +
+        "# The folder under data where this city's data is stored\n" +
+        "name: {}\n".format(folder) +
+        "# If given, limit crashes to after start_year and before end_year\n" +
+        "start_year: \n" +
+        "end_year: \n\n\n" +
+        "#################################################################\n" +
+        "# Configuration for data transformation\n\n" +
+        "# crash file configurations\n" +
+        "crashes_files:\n" +
+        "  {}:\n".format(crash) +
+        "    required:\n" +
+        "      id: \n" +
+        "      latitude: \n" +
+        "      longitude: \n" +
+        "      date: \n" +
+        "    optional:\n" +
+        "      summary: \n" +
+        "      address: \n\n"
+    )
+
+    if concern:
+        f.write(
+            "# List of concern type information" +
+            "concern_files:\n" +
+            "- name: concern\n" +
+            "filename: {}\n".format(concern) +
+            "latitude: \n" +
+            "longitude: \n" +
+            "time: \n\n\n"
+        )
+    f.write(
+        "# week on which to predict crashes (week, year)\n" +
+        "# will output predictions for all weeks up to this week\n" +
+        "# Choose a week towards the end of your crash data set\n" +
+        "# in format [month, year]\n" +
+        "time_target: [30, 2017]\n"
+    )
+    f.close()
+    print yml_file
+
 
 if __name__ == '__main__':
 
