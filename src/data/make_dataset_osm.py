@@ -34,9 +34,9 @@ if __name__ == '__main__':
     start_year = None
     end_year = None
     if args.startyear:
-        start_year = args.startyear
+        start_year = str(args.startyear)
     if args.endyear:
-        end_year = args.endyear
+        end_year = str(args.endyear)
 
     with open(config_file) as f:
         config = yaml.safe_load(f)

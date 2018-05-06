@@ -105,10 +105,16 @@ if __name__ == '__main__':
     if not args.onlysteps or 'transformation' in args.onlysteps:
         data_transformation(config, DATA_FP, forceupdate=args.forceupdate)
 
+    start_year = config['start_year']
+    if start_year:
+        start_year = '01/01/{} 00:00:00Z'.format(start_year)
+    end_year = config['end_year']
+    if end_year:
+        end_year = '01/01/{} 00:00:00Z'.format(end_year)
     if not args.onlysteps or 'generation' in args.onlysteps:
         data_generation(args.config_file, DATA_FP,
-                        start_year=config['start_year'],
-                        end_year=config['end_year'],
+                        start_year=start_year,
+                        end_year=end_year,
                         forceupdate=args.forceupdate)
 
     if not args.onlysteps or 'model' in args.onlysteps:
