@@ -263,7 +263,7 @@ if __name__ == '__main__':
         print 'Generating map from open street map...'
         simple_get_roads(city)
 
-    if not os.path.exists(os.path.join(MAP_FP, 'osm_waysgeojson')) \
+    if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
        or args.forceupdate:
         print "Reprojecting and writing to {}...".format('osm_elements.geojson')
 
