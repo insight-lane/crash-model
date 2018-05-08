@@ -8,14 +8,14 @@
         "description": "Defines the structure of a concern",
         "type": "object",
         "properties": {
+            "id": {
+                "description": "Unique identifier of concern",
+                "type": "number"
+            },
             "source": {
                 "description": "Source of concern",
                 "type": "string",
                 "enum": ["seeclickfix", "visionzero"]
-            },
-            "id": {
-                "description": "Unique identifier of concern",
-                "type": "number"
             },
             "dateCreated": {
                 "description": "Date concern was created, ISO8601 formatted",
@@ -65,6 +65,6 @@
                 "type": "string"
             }
         },
-        "required": ["id", "source", "dateCreated", "status", "category", "location"]
+        "required": ["id", "source", "dateCreated", "status", "category", "location", "summary"]
     }
 }

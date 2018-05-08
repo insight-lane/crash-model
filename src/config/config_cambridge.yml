@@ -1,0 +1,42 @@
+# City name
+city: Cambridge, Massachusetts, USA
+# The folder under data where this city's data is stored
+name: cambridge
+# If given, limit crashes to after start_year and before end_year
+start_year: 
+end_year:
+
+##############################################################################
+# Configuration for data transformation
+
+# List of concern type information
+concern_files:
+  - name: concern
+    filename: Commonwealth_Connect_Service_Requests.csv
+    latitude: lat
+    longitude: lng
+    time: ticket_created_date_time
+
+# crash file configurations
+crashes_files:
+  crash_data_through_2017.csv:
+    required:
+      id: ID
+      latitude: Y
+      longitude: X
+      date: Date Time
+    optional:
+      summary: V1 First Event
+      vehicles:
+      bikes:
+      address: Location
+
+
+# concern column name
+# leave as '' if not adding concerns
+concern: seeclickfix
+
+# week on which to predict crashes (week, year)
+# as is, will end up outputting predictions for all weeks up to this week
+# TODO: Make this more relevant for control
+time_target: [30, 2017]
