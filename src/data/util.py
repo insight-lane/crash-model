@@ -271,7 +271,8 @@ def csv_to_projected_records(filename, x='X', y='Y'):
     return records
 
 
-def read_records(filename, record_type, startyear=None, endyear=None):
+def read_records(filename, record_type,
+                 startyear=None, endyear=None):
     """
     Reads appropriately formatted json file,
     pulls out currently relevant features,
@@ -305,8 +306,11 @@ def read_records(filename, record_type, startyear=None, endyear=None):
     # Keep track of the earliest and latest crash date used
     start = min([x.timestamp for x in records])
     end = max([x.timestamp for x in records])
-    print "Read in data from {} crashes from {} to {}".format(
-        len(records), start.date(), end.date())
+    if start and end:
+        print "Read in data from {} crashes from {} to {}".format(
+            len(records), start.date(), end.date())
+    print "Read in data from {} records".format(len(records))
+
     return records
 
 
@@ -370,24 +374,38 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     Returns:
         The segments and spatial index
     """
-    # Read in segments
+
     inter = []
     non_inter = []
 
     if get_inter:
-        inter = read_shp(dirname + '/inters_segments.shp')
+        inter = fiona.open(dirname + '/inters_segments.geojson')
     if get_non_inter:
-        non_inter = read_shp(dirname + '/non_inters_segments.shp')
+        non_inter = fiona.open(
+            dirname + '/non_inters_segments.geojson')
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 
-    # Combine inter + non_inter
-    combined_seg = inter + non_inter
+    return index_segments(list(inter) + list(non_inter))
+
+
+def index_segments(segments):
+    """
+    Reads a list of segments in geojson format, and makes
+    a spatial index for lookup
+    Args:
+        list of segments
+    """
+
+    # Read in segments and turn them into shape, propery tuples
+    combined_seg = [(shape(x['geometry']), x['properties']) for x in
+                    segments]
 
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
         segments_index.insert(idx, element[0].bounds)
+
     return combined_seg, segments_index
 
 
