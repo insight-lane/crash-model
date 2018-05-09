@@ -182,7 +182,7 @@ def backup_files():
     )
 
 
-def add_point_based_features(filename, features):
+def add_point_based_features(inters, non_inters, filename):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
@@ -194,12 +194,12 @@ def add_point_based_features(filename, features):
 
     features = util.read_records(filename, 'Record')
 
-    seg, segments_index = util.read_segments(
-        dirname=MAP_FP
+    seg, segments_index = util.index_segments(
+        inters + non_inters
     )
-    import ipdb; ipdb.set_trace()
 
     util.find_nearest(features, seg, segments_index, 20, type_record=True)
+
 
     matches = {}
     for feature in features:
@@ -208,6 +208,7 @@ def add_point_based_features(filename, features):
         if near:
             matches[near] = feat_type
 
+    import ipdb; ipdb.set_trace()
     new_inter_data = {}
     for key, segments in inter_data.iteritems():
         updated_segments = []
@@ -339,11 +340,9 @@ if __name__ == '__main__':
     non_int_w_ids, union_inter, union_inter_no_props \
         = create_segments_from_json(elements)
 
-    features = ['signals', 'crosswalk']
-
-
-    add_point_based_features(os.path.join(MAP_FP,
-                                          'features.json'), features)
+    add_point_based_features(non_int_w_ids,
+                             union_inter,
+                             os.path.join(MAP_FP, 'features.json'))
     write_segments(non_int_w_ids, union_inter, union_inter_no_props)
 
 
