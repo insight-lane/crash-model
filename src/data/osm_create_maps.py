@@ -7,7 +7,7 @@ import os
 import re
 import csv
 import geojson
-
+import json
 
 MAP_FP = None
 
@@ -58,7 +58,7 @@ def simple_get_roads(city):
     shutil.rmtree(tempdir)
 
 
-def reproject_and_write(ways_file, nodes_file, all_nodes_file,
+def reproject_and_write(ways_file, nodes_file,
                         result_file, DOC_FP):
     """
     Takes several shape files in 4326 projection, created from osmnx,
@@ -75,10 +75,8 @@ def reproject_and_write(ways_file, nodes_file, all_nodes_file,
     reprojected_ways = clean_and_reproject_ways(ways_file, DOC_FP)
     f = fiona.open(nodes_file)
     reprojected_nodes = util.reproject_records(f)
-    f = fiona.open(all_nodes_file)
-    reprojected_all_nodes = util.reproject_records(f)
     write_geojson(reprojected_ways, reprojected_nodes,
-                  reprojected_all_nodes, result_file)
+                  result_file)
 
 
 def write_highway_keys(DOC_FP, highway_keys):
@@ -172,9 +170,10 @@ def clean_and_reproject_ways(orig_file, DOC_FP):
     return reprojected_way_lines
 
 
-def write_geojson(way_results, node_results, all_node_results, outfp):
+def write_geojson(way_results, node_results, outfp):
     """
-    Given a list of 
+    Given a list of ways, intersection nodes, and all nodes, write them
+    out to a geojson file.
     """
     feats = []
 
@@ -206,38 +205,49 @@ def write_geojson(way_results, node_results, all_node_results, outfp):
             'properties': node['properties']
         }
 
-    non_int_nodes = [x for x in all_node_results
-                     if x['properties']['osmid'] not in node_dict.keys()]
-
-    # Go through the rest of the nodes, and add any of them that have
-    # (hardcoded) open street map features that we care about
-    # For the moment, all_nodes only contains street nodes, so we'll
-    # only look at crosswalks
-    for node in non_int_nodes:
-        add_node = False
-        if node['properties']['highway'] == 'crossing':
-            node['properties']['crossing'] = 1
-            add_node = True
-        elif node['properties']['highway'] == 'traffic_signals':
-            node['properties']['traffic_signals'] = 1
-            add_node = True
-        if add_node:
-            node_dict[node['properties']['osmid']] = {
-                'type': 'Feature',
-                'geometry': {
-                    'type': node['geometry']['type'],
-                    'coordinates': node['geometry']['coordinates']
-                },
-                'properties': node['properties']
-            }
-
-    # Add node features to the way features
+    # Add nodes to ways
     feats = feats + node_dict.values()
     with open(outfp, 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
             'features': feats
         }, outfile)
+
+
+def write_features(all_nodes_file):
+    """
+    Adds relevant features (at this time, only point-based)
+    from open street maps
+    """
+
+    all_node_results = fiona.open(all_nodes_file)
+
+    features = []
+    # Go through the rest of the nodes, and add any of them that have
+    # (hardcoded) open street map features that we care about
+    # For the moment, all_nodes only contains street nodes, so we'll
+    # only look at signals and crosswalks
+    for node in all_node_results:
+        if node['properties']['highway'] == 'crossing':
+            features.append({
+                'id': node['properties']['osmid'],
+                'feature': 'crosswalk',
+                'location': {
+                    'latitude': node['geometry']['coordinates'][1],
+                    'longitude': node['geometry']['coordinates'][0]
+                }})
+        elif node['properties']['highway'] == 'traffic_signals':
+            features.append({
+                'id': node['properties']['osmid'],
+                'feature': 'signal',
+                'location': {
+                    'latitude': node['geometry']['coordinates'][1],
+                    'longitude': node['geometry']['coordinates'][0]
+                }})
+
+    with open(os.path.join(MAP_FP, 'features.json'), "w") as f:
+        json.dump(features, f)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -270,8 +280,7 @@ if __name__ == '__main__':
         reproject_and_write(
             os.path.join(MAP_FP, 'osm_ways.shp'),
             os.path.join(MAP_FP, 'osm_nodes.shp'),
-            os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'),
             os.path.join(MAP_FP, 'osm_ways.geojson'),
             DOC_FP
         )
-
+    write_features(os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'))
