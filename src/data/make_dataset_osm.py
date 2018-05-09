@@ -96,11 +96,7 @@ if __name__ == '__main__':
         '-m',
         'data.create_segments',
         '-d',
-        DATA_FP,
-        '-r',
-        os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp'),
-        '-i',
-        os.path.join(DATA_FP, 'processed/maps/osm_nodes.shp')
+        DATA_FP
     ])
 
     if extra_map:

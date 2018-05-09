@@ -75,7 +75,6 @@ def find_non_ints(roads, int_buffers):
     # Split intersection lines (within buffer) and non-intersection lines
     # (outside buffer)
     print "splitting intersection/non-intersection segments"
-#    inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
     inter_segments = {}
 
     non_int_lines = []
@@ -183,33 +182,31 @@ def backup_files():
     )
 
 
-def add_signals(inter_data, filename):
+def add_point_based_features(filename, features):
     """
-    Add traffic signal feature to inter_data, write it back out
-    to inter_data.json
+    Add any point-based set of features to existing segment data.
+    If it isn't already attached to the segments
+    Point-based features need to be in 3857 projection
     Args:
         inter_data
         filename - shape file for the osm signals data
     """
-    signals = fiona.open(filename)
-    signals = util.reproject_records(signals)
-    records = [{
-        'point': Point(x['geometry']['coordinates']),
-        'properties': x['properties']
-    } for x in signals]
+
+    features = util.read_records(filename, 'Record')
 
     seg, segments_index = util.read_segments(
-        dirname=MAP_FP,
-        get_non_inter=False
+        dirname=MAP_FP
     )
+    import ipdb; ipdb.set_trace()
 
-    util.find_nearest(records, seg, segments_index, 20)
+    util.find_nearest(features, seg, segments_index, 20, type_record=True)
 
     matches = {}
-    for record in records:
-        near = record['properties']['near_id']
+    for feature in features:
+        near = feature.near_id
+        feat_type = feature.properties['feature']
         if near:
-            matches[near] = 1
+            matches[near] = feat_type
 
     new_inter_data = {}
     for key, segments in inter_data.iteritems():
@@ -272,6 +269,7 @@ def create_segments_from_json(roads_shp_path):
         geo = unary_union([x[0] for x in values])
         # For space, only store items for which we have values
         prop = {}
+
         for value in values:
             prop[value[1]['orig_id']] = {k: v for k, v in value[1].items()}
 
@@ -284,6 +282,9 @@ def create_segments_from_json(roads_shp_path):
 
 
     print "extracted {} intersection segments".format(len(union_inter))
+    return non_int_w_ids, union_inter, union_inter_no_props
+
+def write_segments(non_int_w_ids, union_inter, union_inter_no_props):
 
     # Store the combined segments with all properties
     segments = non_int_w_ids + union_inter
@@ -295,13 +296,13 @@ def create_segments_from_json(roads_shp_path):
 
     # Store the individual intersections without properties, since QGIS appears
     # to have trouble with dicts of dicts, and viewing maps can be helpful
-    with open(os.path.join(MAP_FP, 'inter_segments.geojson'), 'w') as outfile:
+    with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
             'features': union_inter_no_props
         }, outfile)
 
-    with open(os.path.join(MAP_FP, 'non_inter_segments.geojson'), 'w') as outfile:
+    with open(os.path.join(MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
             'features': non_int_w_ids
@@ -318,33 +319,33 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--newmap", type=str,
                         help="If given, write output to new directory" +
                         "within the maps directory")
-    parser.add_argument("-i", "--intersections", type=str,
-                        help="Can give osm nodes instead of intersections")
 
     args = parser.parse_args()
+    DATA_FP = os.path.join(args.datadir, 'processed')
+    MAP_FP = os.path.join(args.datadir, 'processed/maps')
 
-    # Can override the hardcoded data directory
-    if args.datadir:
-        DATA_FP = os.path.join(args.datadir, 'processed')
-        MAP_FP = os.path.join(args.datadir, 'processed/maps')
     if args.newmap:
         DATA_FP = os.path.join(MAP_FP, args.newmap)
         MAP_FP = DATA_FP
 
-    if args.intersections:
-        strip_endpoints(args.intersections)
-
-    print "Creating segments..."
-    print "Data directory: " + DATA_FP
-    print "Map directory: " + MAP_FP
+    print "Creating segments.........................."
 
     roads_shp_path = os.path.join(
-        MAP_FP, 'ma_cob_spatially_joined_streets.shp')
+        MAP_FP, 'osm_elements.geojson')
     if args.altroad:
         roads_shp_path = args.altroad
 
-    results = create_segments_from_json(
-        os.path.join(MAP_FP, 'osm_elements.geojson'))
+    elements = os.path.join(MAP_FP, 'osm_elements.geojson')
+    non_int_w_ids, union_inter, union_inter_no_props \
+        = create_segments_from_json(elements)
+
+    features = ['signals', 'crosswalk']
+
+
+    add_point_based_features(os.path.join(MAP_FP,
+                                          'features.json'), features)
+    write_segments(non_int_w_ids, union_inter, union_inter_no_props)
+
 
 #    inter_data = create_segments(roads_shp_path)
 
