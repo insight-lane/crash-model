@@ -2,20 +2,24 @@ import argparse
 import os
 import shutil
 import sys
+from data.util import geocode_address
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.abspath(__file__)))
 
 
-def make_config_file(city, folder, crash, concern):
-    yml_file = os.path.join(BASE_DIR, 'src/config/config_' + folder + '.yml')
+def make_config_file(yml_file, city, folder, crash, concern):
     f = open(yml_file, 'w')
+
+    address = geocode_address(city)
     f.write(
         "# City name\n" +
         "city: {}\n".format(city) +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n".format(folder) +
+        "city latitude: {}\n".format(address[1]) +
+        "city longitude: {}\n".format(address[2]) +
         "# If given, limit crashes to after start_year and before end_year\n" +
         "# Recommended to limit to just a few years for now\n" +
         "start_year: \n" +
@@ -30,7 +34,7 @@ def make_config_file(city, folder, crash, concern):
         "      latitude: \n" +
         "      longitude: \n" +
         "      date: \n" +
-        " # Time is only required if date and time are in different columns" +
+        "# Time is only required if date and time are in different columns\n" +
         "      time: \n" +
         "    optional:\n" +
         "      summary: \n" +
@@ -55,7 +59,7 @@ def make_config_file(city, folder, crash, concern):
         "time_target: [30, 2017]\n"
     )
     f.close()
-    print yml_file
+    print "Wrote new configuration file in {}".format(yml_file)
 
 
 if __name__ == '__main__':
@@ -83,13 +87,17 @@ if __name__ == '__main__':
 
     DATA_FP = os.path.join(BASE_DIR, 'data', args.folder)
 
+    crash = args.crash_file.split('/')[-1]
+    crash_dir = os.path.join(DATA_FP, 'raw', 'crashes')
+    concern = None
+    if args.concern_file:
+        concern = args.concern_file.split('/')[-1]
+
     # Check to see if the directory exists
     # if it does, it's already been initialized, so do nothing
     if not os.path.exists(DATA_FP):
         os.makedirs(DATA_FP)
         os.makedirs(os.path.join(DATA_FP, 'raw'))
-        crash = args.crash_file.split('/')[-1]
-        crash_dir = os.path.join(DATA_FP, 'raw', 'crashes')
         os.makedirs(crash_dir)
         concern_dir = os.path.join(DATA_FP, 'raw', 'concerns')
         os.makedirs(concern_dir)
@@ -97,13 +105,15 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(DATA_FP, 'standardized'))
         shutil.copyfile(args.crash_file, os.path.join(crash_dir, crash))
 
-        concern = None
         if args.concern_file:
-            concern = args.concern_file.split('/')[-1]
             shutil.copyfile(args.concern_file, os.path.join(
                 concern_dir, concern))
 
-        make_config_file(args.city, args.folder, crash, concern)
-
     else:
         print args.folder + " already initialized, skipping"
+
+    yml_file = os.path.join(
+        BASE_DIR, 'src/config/config_' + args.folder + '.yml')
+    if not os.path.exists(yml_file):
+        make_config_file(yml_file, args.city, args.folder, crash, concern)
+
