@@ -280,7 +280,7 @@ if __name__ == '__main__':
         reproject_and_write(
             os.path.join(MAP_FP, 'osm_ways.shp'),
             os.path.join(MAP_FP, 'osm_nodes.shp'),
-            os.path.join(MAP_FP, 'osm_ways.geojson'),
+            os.path.join(MAP_FP, 'osm_elements.geojson'),
             DOC_FP
         )
     write_features(os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'))

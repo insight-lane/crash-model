@@ -182,7 +182,7 @@ def backup_files():
     )
 
 
-def add_point_based_features(inters, non_inters, filename):
+def add_point_based_features(non_inters, inters, filename):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
@@ -208,7 +208,7 @@ def add_point_based_features(inters, non_inters, filename):
         if near:
             matches[near] = feat_type
 
-    import ipdb; ipdb.set_trace()
+#    import ipdb; ipdb.set_trace()
     new_inter_data = {}
     for key, segments in inter_data.iteritems():
         updated_segments = []
@@ -258,6 +258,7 @@ def create_segments_from_json(roads_shp_path):
         value['properties']['id'] = '00' + str(i)
         value['properties']['inter'] = 0
         non_int_w_ids.append(value)
+
     print "extracted {} non-intersection segments".format(len(non_int_w_ids))
 
     # Planarize intersection segments
@@ -281,7 +282,7 @@ def create_segments_from_json(roads_shp_path):
                                      'geometry': geo,
                                      'properties': {'id': idx}})
 
-
+#    import ipdb; ipdb.set_trace()
     print "extracted {} intersection segments".format(len(union_inter))
     return non_int_w_ids, union_inter, union_inter_no_props
 
