@@ -75,29 +75,25 @@ def find_non_ints(roads, int_buffers):
     # Split intersection lines (within buffer) and non-intersection lines
     # (outside buffer)
     print "splitting intersection/non-intersection segments"
-    inter_segments = {}
+    inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
 
     non_int_lines = []
 
-    for i, road in enumerate(roads):
+    for road in roads:
         road_int_buffers = []
         # For each intersection whose buffer intersects road
         road_line = LineString(road['geometry']['coordinates'])
         for idx in int_buffers_index.intersection(road_line.bounds):
+
             int_buffer = int_buffers[idx]
             if int_buffer.intersects(road_line):
+                # Add intersecting road segment line
+                inter_segments['lines'][idx].append(
+                    int_buffer.intersection(road_line))
                 # Add intersecting road segment data
                 road['properties']['inter'] = 1
+                inter_segments['data'][idx].append(road['properties'])
 
-                if idx not in inter_segments.keys():
-                    inter_segments[idx] = []
-
-                inter_segments[idx].append((int_buffer.intersection(road_line),
-                                           road['properties']))
-                # Add intersecting road segment line
-#                inter_segments['lines'][idx].append(
-#                    int_buffer.intersection(road_line))
-#                inter_segments['data'][idx].append(road['properties'])
                 road_int_buffers.append(int_buffer)
 
         # If intersection buffers intersect roads
@@ -119,6 +115,7 @@ def find_non_ints(roads, int_buffers):
                 for l in diff:
                     for coord in l.coords:
                         coords.append(coord)
+
                 non_int_lines.append({
                     'type': 'Feature',
                     'geometry': {
@@ -182,7 +179,7 @@ def backup_files():
     )
 
 
-def add_point_based_features(non_inters, inters, filename):
+def add_point_based_features(non_inters, inters, inter_data, filename):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
@@ -199,6 +196,7 @@ def add_point_based_features(non_inters, inters, filename):
     )
 
     util.find_nearest(features, seg, segments_index, 20, type_record=True)
+    import ipdb; ipdb.set_trace()
 
 
     matches = {}
@@ -264,32 +262,37 @@ def create_segments_from_json(roads_shp_path):
     # Planarize intersection segments
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
-    union_inter_no_props = []
+    for idx, lines in inter_segments['lines'].items():
+        coords = []
+        shape = unary_union(lines)
 
-    for idx, values in inter_segments.items():
+        for line in shape:
+            for coord in line.coords:
+                coords.append(coord)
 
-        geo = unary_union([x[0] for x in values])
-        # For space, only store items for which we have values
-        prop = {}
+        union_inter.append({
+            'type': 'Feature',
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': coords,
+            },
+            # Properties will consist of an id, and the data elements, for now
+            'properties': {
+                'id': idx,
+                'data': inter_segments['data'][idx]
+            }
+        })
 
-        for value in values:
-            prop[value[1]['orig_id']] = {k: v for k, v in value[1].items()}
+    return non_int_w_ids, union_inter, inter_segments['data']
 
-        union_inter.append({'type': 'Feature',
-                            'geometry': geo,
-                            'properties': prop})
-        union_inter_no_props.append({'type': 'Feature',
-                                     'geometry': geo,
-                                     'properties': {'id': idx}})
 
-#    import ipdb; ipdb.set_trace()
-    print "extracted {} intersection segments".format(len(union_inter))
-    return non_int_w_ids, union_inter, union_inter_no_props
-
-def write_segments(non_int_w_ids, union_inter, union_inter_no_props):
+def write_segments(non_int_w_ids, union_inter, inter_data):
 
     # Store the combined segments with all properties
     segments = non_int_w_ids + union_inter
+
+    import ipdb; ipdb.set_trace()
+
     with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
@@ -301,7 +304,7 @@ def write_segments(non_int_w_ids, union_inter, union_inter_no_props):
     with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
-            'features': union_inter_no_props
+            'features': union_inter
         }, outfile)
 
     with open(os.path.join(MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
@@ -309,6 +312,10 @@ def write_segments(non_int_w_ids, union_inter, union_inter_no_props):
             'type': 'FeatureCollection',
             'features': non_int_w_ids
         }, outfile)
+
+    with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
+        json.dump(inter_data, f)
+
 
 
 if __name__ == '__main__':
@@ -338,13 +345,14 @@ if __name__ == '__main__':
         roads_shp_path = args.altroad
 
     elements = os.path.join(MAP_FP, 'osm_elements.geojson')
-    non_int_w_ids, union_inter, union_inter_no_props \
+    non_int_w_ids, inter_w_ids, inter_data \
         = create_segments_from_json(elements)
 
-    add_point_based_features(non_int_w_ids,
-                             union_inter,
-                             os.path.join(MAP_FP, 'features.json'))
-    write_segments(non_int_w_ids, union_inter, union_inter_no_props)
+#    add_point_based_features(non_int_w_ids,
+#                             inter_w_ids,
+#                             inter_data,
+#                             os.path.join(MAP_FP, 'features.json'))
+    write_segments(non_int_w_ids, inter_w_ids, inter_data)
 
 
 #    inter_data = create_segments(roads_shp_path)
