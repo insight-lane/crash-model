@@ -1,14 +1,16 @@
 import os
 from .. import analysis_util
 from .. import util
+import json
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_summary_crash_rate():
 
-    crash_data, crashes = util.group_json_by_location(
-        os.path.join(TEST_FP, 'data', 'crash_test_dummy.json'))
+    items = json.load(open(
+        os.path.join(TEST_FP, 'data', 'crash_test_dummy.json')))
+    crash_data, crashes = util.group_json_by_location(items)
     total_count, total_loc, results = analysis_util.summary_crash_rate(
         crashes)
     assert total_count == 8
@@ -24,10 +26,12 @@ def test_summary_crash_rate():
 
 def test_concerns():
 
-    crash_data, crashes = util.group_json_by_location(
-        os.path.join(TEST_FP, 'data', 'crash_test_dummy.json'))
-    concern_data, concerns = util.group_json_by_location(
-        os.path.join(TEST_FP, 'data', 'concern_test_dummy.json'))
+    items = json.load(open(
+        os.path.join(TEST_FP, 'data', 'crash_test_dummy.json')))
+    crash_data, crashes = util.group_json_by_location(items)
+    items = json.load(open(
+        os.path.join(TEST_FP, 'data', 'concern_test_dummy.json')))
+    concern_data, concerns = util.group_json_by_location(items)
 
     # Summary concerns
     total_count, total_loc, inter_total, inter_loc, non_inter_total, \

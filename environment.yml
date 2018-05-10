@@ -143,6 +143,7 @@ dependencies:
 - wheel
 - widgetsnbextension
 - wrapt
+- pyyaml
 - zlib
 - pip:
   - backports-abc

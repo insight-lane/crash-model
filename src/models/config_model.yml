@@ -1,0 +1,48 @@
+# This is a configuration file for running the model training and prediction
+
+# Data directory to look in and output results to
+# This is optional, and if not given, defaults to Boston data
+datadir: ../data/boston
+
+# name of the dataset from output of make_dataset scripts
+# should be in the processed subfolder of datadir
+seg_data: vz_predict_dataset.csv.gz
+
+# concern column name
+# leave as '' if not adding concerns
+concern: 'visionzero'
+
+# atr filepath (should be in processed subfolder)
+# leave as '' if not adding atrs
+atr: 'atrs_predicted.csv'
+# atr column names as list
+atr_cols:
+- speed_coalesced
+- volume_coalesced
+
+# tmc filepath (should be in processed subfolder)
+# leave as '' if not adding tmcs
+tmc: 'tmc_summary.json'
+# tmc column names as list
+tmc_cols:
+- Conflict
+
+# week on which to predict crashes (week, year)
+# as is, will end up outputting predictions for all weeks up to this week
+# TODO: Make this more relevant for control
+time_target: [15, 2017]
+
+# continuous features
+f_cont:
+- AADT
+
+# categorical features
+f_cat:
+- 'SPEEDLIMIT'
+- 'Struct_Cnd'
+- 'Surface_Tp'
+- 'F_F_Class'
+
+# make categorical into dummies, standardize continuous
+# usually necessary/important if want to use linear models
+process: True

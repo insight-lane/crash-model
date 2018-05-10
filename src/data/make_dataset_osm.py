@@ -10,36 +10,6 @@ DATA_FP = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/data/'
 
-# For this pipeline to run
-# crash data needs to be under raw in the data directory given
-
-
-def add_concern_args(config):
-    concern_args = []
-
-    if 'concern_files' not in config.keys():
-        return None
-
-    for concern_file in config['concern_files']:
-        if 'name' not in concern_file.keys():
-            sys.exit('Concern must have a name')
-        concern_arg = concern_file['name'] + ','
-        if 'filename' not in concern_file.keys():
-            sys.exit('Concern file must be given')
-        concern_arg += concern_file['filename'] + ','
-        if 'latitude' in concern_file.keys() and concern_file['latitude']:
-            concern_arg += concern_file['latitude']
-        concern_arg += ','
-        if 'longitude' in concern_file.keys() and concern_file['longitude']:
-            concern_arg += concern_file['longitude']
-        concern_arg += ','
-        if 'time' in concern_file.keys() and concern_file['time']:
-            concern_arg += concern_file['time']
-        concern_args.append(concern_arg)
-
-    return concern_args
-
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -91,24 +61,6 @@ if __name__ == '__main__':
         extra_map = config['extra_map']
         additional_features = config['additional_features'].split()
         extra_map3857 = config['extra_map3857']
-
-    # Latitude and longitude and time columns might be different
-    # for different cities
-    longitude_crash = None
-    latitude_crash = None
-    date_col_crash = None
-    crash_files = None
-    if 'crashfiles' in config.keys() and config['crashfiles']:
-        crash_files = config['crashfiles']
-    if 'longitude_crash' in config.keys() and config['longitude_crash']:
-        longitude_crash = config['longitude_crash']
-    if 'latitude_crash' in config.keys() and config['latitude_crash']:
-        latitude_crash = config['latitude_crash']
-    if 'date_col_crash' in config.keys() and config['date_col_crash']:
-        date_col_crash = config['date_col_crash']
-
-    # Handle any concern data here
-    concern_args = add_concern_args(config)
 
     # Whether to regenerate maps from open street map
     if 'recreate' in config.keys() and config['recreate']:
@@ -190,13 +142,8 @@ if __name__ == '__main__':
         '-d',
         DATA_FP
     ]
-        + (['-crash'] + (crash_files if crash_files else []))
-        + (['-x_crash', longitude_crash] if longitude_crash else [])
-        + (['-y_crash', latitude_crash] if latitude_crash else [])
-        + (['-t_crash', date_col_crash] if date_col_crash else [])
         + (['-start', start_year] if start_year else [])
         + (['-end', end_year] if end_year else [])
-        + (['--concern'] + concern_args if concern_args else [])
     )
 
     subprocess.check_call([
@@ -226,6 +173,4 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-features'
-    ] + features
-        + (['-t_crash', date_col_crash] if date_col_crash else [])
-        + (['--concern'] + concern_args if concern_args else []))
+    ] + features)

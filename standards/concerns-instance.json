@@ -1,0 +1,38 @@
+[
+    {
+        "id": 14808,
+        "source": "visionzero",
+        "dateCreated": "2016-01-19T14:48:45.000Z",
+        "status": "Unassigned",
+        "category": "of something that is not listed here",
+        "location": {
+            "latitude": 42.354167552594284,
+            "longitude": -71.05414378860903
+        },
+        "summary": "This intersection is dangerous. Cars don't follow the lane markings (ie go straight while in turn lane) so it's nearly impossible to safely position yourself on a bike. In a car, people are trying to move over/it's unclear where people are going."
+    },
+    {
+        "id": 14809,
+        "source": "visionzero",
+        "dateCreated": "2016-01-19T14:57:03.000Z",
+        "status": "Unassigned",
+        "category": "people don't yield while going straight",
+        "location": {
+            "latitude": 42.33938397670106,
+            "longitude": -71.0994798889095
+        },
+        "summary": "It's terrifying to walk over here. It seems like it's impossible to get the cars to stop stop, even at the crosswalks."
+    },
+    {
+        "id": 14810,
+        "source": "visionzero",
+        "dateCreated": "2016-01-19T15:36:25.000Z",
+        "status": "Unassigned",
+        "category": "it’s hard to see / low visibility",
+        "location": {
+            "latitude": 42.349364649630935,
+            "longitude": -71.06656509857143
+        },
+        "summary": "cars coming around the corner of this wide one street are speeding and not visible for persons on the crosswalk"
+    }
+]

@@ -1,0 +1,70 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "title": "Concerns",
+    "description": "Defines the structure of a set of concerns",
+    "type": "array",
+    "items": {
+        "title": "Concern",
+        "description": "Defines the structure of a concern",
+        "type": "object",
+        "properties": {
+            "id": {
+                "description": "Unique identifier of concern",
+                "type": "number"
+            },
+            "source": {
+                "description": "Source of concern",
+                "type": "string",
+                "enum": ["seeclickfix", "visionzero"]
+            },
+            "dateCreated": {
+                "description": "Date concern was created, ISO8601 formatted",
+                "type": "string",
+                "format": "date-time"
+            },
+            "dateResolved": {
+                "description": "Date concern was resolved, ISO8601 formatted",
+                "format": "date-time"
+            },
+            "status": {
+                "description": "Status of concern",
+                "type": "string"
+            },
+            "category": {
+                "description": "Primary category of concern",
+                "type": "string"
+            },
+            "subCategories": {
+                "description": "Subcategories of concern",
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "uniqueItems": true
+            },
+            "location": {
+                "description": "Coordinates of concern, WGS84 formatted",
+                "type": "object",
+                "properties": {
+                    "latitude": {
+                        "description": "Latitude of concern",
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "description": "Longitude of concern",
+                        "type": "number"
+                    }
+                }
+            },
+            "address": {
+                "description": "Address of concern",
+                "type": "string"
+            },
+            "summary": {
+                "description": "Summary of concern",
+                "type": "string"
+            }
+        },
+        "required": ["id", "source", "dateCreated", "status", "category", "location", "summary"]
+    }
+}
