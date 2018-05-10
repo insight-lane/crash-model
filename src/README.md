@@ -37,10 +37,21 @@ These features include
 
 We also can map city-specific maps (and features associated with their roads) to the base open street map.
 
-## Running data generation
+## Running the pipeline: data generation through visualization
 
-Although the processed data exists on data.world, you may wish to generate the data from scratch, or you may be interested in generating data for a new city.  To do that, the easiest way is to use or modify a configuration file in boston-crash-modeling/src/data.
+Although the processed data exists on data.world, you may wish to generate the data from scratch, or you may be interested in generating data for a new city.  This section walks you through how to generate and visualize data for a new city:
 
+- 1) If you want to visualize the data, you need to create a mapbox account (https://www.mapbox.com/)
+- 2) Automatically generate a config file for your city.  In the src directory, run `python initialize_city.py --city <city name> -f <folder name> --crash <crash file> --concern <concern file`.  City name is the full name of the city, e.g. "Cambridge, Massachusetts, USA".  Folder name is what you'd like the city's data directory to  be named, e.g. "cambridge".  The crash file is a csv file of crashes that includes (at minimum) columns for latitude, longitude, and date of crashes.  The concern file is a csv of concerns that includes (at minimum) a latitude, longitude and date of a concern file.
+- 3) Manually edit the configuration file found in e.g. src/config/config_cambridge:
+-- For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well.
+-- If you have a csv concern file, enter the column headers for latitude, longitude, and date.
+-- Modify time_target to be the last month and year of your crash data
+
+- 4) Run the pipeline: `python pipeline.py -c <config file>`
+
+
+## Temporary; obsolete details
 The configuration files are yml files that include all the arguments you'll need to run all of the data generation steps.  In src/data/config.yml you can find an example.
 
 city (required), e.g. 'Boston, Massachusetts, USA'

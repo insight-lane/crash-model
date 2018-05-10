@@ -18,8 +18,8 @@ def make_config_file(yml_file, city, folder, crash, concern):
         "city: {}\n".format(city) +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n".format(folder) +
-        "city latitude: {}\n".format(address[1]) +
-        "city longitude: {}\n".format(address[2]) +
+        "city_latitude: {}\n".format(address[1]) +
+        "city_longitude: {}\n".format(address[2]) +
         "# If given, limit crashes to after start_year and before end_year\n" +
         "# Recommended to limit to just a few years for now\n" +
         "start_year: \n" +
@@ -34,7 +34,8 @@ def make_config_file(yml_file, city, folder, crash, concern):
         "      latitude: \n" +
         "      longitude: \n" +
         "      date: \n" +
-        "# Time is only required if date and time are in different columns\n" +
+        "      # Time is only required if date and time" +
+        " are in different columns\n" +
         "      time: \n" +
         "    optional:\n" +
         "      summary: \n" +
