@@ -72,10 +72,12 @@ def test_concerns():
 
 def test_concerns_by_type():
 
-    crash_data, crashes = util.group_json_by_location(
-        os.path.join(TEST_FP, 'data', 'crash_test_dummy.json'))
-    concern_data, concerns = util.group_json_by_location(
-        os.path.join(TEST_FP, 'data', 'concern_test_dummy.json'))
+    items = json.load(open(
+        os.path.join(TEST_FP, 'data', 'crash_test_dummy.json')))
+    crash_data, crashes = util.group_json_by_location(items)
+    items = json.load(open(
+        os.path.join(TEST_FP, 'data', 'concern_test_dummy.json')))
+    concern_data, concerns = util.group_json_by_location(items)
 
     results = analysis_util.concern_counts_by_type(
         concern_data, crashes)
