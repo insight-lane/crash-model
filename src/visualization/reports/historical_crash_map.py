@@ -88,12 +88,37 @@ def make_preds_gdf(city):
 
     return preds
 
+def dow_crashset(crashes):
+    """
+    Generate day of week crash dataset
+    """
+
+    weekday_map= {0:'Monday', 1:'Tuesday', 2:'Wednesday', 3:'Thursday', 4:'Friday', 5:'Saturday', 6:'Sunday'}
+    crashes['dow'] = crashes['dateOccurred'].dt.dayofweek
+    crashes['dow_name'] = crashes['dow'].map(weekday_map)
+    dow_crashes = crashes.groupby(['city', 'year', 'dow', 'dow_name']).size().reset_index(name='counts')
+    dow_crashes.to_csv('dow_crashes.csv', index=False)
+
+    ##### Generate time of day crash dataset
+    crashes['hour'] = crashes['dateOccurred'].dt.hour
+
+    ### add indicator for weekday/weekend to see if there's a difference in crash distribution
+    crashes['weekend'] = (crashes['dow']//5==1).astype(int)
+
+    hourly_crashes = crashes.groupby(['city', 'year', 'weekend', 'hour']).size().reset_index(name='counts')
+    hourly_crashes['pct_crash'] = hourly_crashes.groupby(['weekend'])['counts'].apply(lambda x: x/x.sum())
+    hourly_crashes['weekend_lbl'] = hourly_crashes['weekend'].map({0:'Weekday', 1:'Weekend'})
+    hourly_crashes.to_csv('hourly_crashes.csv', index=False)
+
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--city", type=str,
                         help="Can give an additional city " +
+                        "in addition to the defaults")
+    parser.add_argument("-y", "--year", type=str,
+                        help="Can give a year, defaults to 2017 " +
                         "in addition to the defaults")
 
     args = parser.parse_args()
@@ -108,13 +133,18 @@ if __name__ == '__main__':
 
     all_crashes = pd.concat(crashes)
 
-    crashes_2017 = all_crashes[all_crashes.year == 2017]
+    year = 2017
+    if args.year:
+        year = int(args.year)
+
+    crashes = all_crashes[all_crashes.year == year]
 
     # create points from lat/lon and read into geodataframe
-    geometry = [Point(xy) for xy in zip(crashes_2017['location.longitude'], crashes_2017['location.latitude'])]
+    geometry = [Point(xy) for xy in zip(
+        crashes['location.longitude'], crashes['location.latitude'])]
     crs = {'init': 'epsg:4326'}
 
-    df = crashes_2017[['city', 'year', 'week']]
+    df = crashes[['city', 'year', 'week']]
 
     geo_df = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
     if os.path.exists('crashes.geojson'):
@@ -137,28 +167,9 @@ if __name__ == '__main__':
         os.remove('preds.json')
     all_preds.to_file('preds.json', driver='GeoJSON')
 
-
-
     ### Generate weekly crash dataset
-    weekly_crashes = crashes_2017.groupby(['city', 'year', 'week']).size().reset_index(name='counts')
+    weekly_crashes = crashes.groupby(
+        ['city', 'year', 'week']).size().reset_index(name='counts')
     weekly_crashes.to_csv('weekly_crashes.csv', index=False)
 
-
-    ##### Generate day of week crash dataset
-    ##weekday_map= {0:'Monday', 1:'Tuesday', 2:'Wednesday', 3:'Thursday', 4:'Friday', 5:'Saturday', 6:'Sunday'}
-    ##crashes_2017['dow'] = crashes_2017['dateOccurred'].dt.dayofweek
-    ##crashes_2017['dow_name'] = crashes_2017['dow'].map(weekday_map)
-    ##dow_crashes = crashes_2017.groupby(['city', 'year', 'dow', 'dow_name']).size().reset_index(name='counts')
-    ##dow_crashes.to_csv('dow_crashes.csv', index=False)
-    ##
-    ##
-    ##### Generate time of day crash dataset
-    ##crashes_2017['hour'] = crashes_2017['dateOccurred'].dt.hour
-    ##
-    ### add indicator for weekday/weekend to see if there's a difference in crash distribution
-    ##crashes_2017['weekend'] = (crashes_2017['dow']//5==1).astype(int)
-    ##
-    ##hourly_crashes = crashes_2017.groupby(['city', 'year', 'weekend', 'hour']).size().reset_index(name='counts')
-    ##hourly_crashes['pct_crash'] = hourly_crashes.groupby(['weekend'])['counts'].apply(lambda x: x/x.sum())
-    ##hourly_crashes['weekend_lbl'] = hourly_crashes['weekend'].map({0:'Weekday', 1:'Weekend'})
-    ##hourly_crashes.to_csv('hourly_crashes.csv', index=False)
+    # dow_crashset(crashes)
