@@ -2,6 +2,8 @@
 city: Boston, Massachusetts, USA
 # The folder under data where this city's data is stored
 name: boston
+city_latitude: 42.3600825
+city_longitude: -71.0588801
 # If given, limit crashes to after start_year and before end_year
 start_year: 
 end_year:

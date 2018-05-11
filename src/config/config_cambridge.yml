@@ -2,6 +2,8 @@
 city: Cambridge, Massachusetts, USA
 # The folder under data where this city's data is stored
 name: cambridge
+city_latitude: 42.3736158
+city_longitude: -71.10973349999999
 # If given, limit crashes to after start_year and before end_year
 start_year: 
 end_year:
