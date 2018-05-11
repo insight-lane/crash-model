@@ -100,7 +100,7 @@ def add_city_specific_fields(crash, formatted_crash, fields):
 
     elif "bikes" in fields.keys() and fields["bikes"] == "TOTAL_BICYCLES":
         if crash[fields["bikes"]] != 0 and crash[fields["bikes"]] != "":
-            formatted_crash.append({
+            formatted_crash['vehicles'].append({
                 "category": "bike",
                 "quantity": int(crash[fields["bikes"]])
             })
