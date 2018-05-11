@@ -79,6 +79,17 @@ def train_model(config_file, DATA_FP):
         DATA_FP
     ])
 
+
+def visualize(name):
+    subprocess.check_call([
+        'python',
+        '-m',
+        'visualization.reports.historical_crash_map',
+        '-c',
+        name,
+    ])
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -120,6 +131,6 @@ if __name__ == '__main__':
     if not args.onlysteps or 'model' in args.onlysteps:
         train_model(args.config_file, DATA_FP)
 
-    # risk map
-    # visualize
+    if not args.onlysteps or 'visualization' in args.onlysteps:
+        visualize(config['name'])
 

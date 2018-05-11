@@ -118,8 +118,7 @@ if __name__ == '__main__':
                         help="Can give an additional city " +
                         "in addition to the defaults")
     parser.add_argument("-y", "--year", type=str,
-                        help="Can give a year, defaults to 2017 " +
-                        "in addition to the defaults")
+                        help="Can give a year, defaults to 2017 ")
 
     args = parser.parse_args()
 
