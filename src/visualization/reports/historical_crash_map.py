@@ -24,10 +24,9 @@ import json
 import pandas as pd
 from pandas.io.json import json_normalize
 import geopandas as gpd
-import shapely.geometry
 from shapely.geometry import Point
 import os
-
+import argparse
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -92,13 +91,22 @@ def make_preds_gdf(city):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--city", type=str,
+                        help="Can give an additional city " +
+                        "in addition to the defaults")
 
-    # Generate historical crash dataset
-    boston_crashes = make_crash_df("boston")
-    cam_crashes = make_crash_df("cambridge")
-    dc_crashes = make_crash_df("dc")
+    args = parser.parse_args()
 
-    all_crashes = pd.concat([boston_crashes, cam_crashes, dc_crashes])
+    cities = ['boston', 'cambridge', 'dc']
+    if args.city:
+        cities.append(args.city)
+
+    crashes = []
+    for city in cities:
+        crashes.append(make_crash_df(city))
+
+    all_crashes = pd.concat(crashes)
 
     crashes_2017 = all_crashes[all_crashes.year == 2017]
 
@@ -113,21 +121,21 @@ if __name__ == '__main__':
         os.remove('crashes.geojson')
     geo_df.to_file('crashes.geojson', driver='GeoJSON')
 
+    # Generate model predictions dataset, but skip dc for now
+    preds = []
+    for city in cities:
+        if city != 'dc':
+            preds.append(make_preds_gdf(city))
 
-    ### Generate model predictions dataset
-    boston_preds = make_preds_gdf("boston")
-    cam_preds = make_preds_gdf("cambridge")
+    all_preds = pd.concat(preds)
 
-    all_preds = pd.concat([boston_preds, cam_preds])
-
-    # export joined predictions as GeoJSON 
-    # IMPORTANT: it's a known bug that Fiona won't let you overwrite GeoJSON files so you have 
-    # to first delete the file from your hard drive before re-exporting
+    # export joined predictions as GeoJSON
+    # IMPORTANT: it's a known bug that Fiona won't let you overwrite
+    # GeoJSON files so you have to first delete the file from your
+    # hard drive before re-exporting
     if os.path.exists('preds.json'):
         os.remove('preds.json')
     all_preds.to_file('preds.json', driver='GeoJSON')
-
-
 
 
 
