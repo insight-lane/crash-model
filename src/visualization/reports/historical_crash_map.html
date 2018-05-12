@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-	
+
 	<title>Crash Modeling</title>
 
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	
+
 	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
 
 	<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
@@ -14,7 +14,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script type='text/javascript', src='config.js'></script>
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-	
+
 	<link rel="stylesheet" href="css/style.css" />
 	<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.1.0/mapbox-gl-compare.js'></script>
 	<!-- <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.1.0/mapbox-gl-compare.css' type='text/css' /> -->
@@ -29,9 +29,9 @@
 		<div id="city_selection">
 			<label for="city_selector">Select Your City:</label>
 			<select id="city_selector" autocomplete="off">
-				<option value="boston">Boston, MA</option>
+<!-- 				<option value="boston">Boston, MA</option>
 				<option value="cambridge">Cambridge, MA</option>
-				<option value="dc">Washington, DC</option>
+				<option value="dc">Washington, DC</option> -->
 			</select>
 		</div>
 		<div class="wrapper">
@@ -81,61 +81,71 @@
 	<script src="js/update_map.js"></script>
 
 	<script>
+		// populate dropdown menu for cities in config file
+		$.each(config.cities, function(i, city) {
+			$('#city_selector').append($('<option>', {
+				value: city.id,
+				text: city.name
+			}));
+		});
+
 		// create base map
 		mapboxgl.accessToken = config.MAPBOX_TOKEN;
+
+		var default_city = config.cities[0];
 
 		var beforeMap = new mapboxgl.Map({
 		  container: 'before',
 		  style: 'mapbox://styles/mapbox/light-v9',
-		  center: [-71.0589, 42.3301],
+		  center: [default_city.longitude, default_city.latitude],
 		  zoom: 11
 		});
 
 		var afterMap = new mapboxgl.Map({
 		  container: 'after',
 		  style: 'mapbox://styles/mapbox/light-v9',
-		  center: [-71.0589, 42.3301],
+		  center: [default_city.longitude, default_city.latitude],
 		  zoom: 11
 		});
 
 		beforeMap.on('load', function() {
-		  	beforeMap.addLayer({
-				id: 'predictions',
-				type: 'line',
-				source: {
-				  type: 'geojson',
-				  data: 'preds.json'
-				},
-				paint: {
-				  'line-color': {
-					property: 'prediction',
-					stops: [
-					  [0.2, '#ffe0b2'],
-					  [0.4, '#ffb74d'],
-					  [0.6, '#ff9800'],
-					  [0.8, '#f57c00']
-					]
-				  },
-				  'line-width': [
-						'interpolate', ['linear'], ['zoom'], 
-						11, 2,
-						15, 3,
-					],
-				  'line-opacity': 1
-				},
-				filter: ['all', ['==', 'week', 1], ['==', 'city', 'boston']]
-			}, 'admin-2-boundaries-dispute');
-		 
+		//   	beforeMap.addLayer({
+		// 		id: 'predictions',
+		// 		type: 'line',
+		// 		source: {
+		// 		  type: 'geojson',
+		// 		  data: 'preds.json'
+		// 		},
+		// 		paint: {
+		// 		  'line-color': {
+		// 			property: 'prediction',
+		// 			stops: [
+		// 			  [0.2, '#ffe0b2'],
+		// 			  [0.4, '#ffb74d'],
+		// 			  [0.6, '#ff9800'],
+		// 			  [0.8, '#f57c00']
+		// 			]
+		// 		  },
+		// 		  'line-width': [
+		// 				'interpolate', ['linear'], ['zoom'],
+		// 				11, 2,
+		// 				15, 3,
+		// 			],
+		// 		  'line-opacity': 1
+		// 		},
+		// 		filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
+		// 	}, 'admin-2-boundaries-dispute');
+
 			beforeMap.addLayer({
 				id: 'crashes',
-				type: 'circle', 
+				type: 'circle',
 				source: {
-					type: 'geojson', 
+					type: 'geojson',
 					data: 'crashes.geojson'
 				},
 				paint: {
 					'circle-radius': [
-						'interpolate', ['linear'], ['zoom'], 
+						'interpolate', ['linear'], ['zoom'],
 						12, 4,
 						15, 8,
 					],
@@ -143,7 +153,7 @@
 					'circle-stroke-color': '#9e00c5',
 					'circle-opacity': 0.8
 				},
-				filter: ['all', ['==', 'week', 1], ['==', 'city', 'boston']]
+				filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
 			}, 'admin-2-boundaries-dispute');
 
 			// add popup for predictions
@@ -164,45 +174,45 @@
 				beforeMap.getCanvas().style.cursor = '';
 			});
 		});
-		
+
 		afterMap.on('load', function() {
-		  	afterMap.addLayer({
-				id: 'predictions',
-				type: 'line',
-				source: {
-				  type: 'geojson',
-				  data: 'preds.json'
-				},
-				paint: {
-				  'line-color': {
-					property: 'prediction',
-					stops: [
-					  [0.2, '#ffe0b2'],
-					  [0.4, '#ffb74d'],
-					  [0.6, '#ff9800'],
-					  [0.8, '#f57c00']
-					]
-				  },
-				  'line-width': [
-						'interpolate', ['linear'], ['zoom'], 
-						11, 2,
-						15, 3,
-					],
-				  'line-opacity': 1
-				},
-				filter: ['all', ['==', 'week', 1], ['==', 'city', 'boston']]
-			}, 'admin-2-boundaries-dispute');
-		 
+		 //  	afterMap.addLayer({
+			// 	id: 'predictions',
+			// 	type: 'line',
+			// 	source: {
+			// 	  type: 'geojson',
+			// 	  data: 'preds.json'
+			// 	},
+			// 	paint: {
+			// 	  'line-color': {
+			// 		property: 'prediction',
+			// 		stops: [
+			// 		  [0.2, '#ffe0b2'],
+			// 		  [0.4, '#ffb74d'],
+			// 		  [0.6, '#ff9800'],
+			// 		  [0.8, '#f57c00']
+			// 		]
+			// 	  },
+			// 	  'line-width': [
+			// 			'interpolate', ['linear'], ['zoom'],
+			// 			11, 2,
+			// 			15, 3,
+			// 		],
+			// 	  'line-opacity': 1
+			// 	},
+			// 	filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
+			// }, 'admin-2-boundaries-dispute');
+
 			afterMap.addLayer({
 					id: 'crashes',
-					type: 'circle', 
+					type: 'circle',
 					source: {
-						type: 'geojson', 
+						type: 'geojson',
 						data: 'crashes.geojson'
 					},
 					paint: {
 						'circle-radius': [
-							'interpolate', ['linear'], ['zoom'], 
+							'interpolate', ['linear'], ['zoom'],
 							12, 4,
 							15, 8,
 						],
@@ -210,7 +220,7 @@
 						'circle-stroke-color': '#9e00c5',
 						'circle-opacity': 0.8
 					},
-					filter: ['all', ['==', 'week', 1], ['==', 'city', 'boston']]
+					filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
 				}, 'admin-2-boundaries-dispute');
 
 			// add popup for predictions
@@ -240,25 +250,19 @@
 
 		//Pan map to different city based on selection
 		$('#city_selector').change(function() {
-			city = $('#city_selector').val();
-			if(city === 'boston') {
-				beforeMap.flyTo({
-					center: [-71.0589, 42.3301],
-					zoom: 11
-				});
-			}
-			else if(city === 'cambridge') {
-				beforeMap.flyTo({
-					center: [-71.1097, 42.3736],
-					zoom: 11
-				});
-			}
-			else {
-				beforeMap.flyTo({
-					center: [-77.0369, 38.9072],
-					zoom: 11
-				});
-			}
+			selected_city = $('#city_selector').val();
+
+			$.each(config.cities, function(i, city) {
+
+				if(selected_city === city.id) {
+					beforeMap.flyTo({
+						center: [city.longitude, city.latitude],
+						zoom: 11
+					});
+				}
+
+			});
+
 		});
 	</script>
 
