@@ -109,32 +109,32 @@
 		});
 
 		beforeMap.on('load', function() {
-		//   	beforeMap.addLayer({
-		// 		id: 'predictions',
-		// 		type: 'line',
-		// 		source: {
-		// 		  type: 'geojson',
-		// 		  data: 'preds.json'
-		// 		},
-		// 		paint: {
-		// 		  'line-color': {
-		// 			property: 'prediction',
-		// 			stops: [
-		// 			  [0.2, '#ffe0b2'],
-		// 			  [0.4, '#ffb74d'],
-		// 			  [0.6, '#ff9800'],
-		// 			  [0.8, '#f57c00']
-		// 			]
-		// 		  },
-		// 		  'line-width': [
-		// 				'interpolate', ['linear'], ['zoom'],
-		// 				11, 2,
-		// 				15, 3,
-		// 			],
-		// 		  'line-opacity': 1
-		// 		},
-		// 		filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
-		// 	}, 'admin-2-boundaries-dispute');
+		  	beforeMap.addLayer({
+				id: 'predictions',
+				type: 'line',
+				source: {
+				  type: 'geojson',
+				  data: 'preds.json'
+				},
+				paint: {
+				  'line-color': {
+					property: 'prediction',
+					stops: [
+					  [0.2, '#ffe0b2'],
+					  [0.4, '#ffb74d'],
+					  [0.6, '#ff9800'],
+					  [0.8, '#f57c00']
+					]
+				  },
+				  'line-width': [
+						'interpolate', ['linear'], ['zoom'],
+						11, 2,
+						15, 3,
+					],
+				  'line-opacity': 1
+				},
+				filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
+			}, 'admin-2-boundaries-dispute');
 
 			beforeMap.addLayer({
 				id: 'crashes',
@@ -176,32 +176,32 @@
 		});
 
 		afterMap.on('load', function() {
-		 //  	afterMap.addLayer({
-			// 	id: 'predictions',
-			// 	type: 'line',
-			// 	source: {
-			// 	  type: 'geojson',
-			// 	  data: 'preds.json'
-			// 	},
-			// 	paint: {
-			// 	  'line-color': {
-			// 		property: 'prediction',
-			// 		stops: [
-			// 		  [0.2, '#ffe0b2'],
-			// 		  [0.4, '#ffb74d'],
-			// 		  [0.6, '#ff9800'],
-			// 		  [0.8, '#f57c00']
-			// 		]
-			// 	  },
-			// 	  'line-width': [
-			// 			'interpolate', ['linear'], ['zoom'],
-			// 			11, 2,
-			// 			15, 3,
-			// 		],
-			// 	  'line-opacity': 1
-			// 	},
-			// 	filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
-			// }, 'admin-2-boundaries-dispute');
+		  	afterMap.addLayer({
+				id: 'predictions',
+				type: 'line',
+				source: {
+				  type: 'geojson',
+				  data: 'preds.json'
+				},
+				paint: {
+				  'line-color': {
+					property: 'prediction',
+					stops: [
+					  [0.2, '#ffe0b2'],
+					  [0.4, '#ffb74d'],
+					  [0.6, '#ff9800'],
+					  [0.8, '#f57c00']
+					]
+				  },
+				  'line-width': [
+						'interpolate', ['linear'], ['zoom'],
+						11, 2,
+						15, 3,
+					],
+				  'line-opacity': 1
+				},
+				filter: ['all', ['==', 'week', 1], ['==', 'city', default_city.id]]
+			}, 'admin-2-boundaries-dispute');
 
 			afterMap.addLayer({
 					id: 'crashes',
