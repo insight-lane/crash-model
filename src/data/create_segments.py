@@ -196,27 +196,31 @@ def add_point_based_features(non_inters, inters, inter_data, filename):
     )
 
     util.find_nearest(features, seg, segments_index, 20, type_record=True)
-    import ipdb; ipdb.set_trace()
-
 
     matches = {}
     for feature in features:
         near = feature.near_id
         feat_type = feature.properties['feature']
         if near:
-            matches[near] = feat_type
+            if str(near) not in matches.keys():
+                matches[str(near)] = []
+            matches[str(near)].append(feat_type)
 
-#    import ipdb; ipdb.set_trace()
-    new_inter_data = {}
-    for key, segments in inter_data.iteritems():
-        updated_segments = []
-        for segment in segments:
-            signal = '0'
-            if key in matches.keys():
-                signal = '1'
-            segment.update({'signal': signal})
-            updated_segments.append(segment)
-        new_inter_data[key] = updated_segments
+#    updated_inters = []
+    for i, inter in enumerate(inters):
+        
+        if str(inter['properties']['id']) in matches.keys():
+            new_properties = []
+            matched_features = set(matches[str(inter['properties']['id'])])
+
+            for prop in inter['properties']['data']:
+                for feat in matched_features:
+                    prop[feat] = 1
+
+            if len(matched_features) == 2:
+                import ipdb; ipdb.set_trace()
+             
+#            import ipdb; ipdb.set_trace()
 
     with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
@@ -291,13 +295,13 @@ def write_segments(non_int_w_ids, union_inter, inter_data):
     # Store the combined segments with all properties
     segments = non_int_w_ids + union_inter
 
-    import ipdb; ipdb.set_trace()
+#    import ipdb; ipdb.set_trace()
 
-    with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
-        geojson.dump({
-            'type': 'FeatureCollection',
-            'features': segments
-        }, outfile)
+#    with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
+#        geojson.dump({
+#            'type': 'FeatureCollection',
+#            'features': segments
+#        }, outfile)
 
     # Store the individual intersections without properties, since QGIS appears
     # to have trouble with dicts of dicts, and viewing maps can be helpful
@@ -348,10 +352,10 @@ if __name__ == '__main__':
     non_int_w_ids, inter_w_ids, inter_data \
         = create_segments_from_json(elements)
 
-#    add_point_based_features(non_int_w_ids,
-#                             inter_w_ids,
-#                             inter_data,
-#                             os.path.join(MAP_FP, 'features.json'))
+    add_point_based_features(non_int_w_ids,
+                             inter_w_ids,
+                             inter_data,
+                             os.path.join(MAP_FP, 'features.json'))
     write_segments(non_int_w_ids, inter_w_ids, inter_data)
 
 
