@@ -1,4 +1,6 @@
-FROM continuumio/anaconda
+FROM continuumio/miniconda
+# update
+RUN conda update -n base conda
 
 # Set package installer as non-interactive
 ENV DEBIAN_FRONTEND noninteractive
@@ -6,19 +8,13 @@ ENV DEBIAN_FRONTEND noninteractive
 # Set a terminal type
 ENV TERM xterm-256color
 
-# Use bash for the entrypoint rather than sh, for 'conda activate' compatibility
-ENTRYPOINT ["/bin/bash", "-c"]
-
-# the default PS1 has issues with long outputs, replace it
-RUN echo "swapping to a PS1 that better handles long outputs" >> /etc/bash.bashrc
-RUN echo "PS1='\h:\W \u\$ '" >> /etc/bash.bashrc
-
 WORKDIR /app
 
 # Install packges
 # (gcc) installed to enable conda to create virtual environments
 RUN apt-get update -qq && apt-get install -y \
 	gcc \
+	g++ \
 	# apache for serving the visualisation
 	apache2 \
 	# easier management of services via supervisor
@@ -48,13 +44,24 @@ RUN ["conda", "env", "create", "--file", "environment_docker.yml"]
 # Copy over the app
 COPY . /app
 
-# Activate the virtual environment (fulfils the work of 'source activate boston-crash-model' without the overhead)
-ENV PATH /opt/conda/envs/boston-crash-model/bin:$PATH
+# Use bash for the entrypoint rather than sh, for 'conda activate' compatibility
+ENTRYPOINT ["/bin/bash", "-c"]
 
-# On startup:
-# call the script to generate historical crash map
-# hand off to entrypoint script
-# CMD ["python historical_crash_map.py && /start.sh"]
+# RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+
+# Activate the virtual environment (fulfils the work of 'source activate boston-crash-model' without the overhead)
+# ENV PATH /opt/conda/envs/boston-crash-model/bin:$PATH
+# RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+# RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc
+# RUN conda activate boston-crash-model
+RUN echo "conda activate boston-crash-model" >> ~/.bashrc
+
+# the default PS1 has issues with long outputs, replace it
+# RUN echo "swapping to a PS1 that better handles long outputs" >> /etc/bash.bashrc
+# RUN echo "PS1='\h:\W \u\$ '" >> /etc/bash.bashrc
+# RUN echo "PS1='\h:\W \u\$ '" >> ~/.bashrc
+
+# this startup script runs supervisor in foreground (which in turn starts apache) to keep container running
 CMD ["/start.sh"]
 
 # Make the apache port available

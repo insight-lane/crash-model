@@ -111,10 +111,21 @@ You'll want to reproduce the packages and package versions required to run code 
 If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/data_generation) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/benchmark) for running the benchmark model.
 
 ### Docker:
-A basic Dockerfile has been created to run the project in a container, using the ContinuumIO anaconda base image (Python 2.7). Right now the image simply installs the project code & its dependencies, creates the 'boston-crash-model' virtual environment and starts an apache2 webserver (via supervisor daemon) to serve the visualization. A pre-built image is not yet available but will be shortly. To build the image from scratch and run it in a container, execute the following (as root user) from the project's main directory:
+A basic Docker image has been created to run the project in a container, using ContinuumIO anaconda (Python 2.7) as a base image. Right now the image simply installs the project code & its dependencies, creates the 'boston-crash-model' virtual environment and starts an apache2 webserver (via supervisor daemon) to serve the visualization.
 
-	$ docker build --tag boston-crash-modeling:latest .
-	$ docker run -d -p 8080:8080 --name bcm.local boston-crash-modeling:latest
+To run the Docker image, you need to first install the Docker engine on your local machine (Community Edition is sufficient). Instructions are available at https://docs.docker.com/install/ or contact @terryf82 in the project Slack channel for help =)
+
+The latest pre-built image is available from Data4Democracy's Docker Hub account at https://hub.docker.com/r/datafordemocracy/boston-crash-modeling/ by running the following command:
+
+    $ docker pull datafordemocracy/boston-crash-modeling:latest
+
+or you can build the image from scratch by running the following from within the project repo:
+
+    $ docker build --tag datafordemocracy/boston-crash-modeling:latest .
+
+Once you've downloaded or built the image, you can run it in a container. The osm-data directory needs to be on your local machine and made available to the container. The same can optionally be done for the project repo, which is useful if you want to run the project and test new code on your local machine in realtime:
+
+	$ docker run -d -p 8080:8080 -v /local/path/to/osm-data:/osm-data [-v /local/path/to/project/repo:/app] --name bcm.local datafordemocracy/boston-crash-modeling:latest
 
 The visualization should now be visible at http://localhost:8080/reports/historical_crash_map.html
 
