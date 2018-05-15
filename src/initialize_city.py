@@ -12,14 +12,11 @@ BASE_DIR = os.path.dirname(
 def make_config_file(yml_file, city, folder, crash, concern):
     f = open(yml_file, 'w')
 
-    address = geocode_address(city)
     f.write(
         "# City name\n" +
         "city: {}\n".format(city) +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n".format(folder) +
-        "city_latitude: {}\n".format(address[1]) +
-        "city_longitude: {}\n".format(address[2]) +
         "# If given, limit crashes to after start_year and before end_year\n" +
         "# Recommended to limit to just a few years for now\n" +
         "start_year: \n" +
@@ -63,28 +60,38 @@ def make_config_file(yml_file, city, folder, crash, concern):
     print "Wrote new configuration file in {}".format(yml_file)
 
 
+def make_js_config(jsfile, city, folder):
+    address = geocode_address(city)
+
+    f = open(jsfile, 'w')
+    f.write(
+        'var config = {\n' +
+        '    MAPBOX_TOKEN: ,\n' +
+        '    cities: [\n' +
+        '        {\n' +
+        '            name: "{}",\n'.format(city) +
+        '            id: "{}",\n'.format(folder) +
+        '            latitude: {},\n'.format(str(address[1])) +
+        '            longitude: {},\n'.format(str(address[2])) +
+        '        }\n' +
+        '    ]\n' +
+        '}\n'
+    )
+    f.close()
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-city", "--city", type=str,
+    parser.add_argument("-city", "--city", type=str, required=True,
                         help="city name")
-    parser.add_argument("-f", "--folder", type=str,
+    parser.add_argument("-f", "--folder", type=str, required=True,
                         help="folder name")
-    parser.add_argument('-crash', '--crash_file', type=str,
+    parser.add_argument('-crash', '--crash_file', type=str, required=True,
                         help="crash file path")
     parser.add_argument('-concern', '--concern_file', type=str,
                         help="concern file path")
 
     args = parser.parse_args()
-    if not args.city:
-        print "city required"
-        sys.exit()
-    if not args.folder:
-        print "folder required"
-        sys.exit()
-    if not args.crash_file:
-        print "crash file required"
-        sys.exit()
 
     DATA_FP = os.path.join(BASE_DIR, 'data', args.folder)
 
@@ -117,4 +124,10 @@ if __name__ == '__main__':
         BASE_DIR, 'src/config/config_' + args.folder + '.yml')
     if not os.path.exists(yml_file):
         make_config_file(yml_file, args.city, args.folder, crash, concern)
+
+    js_file = os.path.join(
+        BASE_DIR, 'src/visualization/reports/config.js')
+    if not os.path.exists(js_file):
+        print "Writing config.js"
+        make_js_config(js_file, args.city, args.folder)
 
