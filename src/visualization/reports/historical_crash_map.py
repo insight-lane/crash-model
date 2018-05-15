@@ -27,6 +27,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 import os
 import argparse
+import sys
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -61,7 +62,7 @@ def make_crash_df(city):
     return crashes_df[['city', 'location.latitude', 'location.longitude', 'year', 'week', 'dateOccurred']]
 
 
-def make_preds_gdf(city):
+def make_preds_gdf(city, year):
     # read in model output
     seg_file = os.path.join(DATA_FP, city, 'processed', 'seg_with_predicted.csv')
 
@@ -69,7 +70,7 @@ def make_preds_gdf(city):
     output['id'] = output['segment_id']
     output['city'] = city
 
-    output = output[output.year == 2017] #temporary
+    output = output[output.year == year] #temporary
 
     # Read in shapefile as a GeoDataframe
     map_fp = os.path.join(DATA_FP, city, 'processed/maps')
@@ -117,14 +118,19 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--city", type=str,
                         help="Can give an additional city " +
                         "in addition to the defaults")
+    parser.add_argument("--demo", type=bool)
     parser.add_argument("-y", "--year", type=str,
                         help="Can give a year, defaults to 2017 ")
 
     args = parser.parse_args()
 
-    cities = ['boston', 'cambridge', 'dc']
     if args.city:
-        cities.append(args.city)
+        cities = [args.city]
+    elif args.demo:
+        cities = ['boston', 'cambridge', 'dc']
+    else:
+        print "Either city needs to be given, or --demo flag set"
+        sys.exit()
 
     crashes = []
     for city in cities:
@@ -146,29 +152,33 @@ if __name__ == '__main__':
     df = crashes[['city', 'year', 'week']]
 
     geo_df = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-    if os.path.exists('crashes.geojson'):
-        os.remove('crashes.geojson')
-    geo_df.to_file('crashes.geojson', driver='GeoJSON')
+    FP = os.path.join(BASE_DIR, 'src', 'visualization', 'reports')
+    crash_path = os.path.join(FP, 'crashes.geojson')
+
+    if os.path.exists(crash_path):
+        os.remove(crash_path)
+    geo_df.to_file(crash_path, driver='GeoJSON')
 
     # Generate model predictions dataset, but skip dc for now
     preds = []
+
     for city in cities:
         if city != 'dc':
-            preds.append(make_preds_gdf(city))
-
+            preds.append(make_preds_gdf(city, year))
     all_preds = pd.concat(preds)
 
     # export joined predictions as GeoJSON
     # IMPORTANT: it's a known bug that Fiona won't let you overwrite
     # GeoJSON files so you have to first delete the file from your
     # hard drive before re-exporting
-    if os.path.exists('preds.json'):
-        os.remove('preds.json')
-    all_preds.to_file('preds.json', driver='GeoJSON')
+    preds_path = os.path.join(FP, 'preds.json')
+    if os.path.exists(preds_path):
+        os.remove(preds_path)
+    all_preds.to_file(preds_path, driver='GeoJSON')
 
     ### Generate weekly crash dataset
     weekly_crashes = crashes.groupby(
         ['city', 'year', 'week']).size().reset_index(name='counts')
-    weekly_crashes.to_csv('weekly_crashes.csv', index=False)
+    weekly_crashes.to_csv(os.path.join(FP, 'weekly_crashes.csv'), index=False)
 
     # dow_crashset(crashes)

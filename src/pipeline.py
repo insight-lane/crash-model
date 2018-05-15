@@ -80,14 +80,17 @@ def train_model(config_file, DATA_FP):
     ])
 
 
-def visualize(name):
+def visualize(name, end_year):
+
     subprocess.check_call([
         'python',
         '-m',
         'visualization.reports.historical_crash_map',
         '-c',
-        name,
-    ])
+        name
+    ]
+        + (['-y', str(end_year-1)] if end_year else [])
+    )
 
 
 if __name__ == '__main__':
@@ -132,4 +135,4 @@ if __name__ == '__main__':
         train_model(args.config_file, DATA_FP)
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
-        visualize(config['name'])
+        visualize(config['name'], config['end_year'])

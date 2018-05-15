@@ -66,7 +66,7 @@ def make_js_config(jsfile, city, folder):
     f = open(jsfile, 'w')
     f.write(
         'var config = {\n' +
-        '    MAPBOX_TOKEN: ,\n' +
+        '    MAPBOX_TOKEN: "",\n' +
         '    cities: [\n' +
         '        {\n' +
         '            name: "{}",\n'.format(city) +
