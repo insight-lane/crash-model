@@ -10,6 +10,11 @@ from collections import OrderedDict
 from datetime import datetime
 from jsonschema import validate
 
+CURR_FP = os.path.dirname(
+    os.path.abspath(__file__))
+BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--destination", type=str,
                     help="destination name")
@@ -116,7 +121,7 @@ for csv_file in os.listdir(raw_path):
 
 print "done, {} concerns loaded, validating against schema".format(len(concerns))
 
-schema_path = "/app/standards/concerns-schema.json"
+schema_path = os.path.join(BASE_FP, "standards/concerns-schema.json")
 with open(schema_path) as concerns_schema:
     validate(concerns, json.load(concerns_schema))
 

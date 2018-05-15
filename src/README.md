@@ -37,27 +37,31 @@ These features include
 
 We also can map city-specific maps (and features associated with their roads) to the base open street map.
 
-## Running data generation
+## Running the pipeline: data generation through visualization
 
-Although the processed data exists on data.world, you may wish to generate the data from scratch, or you may be interested in generating data for a new city.  To do that, the easiest way is to use or modify a configuration file in boston-crash-modeling/src/data.
+Although the processed data exists on data.world, you may wish to generate the data from scratch, or you may be interested in generating data for a new city.  This section walks you through how to generate and visualize data for a new city:
 
-The configuration files are yml files that include all the arguments you'll need to run all of the data generation steps.  In src/data/config.yml you can find an example.
+- If you want to visualize the data, you need to create a mapbox account (https://www.mapbox.com/)
+- Automatically generate a config file for your city.  In the src directory, run `python initialize_city.py --city <city name> -f <folder name> --crash <crash file> --concern <concern file>`.
+    - City name is the full name of the city, e.g. "Cambridge, Massachusetts, USA".
+    - Folder name is what you'd like the city's data directory to  be named, e.g. "cambridge".
+    - The crash file is a csv file of crashes that includes (at minimum) columns for latitude, longitude, and date of crashes.
+    - The concern file is a csv of concerns that includes (at minimum) a latitude, longitude and date of a concern file.
+- Manually edit the configuration file found in e.g. src/config/config_cambridge:
+    - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well.
+    - If you have a csv concern file, enter the column headers for latitude, longitude, and date.
+    - Modify time_target to be the last month and year of your crash data
 
-city (required), e.g. 'Boston, Massachusetts, USA'
+- Run the pipeline: `python pipeline.py -c <config file>`
 
-datadir: The directory you want all of your output to end up in.  This directory will need at an absolute minimum to have a raw/ directory in it, containing at least the csv file(s) of crash data.  This is an optional argument, and defaults to ../data/
 
-crash_files: In ../data/raw/ if your crash csv files aren't the default Boston ones, you need to provide the names.  Right now, they must live in this directory.
+## Boston-specific feature additions
+Since Boston was our pilot city, we generate additional features from maps they provided (in addition to the ones we pull from open street map).  If you're only interested in other cities, no need to read this section.
 
-If you want to add features from another map (not required), you need all of the following arguments to be filled out:
-extra_map: A map in 4326 projection
-extra_map3857: A map in 3857 projection
-additional_features: any features you want to grab from extra_map3857
-
-And finally, if you're using a crash file with columns named things we aren't expecting, you need to tell us about it:
-longitude: If the column for the longitude is not labeled 'X', you need to give this
-latitude: If the column for the latitude is not labeled 'Y', you need to give this
-time_col: If the column for the date/time is not labeled 'CALENDAR_DATE', you need to give this
+To add Boston's specific data to the boston model, the following arguments are added to the configuration file:
+- extra_map: A map in 4326 projection
+- extra_map3857: A map in 3857 projection
+- additional_features: a list of strings that are features you want to grab from extra_map3857
 
 ## Process map
 

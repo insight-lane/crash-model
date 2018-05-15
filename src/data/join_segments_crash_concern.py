@@ -58,6 +58,7 @@ if __name__ == '__main__':
                         help="Can limit data to crashes this year or earlier")
 
     args = parser.parse_args()
+
     # Can override the hardcoded data directory
     if args.datadir:
         RAW_DATA_FP = os.path.join(args.datadir, 'standardized')
@@ -70,6 +71,8 @@ if __name__ == '__main__':
         os.path.join(RAW_DATA_FP, 'crashes.json'), 'crash',
         startyear=args.startyear, endyear=args.endyear)
 
-    snap_records(
-        combined_seg, segments_index,
-        os.path.join(RAW_DATA_FP, 'concerns.json'), 'concern')
+    concern_file = os.path.join(os.path.join(RAW_DATA_FP, 'concerns.json'))
+    if os.path.exists(concern_file):
+        snap_records(
+            combined_seg, segments_index,
+            concern_file, 'concern')
