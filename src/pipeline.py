@@ -93,7 +93,7 @@ def visualize(name):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config_file", type=str,
+    parser.add_argument("-c", "--config_file", required=True, type=str,
                         help="config file location")
     parser.add_argument('--forceupdate', action='store_true',
                         help='Whether to force update the maps')
@@ -133,4 +133,3 @@ if __name__ == '__main__':
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
         visualize(config['name'])
-
