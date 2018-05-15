@@ -85,7 +85,7 @@ def visualize(name, end_year):
     subprocess.check_call([
         'python',
         '-m',
-        'visualization.reports.historical_crash_map',
+        'visualization.historical_crash_map',
         '-c',
         name
     ]
