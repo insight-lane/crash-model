@@ -67,11 +67,11 @@ crashes_files:
 
 # If you are adding another map and its features to the open street map,
 # give it here:
-extra_map: ../data/boston/raw/Boston_Segments.shp
+extra_map: ../data/boston/raw/maps/Boston_Segments.shp
 
 # Also need to give a map in 3857 projection.
 # This is required if extra_map is given
-extra_map3857: ../data/boston/processed/maps/ma_cob_spatially_joined_streets.shp
+extra_map3857: ../data/boston/raw/maps/ma_cob_spatially_joined_streets.shp
 
 # Additional features to add from the additional map.
 # This is required if extra_map is given
