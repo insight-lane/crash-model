@@ -64,6 +64,7 @@ The data generation steps create a set of maps of road segments for the city, ge
 3) Feature Generation
 
 Found in src/features <br><br>
+Documented in the README under src/data/ <br><br>
 The feature generation step takes the data from the data generation step, and turns them into a feature set.
 
 4) Training the model
