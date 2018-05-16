@@ -22,7 +22,7 @@ def make_config_file(yml_file, city, folder, crash, concern):
         "start_year: \n" +
         "end_year: \n\n\n" +
         "#################################################################\n" +
-        "# Configuration for data transformation\n\n" +
+        "# Configuration for data standardization\n\n" +
         "# crash file configurations\n" +
         "crashes_files:\n" +
         "  {}:\n".format(crash) +
@@ -130,4 +130,3 @@ if __name__ == '__main__':
     if not os.path.exists(js_file):
         print "Writing config.js"
         make_js_config(js_file, args.city, args.folder)
-
