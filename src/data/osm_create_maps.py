@@ -20,7 +20,11 @@ def simple_get_roads(city):
         None
     """
 
-    G1 = ox.graph_from_place(city, network_type='drive', simplify=False)
+    if (city == "brisbane"):
+        G1 = ox.graph_from_point([-27.4697707,153.0251235], distance=20000, network_type='drive', simplify=False)
+    else
+        G1 = ox.graph_from_place(city, network_type='drive', simplify=False)
+        
     G = ox.simplify_graph(G1)
 
     # Label endpoints
@@ -207,5 +211,3 @@ if __name__ == '__main__':
             os.path.join(MAP_FP, 'osm_ways_3857.shp'),
             DOC_FP
         )
-
-

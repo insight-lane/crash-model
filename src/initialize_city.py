@@ -126,7 +126,7 @@ if __name__ == '__main__':
         make_config_file(yml_file, args.city, args.folder, crash, concern)
 
     js_file = os.path.join(
-        BASE_DIR, 'src/visualization/reports/config.js')
+        BASE_DIR, 'reports/config.js')
     if not os.path.exists(js_file):
         print "Writing config.js"
         make_js_config(js_file, args.city, args.folder)
