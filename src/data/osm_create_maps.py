@@ -20,11 +20,13 @@ def simple_get_roads(city):
         None
     """
 
-    if (city == "brisbane"):
-        G1 = ox.graph_from_point([-27.4697707,153.0251235], distance=20000, network_type='drive', simplify=False)
-    else
+    if (city == "Brisbane, Australia"):
+        print("using graph_from_point for Brisbane as an exception")
+        G1 = ox.graph_from_point([-27.4697707,153.0251235], distance=10000, network_type='drive', simplify=False)
+    else:
+        print("using graph_from_place for {}".format(city))
         G1 = ox.graph_from_place(city, network_type='drive', simplify=False)
-        
+
     G = ox.simplify_graph(G1)
 
     # Label endpoints
