@@ -207,5 +207,3 @@ if __name__ == '__main__':
             os.path.join(MAP_FP, 'osm_ways_3857.shp'),
             DOC_FP
         )
-
-

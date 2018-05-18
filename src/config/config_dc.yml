@@ -9,7 +9,7 @@ start_year: 2014
 end_year: 2017
 
 ##############################################################################
-# Configuration for data transformation
+# Configuration for data standardization
 
 # crash file configurations
 crashes_files:
@@ -41,4 +41,3 @@ concern: visionzero
 # Choose a week towards the end of your crash data set
 # in format [month, year]
 time_target: [51, 2016]
-

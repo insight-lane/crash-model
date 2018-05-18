@@ -5,11 +5,11 @@ name: boston
 city_latitude: 42.3600825
 city_longitude: -71.0588801
 # If given, limit crashes to after start_year and before end_year
-start_year: 
+start_year:
 end_year:
 
 ##############################################################################
-# Configuration for data transformation
+# Configuration for data standardization
 
 # List of concern type information
 concern_files:

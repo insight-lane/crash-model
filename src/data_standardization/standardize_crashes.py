@@ -1,4 +1,4 @@
-# Transform a crashes CSV into compatible JSON document.
+# Standardize a crashes CSV into compatible JSON document.
 # Author terryf82 https://github.com/terryf82
 
 import argparse

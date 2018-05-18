@@ -8,29 +8,29 @@ BASE_DIR = os.path.dirname(
         os.path.abspath(__file__)))
 
 
-def data_transformation(config, DATA_FP, forceupdate=False):
+def data_standardization(config, DATA_FP, forceupdate=False):
     """
-    Transform data from a csv file into standardized crashes and concerns
+    Standardize data from a csv file into compatible crashes and concerns
     according to a config file
     Args:
         config
         DATA_FP - data directory for this city
     """
-    # transform data, if the standardized files don't exist
+    # standardize data, if the files don't already exist
     # or forceupdate
     if not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'crashes.json')) or forceupdate:
         subprocess.check_call([
             'python',
             '-m',
-            'data_transformation.transform_crashes',
+            'data_standardization.standardize_crashes',
             '-d',
             config['name'],
             '-f',
             DATA_FP
         ])
     else:
-        print "Already transformed crash data, skipping"
+        print "Already standardized crash data, skipping"
 
     # There has to be concern data in the config file to try processing it
     if ('concern_files' in config.keys()
@@ -39,7 +39,7 @@ def data_transformation(config, DATA_FP, forceupdate=False):
         subprocess.check_call([
             'python',
             '-m',
-            'data_transformation.transform_concerns',
+            'data_standardization.standardize_concerns',
             '-d',
             config['name'],
             '-f',
@@ -49,7 +49,7 @@ def data_transformation(config, DATA_FP, forceupdate=False):
         if 'concern_files' not in config.keys() or not config['concern_files']:
             print "No concerns defined in config file"
         elif not forceupdate:
-            print "Already transformed concern data, skipping"
+            print "Already standardized concern data, skipping"
 
 
 def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # Can also choose which steps of the process to run
     parser.add_argument('--onlysteps',
                         help="Give list of steps to run, as comma-separated " +
-                        "string.  Has to be among 'transformation'," +
+                        "string.  Has to be among 'standardization'," +
                         "'generation', 'model', 'visualization'")
 
     args = parser.parse_args()
@@ -116,8 +116,8 @@ if __name__ == '__main__':
 
     DATA_FP = os.path.join(BASE_DIR, 'data', config['name'])
 
-    if not args.onlysteps or 'transformation' in args.onlysteps:
-        data_transformation(config, DATA_FP, forceupdate=args.forceupdate)
+    if not args.onlysteps or 'standardization' in args.onlysteps:
+        data_standardization(config, DATA_FP, forceupdate=args.forceupdate)
 
     start_year = config['start_year']
     if start_year:
