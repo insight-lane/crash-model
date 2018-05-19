@@ -276,7 +276,7 @@ if __name__ == '__main__':
     tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
     # predict for all weeks past 4 months
-    all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values[16:]
+    all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values[-1:]
     pred_all_weeks = np.zeros([all_weeks.shape[0], data_segs.shape[0]])
     for i, yw in enumerate(all_weeks):
         preds = predict_forward(yw[1], yw[0], data_segs, data_nonzero)
