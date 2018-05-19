@@ -68,3 +68,68 @@ def test_concerns():
 
     assert results[1][1] == 100.0
     assert results[1][5] == 100.0
+
+
+def test_concerns_by_type():
+
+    items = json.load(open(
+        os.path.join(TEST_FP, 'data', 'crash_test_dummy.json')))
+    crash_data, crashes = util.group_json_by_location(items)
+    items = json.load(open(
+        os.path.join(TEST_FP, 'data', 'concern_test_dummy.json')))
+    concern_data, concerns = util.group_json_by_location(items)
+
+    results = analysis_util.concern_counts_by_type(
+        concern_data, crashes)
+
+    assert results['bike facilities'] == {
+        'total': 3,
+        'crashes': 2,
+        'inter_crashes': 0,
+        'inter_total': 0,
+        'non_inter_crashes': 2,
+        'non_inter_total': 3
+    }
+    assert results['other'] == {
+        'total': 1,
+        'crashes': 0,
+        'inter_crashes': 0,
+        'inter_total': 1,
+        'non_inter_crashes': 0,
+        'non_inter_total': 0
+    }
+    assert results["people don't yield while going straight"] == {
+        'total': 3,
+        'crashes': 2,
+        'inter_crashes': 1,
+        'inter_total': 1,
+        'non_inter_crashes': 1,
+        'non_inter_total': 2
+    }
+    assert results["people don't yield while turning"] == {
+        'total': 1,
+        'crashes': 0,
+        'inter_crashes': 0,
+        'inter_total': 0,
+        'non_inter_crashes': 0,
+        'non_inter_total': 1
+    }
+    assert results["low visibility"] == {
+        'total': 1,
+        'crashes': 0,
+        'inter_crashes': 0,
+        'inter_total': 1,
+        'non_inter_crashes': 0,
+        'non_inter_total': 0
+    }
+
+    results = analysis_util.concern_percentages_by_type(results, cutoff=1)
+    results.sort()
+    assert results == [
+        ['bike facilities', 67.0, 2, 3, 0.0, 0, 0, 67.0, 2, 3],
+        ['low visibility', 0.0, 0, 1, 0.0, 0, 1, 0.0, 0, 0],
+        ['other', 0.0, 0, 1, 0.0, 0, 1, 0.0, 0, 0],
+        ["people don't yield while going straight",
+         67.0, 2, 3, 100.0, 1, 1, 50.0, 1, 2],
+        ["people don't yield while turning", 0.0, 0, 1, 0.0, 0, 0, 0.0, 0, 1]
+    ]

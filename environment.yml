@@ -144,7 +144,9 @@ dependencies:
 - widgetsnbextension
 - wrapt
 - pyyaml
+- xlrd
 - zlib
+- xgboost
 - pip:
   - backports-abc
   - backports.shutil-get-terminal-size
@@ -157,4 +159,3 @@ dependencies:
   - jupyter-core
   - prompt-toolkit
   - ratelim
-

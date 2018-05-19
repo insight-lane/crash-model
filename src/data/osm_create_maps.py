@@ -283,4 +283,5 @@ if __name__ == '__main__':
             os.path.join(MAP_FP, 'osm_elements.geojson'),
             DOC_FP
         )
+
     write_features(os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'))

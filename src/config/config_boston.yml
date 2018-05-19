@@ -2,12 +2,14 @@
 city: Boston, Massachusetts, USA
 # The folder under data where this city's data is stored
 name: boston
+city_latitude: 42.3600825
+city_longitude: -71.0588801
 # If given, limit crashes to after start_year and before end_year
-start_year: 
+start_year:
 end_year:
 
 ##############################################################################
-# Configuration for data transformation
+# Configuration for data standardization
 
 # List of concern type information
 concern_files:
@@ -65,11 +67,11 @@ crashes_files:
 
 # If you are adding another map and its features to the open street map,
 # give it here:
-extra_map: ../data/boston/raw/Boston_Segments.shp
+extra_map: ../data/boston/raw/maps/Boston_Segments.shp
 
 # Also need to give a map in 3857 projection.
 # This is required if extra_map is given
-extra_map3857: ../data/boston/processed/maps/ma_cob_spatially_joined_streets.shp
+extra_map3857: ../data/boston/raw/maps/ma_cob_spatially_joined_streets.shp
 
 # Additional features to add from the additional map.
 # This is required if extra_map is given

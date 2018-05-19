@@ -15,9 +15,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     # Can give a config file
-    parser.add_argument("-c", "--config", type=str,
+    parser.add_argument("-c", "--config", type=str, required=True,
                         help="Config file")
-    parser.add_argument("-d", "--datadir", type=str,
+    parser.add_argument("-d", "--datadir", type=str, required=True,
                         help="Data directory")
     
     parser.add_argument("-s", "--startyear", type=str,
@@ -28,9 +28,8 @@ if __name__ == '__main__':
                         help='Whether to force update the maps')
 
     args = parser.parse_args()
-    config_file = 'data/config.yml'
-    if args.config:
-        config_file = args.config
+
+    config_file = args.config
     start_year = None
     end_year = None
     if args.startyear:

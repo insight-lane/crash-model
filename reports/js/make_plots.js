@@ -47,7 +47,7 @@ d3.csv("weekly_crashes.csv", function(d) {
 
 	weekly_crashes = data;
 
-	data = data.filter(function(d) { return d.city === "boston"; });
+	data = data.filter(function(d) { return d.city === config.cities[0].id; });
 
 	yscale.domain([0, d3.max(data, function(d) { return d.crashes; })])
 
@@ -383,7 +383,7 @@ function draw_weekly_bars(dataset, city) {
 
 
 // 	d3.selectAll("input[name='daytype']").on("change", function() {
-		
+
 // 		if (this.value==="Weekend"){
 // 			bars.data(weekend_crashes)
 // 				.transition(1000)
