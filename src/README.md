@@ -51,10 +51,10 @@ Although the processed data for our demo cities exist on data.world, you may wis
 
 To learn more about any individual steps (which are themselves often broken up into a number of steps), look at the README in that directory
 
-### 1) Data Transformation
+### 1) Data Standardization
 
-Found in src/data_transformation <br><br>
-Cities can provide csv files containing crash and concern data.  But because there isn't very much standardization of crash or concern data across cities, we use this step to turn csv files into formatted json files.
+Found in src/data_standardization <br><br>
+Cities can provide csv files containing crash and concern data.  Due to the varying recording methodologies used across cities, we run this step to turn csv files into compatible JSON files.
 
 2) Data Generation
 

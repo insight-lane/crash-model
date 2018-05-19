@@ -1,4 +1,4 @@
-from .. import transform_crashes
+from .. import standardize_crashes
 import os
 import csv
 
@@ -29,7 +29,7 @@ def test_add_id(tmpdir):
     """
     tmppath = create_test_csv(tmpdir, 'test.csv')
     filename = os.path.join(tmppath, 'test.csv')
-    transform_crashes.add_id(filename, 'ID')
+    standardize_crashes.add_id(filename, 'ID')
 
     expected = [{
         'ID': '1',
@@ -47,7 +47,7 @@ def test_add_id(tmpdir):
             assert row == expected[i]
 
     # Test calling it again and make sure it doesn't change
-    transform_crashes.add_id(filename, 'ID')
+    standardize_crashes.add_id(filename, 'ID')
     with open(filename) as f:
         csv_reader = csv.DictReader(f)
         for i, row in enumerate(csv_reader):
