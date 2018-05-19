@@ -179,13 +179,14 @@ def backup_files():
     )
 
 
-def add_point_based_features(non_inters, inters, inter_data, filename):
+def add_point_based_features(non_inters, inters, filename):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
     Point-based features need to be in 3857 projection
     Args:
-        inter_data
+        non_inters
+        inters
         filename - shape file for the osm signals data
     """
 
@@ -206,24 +207,26 @@ def add_point_based_features(non_inters, inters, inter_data, filename):
                 matches[str(near)] = []
             matches[str(near)].append(feat_type)
 
-#    updated_inters = []
+    # Add point data to intersections
     for i, inter in enumerate(inters):
-        
         if str(inter['properties']['id']) in matches.keys():
-            new_properties = []
             matched_features = set(matches[str(inter['properties']['id'])])
-
+            # Since intersections consist of multiple segments, add the
+            # point-based properties to each of them
             for prop in inter['properties']['data']:
                 for feat in matched_features:
                     prop[feat] = 1
 
-            if len(matched_features) == 2:
-                import ipdb; ipdb.set_trace()
-             
-#            import ipdb; ipdb.set_trace()
+    # Add point data to non-intersections
+    for i, non_inter in enumerate(non_inters):
+        if str(non_inter['properties']['id']) in matches.keys():
+            matched_features = set(matches[non_inter['properties']['id']])
+            n = copy.deepcopy(non_inter)
+            for feat in matched_features:
+                n[feat] = 1
+            non_inters[i] = n
 
-    with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
-        json.dump(inter_data, f)
+    return non_inters, inters
 
 
 def create_segments_from_json(roads_shp_path):
@@ -287,39 +290,44 @@ def create_segments_from_json(roads_shp_path):
             }
         })
 
-    return non_int_w_ids, union_inter, inter_segments['data']
+    return non_int_w_ids, union_inter
 
 
-def write_segments(non_int_w_ids, union_inter, inter_data):
+def write_segments(non_inters, inters):
 
-    # Store the combined segments with all properties
-    segments = non_int_w_ids + union_inter
-
-#    import ipdb; ipdb.set_trace()
-
-#    with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
-#        geojson.dump({
-#            'type': 'FeatureCollection',
-#            'features': segments
-#        }, outfile)
-
-    # Store the individual intersections without properties, since QGIS appears
-    # to have trouble with dicts of dicts, and viewing maps can be helpful
-    with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
+    # Store non-intersection segments
+    with open(os.path.join(
+            MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
-            'features': union_inter
+            'features': non_inters
         }, outfile)
 
-    with open(os.path.join(MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
-        geojson.dump({
-            'type': 'FeatureCollection',
-            'features': non_int_w_ids
-        }, outfile)
-
+    # Get just the properties for the intersections
+    inter_data = [x['properties']['data'] for x in inters]
     with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
 
+    # Store the individual intersections without properties, since QGIS appears
+    # to have trouble with dicts of dicts, and viewing maps can be helpful
+    int_w_ids = [{
+        'geometry': x['geometry'],
+        'properties': {'id': x['properties']['id']}
+    } for x in inters]
+    with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
+        geojson.dump({
+            'type': 'FeatureCollection',
+            'features': int_w_ids
+        }, outfile)
+
+    # Store the combined segments with all properties
+    segments = non_inters + inters
+
+    with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
+        geojson.dump({
+            'type': 'FeatureCollection',
+            'features': segments
+        }, outfile)
 
 
 if __name__ == '__main__':
@@ -349,22 +357,12 @@ if __name__ == '__main__':
         roads_shp_path = args.altroad
 
     elements = os.path.join(MAP_FP, 'osm_elements.geojson')
-    non_int_w_ids, inter_w_ids, inter_data \
-        = create_segments_from_json(elements)
+    non_int_w_ids, inter_w_ids = create_segments_from_json(elements)
 
-    add_point_based_features(non_int_w_ids,
-                             inter_w_ids,
-                             inter_data,
-                             os.path.join(MAP_FP, 'features.json'))
-    write_segments(non_int_w_ids, inter_w_ids, inter_data)
+    non_inters, inters = add_point_based_features(
+        non_int_w_ids,
+        inter_w_ids,
+        os.path.join(MAP_FP, 'features.json')
+    )
+    write_segments(non_inters, inters)
 
-
-#    inter_data = create_segments(roads_shp_path)
-
-    # Once the intersections and non_intersection segments exist,
-    # other features can be added
-#    signal_file = os.path.join(MAP_FP, 'osm_signals.shp')
-#    if os.path.exists(signal_file):
-#        add_signals(inter_data, signal_file)
-
-#    backup_files()

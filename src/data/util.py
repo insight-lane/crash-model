@@ -335,7 +335,6 @@ def find_nearest(records, segments, segments_index, tolerance,
 
         record_buffer_bounds = record_point.buffer(tolerance).bounds
         nearby_segments = segments_index.intersection(record_buffer_bounds)
-        import ipdb; ipdb.set_trace()
 
         segment_id_with_distance = [
             # Get db index and distance to point
