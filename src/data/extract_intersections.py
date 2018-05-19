@@ -5,7 +5,8 @@ import itertools
 import cPickle
 import os
 import argparse
-from util import track, write_points
+from util import track
+import geojson
 
 MAP_DATA_FP = os.path.dirname(
     os.path.dirname(
@@ -84,7 +85,7 @@ def generate_intersections(lines):
     return inters
 
 
-def write_intersections(inters):
+def write_intersections(inters, lines):
     """
     Given a list of shapely intersections,
     de-dupe and write shape files
@@ -92,15 +93,22 @@ def write_intersections(inters):
     Args:
         inters: list of points indicating intersections
     """
-    # schema of the shapefile
-    schema = {
-        'geometry': 'Point',
-        'properties': {
-            'id_1': 'int',
-            'id_2': 'int'
-        }
-    }
-    write_points(inters, schema, os.path.join(MAP_DATA_FP, 'inters.shp'))
+
+    inters = [
+        {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [x[0].x, x[0].y],
+            },
+            'properties': x[1]
+        } for x in inters]
+
+    with open(os.path.join(MAP_DATA_FP, 'elements.geojson'), 'w') as outfile:
+        geojson.dump({
+            'type': 'FeatureCollection',
+            'features': inters + [x for x in roads]
+        }, outfile)
 
 
 if __name__ == '__main__':
@@ -131,12 +139,13 @@ if __name__ == '__main__':
         if not os.path.exists(MAP_DATA_FP):
             os.mkdir(MAP_DATA_FP)
 
+    roads = fiona.open(shp)
     # Get all lines, dummy id
     lines = [
         (
-            line[0],
-            shape(line[1]['geometry'])
-        ) for line in enumerate(fiona.open(shp))
+            i,
+            shape(line['geometry'])
+        ) for i, line in enumerate(roads)
     ]
 
     print 'Extracting intersections and writing into ' + MAP_DATA_FP
@@ -152,4 +161,5 @@ if __name__ == '__main__':
         print 'Reading intersections from ' + pkl_file
         with open(pkl_file, 'r') as f:
             inters = cPickle.load(f)
-    write_intersections(inters)
+
+    write_intersections(inters, roads)

@@ -245,7 +245,7 @@ def write_features(all_nodes_file):
                     'longitude': node['geometry']['coordinates'][0]
                 }})
 
-    with open(os.path.join(MAP_FP, 'features.json'), "w") as f:
+    with open(os.path.join(MAP_FP, 'features.geojson'), "w") as f:
         json.dump(features, f)
 
 

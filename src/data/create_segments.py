@@ -128,57 +128,6 @@ def find_non_ints(roads, int_buffers):
     return non_int_lines, inter_segments
 
 
-def reproject_and_read(infile, outfile):
-    """
-    Reprojects points from the inters shapefile to a new projection
-        and writes to file
-    Args:
-        infile - shapefile to read from
-        outfile - shapefile to write to, in new projection
-    Returns:
-        inters - the reprojected intersections
-    """
-
-    # Reproject to 3857
-    # Necessary because original intersection extraction had null projection
-    print "Reprojecting map file " + infile
-    inters = fiona.open(infile)
-
-    reprojected_records = util.reproject_records(inters)
-
-    # Write the reprojected (to 3857) intersections to file
-    with fiona.open(outfile, 'w', crs=from_epsg(3857),
-                    schema=inters.schema, driver='ESRI Shapefile') as output:
-        for record in reprojected_records:
-            output.write(record)
-
-    # Read in reprojected intersection
-    reprojected_inters = [(shape(inter['geometry']), inter['properties'])
-                          for inter in fiona.open(outfile)]
-    print "read in {} intersection points".format(len(reprojected_inters))
-    return reprojected_inters
-
-
-def backup_files():
-    """
-    Make a copy of inters_segments, non_inters_segments, and inters_data
-    Since we'll be modifying these files if we add features from another source
-    """
-    shp_files = [
-        file for file in os.listdir(MAP_FP) if 'inters_segments.' in file]
-
-    for file in shp_files:
-        file_segs = file.split('.')
-        shutil.copyfile(
-            os.path.join(MAP_FP, file),
-            os.path.join(MAP_FP, file_segs[0] + '_orig.' + file_segs[1]))
-    # Also copy inters_data.json
-    shutil.copyfile(
-        os.path.join(DATA_FP, 'inters_data.json'),
-        os.path.join(DATA_FP, 'inters_data_orig.json')
-    )
-
-
 def add_point_based_features(non_inters, inters, filename):
     """
     Add any point-based set of features to existing segment data.
@@ -271,9 +220,9 @@ def create_segments_from_json(roads_shp_path):
     union_inter = []
     for idx, lines in inter_segments['lines'].items():
         coords = []
-        shape = unary_union(lines)
+        lines = unary_union(lines)
 
-        for line in shape:
+        for line in lines:
             for coord in line.coords:
                 coords.append(coord)
 

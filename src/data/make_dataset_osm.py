@@ -106,7 +106,7 @@ if __name__ == '__main__':
             'python',
             '-m',
             'data.extract_intersections',
-            os.path.join(extra_map),
+            os.path.join(extra_map3857),
             '-d',
             DATA_FP,
             '-n',
