@@ -27,8 +27,6 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-DATA_FP = BASE_DIR + '/data/processed/'
-
 def predict_forward(split_week, split_year, seg_data, crash_data):
     """simple function to predict crashes for specific week/year"""
     test_crash = format_crash_data(crash_data, 'crash', split_week, split_year)
@@ -71,11 +69,6 @@ mp['XGBClassifier']['learning_rate'] = ss.beta(a=2,b=15)
 # generally, if the model isn't better than chance, it's not worth reporting
 perf_cutoff = 0.5
 
-default_basedir = os.path.dirname(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.abspath(__file__))))
-
 def set_defaults(config={}):
     """
     Sets defaults if not given in the config file.
@@ -99,10 +92,10 @@ def set_defaults(config={}):
         config['process'] = True
     if 'time_target' not in config.keys():
         config['time_target'] = [15, 2017]
-    if 'datadir' not in config.keys():
-    	config['datadir'] = os.path.join(default_basedir, 'data/boston')
     if 'weeks_back' not in config.keys():
     	config['weeks_back'] = 1
+    if 'name' not in config.keys():
+        config['name'] = 'boston'
 
 
 if __name__ == '__main__':
@@ -125,7 +118,7 @@ if __name__ == '__main__':
             config = yaml.safe_load(f)
     set_defaults(config)
 
-    DATA_FP = os.path.join(config['datadir'], 'processed/')
+    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
     print('Outputting to: %s' % DATA_FP)
 
     # Default
