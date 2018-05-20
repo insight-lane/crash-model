@@ -44,8 +44,8 @@ h4 {
 
 .wrapper {
     background-color: #fff;
-    height: 600px;
-    width: 810px;
+    height: 650px;
+    width: 960px;
     margin: 20px 10px 10px 10px;
     padding: 20px;
 }
@@ -53,7 +53,7 @@ h4 {
 .plot {
     box-sizing: border-box;
     position: relative;
-    width: 850px;
+    width: 900px;
     float: left;
     background-color: #fff;
     margin: 10px;
@@ -63,8 +63,8 @@ h4 {
 .map {
 	position: absolute;
     margin-top: 10px;
-	width: 810px;
-	height: 550px;
+	width: 960px;
+	height: 600px;
 }
 
 .input_overlay {
