@@ -12,9 +12,9 @@ WORKDIR /app
 
 # Install packges
 # (gcc) installed to enable conda to create virtual environments
-RUN apt-get update -qq && apt-get install -y \
-	gcc \
-	g++ \
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
+#	gcc \
+#	g++ \
 	# apache for serving the visualisation
 	apache2 \
 	# easier management of services via supervisor
