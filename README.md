@@ -117,11 +117,11 @@ A basic Docker image has been created to run the project in a container, using t
 
  Alternatively you can build the image yourself from the Dockerfile by running the following from within the project repo:
 
-	$ docker build --tag boston-crash-modeling:latest .
+	$ docker build --tag datafordemocracy/boston-crash-modeling:latest .
 
 Once you have downloaded or built the image, you can run it in a container:
 
-	$ docker run -d -p 8080:8080 --name bcm.local -v /local/path/to/project_repo:/app boston-crash-modeling:latest
+	$ docker run -d -p 8080:8080 --name bcm.local -v /local/path/to/project_repo:/app datafordemocracy/boston-crash-modeling:latest
 
 The arguments to this command perform the following:
 
