@@ -18,6 +18,7 @@ def data_standardization(config, DATA_FP, forceupdate=False):
     """
     # standardize data, if the files don't already exist
     # or forceupdate
+    print "Standardizing data..."
     if not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'crashes.json')) or forceupdate:
         subprocess.check_call([
@@ -54,6 +55,15 @@ def data_standardization(config, DATA_FP, forceupdate=False):
 
 def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
                     forceupdate=False):
+    """
+    Generate the map and feature data for this city
+    Args:
+        config_file - path to config file
+        DATA_FP - path to data directory, e.g. ../data/boston/
+        start_year (optional)
+        end_year (optional)
+    """
+    print "Generating data and features..."
     subprocess.check_call([
         'python',
         '-m',
@@ -69,6 +79,13 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
 
 
 def train_model(config_file, DATA_FP):
+    """
+    Trains the model
+    Args:
+        config_file - path to config file
+        DATA_FP - path to data directory, e.g. ../data/boston/
+    """
+    print "Training model..."
     subprocess.check_call([
         'python',
         '-m',
@@ -81,7 +98,14 @@ def train_model(config_file, DATA_FP):
 
 
 def visualize(name, end_year):
-
+    """
+    Creates the visualization data set for a city
+    Args:
+        name - e.g. Boston, MA, USA
+        end_year - year we're visualizing, typically the last year for
+                   for which we have data
+    """
+    print "Generating visualization data"
     subprocess.check_call([
         'python',
         '-m',

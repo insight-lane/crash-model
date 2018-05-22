@@ -27,6 +27,9 @@ def snap_records(
         startyear=None, endyear=None):
 
     records = util.read_records(infile, record_type, startyear, endyear)
+    if record_type == 'concern' and not records:
+        print "no concerns found"
+        return
 
     # Find nearest crashes - 30 tolerance
     print "snapping " + record_type + " records to segments"
@@ -36,7 +39,6 @@ def snap_records(
     # Write out snapped records
     schema = records[0].schema
     shpfile = os.path.join(MAP_FP, record_type + '_joined.shp')
-    print "output " + record_type + " data to " + shpfile
     util.records_to_shapefile(schema, shpfile, records)
 
     jsonfile = os.path.join(

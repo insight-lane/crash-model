@@ -105,6 +105,7 @@ if __name__ == '__main__':
     # Check to see if the directory exists
     # if it does, it's already been initialized, so do nothing
     if not os.path.exists(DATA_FP):
+        print "Making directory structure under " + DATA_FP
         os.makedirs(DATA_FP)
         os.makedirs(os.path.join(DATA_FP, 'raw'))
         os.makedirs(crash_dir)
