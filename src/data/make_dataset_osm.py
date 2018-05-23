@@ -122,7 +122,8 @@ if __name__ == '__main__':
             '-n',
             outputdir,
             '-r',
-            extra_map3857
+            os.path.join(
+                DATA_FP, 'processed', 'maps', outputdir, 'elements.json')
         ])
 
         # Map the boston segments to the open street map segments

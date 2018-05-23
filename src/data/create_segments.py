@@ -128,7 +128,7 @@ def find_non_ints(roads, int_buffers):
     return non_int_lines, inter_segments
 
 
-def add_point_based_features(non_inters, inters, filename):
+def add_point_based_features(non_inters, inters, feats_filename):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
@@ -136,10 +136,10 @@ def add_point_based_features(non_inters, inters, filename):
     Args:
         non_inters
         inters
-        filename - shape file for the osm signals data
+        feats_filename - geojson file for point-based features data
     """
 
-    features = util.read_records(filename, 'Record')
+    features = util.read_records(feats_filename, 'Record')
 
     seg, segments_index = util.index_segments(
         inters + non_inters
@@ -263,6 +263,7 @@ def write_segments(non_inters, inters):
         'geometry': x['geometry'],
         'properties': {'id': x['properties']['id']}
     } for x in inters]
+
     with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
@@ -285,7 +286,7 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
     parser.add_argument("-r", "--altroad", type=str,
-                        help="Can give alternate road shape file")
+                        help="Can give alternate road elements geojson file")
     parser.add_argument("-n", "--newmap", type=str,
                         help="If given, write output to new directory" +
                         "within the maps directory")
@@ -300,18 +301,19 @@ if __name__ == '__main__':
 
     print "Creating segments.........................."
 
-    roads_shp_path = os.path.join(
+    elements = os.path.join(
         MAP_FP, 'osm_elements.geojson')
     if args.altroad:
-        roads_shp_path = args.altroad
+        elements = args.altroad
 
-    elements = os.path.join(MAP_FP, 'osm_elements.geojson')
-    non_int_w_ids, inter_w_ids = create_segments_from_json(elements)
+    non_inters, inters = create_segments_from_json(elements)
 
-    non_inters, inters = add_point_based_features(
-        non_int_w_ids,
-        inter_w_ids,
-        os.path.join(MAP_FP, 'features.json')
-    )
+    feats_file = os.path.join(MAP_FP, 'features.geojson')
+    if os.path.exists(feats_file):
+        non_inters, inters = add_point_based_features(
+            non_inters,
+            inters,
+            os.path.join(MAP_FP, 'features.geojson')
+        )
     write_segments(non_inters, inters)
 

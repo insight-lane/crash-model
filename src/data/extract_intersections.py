@@ -93,21 +93,24 @@ def write_intersections(inters, lines):
     Args:
         inters: list of points indicating intersections
     """
-
-    inters = [
-        {
-            'type': 'Feature',
-            'geometry': {
-                'type': 'Point',
-                'coordinates': [x[0].x, x[0].y],
-            },
-            'properties': x[1]
-        } for x in inters]
+    output_inters = []
+    for x in inters:
+        properties = x[1]
+        properties.update({'intersection': 1})
+        output_inters.append(
+            {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [x[0].x, x[0].y],
+                },
+                'properties': properties
+            })
 
     with open(os.path.join(MAP_DATA_FP, 'elements.geojson'), 'w') as outfile:
         geojson.dump({
             'type': 'FeatureCollection',
-            'features': inters + [x for x in roads]
+            'features': output_inters + [x for x in roads]
         }, outfile)
 
 
@@ -161,5 +164,5 @@ if __name__ == '__main__':
         print 'Reading intersections from ' + pkl_file
         with open(pkl_file, 'r') as f:
             inters = cPickle.load(f)
-
+    print "writing intersections and road segments to geojson"
     write_intersections(inters, roads)
