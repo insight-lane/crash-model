@@ -15,8 +15,6 @@ Output:
     geojson of historical crash data
     geojson of predictions merged with geometries
     weekly_crashes.csv
-    dow_crashes.csv
-    hourly_crashes.csv
 """
 
 # Import the necessary Python modules
@@ -70,6 +68,9 @@ def make_preds_gdf(city, year):
     output['city'] = city
 
     output = output[output.year == year] #temporary
+
+    # Filter dataset down to most recent week of predictions only
+    output = output[output.week == output.week.max()]
 
     # Read in shapefile as a GeoDataframe
     map_fp = os.path.join(DATA_FP, city, 'processed/maps')

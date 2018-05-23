@@ -27,14 +27,16 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-DATA_FP = BASE_DIR + '/data/processed/'
-
 def predict_forward(split_week, split_year, seg_data, crash_data):
     """simple function to predict crashes for specific week/year"""
     test_crash = format_crash_data(crash_data, 'crash', split_week, split_year)
     test_crash_segs = test_crash.merge(seg_data, left_on='segment_id', right_on='segment_id')
     preds = trained_model.predict_proba(test_crash_segs[best_model_features])[::,1]
-    perf = roc_auc_score(test_crash_segs['target'], preds)
+    try: 
+    	perf = roc_auc_score(test_crash_segs['target'], preds)
+    except ValueError as e:
+    	print('Only one class present, likely no crashes in the week')
+    	perf = 0
     print('Week {0}, year {1}, perf {2}'.format(split_week, split_year, perf))
     if perf<=perf_cutoff:
         print('Model performs below AUC %s, may not be usable' % perf_cutoff)
@@ -67,7 +69,6 @@ mp['XGBClassifier']['learning_rate'] = ss.beta(a=2,b=15)
 # generally, if the model isn't better than chance, it's not worth reporting
 perf_cutoff = 0.5
 
-
 def set_defaults(config={}):
     """
     Sets defaults if not given in the config file.
@@ -91,6 +92,10 @@ def set_defaults(config={}):
         config['process'] = True
     if 'time_target' not in config.keys():
         config['time_target'] = [15, 2017]
+    if 'weeks_back' not in config.keys():
+    	config['weeks_back'] = 1
+    if 'name' not in config.keys():
+        config['name'] = 'boston'
 
 
 if __name__ == '__main__':
@@ -113,7 +118,7 @@ if __name__ == '__main__':
             config = yaml.safe_load(f)
     set_defaults(config)
 
-    DATA_FP = os.path.join(args.datadir, 'processed/')
+    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
     print('Outputting to: %s' % DATA_FP)
 
     # Default
@@ -233,7 +238,11 @@ if __name__ == '__main__':
     print "full features:{}".format(features)
 
     #Initialize data
-    df = Indata(data_model, 'target')
+    try: 
+    	df = Indata(data_model, 'target')
+    except AssertionError:
+    	print('Target has only one class, likely there are no crashes in that week')
+    	raise
     #Create train/test split
     df.tr_te_split(.7)
 
@@ -275,17 +284,18 @@ if __name__ == '__main__':
     # running this to test performance at different weeks
     tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
-    # predict for all weeks past 4 months
-    all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values[16:]
-    pred_all_weeks = np.zeros([all_weeks.shape[0], data_segs.shape[0]])
-    for i, yw in enumerate(all_weeks):
+    # predict back number of weeks according to config
+    all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values
+    back_weeks = all_weeks[-config['weeks_back']:]
+    pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
+    for i, yw in enumerate(back_weeks):
         preds = predict_forward(yw[1], yw[0], data_segs, data_nonzero)
-        pred_all_weeks[i] = preds
+        pred_weeks[i] = preds
 
     # create dataframe with segment-year-week index
-    df_pred = pd.DataFrame(pred_all_weeks.T,
+    df_pred = pd.DataFrame(pred_weeks.T,
             index=data_segs.segment_id.values,
-            columns=pd.MultiIndex.from_tuples([tuple(w) for w in all_weeks]))
+            columns=pd.MultiIndex.from_tuples([tuple(w) for w in back_weeks]))
     # has year-week column index, need to stack for year-week index
     df_pred = df_pred.stack(level=[0,1])
     df_pred = df_pred.reset_index()

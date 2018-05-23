@@ -51,10 +51,11 @@ def make_config_file(yml_file, city, folder, crash, concern):
         )
     f.write(
         "# week on which to predict crashes (week, year)\n" +
-        "# will output predictions for all weeks up to this week\n" +
-        "# Choose a week towards the end of your crash data set\n" +
+        "# Best practice is to choose a week towards the end of your crash data set\n" +
         "# in format [month, year]\n" +
-        "time_target: [30, 2017]\n"
+        "time_target: [30, 2017]\n" + 
+        "# specify how many weeks back to predict in output of train_model\n"+
+        "weeks_back: 1"
     )
     f.close()
     print "Wrote new configuration file in {}".format(yml_file)
@@ -104,6 +105,7 @@ if __name__ == '__main__':
     # Check to see if the directory exists
     # if it does, it's already been initialized, so do nothing
     if not os.path.exists(DATA_FP):
+        print "Making directory structure under " + DATA_FP
         os.makedirs(DATA_FP)
         os.makedirs(os.path.join(DATA_FP, 'raw'))
         os.makedirs(crash_dir)
