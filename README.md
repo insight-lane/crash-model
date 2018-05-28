@@ -111,12 +111,30 @@ You'll want to reproduce the packages and package versions required to run code 
 If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/data_generation) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/benchmark) for running the benchmark model.
 
 ### Docker:
-A basic Dockerfile has been created to run the project in a container, using the ContinuumIO anaconda base image (Python 2.7). Right now the image simply installs the project code & its dependencies, creates the 'boston-crash-model' virtual environment and starts an apache2 webserver (via supervisor daemon) to serve the visualization. A pre-built image is not yet available but will be shortly. To build the image from scratch and run it in a container, execute the following (as root user) from the project's main directory:
+A basic Docker image has been created to run the project in a container, using the ContinuumIO anaconda base image (Python 2.7). Right now the image simply installs the project code & its dependencies, creates the 'boston-crash-model' virtual environment and starts an apache2 webserver (via supervisor daemon) to serve the visualization. You can download the pre-built image by running the following from a machine with the Docker engine installed:
 
-	$ docker build --tag boston-crash-modeling:latest .
-	$ docker run -d -p 8080:8080 --name bcm.local boston-crash-modeling:latest
+	$ docker pull datafordemocracy/boston-crash-modeling:latest
+
+ Alternatively you can build the image yourself from the Dockerfile by running the following from within the project repo:
+
+	$ docker build --tag datafordemocracy/boston-crash-modeling:latest .
+
+Once you have downloaded or built the image, you can run it in a container:
+
+	$ docker run -d -p 8080:8080 --name bcm.local -v /local/path/to/project_repo:/app datafordemocracy/boston-crash-modeling:latest
+
+The arguments to this command perform the following:
+
+1. -d detaches the container and runs it in the background (gives you your shell back)
+2. -p 8080:8080 maps port 8080 from the container to 8080 on your local machine (required if you want to view the visualization via browser)
+3. --name bcm.local names the container 'bcm.local' (or whatever value you specify)
+4. -v /local/path/to/project_repo:/app mounts your local machine's copy of the project repo into /app in the container. Without this, you will likely be running an out of date version of the project code.
 
 The visualization should now be visible at http://localhost:8080/reports/historical_crash_map.html
+
+Once you have a running container, you can get a shell on it to test scripts etc. by running:
+
+	$ docker exec -it bcm.local /bin/bash
 
 ### Data:
 

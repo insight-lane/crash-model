@@ -287,6 +287,9 @@ def read_records(filename, record_type, startyear=None, endyear=None):
 
     records = []
     items = json.load(open(filename))
+    if not items:
+        return []
+
     for item in items:
         record = None
         if record_type == 'crash':

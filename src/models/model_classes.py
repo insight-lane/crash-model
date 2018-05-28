@@ -26,6 +26,8 @@ class Indata():
         else:
             self.data = data
         self.target = target
+        # check to see that target has more than one value
+        assert self.data[self.target].nunique()>1
     
     # Split into train/test
     # pct : percent training observations

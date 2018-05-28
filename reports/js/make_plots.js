@@ -47,7 +47,7 @@ d3.csv("weekly_crashes.csv", function(d) {
 
 	weekly_crashes = data;
 
-	data = data.filter(function(d) { return d.city === "boston"; });
+	data = data.filter(function(d) { return d.city === config.cities[0].id; });
 
 	yscale.domain([0, d3.max(data, function(d) { return d.crashes; })])
 
@@ -76,7 +76,10 @@ d3.csv("weekly_crashes.csv", function(d) {
 		.attr("y", function(d) { return yscale(d.crashes); })
 		.attr("width", barWidth)
 		.attr("height", function(d) { return h - yscale(d.crashes); })
-		.style("fill", "#b2b2b2");
+		.style("fill", "#b2b2b2")
+		.style("fill", "#b2b2b2")
+		.filter(function(d) { return d.week === 1; })
+		.style("fill", "#d500f9");
 
 	// draw_weekly_bars(weekly_crashes, "Boston");
 
@@ -383,7 +386,7 @@ function draw_weekly_bars(dataset, city) {
 
 
 // 	d3.selectAll("input[name='daytype']").on("change", function() {
-		
+
 // 		if (this.value==="Weekend"){
 // 			bars.data(weekend_crashes)
 // 				.transition(1000)
