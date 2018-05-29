@@ -179,39 +179,26 @@ def write_geojson(way_results, node_results, outfp):
 
     # Add the ways
     for way_result in way_results:
-        feats.append({
-            'type': 'Feature',
-            'geometry': {
-                'type': way_result['geometry'].type,
-                'coordinates': [x for x in way_result['geometry'].coords]
-            },
-            'properties': way_result['properties']
-        })
+        feats.append(geojson.Feature(
+            geometry=geojson.LineString(
+                [x for x in way_result['geometry'].coords]),
+            properties=way_result['properties'])
+        )
 
-    # Add the nodes, in a dict, ordered by id
-    node_dict = {}
     for node in node_results:
         if not node['properties']['dead_end']:
             node['properties']['intersection'] = 1
         if node['properties']['highway'] == 'traffic_signals':
             node['properties']['signal'] = 1
 
-        node_dict[node['properties']['osmid']] = {
-            'type': 'Feature',
-            'geometry': {
-                'type': node['geometry']['type'],
-                'coordinates': node['geometry']['coordinates']
-            },
-            'properties': node['properties']
-        }
+        feats.append(geojson.Feature(
+            geometry=geojson.Point(node['geometry']['coordinates']),
+            properties=node['properties'])
+        )
 
-    # Add nodes to ways
-    feats = feats + node_dict.values()
+    feat_collection = geojson.FeatureCollection(feats)
     with open(outfp, 'w') as outfile:
-        geojson.dump({
-            'type': 'FeatureCollection',
-            'features': feats
-        }, outfile)
+        geojson.dump(feat_collection, outfile)
 
 
 def write_features(all_nodes_file):
@@ -229,21 +216,20 @@ def write_features(all_nodes_file):
     # only look at signals and crosswalks
     for node in all_node_results:
         if node['properties']['highway'] == 'crossing':
-            features.append({
-                'id': node['properties']['osmid'],
-                'feature': 'crosswalk',
-                'location': {
-                    'latitude': node['geometry']['coordinates'][1],
-                    'longitude': node['geometry']['coordinates'][0]
-                }})
+            features.append(geojson.Feature(
+                geometry=geojson.Point(node['geometry']['coordinates']),
+                id=node['properties']['osmid'],
+                properties={'feature': 'crosswalk'},
+            ))
+
         elif node['properties']['highway'] == 'traffic_signals':
-            features.append({
-                'id': node['properties']['osmid'],
-                'feature': 'signal',
-                'location': {
-                    'latitude': node['geometry']['coordinates'][1],
-                    'longitude': node['geometry']['coordinates'][0]
-                }})
+            features.append(geojson.Feature(
+                geometry=geojson.Point(node['geometry']['coordinates']),
+                id=node['properties']['osmid'],
+                properties={'feature': 'signal'},
+            ))
+
+    features = geojson.FeatureCollection(features)
 
     with open(os.path.join(MAP_FP, 'features.geojson'), "w") as f:
         json.dump(features, f)

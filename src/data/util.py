@@ -12,6 +12,7 @@ from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
 from record import Crash, Concern, Record
+import geojson
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -271,6 +272,31 @@ def csv_to_projected_records(filename, x='X', y='Y'):
     return records
 
 
+def read_records_from_geojson(filename):
+    """
+    Reads appropriately formatted geojson file,
+    converts latitude and longitude to projection 4326, and turns into
+    a Record object
+    Args:
+        filename - geojson file
+    Returns:
+        A list of Records
+    """
+
+    records = []
+    with open(filename) as f:
+        items = geojson.load(f)
+        for item in items['features']:
+            properties = item['properties']
+            properties['location'] = {
+                'latitude': item['geometry']['coordinates'][1],
+                'longitude': item['geometry']['coordinates'][0]
+            }
+            record = Record(properties)
+            records.append(record)
+    return records
+
+
 def read_records(filename, record_type,
                  startyear=None, endyear=None):
     """
@@ -485,7 +511,7 @@ def reproject(coords, inproj='epsg:4326', outproj='epsg:3857'):
     outproj = pyproj.Proj(init=outproj)
 
     for coord in coords:
-        re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+        re_point = pyproj.transform(inproj, outproj, coord[0], coord[1])
         point = Point(re_point)
         new_coords.append(mapping(point))
     return new_coords

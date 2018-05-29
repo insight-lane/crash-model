@@ -139,7 +139,7 @@ def add_point_based_features(non_inters, inters, feats_filename):
         feats_filename - geojson file for point-based features data
     """
 
-    features = util.read_records(feats_filename, 'Record')
+    features = util.read_records_from_geojson(feats_filename)
 
     seg, segments_index = util.index_segments(
         inters + non_inters
@@ -148,6 +148,7 @@ def add_point_based_features(non_inters, inters, feats_filename):
     util.find_nearest(features, seg, segments_index, 20, type_record=True)
 
     matches = {}
+
     for feature in features:
         near = feature.near_id
         feat_type = feature.properties['feature']
