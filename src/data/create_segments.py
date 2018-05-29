@@ -233,17 +233,17 @@ def create_segments_from_json(roads_shp_path):
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
     for idx, lines in inter_segments['lines'].items():
-        coords = []
+
         lines = unary_union(lines)
 
+        coords = []
         for line in lines:
-            for coord in line.coords:
-                coords.append(coord)
+            coords += [[x for x in line.coords]]
 
         union_inter.append({
             'type': 'Feature',
             'geometry': {
-                'type': 'LineString',
+                'type': 'MultiLineString',
                 'coordinates': coords,
             },
             # Properties will consist of an id, and the data elements, for now
