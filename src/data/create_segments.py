@@ -201,6 +201,19 @@ def create_segments_from_json(roads_shp_path):
 
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
+    polys = []
+    for buffer in int_buffers:
+        coords = [[x for x in buffer.exterior.coords]]
+        polys.append(geojson.Feature(
+            geometry=geojson.Polygon(coords), properties={}))
+
+    buff = geojson.FeatureCollection(polys)
+    with open(os.path.join(
+            MAP_FP, 'buffers.geojson'), 'w') as outfile:
+        geojson.dump(buff, outfile)
+    print "new file:" + os.path.join(
+        MAP_FP, 'buffers.geojson')
+
     non_int_lines, inter_segments = find_non_ints(
         roads, int_buffers)
 
