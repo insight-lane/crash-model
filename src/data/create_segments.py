@@ -101,29 +101,19 @@ def find_non_ints(roads, int_buffers):
             # Find part of road outside of the intersecting parts
             diff = road_line.difference(unary_union(road_int_buffers))
             if 'LineString' == diff.type:
-                non_int_lines.append({
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': [x for x in diff.coords],
-                    },
-                    'properties': road['properties']
-                })
+                non_int_lines.append(geojson.Feature(
+                    geometry=geojson.LineString([x for x in diff.coords]),
+                    properties=road['properties'])
+                )
             elif 'MultiLineString' == diff.type:
-
                 coords = []
                 for l in diff:
                     for coord in l.coords:
                         coords.append(coord)
-
-                non_int_lines.append({
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': coords,
-                    },
-                    'properties': road['properties']
-                })
+                non_int_lines.append(geojson.Feature(
+                    geometry=geojson.LineString(coords),
+                    properties=road['properties'])
+                )
 
     return non_int_lines, inter_segments
 
@@ -212,8 +202,6 @@ def create_segments_from_json(roads_shp_path):
     with open(os.path.join(
             MAP_FP, 'buffers.geojson'), 'w') as outfile:
         geojson.dump(buff, outfile)
-    print "new file:" + os.path.join(
-        MAP_FP, 'buffers.geojson')
 
     non_int_lines, inter_segments = find_non_ints(
         roads, int_buffers)
@@ -240,18 +228,15 @@ def create_segments_from_json(roads_shp_path):
         for line in lines:
             coords += [[x for x in line.coords]]
 
-        union_inter.append({
-            'type': 'Feature',
-            'geometry': {
-                'type': 'MultiLineString',
-                'coordinates': coords,
-            },
-            # Properties will consist of an id, and the data elements, for now
-            'properties': {
-                'id': idx,
-                'data': inter_segments['data'][idx]
-            }
-        })
+        properties = {
+            'id': idx,
+            'data': inter_segments['data'][idx]
+        }
+        union_inter.append(geojson.Feature(
+            geometry=geojson.MultiLineString(coords),
+            id=idx,
+            properties=properties,
+        ))
 
     return non_int_w_ids, union_inter
 
@@ -268,6 +253,7 @@ def write_segments(non_inters, inters):
 
     # Get just the properties for the intersections
     inter_data = [x['properties']['data'] for x in inters]
+
     with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
 
