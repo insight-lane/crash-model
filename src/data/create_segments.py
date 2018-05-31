@@ -5,18 +5,15 @@
 # Draws on: http://bit.ly/2m7469y
 # Developed by: bpben
 
-import fiona
 import rtree
 import json
 import copy
-from fiona.crs import from_epsg
-from shapely.geometry import shape, Point, LineString
+from shapely.geometry import Point, LineString
 from shapely.ops import unary_union
 from collections import defaultdict
 import util
 import argparse
 import os
-import shutil
 import geojson
 
 BASE_DIR = os.path.dirname(
@@ -246,13 +243,11 @@ def write_segments(non_inters, inters):
     # Store non-intersection segments
     with open(os.path.join(
             MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
-        geojson.dump({
-            'type': 'FeatureCollection',
-            'features': non_inters
-        }, outfile)
+        geojson.dump(geojson.FeatureCollection(non_inters), outfile)
 
     # Get just the properties for the intersections
-    inter_data = [x['properties']['data'] for x in inters]
+    inter_data = {
+        str(x['properties']['id']): x['properties']['data'] for x in inters}
 
     with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
@@ -265,19 +260,13 @@ def write_segments(non_inters, inters):
     } for x in inters]
 
     with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
-        geojson.dump({
-            'type': 'FeatureCollection',
-            'features': int_w_ids
-        }, outfile)
+        geojson.dump(geojson.FeatureCollection(int_w_ids), outfile)
 
     # Store the combined segments with all properties
     segments = non_inters + inters
 
     with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
-        geojson.dump({
-            'type': 'FeatureCollection',
-            'features': segments
-        }, outfile)
+        geojson.dump(geojson.FeatureCollection(segments), outfile)
 
 
 if __name__ == '__main__':

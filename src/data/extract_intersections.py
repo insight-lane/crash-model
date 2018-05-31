@@ -97,21 +97,13 @@ def write_intersections(inters, lines):
     for x in inters:
         properties = x[1]
         properties.update({'intersection': 1})
-        output_inters.append(
-            {
-                'type': 'Feature',
-                'geometry': {
-                    'type': 'Point',
-                    'coordinates': [x[0].x, x[0].y],
-                },
-                'properties': properties
-            })
-
+        output_inters.append(geojson.Feature(
+            geometry=geojson.Point([x[0].x, x[0].y]),
+            properties=properties
+        ))
     with open(os.path.join(MAP_DATA_FP, 'elements.geojson'), 'w') as outfile:
-        geojson.dump({
-            'type': 'FeatureCollection',
-            'features': output_inters + [x for x in roads]
-        }, outfile)
+        geojson.dump(geojson.FeatureCollection(
+            output_inters + [x for x in roads]), outfile)
 
 
 if __name__ == '__main__':

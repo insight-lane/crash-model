@@ -147,8 +147,21 @@ def plot_hourly_rates(all_counts, outfile):
     pyplot.savefig(outfile)
 
 
+def read_geojson(fp):
+    """ Read geojson file, output tuple geometry + property """
+
+    with open(fp) as f:
+        data = json.load(f)
+
+    out = [(shape(line['geometry']), line['properties'])
+           for line in data['features']]
+
+    return(out)
+
+
 def read_shp(fp):
     """ Read shp, output tuple geometry + property """
+
     out = [(shape(line['geometry']), line['properties'])
            for line in fiona.open(fp)]
     return(out)
