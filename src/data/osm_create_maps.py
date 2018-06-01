@@ -58,8 +58,8 @@ def simple_get_roads(city):
     shutil.rmtree(tempdir)
 
 
-def reproject_and_write(ways_file, nodes_file,
-                        result_file, DOC_FP):
+def clean_and_write(ways_file, nodes_file,
+                    result_file, DOC_FP):
     """
     Takes several shape files in 4326 projection, created from osmnx,
     reprojects them, and calls write_geojson
@@ -72,10 +72,9 @@ def reproject_and_write(ways_file, nodes_file,
     Returns:
         None, writes a geojson file
     """
-    reprojected_ways = clean_and_reproject_ways(ways_file, DOC_FP)
-    f = fiona.open(nodes_file)
-    reprojected_nodes = util.reproject_records(f)
-    write_geojson(reprojected_ways, reprojected_nodes,
+    cleaned_ways = clean_ways(ways_file, DOC_FP)
+    nodes = fiona.open(nodes_file)
+    write_geojson(cleaned_ways, nodes,
                   result_file)
 
 
@@ -98,7 +97,7 @@ def write_highway_keys(DOC_FP, highway_keys):
             w.writerow(item)
 
 
-def clean_and_reproject_ways(orig_file, DOC_FP):
+def clean_ways(orig_file, DOC_FP):
     """
     Reads in osm_ways file, cleans up the features, and reprojects
     results into 3857 projection
@@ -118,10 +117,12 @@ def clean_and_reproject_ways(orig_file, DOC_FP):
         a list of reprojected way lines
     """
 
-    f = fiona.open(orig_file)
-    reprojected_way_lines = util.reproject_records(f)
+    way_lines = fiona.open(orig_file)
+
     highway_keys = {}
-    for way_line in reprojected_way_lines:
+    results = []
+    for way_line in way_lines:
+
         # All features need to be ints, so convert them here
 
         # Use speed limit if given in osm
@@ -165,9 +166,10 @@ def clean_and_reproject_ways(orig_file, DOC_FP):
             'signal': 0,
             'oneway': oneway
         })
+        results.append(way_line)
 
     write_highway_keys(DOC_FP, highway_keys)
-    return reprojected_way_lines
+    return results
 
 
 def write_geojson(way_results, node_results, outfp):
@@ -175,15 +177,7 @@ def write_geojson(way_results, node_results, outfp):
     Given a list of ways, intersection nodes, and all nodes, write them
     out to a geojson file.
     """
-    feats = []
-
-    # Add the ways
-    for way_result in way_results:
-        feats.append(geojson.Feature(
-            geometry=geojson.LineString(
-                [x for x in way_result['geometry'].coords]),
-            properties=way_result['properties'])
-        )
+    feats = way_results
 
     for node in node_results:
         if not node['properties']['dead_end']:
@@ -261,9 +255,9 @@ if __name__ == '__main__':
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
        or args.forceupdate:
-        print "Reprojecting and writing to {}...".format('osm_elements.geojson')
+        print "Cleaning and writing to {}...".format('osm_elements.geojson')
 
-        reproject_and_write(
+        clean_and_write(
             os.path.join(MAP_FP, 'osm_ways.shp'),
             os.path.join(MAP_FP, 'osm_nodes.shp'),
             os.path.join(MAP_FP, 'osm_elements.geojson'),

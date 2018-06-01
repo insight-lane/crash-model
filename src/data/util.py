@@ -544,19 +544,18 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     results = []
     inproj = pyproj.Proj(init=inproj)
     outproj = pyproj.Proj(init=outproj)
+
     for record in records:
 
         coords = record['geometry']['coordinates']
         if record['geometry']['type'] == 'Point':
             re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
             point = Point(re_point)
-            results.append({'geometry': mapping(point),
+            results.append({'geometry': point,
                             'properties': record['properties']})
         elif record['geometry']['type'] == 'MultiLineString':
             new_coords = []
-            print coords
             for segment in coords:
-                print segment
                 new_segment = [
                     pyproj.transform(
                         inproj, outproj, segment[0][0], segment[0][1]),
@@ -575,7 +574,27 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
                 )
             results.append({'geometry': LineString(new_coords),
                             'properties': record['properties']})
+
     return results
+
+
+def prepare_geojson(records):
+    """
+    Prepares a set of records to be written as geojson, reprojecting
+    from 4326 to 3857
+    Args:
+        records - a list of dicts with geometry and properties
+    Results:
+        A geojson feature collection
+    """
+    results = reproject_records(records, inproj='epsg:3857',
+                                outproj='epsg:4326')
+    results = [geojson.Feature(
+        geometry=mapping(x['geometry']),
+        id=x['properties']['id'],
+        properties=x['properties']) for x in results]
+
+    return geojson.FeatureCollection(results)
 
 
 def make_schema(geometry, properties):

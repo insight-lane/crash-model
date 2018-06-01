@@ -15,6 +15,7 @@ import util
 import argparse
 import os
 import geojson
+import fiona
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -36,9 +37,8 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
         these are circles, or groups of overlapping circles
     """
 
-    buffered_intersections = [Point(intersection[
-        'geometry']['coordinates']).buffer(intersection_buffer_units)
-        for intersection in intersections]
+    buffered_intersections = [intersection['geometry'].buffer(
+        intersection_buffer_units) for intersection in intersections]
 
     return unary_union(buffered_intersections)
 
@@ -79,7 +79,8 @@ def find_non_ints(roads, int_buffers):
     for road in roads:
         road_int_buffers = []
         # For each intersection whose buffer intersects road
-        road_line = LineString(road['geometry']['coordinates'])
+
+        road_line = road['geometry']
         for idx in int_buffers_index.intersection(road_line.bounds):
 
             int_buffer = int_buffers[idx]
@@ -168,12 +169,12 @@ def add_point_based_features(non_inters, inters, feats_filename):
 
 def create_segments_from_json(roads_shp_path):
 
-    with open(roads_shp_path) as f:
-        data = json.load(f)
+    data = fiona.open(roads_shp_path)
+    data = util.reproject_records([x for x in data])
 
     # All the line strings are roads
-    roads = [x for x in data['features']
-             if x['geometry']['type'] == 'LineString']
+    roads = [x for x in data
+             if x['geometry'].type == 'LineString']
 
     print "read in {} road segments".format(len(roads))
 
@@ -183,12 +184,13 @@ def create_segments_from_json(roads_shp_path):
 
     # Get the intersection list by excluding anything that's not labeled
     # as an intersection
-    inters = [x for x in data['features'] if x['geometry']['type'] == 'Point'
+    inters = [x for x in data if x['geometry'].type == 'Point'
               and 'intersection' in x['properties'].keys()
               and x['properties']['intersection']]
 
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
+
     polys = []
     for buffer in int_buffers:
         coords = [[x for x in buffer.exterior.coords]]
@@ -241,9 +243,13 @@ def create_segments_from_json(roads_shp_path):
 def write_segments(non_inters, inters):
 
     # Store non-intersection segments
+
+    # Project back into 4326 for storage
+    non_inters = util.prepare_geojson(non_inters)
+
     with open(os.path.join(
             MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
-        geojson.dump(geojson.FeatureCollection(non_inters), outfile)
+        geojson.dump(non_inters, outfile)
 
     # Get just the properties for the intersections
     inter_data = {
@@ -259,11 +265,13 @@ def write_segments(non_inters, inters):
         'properties': {'id': x['properties']['id']}
     } for x in inters]
 
+    int_w_ids = util.prepare_geojson(int_w_ids)
+
     with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
         geojson.dump(geojson.FeatureCollection(int_w_ids), outfile)
 
     # Store the combined segments with all properties
-    segments = non_inters + inters
+    segments = non_inters['features'] + int_w_ids['features']
 
     with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
         geojson.dump(geojson.FeatureCollection(segments), outfile)
