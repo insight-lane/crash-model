@@ -6,7 +6,6 @@ import rtree
 import os
 import json
 import geojson
-import fiona
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -303,19 +302,13 @@ if __name__ == '__main__':
     non_inters_osm_file = os.path.join(
         MAP_FP, 'non_inters_segments.geojson')
     print "Reading original map from " + non_inters_osm_file
-    osm_map_non_inter = fiona.open(non_inters_osm_file)
-    osm_map_non_inter = util.reproject_records([x for x in osm_map_non_inter])
-    osm_map_non_inter = [(x['geometry'], x['properties'])
-                         for x in osm_map_non_inter]
+    osm_map_non_inter = util.read_geojson(non_inters_osm_file)
 
     non_inters_new_file = os.path.join(
         MAP_FP, args.map2dir, 'non_inters_segments.geojson')
     print "Reading new map from " + non_inters_new_file
 
-    new_map_non_inter = fiona.open(non_inters_new_file)
-    new_map_non_inter = util.reproject_records([x for x in new_map_non_inter])
-    new_map_non_inter = [(x['geometry'], x['properties'])
-                         for x in new_map_non_inter]
+    new_map_non_inter = util.read_geojson(non_inters_new_file)
 
     # Index for the new map
     new_buffered = []
@@ -344,17 +337,10 @@ if __name__ == '__main__':
         geojson.dump(output, outfile)
 
     # Now do intersections
-    osm_inter_map = os.path.join(MAP_FP, 'inters_segments.geojson')
-    osm_map_inter = fiona.open(osm_inter_map)
-    osm_map_inter = util.reproject_records([x for x in osm_map_inter])
-    osm_map_inter = [(x['geometry'], x['properties'])
-                     for x in osm_map_inter]
-
-    new_map_inter = fiona.open(os.path.join(
+    osm_map_inter = util.read_geojson(
+        os.path.join(MAP_FP, 'inters_segments.geojson'))
+    new_map_inter = util.read_geojson(os.path.join(
         MAP_FP, args.map2dir, 'inters_segments.geojson'))
-    new_map_inter = util.reproject_records([x for x in new_map_inter])
-    new_map_inter = [(x['geometry'], x['properties'])
-                     for x in new_map_inter]
 
     orig_buffered_inter = []
     orig_index_inter = rtree.index.Index()

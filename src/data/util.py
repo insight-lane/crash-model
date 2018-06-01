@@ -148,15 +148,12 @@ def plot_hourly_rates(all_counts, outfile):
 
 
 def read_geojson(fp):
-    """ Read geojson file, output tuple geometry + property """
+    """ Read geojson file, reproject to 3857, and
+    output tuple geometry + property """
 
-    with open(fp) as f:
-        data = json.load(f)
-
-    out = [(shape(line['geometry']), line['properties'])
-           for line in data['features']]
-
-    return(out)
+    data = fiona.open(fp)
+    data = reproject_records([x for x in data])
+    return [(x['geometry'], x['properties']) for x in data]
 
 
 def read_shp(fp):
