@@ -266,9 +266,8 @@ def write_segments(non_inters, inters):
     } for x in inters]
 
     int_w_ids = util.prepare_geojson(int_w_ids)
-
     with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
-        geojson.dump(geojson.FeatureCollection(int_w_ids), outfile)
+        geojson.dump(int_w_ids, outfile)
 
     # Store the combined segments with all properties
     segments = non_inters['features'] + int_w_ids['features']

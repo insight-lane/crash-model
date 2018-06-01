@@ -591,7 +591,7 @@ def prepare_geojson(records):
                                 outproj='epsg:4326')
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
-        id=x['properties']['id'],
+        id=x['properties']['id'] if 'id' in x['properties'] else '',
         properties=x['properties']) for x in results]
 
     return geojson.FeatureCollection(results)

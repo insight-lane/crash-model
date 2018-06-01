@@ -5,7 +5,7 @@ import itertools
 import cPickle
 import os
 import argparse
-from util import track
+from util import track, prepare_geojson
 import geojson
 
 MAP_DATA_FP = os.path.dirname(
@@ -85,7 +85,7 @@ def generate_intersections(lines):
     return inters
 
 
-def write_intersections(inters, lines):
+def write_intersections(inters, roads):
     """
     Given a list of shapely intersections,
     de-dupe and write shape files
@@ -101,9 +101,12 @@ def write_intersections(inters, lines):
             geometry=geojson.Point([x[0].x, x[0].y]),
             properties=properties
         ))
+    output_inters = prepare_geojson(output_inters)
+    roads = prepare_geojson(roads)
+
     with open(os.path.join(MAP_DATA_FP, 'elements.geojson'), 'w') as outfile:
         geojson.dump(geojson.FeatureCollection(
-            output_inters + [x for x in roads]), outfile)
+            output_inters['features'] + roads['features']), outfile)
 
 
 if __name__ == '__main__':
