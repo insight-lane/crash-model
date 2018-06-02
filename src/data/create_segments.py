@@ -8,7 +8,6 @@
 import rtree
 import json
 import copy
-from shapely.geometry import Point, LineString
 from shapely.ops import unary_union
 from collections import defaultdict
 import util

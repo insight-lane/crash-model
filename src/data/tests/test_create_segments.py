@@ -1,6 +1,5 @@
 from .. import create_segments
 import fiona
-from shapely.geometry import shape
 import os
 import geojson
 from .. import util
@@ -20,11 +19,11 @@ def make_shape_file(tmpdir):
 
 def test_get_intersection_buffers():
     """
-    Use small test version of inters_3857.shp to test
+    Use small test version of inters.shp to test
     """
 
     inters = fiona.open(
-        TEST_FP + '/data/processed/maps/inters_3857.geojson')
+        TEST_FP + '/data/processed/maps/inters.geojson')
     inters = util.reproject_records([x for x in inters])
 
     assert len(inters) == 6
@@ -39,15 +38,14 @@ def test_get_intersection_buffers():
 
 
 def test_find_non_ints():
-    roads_shp_path = TEST_FP + \
-        '/data/processed/maps/ma_cob_spatially_joined_streets.shp'
-    roads = [(shape(road['geometry']), road['properties'])
-             for road in fiona.open(roads_shp_path)]
-    inters = [
-        (shape(inter['geometry']), inter['properties'])
-        for inter in fiona.open(
-            TEST_FP + '/data/processed/maps/inters_3857.shp'
-        )]
+
+    roads = fiona.open(TEST_FP +
+                '/data/processed/maps/ma_cob_spatially_joined_streets.geojson')
+
+    roads = util.reproject_records([x for x in roads])
+
+    inters = fiona.open(TEST_FP + '/data/processed/maps/inters.geojson')
+    inters = util.reproject_records([x for x in inters])
 
     int_buffers = create_segments.get_intersection_buffers(inters, 20)
     non_int_lines, inter_segments = create_segments.find_non_ints(
