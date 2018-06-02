@@ -1,49 +1,32 @@
 from .. import create_segments
 import fiona
-from shapely.geometry import Point, mapping, shape
-from fiona.crs import from_epsg
+from shapely.geometry import shape
 import os
+import geojson
+from .. import util
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
-
-
-def test_reproject_and_read(tmpdir):
-    make_shape_file(tmpdir)
-    results = create_segments.reproject_and_read(
-        tmpdir.strpath, tmpdir.strpath + '/outfile')
-
-    assert results[0][0].coords
-    reprojected = fiona.open(tmpdir.strpath + '/outfile')
-    assert reprojected.crs == {'init': u'epsg:3857'}
 
 
 def make_shape_file(tmpdir):
     tmppath = tmpdir.strpath
 
-    schema = {
-        'geometry': 'Point',
-        'properties': {
-            'id_1': 'int',
-            'id_2': 'int'
-        }
-    }
-    with fiona.open(tmppath, 'w', 'ESRI Shapefile', schema,
-                    crs=from_epsg(3857)) as infile:
-        infile.write({
-            'geometry': mapping(Point(-71.08724754844711, 42.352043744961)),
-            'properties': {'id_1': 1, 'id_2': 2}
-        })
+    with open(tmppath, 'w') as outfile:
+        geojson.dump(geojson.FeatureCollection(
+            geojson.Feature(
+                geometry=geojson.Point(-71.08724754844711, 42.352043744961),
+                properties={'id_1': 1, 'id_2': 2})), outfile)
 
 
 def test_get_intersection_buffers():
     """
     Use small test version of inters_3857.shp to test
     """
-    inters = [
-        (shape(inter['geometry']), inter['properties'])
-        for inter in fiona.open(
-            TEST_FP + '/data/processed/maps/inters_3857.shp'
-        )]
+
+    inters = fiona.open(
+        TEST_FP + '/data/processed/maps/inters_3857.geojson')
+    inters = util.reproject_records([x for x in inters])
+
     assert len(inters) == 6
 
     # Two test intersections overlap with the regular buffer
