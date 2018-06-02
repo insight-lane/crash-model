@@ -156,14 +156,6 @@ def read_geojson(fp):
     return [(x['geometry'], x['properties']) for x in data]
 
 
-def read_shp(fp):
-    """ Read shp, output tuple geometry + property """
-
-    out = [(shape(line['geometry']), line['properties'])
-           for line in fiona.open(fp)]
-    return(out)
-
-
 def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
     """ Write Shapefile
     Args:
