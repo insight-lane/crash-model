@@ -40,7 +40,7 @@ def test_get_intersection_buffers():
 def test_find_non_ints():
 
     roads = fiona.open(TEST_FP +
-                '/data/processed/maps/ma_cob_spatially_joined_streets.geojson')
+                       '/data/processed/maps/boston_test_elements.geojson')
 
     roads = util.reproject_records([x for x in roads])
 
