@@ -37,7 +37,7 @@ def test_add_map(tmpdir):
         '-d',
         path,
         '-r',
-        os.path.join(data_path, 'osm3857.geojson')
+        os.path.join(data_path, 'osm.geojson')
     ])
 
     # Extract and create on supplemental map
