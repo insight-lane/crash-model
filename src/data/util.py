@@ -411,9 +411,19 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
 
     if get_inter:
         inter = fiona.open(dirname + '/inters_segments.geojson')
+        inter = reproject_records([x for x in inter])
+        inter = [{
+            'geometry': mapping(x['geometry']),
+            'properties': x['properties']} for x in inter]
+
     if get_non_inter:
         non_inter = fiona.open(
             dirname + '/non_inters_segments.geojson')
+        non_inter = reproject_records([x for x in non_inter])
+        non_inter = [{
+            'geometry': mapping(x['geometry']),
+            'properties': x['properties']} for x in non_inter]
+
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 
