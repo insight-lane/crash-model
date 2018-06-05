@@ -108,9 +108,8 @@ def write_intersections(inters, roads):
             ))
         seen_points[str(x[0].x) + str(x[0].y)] = True
 
-    # These shapes are already in 4326 projection
-    output_inters = prepare_geojson(output_inters, reproject=False)
-    roads = prepare_geojson(roads, reproject=False)
+    output_inters = prepare_geojson(output_inters)
+    roads = prepare_geojson(roads)
 
     elements = geojson.FeatureCollection(
         output_inters['features'] + roads['features'])
