@@ -40,9 +40,9 @@ def test_all(tmpdir):
         path,
     ])
     data = json.load(open(path + '/processed/crash_joined.json'))
-    assert data[0]['near_id'] == 3
+    assert data[0]['near_id'] == 2
 
     data = json.load(open(path + '/processed/concern_joined.json'))
-    assert data[0]['near_id'] == 2
+    assert data[0]['near_id'] == 3
 
 
