@@ -577,7 +577,7 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     return results
 
 
-def prepare_geojson(records):
+def prepare_geojson(records, reproject=True):
     """
     Prepares a set of records to be written as geojson, reprojecting
     from 4326 to 3857
@@ -586,12 +586,17 @@ def prepare_geojson(records):
     Results:
         A geojson feature collection
     """
-    results = reproject_records(records, inproj='epsg:3857',
-                                outproj='epsg:4326')
+
+    # If we don't reproject, inproj and outproj are the same
+    inproj = 'epsg:4326'
+    outproj = 'epsg:4326'
+    if reproject:
+        inproj = 'epsg:3857'
+    records = reproject_records(records, inproj=inproj, outproj=outproj)
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
-        properties=x['properties']) for x in results]
+        properties=x['properties']) for x in records]
 
     return geojson.FeatureCollection(results)
 

@@ -94,19 +94,30 @@ def write_intersections(inters, roads):
         inters: list of points indicating intersections
     """
     output_inters = []
+
+    # De-dupe and add intersection as a property
+    seen_points = {}
     for x in inters:
         properties = x[1]
-        properties.update({'intersection': 1})
-        output_inters.append(geojson.Feature(
-            geometry=geojson.Point([x[0].x, x[0].y]),
-            properties=properties
-        ))
-    output_inters = prepare_geojson(output_inters)
-    roads = prepare_geojson(roads)
 
-    with open(os.path.join(MAP_DATA_FP, 'elements.geojson'), 'w') as outfile:
-        geojson.dump(geojson.FeatureCollection(
-            output_inters['features'] + roads['features']), outfile)
+        if str(x[0].x) + str(x[0].y) not in seen_points.keys():
+            properties.update({'intersection': 1})
+            output_inters.append(geojson.Feature(
+                geometry=geojson.Point([x[0].x, x[0].y]),
+                properties=properties
+            ))
+        seen_points[str(x[0].x) + str(x[0].y)] = True
+
+    # These shapes are already in 4326 projection
+    output_inters = prepare_geojson(output_inters, reproject=False)
+    roads = prepare_geojson(roads, reproject=False)
+
+    elements = geojson.FeatureCollection(
+        output_inters['features'] + roads['features'])
+
+    outfp = os.path.join(MAP_DATA_FP, 'elements.geojson')
+    with open(outfp, 'w') as outfile:
+        geojson.dump(elements, outfile)
 
 
 if __name__ == '__main__':
@@ -149,9 +160,11 @@ if __name__ == '__main__':
     print 'Extracting intersections and writing into ' + MAP_DATA_FP
     inters = []
     pkl_file = os.path.join(MAP_DATA_FP, 'inters.pkl')
+
     if not os.path.exists(pkl_file) or args.forceupdate:
         print 'Generating intersections...'
         inters = generate_intersections(lines)
+
         # Save to pickle in case script breaks
         with open(pkl_file, 'w') as f:
             cPickle.dump(inters, f)
@@ -159,5 +172,6 @@ if __name__ == '__main__':
         print 'Reading intersections from ' + pkl_file
         with open(pkl_file, 'r') as f:
             inters = cPickle.load(f)
+
     print "writing intersections and road segments to geojson"
     write_intersections(inters, roads)
