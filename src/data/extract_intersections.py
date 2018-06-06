@@ -51,7 +51,7 @@ def extract_intersections(inter, prop):
 
 def generate_intersections(lines):
     """
-    Runs extract_intersections on all combinations of points
+    Runs extract_intersections on all combinations of lines
     Writes the resulting intersections to file as well as returning
 
     Args:

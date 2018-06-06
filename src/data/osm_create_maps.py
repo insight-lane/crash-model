@@ -20,11 +20,24 @@ def simple_get_roads(city):
         None
     """
 
-    G = ox.graph_from_place(city, network_type='drive')
+    G1 = ox.graph_from_place(city, network_type='drive', simplify=False)
+    G = ox.simplify_graph(G1)
+
+    # Label endpoints
+    streets_per_node = ox.count_streets_per_node(G)
+    for node, count in streets_per_node.items():
+        if count <= 1:
+            G.nodes()[node]['dead_end'] = True
 
     # osmnx creates a directory for the nodes and edges
+    # Store all nodes, since they can be other features
+    ox.save_graph_shapefile(
+        G, filename='all_nodes', folder=MAP_FP)
+
+    # Store simplified network
     ox.save_graph_shapefile(
         G, filename='temp', folder=MAP_FP)
+
     # Copy and remove temp directory
     tempdir = os.path.join(MAP_FP, 'temp')
     for filename in os.listdir(os.path.join(tempdir, 'edges')):
@@ -38,12 +51,38 @@ def simple_get_roads(city):
     shutil.rmtree(tempdir)
 
 
+def get_signals():
+    nodes = util.read_shp(
+        os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'))
+    signals = [
+        node for node in nodes if node[1]['highway'] == 'traffic_signals'
+    ]
+    schema = {
+        'geometry': 'Point',
+        'properties': {
+            'highway': 'str',
+            'osmid': 'str',
+            'ref': 'str'
+        }
+    }
+    util.write_shp(
+        schema,
+        os.path.join(MAP_FP, 'osm_signals.shp'),
+        signals, 0, 1, crs=fiona.crs.from_epsg(3857))
+
+
 def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
     """
     Reads in osm_ways file, cleans up the features, and reprojects
     results into 3857 projection
     Additionally writes a key which shows the correspondence between
     highway type as a string and the resulting int feature
+    Features:
+        width
+        lanes
+        hwy_type
+        osm_speed
+        signal
     Args:
         orig_file: Filename for original file
         result_file: Filename for resulting file in 3857 projection
@@ -62,7 +101,6 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
 
     highway_keys = {}
     for way_line in reprojected_way_lines:
-
         # All features need to be ints, so convert them here
 
         # Use speed limit if given in osm
@@ -75,11 +113,13 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
             speed = 0
 
         # round width
-        width = way_line[1]['width']
-        if not width or ';' in width or '[' in width:
-            width = 0
-        else:
-            width = round(float(width))
+        width = 0
+        if ['width'] in way_line[1].keys():
+            width = way_line[1]['width']
+            if not width or ';' in width or '[' in width:
+                width = 0
+            else:
+                width = round(float(width))
 
         lanes = way_line[1]['lanes']
         if lanes:
@@ -91,19 +131,30 @@ def reproject_and_clean_feats(orig_file, result_file, DOC_FP):
         if way_line[1]['highway'] not in highway_keys.keys():
             highway_keys[way_line[1]['highway']] = len(highway_keys)
 
+        # Use oneway
+        oneway = 0
+        if way_line[1]['oneway'] == 'True':
+            oneway = 1
+
         way_line[1].update({
             'width': width,
             'lanes': int(lanes),
             'hwy_type': highway_keys[way_line[1]['highway']],
             'osm_speed': speed,
+            'signal': 0,
+            'oneway': oneway
         })
     schema = way_results.schema
 
     # Add values to schema if they don't exist, so new map won't break
     schema['properties'].update({
         # Add highway type key and osm_speed to the schema
+        'width': 'int',
+        'lanes': 'int',
         'hwy_type': 'int',
         'osm_speed': 'int',
+        'signal': 'int',
+        'oneway': 'int',
     })
 
     util.write_shp(
@@ -144,6 +195,9 @@ if __name__ == '__main__':
        or args.forceupdate:
         print 'Generating map from open street map...'
         simple_get_roads(city)
+
+    if not os.path.exists(os.path.join(MAP_FP, 'osm_signals.shp')):
+        get_signals()
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways_3857.shp')) \
        or args.forceupdate:

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title>Crash Modeling</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+	<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet' />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script type='text/javascript', src='config.js'></script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+
+	<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+	<div id="header">
+		<h1>Crash Modeling</h1>
+	</div>
+
+	<div id="content">
+		<div id="city">
+			<p>Viewing Predictions for: <span id="city_name"></span></p>
+		</div>
+		<div class="wrapper">
+			<div class="box input_overlay">
+				<label for="week_selector">Week: </label>
+				<output for="week_selector" id="week_num">1</output>
+				<input type="range" id="week_selector" autocomplete="off" min="1" max="52" step="1" value="1" />
+			</div>
+			<div id="before" class="map">
+				<div id="legend">
+					<h4>Risk Score:</h4>
+					<div class="row colors"></div>
+					<div class="row labels">
+						<div class="label">0.2</div>
+						<div class="label">0.4</div>
+						<div class="label">0.6</div>
+						<div class="label">0.8</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="weekly_barplot" class="plot">
+			<h3>Total Crashes by Week</h3>
+		</div>
+	</div>
+
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<script src="js/make_plots.js"></script>
+	<script src="js/update_map.js"></script>
+
+	<script>
+		var city = config.cities[0];
+
+		// insert city name
+		$('#city_name').text(city.name);
+
+		// create base map
+		mapboxgl.accessToken = config.MAPBOX_TOKEN;
+
+		var beforeMap = new mapboxgl.Map({
+		  container: 'before',
+		  style: 'mapbox://styles/mapbox/light-v9',
+		  center: [city.longitude, city.latitude],
+		  zoom: 11
+		});
+
+		beforeMap.on('load', function() {
+		  	beforeMap.addLayer({
+				id: 'predictions',
+				type: 'line',
+				source: {
+				  type: 'geojson',
+				  data: 'preds.json'
+				},
+				paint: {
+				  'line-color': {
+					property: 'prediction',
+					stops: [
+					  [0.2, '#ffe0b2'],
+					  [0.4, '#ffb74d'],
+					  [0.6, '#ff9800'],
+					  [0.8, '#f57c00']
+					]
+				  },
+				  'line-width': [
+						'interpolate', ['linear'], ['zoom'],
+						11, 2,
+						15, 3,
+					],
+				  'line-opacity': 1
+				}
+			}, 'admin-2-boundaries-dispute');
+
+			beforeMap.addLayer({
+				id: 'crashes',
+				type: 'circle',
+				source: {
+					type: 'geojson',
+					data: 'crashes.geojson'
+				},
+				paint: {
+					'circle-radius': [
+						'interpolate', ['linear'], ['zoom'],
+						12, 4,
+						15, 8,
+					],
+					'circle-color': '#d500f9',
+					'circle-stroke-color': '#9e00c5',
+					'circle-opacity': 0.8
+				},
+				filter: ['all', ['==', 'week', 1]]
+			}, 'admin-2-boundaries-dispute');
+
+			// add popup for predictions
+			beforeMap.on('click', 'predictions', function(e) {
+				var popupText = "Risk Score for Week " + e.features[0].properties.week + ": " + e.features[0].properties.prediction.toFixed(2);
+
+				new mapboxgl.Popup()
+					.setLngLat(e.lngLat)
+					.setHTML(popupText)
+					.addTo(beforeMap);
+			});
+
+			beforeMap.on('mouseenter', 'predictions', function () {
+				beforeMap.getCanvas().style.cursor = 'pointer';
+			});
+
+			beforeMap.on('mouseleave', 'predictions', function () {
+				beforeMap.getCanvas().style.cursor = '';
+			});
+		});
+
+		// Add zoom controls to map
+		beforeMap.addControl(new mapboxgl.NavigationControl());
+	</script>
+
+</body>
+</html>

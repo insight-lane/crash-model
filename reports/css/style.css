@@ -38,13 +38,14 @@ h4 {
     font-weight: normal;
 }
 
+#city_selection {
+    padding: 20px 0px 0px 2px;
+}
+
 .wrapper {
-    display: grid;
-    grid-template-columns: 50% 50%;
-    grid-template-rows: 5% 95%;
-    grid-gap: 10px;
     background-color: #fff;
-    height: 600px;
+    height: 650px;
+    width: 960px;
     margin: 20px 10px 10px 10px;
     padding: 20px;
 }
@@ -52,24 +53,22 @@ h4 {
 .plot {
     box-sizing: border-box;
     position: relative;
-    /*width: 470px;*/
+    width: 900px;
     float: left;
     background-color: #fff;
     margin: 10px;
     padding-left: 10px;
-    /*border: 1px solid #b2b2b2;*/
 }
 
 .map {
-	/*position: absolute;*/
-    margin: 10px;
-	/*width: 900px;*/
-	/*height: 100%;*/
+	position: absolute;
+    margin-top: 10px;
+	width: 960px;
+	height: 600px;
 }
 
 .input_overlay {
 	width: 80%;
-	/*margin: 20px 0px 0px 20px;*/
 }
 
 input[type="range"] {
@@ -113,7 +112,7 @@ input[type="range"]::-moz-range-thumb {
 
 input[type="range"]::-ms-track {
     height: 3px;
-    background: transparent;   
+    background: transparent;
     border-color: transparent;
     border-width: 6px 0;
     color: transparent;
@@ -124,16 +123,6 @@ input[type="range"]::-ms-thumb {
     width: 16px;
     border-radius: 50%;
 }
-
-/*#select_compare_week{
-    position: absolute;
-    top: 20px;
-    right: 20px;
-}
-
-select {
-    margin: 10px;
-}*/
 
 #legend {
     position: absolute;
@@ -151,7 +140,7 @@ select {
 }
 
 .colors {
-    background: linear-gradient(to right, #ffffb2, #fecc5c, #fd8d3c, #e31a1c);
+    background: linear-gradient(to right, #ffe0b2, #ffb74d, #ff9800, #f57c00);
 }
 
 .label {

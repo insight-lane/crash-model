@@ -113,7 +113,7 @@ def test_reproject_records():
 
 
 def test_group_json_by_location(tmpdir):
-    tmppath = tmpdir.strpath
+
     test_json = [{
         'near_id': '001',
         'key1': 'value1',
@@ -127,11 +127,7 @@ def test_group_json_by_location(tmpdir):
         'key2': 'abc',
     }]
 
-    filename = tmppath + '/crash_joined.json'
-    with open(filename, 'w') as f:
-        json.dump(test_json, f)
-
-    result = util.group_json_by_location(filename)
+    result = util.group_json_by_location(test_json)
     assert result == ([
         {'near_id': '001', u'key1': 'value1', 'key2': 'value2'},
         {'near_id': '2', 'key1': 'test'},
@@ -140,7 +136,7 @@ def test_group_json_by_location(tmpdir):
         '001': {'count': 2}, '2': {'count': 1}
     })
 
-    result = util.group_json_by_location(filename, otherfields=['key1'])
+    result = util.group_json_by_location(test_json, otherfields=['key1'])
     assert result == ([
         {'near_id': '001', u'key1': 'value1', 'key2': 'value2'},
         {'near_id': '2', 'key1': 'test'},
@@ -153,3 +149,9 @@ def test_group_json_by_location(tmpdir):
     })
 
 
+def test_make_schema():
+    test_schema = {'X': 1, 'NAME': 'foo'}
+    result_schema = util.make_schema(
+        'Point', test_schema)
+    assert result_schema == {'geometry': 'Point', 'properties':
+                             {'X': 'str', 'NAME': 'str'}}

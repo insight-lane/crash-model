@@ -10,31 +10,44 @@ DATA_FP = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/data/'
 
-# For this pipeline to run
-# crash data needs to be under raw in the data directory given
-
-# Plan is to make only the crash data required
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     # Can give a config file
-    parser.add_argument("-c", "--config", type=str,
-                        help="Can give a different .yml config file")
+    parser.add_argument("-c", "--config", type=str, required=True,
+                        help="Config file")
+    parser.add_argument("-d", "--datadir", type=str, required=True,
+                        help="Data directory")
+    
+    parser.add_argument("-s", "--startyear", type=str,
+                        help="Can limit data to crashes this year or later")
+    parser.add_argument("-e", "--endyear", type=str,
+                        help="Can limit data to crashes this year or earlier")
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether to force update the maps')
+
     args = parser.parse_args()
-    config_file = 'data/config.yml'
-    if args.config:
-        config_file = args.config
+
+    config_file = args.config
+    start_year = None
+    end_year = None
+    if args.startyear:
+        start_year = str(args.startyear)
+    if args.endyear:
+        end_year = str(args.endyear)
+
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
+    # City
     if 'city' not in config.keys() or config['city'] is None:
         sys.exit('City is required in config file')
     city = config['city']
 
-    if 'datadir' in config.keys() and config['datadir']:
-        DATA_FP = config['datadir']
+    DATA_FP = args.datadir
 
+    # This block handles any extra map info as we have in Boston
     extra_map = None
     additional_features = None
     extra_map3857 = None
@@ -53,27 +66,16 @@ if __name__ == '__main__':
         additional_features = config['additional_features'].split()
         extra_map3857 = config['extra_map3857']
 
-    longitude = 'X'
-    latitude = 'Y'
-    date_col = None
-    crash_file = None
-    if 'longitude' in config.keys() and config['longitude']:
-        longitude = config['longitude']
-    if 'latitude' in config.keys() and config['latitude']:
-        latitude = config['latitude']
-
-    if 'date_col' in config.keys() and config['date_col']:
-        date_col = config['date_col']
-
-    if 'crash_file' in config.keys() and config['crash_file']:
-        crash_file = config['crash_file']
-
-    if 'recreate' in config.keys() and config['recreate']:
+    # Whether to regenerate maps from open street map
+    if args.forceupdate:
         recreate = True
 
     # Features drawn from open street maps
     # additional_features from config file can add on to
-    features = ['width', 'lanes', 'hwy_type', 'osm_speed']
+    # But additional features are only added if you're using an extra map
+    # beyond open street map
+    features = [
+        'width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway']
 
     print "Generating maps for " + city + ' in ' + DATA_FP
     if recreate:
@@ -86,15 +88,7 @@ if __name__ == '__main__':
         city,
         DATA_FP,
     ] + (['--forceupdate'] if recreate else []))
-    # Extract intersections from the open street map data
-    subprocess.check_call([
-        'python',
-        '-m',
-        'data.extract_intersections',
-        os.path.join(DATA_FP, 'processed/maps/osm_ways.shp'),
-        '-d',
-        DATA_FP
-    ] + (['--forceupdate'] if recreate else []))
+
     # Create segments on the open street map data
     subprocess.check_call([
         'python',
@@ -103,7 +97,9 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-r',
-        os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp')
+        os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp'),
+        '-i',
+        os.path.join(DATA_FP, 'processed/maps/osm_nodes.shp')
     ])
 
     if extra_map:
@@ -148,14 +144,10 @@ if __name__ == '__main__':
         '-m',
         'data.join_segments_crash_concern',
         '-d',
-        DATA_FP,
-        '-x',
-        longitude,
-        '-y',
-        latitude,
+        DATA_FP
     ]
-        + (['-c', crash_file] if crash_file else [])
-        + (['-t', date_col] if date_col else [])
+        + (['-start', start_year] if start_year else [])
+        + (['-end', end_year] if end_year else [])
     )
 
     subprocess.check_call([
@@ -186,4 +178,3 @@ if __name__ == '__main__':
         DATA_FP,
         '-features'
     ] + features)
-
