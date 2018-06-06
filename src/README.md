@@ -31,21 +31,24 @@ We also can map city-specific maps (and features associated with their roads) to
 
 ## Running the pipeline: data generation through visualization
 
-Although the processed data for our demo cities exist on data.world, you may wish to generate the data from scratch, or you may be interested in generating data for a new city.  This section walks you through how to generate and visualize data for a new city:
+This section walks you through how to generate and visualize data for any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), or for any city that you suitable data for (at a minimum crashes, ideally concerns as well).
 
-- If you want to visualize the data, you need to create a mapbox account (https://www.mapbox.com/)
-- Automatically generate a config file for your city.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file>`.
+The demo city data is hosted on data.world. The 1.1 compatible zip can be downloaded from https://query.data.world/s/wwd5od3qrapm5nlenq44caxb5ba5rq
+
+- If you want to visualize the data, you'll need to create a mapbox account (https://www.mapbox.com/)
+- If you're running one of the demo cities, extract the 1.1 zip and move the /data folder into the root application folder
+- If you're running a different city, you need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file>`.
     - City name is the full name of the city, e.g. "Cambridge, MA, USA".
     - Folder name is what you'd like the city's data directory to  be named, e.g. "cambridge".
     - The crash file is a csv file of crashes that includes (at minimum) columns for latitude, longitude, and date of crashes.
 		- Windows users should modify their filepath to use forward slashes (/) rather than the default backslash (\\)
     - The concern file is a csv of concerns that includes (at minimum) a latitude, longitude and date of a concern file.
 		- Windows users should modify their filepath to use forward slashes (/) rather than the default backslash (\\)
-- Manually edit the configuration file found in e.g. src/config/config_cambridge:
-    - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well.
-    - If you have a csv concern file, enter the column headers for latitude, longitude, and date.
-    - Modify time_target to be the last month and year of your crash data
-    - Manually edit config.js in /reports/ to add your mapbox api key (from when you made a mapbox account) as MAPBOX_TOKEN
+    - Manually edit the configuration file found in e.g. src/config/config_cambridge:
+        - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well.
+        - If you have a csv concern file, enter the column headers for latitude, longitude, and date.
+        - Modify time_target to be the last month and year of your crash data
+- Manually edit config.js in /reports/ to add your mapbox api key (from when you made a mapbox account) as MAPBOX_TOKEN
 
 - Run the pipeline: `python pipeline.py -c <config file>`
 
