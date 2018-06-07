@@ -25,16 +25,16 @@ args = parser.parse_args()
 
 raw_path = os.path.join(args.folder, "raw/concerns")
 if not os.path.exists(raw_path):
-    print raw_path+" not found, exiting"
+    print(raw_path+" not found, exiting")
     exit(1)
 
 concerns = []
 manual_concern_id = 1
 
-print "searching "+raw_path+" for raw concerns file(s)"
+print("searching "+raw_path+" for raw concerns file(s)")
 
 for csv_file in os.listdir(raw_path):
-    print csv_file
+    print(csv_file)
 
 
     df_concerns = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
@@ -119,7 +119,7 @@ for csv_file in os.listdir(raw_path):
                 ("summary", key["issue_description"])
             ]))
 
-print "done, {} concerns loaded, validating against schema".format(len(concerns))
+print("done, {} concerns loaded, validating against schema".format(len(concerns)))
 
 schema_path = os.path.join(BASE_FP, "standards/concerns-schema.json")
 with open(schema_path) as concerns_schema:
@@ -130,4 +130,4 @@ concerns_output = os.path.join(args.folder, "standardized/concerns.json")
 with open(concerns_output, "w") as f:
     json.dump(concerns, f)
 
-print "output written to {}".format(concerns_output)
+print("output written to {}".format(concerns_output))

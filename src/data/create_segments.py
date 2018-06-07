@@ -10,7 +10,7 @@ import json
 import copy
 from shapely.ops import unary_union
 from collections import defaultdict
-import util
+from . import util
 import argparse
 import os
 import geojson
@@ -61,7 +61,7 @@ def find_non_ints(roads, int_buffers):
     """
 
     # Create index for quick lookup
-    print "creating rindex"
+    print("creating rindex")
 
     int_buffers_index = rtree.index.Index()
 
@@ -70,7 +70,7 @@ def find_non_ints(roads, int_buffers):
 
     # Split intersection lines (within buffer) and non-intersection lines
     # (outside buffer)
-    print "splitting intersection/non-intersection segments"
+    print("splitting intersection/non-intersection segments")
     inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
 
     non_int_lines = []
@@ -140,13 +140,13 @@ def add_point_based_features(non_inters, inters, feats_filename):
         near = feature.near_id
         feat_type = feature.properties['feature']
         if near:
-            if str(near) not in matches.keys():
+            if str(near) not in list(matches.keys()):
                 matches[str(near)] = []
             matches[str(near)].append(feat_type)
 
     # Add point data to intersections
     for i, inter in enumerate(inters):
-        if str(inter['properties']['id']) in matches.keys():
+        if str(inter['properties']['id']) in list(matches.keys()):
             matched_features = set(matches[str(inter['properties']['id'])])
             # Since intersections consist of multiple segments, add the
             # point-based properties to each of them
@@ -156,7 +156,7 @@ def add_point_based_features(non_inters, inters, feats_filename):
 
     # Add point data to non-intersections
     for i, non_inter in enumerate(non_inters):
-        if str(non_inter['properties']['id']) in matches.keys():
+        if str(non_inter['properties']['id']) in list(matches.keys()):
             matched_features = set(matches[non_inter['properties']['id']])
             n = copy.deepcopy(non_inter)
             for feat in matched_features:
@@ -175,7 +175,7 @@ def create_segments_from_json(roads_shp_path):
     roads = [x for x in data
              if x['geometry'].type == 'LineString']
 
-    print "read in {} road segments".format(len(roads))
+    print("read in {} road segments".format(len(roads)))
 
     # unique id did not get included in shapefile, need to add it for adjacency
     for i, road in enumerate(roads):
@@ -184,7 +184,7 @@ def create_segments_from_json(roads_shp_path):
     # Get the intersection list by excluding anything that's not labeled
     # as an intersection
     inters = [x for x in data if x['geometry'].type == 'Point'
-              and 'intersection' in x['properties'].keys()
+              and 'intersection' in list(x['properties'].keys())
               and x['properties']['intersection']]
 
     # Initial buffer = 20 meters
@@ -213,12 +213,12 @@ def create_segments_from_json(roads_shp_path):
         value['properties']['inter'] = 0
         non_int_w_ids.append(value)
 
-    print "extracted {} non-intersection segments".format(len(non_int_w_ids))
+    print("extracted {} non-intersection segments".format(len(non_int_w_ids)))
 
     # Planarize intersection segments
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
-    for idx, lines in inter_segments['lines'].items():
+    for idx, lines in list(inter_segments['lines'].items()):
 
         lines = unary_union(lines)
 
@@ -295,7 +295,7 @@ if __name__ == '__main__':
         DATA_FP = os.path.join(MAP_FP, args.newmap)
         MAP_FP = DATA_FP
 
-    print "Creating segments.........................."
+    print("Creating segments..........................")
 
     elements = os.path.join(
         MAP_FP, 'osm_elements.geojson')
