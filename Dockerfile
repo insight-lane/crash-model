@@ -11,16 +11,14 @@ ENV TERM xterm-256color
 WORKDIR /app
 
 # Install packges
-# (gcc) installed to enable conda to create virtual environments
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
-#	gcc \
-#	g++ \
 	# apache for serving the visualisation
 	apache2 \
 	# easier management of services via supervisor
 	supervisor \
 	# base anaconda image seems to lack libgl support required for our virtual environment
 	libgl1-mesa-glx \
+	# handy text editor
 	vim
 
 # Setup apache & supervisor
@@ -41,21 +39,11 @@ RUN chmod +x /start.sh
 COPY environment.yml /app/environment.yml
 RUN ["conda", "env", "create", "--file", "environment.yml"]
 
-# Copy over the app
-COPY . /app
-
 # Use bash for the entrypoint rather than sh, for 'conda activate' compatibility
 ENTRYPOINT ["/bin/bash", "-c"]
 
-# RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
-
 # Activate the project's virtual environment
 RUN echo "conda activate boston-crash-model" >> ~/.bashrc
-
-# the default PS1 has issues with long outputs, replace it
-# RUN echo "swapping to a PS1 that better handles long outputs" >> /etc/bash.bashrc
-# RUN echo "PS1='\h:\W \u\$ '" >> /etc/bash.bashrc
-# RUN echo "PS1='\h:\W \u\$ '" >> ~/.bashrc
 
 # this startup script runs supervisor in foreground (which in turn starts apache) to keep container running
 CMD ["/start.sh"]
