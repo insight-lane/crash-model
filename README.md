@@ -99,7 +99,7 @@ Getting Started
 
 ### Dependencies:
 Most of the work on this project so far has been done in Python, in Jupyter notebooks.
-- Python 2.7 (we recommend [Anaconda](https://www.continuum.io/downloads))
+- Python 3.6 (we recommend [Anaconda](https://www.continuum.io/downloads))
 - conda (included with Anaconda)
 
 ### Environment:
@@ -111,7 +111,7 @@ You'll want to reproduce the packages and package versions required to run code 
 If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/data_generation) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/boston-crash-modeling/tree/master/notebooks/benchmark) for running the benchmark model.
 
 ### Docker:
-A basic Docker image has been created to run the project in a container, using the ContinuumIO anaconda base image (Python 2.7). The virtual environment 'boston-crash-model' is installed and activated when the image is started via a container, as well as an apache2 webserver (via supervisor daemon) to serve the visualization.
+A basic Docker image has been created to run the project in a container, using the ContinuumIO anaconda base image (Python 3.6). The virtual environment 'boston-crash-model' is installed and activated when the image is started via a container, as well as an apache2 webserver (via supervisor daemon) to serve the visualization.
 
 You can download the image from D4D's Docker Hub repo by running the following command, from a machine with the Docker engine installed:
 
