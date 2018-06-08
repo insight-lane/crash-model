@@ -127,7 +127,7 @@ if __name__ == '__main__':
     elif args.demo:
         cities = ['boston', 'cambridge', 'dc']
     else:
-        print "Either city needs to be given, or --demo flag set"
+        print("Either city needs to be given, or --demo flag set")
         sys.exit()
 
     crashes = []
