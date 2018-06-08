@@ -71,7 +71,7 @@ def test_csv_to_projected_records(tmpdir):
     y = float(42.3)
     print(tmpdir)
     file = str(tmpdir) + '/test.csv'
-    with open(file, 'wb') as csvfile:
+    with open(file, 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(['col1', 'col2', 'col3'])
         writer.writerow(['test', x, y])

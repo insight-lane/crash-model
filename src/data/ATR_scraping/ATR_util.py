@@ -55,9 +55,9 @@ def plot_hourly_rates(files, outfile):
     all_counts = []
     for f in files:
         wb = openpyxl.load_workbook(f, data_only=True)
-        sheet_names = wb.get_sheet_names()
+        sheet_names = wb.sheetnames
         if 'Classification-Combined' in sheet_names:
-            sheet = wb.get_sheet_by_name('Classification-Combined')
+            sheet = wb['Classification-Combined']
             # Right now the cell locations are hardcoded,
             # but if we expand to cover different formats, will need to change
             counts = []
@@ -70,7 +70,7 @@ def plot_hourly_rates(files, outfile):
                 counts[i] = counts[i]/total
             all_counts.append(counts)
 
-    bins = range(0, 24)
+    bins = list(range(0, 24))
     for val in all_counts:
         pyplot.plot(bins, val)
     pyplot.legend(loc='upper right')
@@ -87,33 +87,33 @@ def read_ATR(fname):
 
     # data_only=True so as to not read formulas
     wb = openpyxl.load_workbook(fname, data_only=True)
-    sheet_names = wb.get_sheet_names()
+    sheet_names = wb.sheetnames
 
     # get total volume cell F106
     if 'Volume' in sheet_names:
-        sheet = wb.get_sheet_by_name('Volume')
+        sheet = wb['Volume']
         vol = sheet['F106'].value
     else:
         vol = 0
 
     # get mean speed data
     if 'Speed Combined' in sheet_names:
-        sheet = wb.get_sheet_by_name('Speed Combined')
+        sheet = wb['Speed Combined']
         speed = sheet['E42'].value
     elif 'Speed-1' in sheet_names:
-        sheet = wb.get_sheet_by_name('Speed-1')
+        sheet = wb['Speed-1']
         speed = sheet['E42'].value
     else:
         speed = 0
 
     # get classification data
     if 'Classification-Combined' in sheet_names:
-        sheet = wb.get_sheet_by_name('Classification-Combined')
+        sheet = wb['Classification-Combined']
         motos = sheet['D38'].value
         light = sheet['D39'].value
         heavy = sheet['D40'].value
     elif 'Classification-1' in sheet_names:
-        sheet = wb.get_sheet_by_name('Classification-1')
+        sheet = wb['Classification-1']
         motos = sheet['D38'].value
         light = sheet['D39'].value
         heavy = sheet['D40'].value

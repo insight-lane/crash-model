@@ -65,7 +65,7 @@ def write_geocode_cache(results,
         filename - file to write to (defaults to geocoded_addresses.csv)
     """
 
-    with open(filename, 'wb') as f:
+    with open(filename, 'w') as f:
         writer = csv.writer(f)
         writer.writerow([
             'Input Address',
@@ -113,9 +113,9 @@ def get_hourly_rates(files):
     all_counts = []
     for f in files:
         wb = openpyxl.load_workbook(f, data_only=True)
-        sheet_names = wb.get_sheet_names()
+        sheet_names = wb.sheetnames
         if 'Classification-Combined' in sheet_names:
-            sheet = wb.get_sheet_by_name('Classification-Combined')
+            sheet = wb['Classification-Combined']
             # Right now the cell locations are hardcoded,
             # but if we expand to cover different formats, will need to change
             counts = []
