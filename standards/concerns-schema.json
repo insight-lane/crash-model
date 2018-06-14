@@ -10,7 +10,7 @@
         "properties": {
             "id": {
                 "description": "Unique identifier of concern",
-                "type": "number"
+                "type": ["string", "number"]
             },
             "source": {
                 "description": "Source of concern",
