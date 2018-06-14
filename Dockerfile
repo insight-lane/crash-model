@@ -11,16 +11,14 @@ ENV TERM xterm-256color
 WORKDIR /app
 
 # Install packges
-# (gcc) installed to enable conda to create virtual environments
-RUN apt-get update -qq && apt-get install -y \
-	gcc \
-	g++ \
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
 	# apache for serving the visualisation
 	apache2 \
 	# easier management of services via supervisor
 	supervisor \
 	# base anaconda image seems to lack libgl support required for our virtual environment
 	libgl1-mesa-glx \
+	# handy text editor
 	vim
 
 # Setup apache & supervisor
@@ -37,29 +35,15 @@ RUN service apache2 stop && service supervisor stop
 ADD conf/start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Setup the app's virtual environment
-COPY environment_docker.yml /app/environment_docker.yml
-RUN ["conda", "env", "create", "--file", "environment_docker.yml"]
-
-# Copy over the app
-COPY . /app
+# Setup the project's virtual environment
+COPY environment.yml /app/environment.yml
+RUN ["conda", "env", "create", "--file", "environment.yml"]
 
 # Use bash for the entrypoint rather than sh, for 'conda activate' compatibility
 ENTRYPOINT ["/bin/bash", "-c"]
 
-# RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
-
-# Activate the virtual environment (fulfils the work of 'source activate boston-crash-model' without the overhead)
-# ENV PATH /opt/conda/envs/boston-crash-model/bin:$PATH
-# RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
-# RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc
-# RUN conda activate boston-crash-model
+# Activate the project's virtual environment
 RUN echo "conda activate boston-crash-model" >> ~/.bashrc
-
-# the default PS1 has issues with long outputs, replace it
-# RUN echo "swapping to a PS1 that better handles long outputs" >> /etc/bash.bashrc
-# RUN echo "PS1='\h:\W \u\$ '" >> /etc/bash.bashrc
-# RUN echo "PS1='\h:\W \u\$ '" >> ~/.bashrc
 
 # this startup script runs supervisor in foreground (which in turn starts apache) to keep container running
 CMD ["/start.sh"]
