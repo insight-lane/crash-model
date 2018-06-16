@@ -1,0 +1,50 @@
+# City name
+city: Brisbane, Queensland, Australia
+# The folder under data where this city's data is stored
+name: brisbane
+city_latitude: 152.7123276
+city_longitude: -27.381252
+# If given, limit crashes to after start_year and before end_year
+start_year: 2015
+end_year: 2018
+
+##############################################################################
+# Configuration for data standardization
+
+# # List of concern type information
+# concern_files:
+#   - name: concern
+#     filename: Vision_Zero_Entry.csv
+#     latitude:
+#     longitude:
+#     time:
+#   - name: see_click_fix
+#     filename: bos_scf.csv
+#     latitude:
+#     longitude:
+#     time: created
+
+# crash file configurations
+crashes_files:
+    locations_2014_2017.csv:
+        required:
+            id: Crash_Ref_Number
+            latitude: Crash_Latitude_GDA94
+            longitude: Crash_Longitude_GDA94
+            date: Crash_Date
+        optional:
+            summary: Crash_Nature
+            vehicles:
+            bikes:
+
+##############################################################################
+
+# configuration for running the model training and prediction
+
+# concern column name
+# leave as '' if not adding concerns
+concern: ''
+
+# make categorical into dummies, standardize continuous
+# usually necessary/important if want to use linear models
+# process: True
