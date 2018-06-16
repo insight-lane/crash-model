@@ -58,7 +58,7 @@ def make_config_file(yml_file, city, folder, crash, concern):
         "weeks_back: 1"
     )
     f.close()
-    print "Wrote new configuration file in {}".format(yml_file)
+    print("Wrote new configuration file in {}".format(yml_file))
 
 
 def make_js_config(jsfile, city, folder):
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     # Check to see if the directory exists
     # if it does, it's already been initialized, so do nothing
     if not os.path.exists(DATA_FP):
-        print "Making directory structure under " + DATA_FP
+        print("Making directory structure under " + DATA_FP)
         os.makedirs(DATA_FP)
         os.makedirs(os.path.join(DATA_FP, 'raw'))
         os.makedirs(crash_dir)
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                 concern_dir, concern))
 
     else:
-        print args.folder + " already initialized, skipping"
+        print(args.folder + " already initialized, skipping")
 
     yml_file = os.path.join(
         BASE_DIR, 'src/config/config_' + args.folder + '.yml')
@@ -130,5 +130,5 @@ if __name__ == '__main__':
     js_file = os.path.join(
         BASE_DIR, 'reports/config.js')
     if not os.path.exists(js_file):
-        print "Writing config.js"
+        print("Writing config.js")
         make_js_config(js_file, args.city, args.folder)

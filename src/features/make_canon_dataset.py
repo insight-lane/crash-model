@@ -4,7 +4,7 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from data.util import read_shp, group_json_by_location, group_json_by_field
+from data.util import read_geojson, group_json_by_location, group_json_by_field
 import os
 import argparse
 
@@ -30,7 +30,7 @@ def read_records(fp, date_col, id_col, agg='week'):
     df = pd.DataFrame(data)
 
     df[date_col] = pd.to_datetime(df[date_col])
-    print "total number of records in {}:{}".format(fp, len(df))
+    print("total number of records in {}:{}".format(fp, len(df)))
     
     # get date according to iso calendar
     df['isodate'] = df[date_col].apply(lambda d: d.isocalendar())
@@ -38,7 +38,7 @@ def read_records(fp, date_col, id_col, agg='week'):
     df['year'] = df['isodate'].apply(lambda x: x[0])
 
     # aggregate
-    print "aggregating by ", agg
+    print("aggregating by ", agg)
     df[agg] = df[date_col].apply(lambda x: getattr(x, agg))
     df_g = df.groupby([id_col, 'year', agg]).size()
 
@@ -55,11 +55,11 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     # Read in inters data (json), turn into df with inter index
     df_index = []
     df_records = []
-    print "reading ", inters_fp
+    print("reading ", inters_fp)
     with open(inters_fp, 'r') as f:
         inters = json.load(f)
         # Append each index to dataframe
-        for idx, lines in inters.iteritems():
+        for idx, lines in inters.items():
 
             # Each intersection has more than one segment
             # Add each segment's properties to df_records
@@ -68,8 +68,8 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     inters_df = pd.DataFrame(df_records, index=df_index)
 
     # Read in non_inters data:
-    print "reading ", non_inters_fp
-    non_inters = read_shp(non_inters_fp)
+    print("reading ", non_inters_fp)
+    non_inters = read_geojson(non_inters_fp)
     non_inters_df = pd.DataFrame([x[1] for x in non_inters])
     non_inters_df.set_index('id', inplace=True)
 
@@ -93,9 +93,9 @@ def read_concerns(fp, id_col):
     grouped_by_source = group_json_by_field(items, 'source')
 
     data_frames = []
-    for source, items in grouped_by_source.iteritems():
+    for source, items in grouped_by_source.items():
         results, grouped = group_json_by_location(items)
-        segments = [k for k in grouped.keys() if k]
+        segments = [k for k in list(grouped.keys()) if k]
         results = {source: [grouped[k]['count'] for k in segments]}
         df = pd.DataFrame(results, index=segments)
         data_frames.append((source, df))
@@ -118,11 +118,11 @@ def aggregate_roads(feats, datadir, concerns=[]):
 
     # combined road feature dataset parameters
     inters_fp = os.path.join(datadir, 'inters_data.json')
-    non_inters_fp = os.path.join(datadir, 'maps', 'non_inters_segments.shp')
+    non_inters_fp = os.path.join(datadir, 'maps', 'non_inters_segments.geojson')
 
     # create combined road feature dataset
     aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
-    print "road features being included: ", ', '.join(feats)
+    print("road features being included: ", ', '.join(feats))
 
     # Add any concern types if applicable
     filename = os.path.join(datadir, 'concern_joined.json')
@@ -164,11 +164,11 @@ def group_by_date(cr_con, aggregated):
         # doing this because multiindex is hard to set up placeholder
         if y == all_years[0]:
             all_weeks = pd.MultiIndex.from_product(
-                [aggregated.index, [y], range(yr_min, yr_max)],
+                [aggregated.index, [y], list(range(yr_min, yr_max))],
                 names=['segment_id', 'year', 'week'])
         else:
             yr_index = pd.MultiIndex.from_product(
-                [aggregated.index, [y], range(yr_min, yr_max)],
+                [aggregated.index, [y], list(range(yr_min, yr_max))],
                 names=['segment_id', 'year', 'week'])
             all_weeks = all_weeks.union(yr_index)
 
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     if args.featlist:
         feats = args.featlist
 
-    print "Data directory: " + DATA_FP
+    print("Data directory: " + DATA_FP)
 
     aggregated, adjacent, cr_con = aggregate_roads(
         feats,
@@ -225,7 +225,7 @@ if __name__ == '__main__':
     cr_con_roads = group_by_date(cr_con, aggregated)
 
     # output canon dataset
-    print "exporting canonical dataset to ", DATA_FP
+    print("exporting canonical dataset to ", DATA_FP)
 
     cr_con_roads.set_index('segment_id').to_csv(
         os.path.join(DATA_FP, 'vz_predict_dataset.csv.gz'),
@@ -247,4 +247,4 @@ if __name__ == '__main__':
         adjacent.to_csv(os.path.join(
             DATA_FP, 'adjacency_info.csv'), index=False)
     else:
-        print "No ATRs found, skipping..."
+        print("No ATRs found, skipping...")
