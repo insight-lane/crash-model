@@ -41,7 +41,6 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
 
     return unary_union(buffered_intersections)
 
-
 def find_non_ints(roads, int_buffers):
     """
     Find the segments that aren't intersections
@@ -111,6 +110,9 @@ def find_non_ints(roads, int_buffers):
                     geometry=geojson.LineString(coords),
                     properties=road['properties'])
                 )
+        else:
+            non_int_lines.append(geojson.Feature(
+                geometry=geojson.LineString([x for x in road['geometry'].coords])))
 
     return non_int_lines, inter_segments
 
@@ -190,17 +192,6 @@ def create_segments_from_json(roads_shp_path, mapfp):
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
 
-    polys = []
-    for buffer in int_buffers:
-        coords = [[x for x in buffer.exterior.coords]]
-        polys.append(geojson.Feature(
-            geometry=geojson.Polygon(coords), properties={}))
-
-    buff = geojson.FeatureCollection(polys)
-    with open(os.path.join(
-            mapfp, 'buffers.geojson'), 'w') as outfile:
-        geojson.dump(buff, outfile)
-
     non_int_lines, inter_segments = find_non_ints(
         roads, int_buffers)
 
@@ -218,6 +209,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
     # Planarize intersection segments
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
+
     for idx, lines in list(inter_segments['lines'].items()):
 
         lines = unary_union(lines)
@@ -230,6 +222,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
             'id': idx,
             'data': inter_segments['data'][idx]
         }
+
         union_inter.append(geojson.Feature(
             geometry=geojson.MultiLineString(coords),
             id=idx,
@@ -265,6 +258,7 @@ def write_segments(non_inters, inters, mapfp, datafp):
     } for x in inters]
 
     int_w_ids = util.prepare_geojson(int_w_ids)
+
     with open(os.path.join(mapfp, 'inters_segments.geojson'), 'w') as outfile:
         geojson.dump(int_w_ids, outfile)
 
