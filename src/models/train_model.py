@@ -13,8 +13,8 @@ from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 from datetime import datetime
 from scipy.stats import describe
-from model_utils import *
-from model_classes import *
+from .model_utils import *
+from .model_classes import *
 import os
 import argparse
 import random
@@ -37,9 +37,9 @@ def predict_forward(split_week, split_year, seg_data, crash_data):
     except ValueError as e:
     	print('Only one class present, likely no crashes in the week')
     	perf = 0
-    print('Week {0}, year {1}, perf {2}'.format(split_week, split_year, perf))
+    print(('Week {0}, year {1}, perf {2}'.format(split_week, split_year, perf)))
     if perf<=perf_cutoff:
-        print('Model performs below AUC %s, may not be usable' % perf_cutoff)
+        print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
     return(preds)
 
 #Model parameters
@@ -61,8 +61,8 @@ mp['LogisticRegression']['class_weight'] = ['balanced']
 
 #xgBoost model parameters
 mp['XGBClassifier'] = dict()
-mp['XGBClassifier']['max_depth'] = range(3, 7)
-mp['XGBClassifier']['min_child_weight'] = range(1, 5)
+mp['XGBClassifier']['max_depth'] = list(range(3, 7))
+mp['XGBClassifier']['min_child_weight'] = list(range(1, 5))
 mp['XGBClassifier']['learning_rate'] = ss.beta(a=2,b=15)
 
 # cut-off for model performance
@@ -76,25 +76,25 @@ def set_defaults(config={}):
     args:
         config - dict
     """
-    if 'seg_data' not in config.keys():
+    if 'seg_data' not in list(config.keys()):
         config['seg_data'] = 'vz_predict_dataset.csv.gz'
-    if 'concern' not in config.keys():
+    if 'concern' not in list(config.keys()):
         config['concern'] = ''
-    if 'atr' not in config.keys():
+    if 'atr' not in list(config.keys()):
         config['atr'] = ''
-    if 'tmc' not in config.keys():
+    if 'tmc' not in list(config.keys()):
         config['tmc'] = ''
-    if 'f_cont' not in config.keys():
+    if 'f_cont' not in list(config.keys()):
         config['f_cont'] = ['width']
-    if 'f_cat' not in config.keys():
+    if 'f_cat' not in list(config.keys()):
         config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway']
-    if 'process' not in config.keys():
+    if 'process' not in list(config.keys()):
         config['process'] = True
-    if 'time_target' not in config.keys():
+    if 'time_target' not in list(config.keys()):
         config['time_target'] = [15, 2017]
-    if 'weeks_back' not in config.keys():
+    if 'weeks_back' not in list(config.keys()):
     	config['weeks_back'] = 1
-    if 'name' not in config.keys():
+    if 'name' not in list(config.keys()):
         config['name'] = 'boston'
 
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     set_defaults(config)
 
     DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
-    print('Outputting to: %s' % DATA_FP)
+    print(('Outputting to: %s' % DATA_FP))
 
     # Default
     seg_data = os.path.join(DATA_FP, 'vz_predict_dataset.csv.gz')
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     new_feats = []
     for f in f_cont:
         if f not in data_nonzero.columns.values:
-            print "Feature " + f + " not found, skipping"
+            print("Feature " + f + " not found, skipping")
         else:
             new_feats.append(f)
     f_cont = new_feats
@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     # create featureset holder
     features = f_cont+f_cat
-    print('Segment features included: {}'.format(features))
+    print(('Segment features included: {}'.format(features)))
 
     # add concern
     if config['concern']!='':
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     features += crash_cols
 
     if config['process']:
-        print('Processing categorical: {}'.format(f_cat))
+        print(('Processing categorical: {}'.format(f_cat)))
         for f in f_cat:
             t = pd.get_dummies(data_segs[f])
             t.columns = [f+str(c) for c in t.columns]
@@ -219,7 +219,7 @@ if __name__ == '__main__':
             # for linear model, allow for intercept
             lm_features += t.columns.tolist()[1:]
         # aadt - log-transform
-        print('Processing continuous: {}'.format(f_cont))
+        print(('Processing continuous: {}'.format(f_cont)))
         for f in f_cont:
             data_segs['log_%s' % f] = np.log(data_segs[f]+1)
             features += ['log_%s' % f]
@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     # create model data
     data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment_id')
-    print "full features:{}".format(features)
+    print("full features:{}".format(features))
 
     #Initialize data
     try: 
@@ -276,7 +276,7 @@ if __name__ == '__main__':
             best_model_features = test.rundict[m]['features']
     # check for performance above certain level
     if best_perf<=perf_cutoff:
-        print('Model performs below AUC %s, may not be usable' % perf_cutoff)
+        print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
 
     # train on full data
     trained_model = best_model.fit(data_model[best_model_features], data_model['target'])

@@ -18,7 +18,7 @@ def create_test_csv(tmpdir, filename):
         'key2': 5
     }]
     with open(os.path.join(tmppath, filename), 'w') as f:
-        writer = csv.DictWriter(f, test[0].keys())
+        writer = csv.DictWriter(f, list(test[0].keys()))
         writer.writeheader()
         for row in test:
             writer.writerow(row)

@@ -4,13 +4,13 @@ from shapely.geometry import Point
 import pyproj
 import csv
 import fiona
-import json
+
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_read_shp():
-    res = util.read_shp(TEST_FP + '/data/processed/maps/inters.shp')
+def test_read_geojson():
+    res = util.read_geojson(TEST_FP + '/data/processed/maps/inters.geojson')
     assert len(res) == 6
     assert type(res[0][0]) == Point
 
@@ -69,9 +69,9 @@ def test_read_record():
 def test_csv_to_projected_records(tmpdir):
     x = float(-71.07)
     y = float(42.3)
-    print tmpdir
+    print(tmpdir)
     file = str(tmpdir) + '/test.csv'
-    with open(file, 'wb') as csvfile:
+    with open(file, 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(['col1', 'col2', 'col3'])
         writer.writerow(['test', x, y])
@@ -129,7 +129,7 @@ def test_group_json_by_location(tmpdir):
 
     result = util.group_json_by_location(test_json)
     assert result == ([
-        {'near_id': '001', u'key1': 'value1', 'key2': 'value2'},
+        {'near_id': '001', 'key1': 'value1', 'key2': 'value2'},
         {'near_id': '2', 'key1': 'test'},
         {'near_id': '001', 'key1': 'testtest', 'key2': 'abc'}
     ], {
@@ -138,7 +138,7 @@ def test_group_json_by_location(tmpdir):
 
     result = util.group_json_by_location(test_json, otherfields=['key1'])
     assert result == ([
-        {'near_id': '001', u'key1': 'value1', 'key2': 'value2'},
+        {'near_id': '001', 'key1': 'value1', 'key2': 'value2'},
         {'near_id': '2', 'key1': 'test'},
         {'near_id': '001', 'key1': 'testtest', 'key2': 'abc'}
     ], {

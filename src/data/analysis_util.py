@@ -1,8 +1,8 @@
 # Util file solely for analysis.  If you find yourself using any of these
 # during the data generation process, you should probably move that
 # function to util.py instead
-from util import is_inter
-import util
+from .util import is_inter
+from . import util
 BASE_DIR = ''
 
 
@@ -20,7 +20,7 @@ def summary_crash_rate(crashes):
     }
     total_crashes = 0
     total_crash_locations = 0
-    for k, v in crashes.iteritems():
+    for k, v in crashes.items():
         total_crash_locations += 1
         total_crashes += v['count']
         if str(k) == '':
@@ -55,9 +55,9 @@ def summary_concern_counts(crashes, concerns):
     non_inter_loc = 0
 
     total_concerns = 0
-    for id, d in concerns.iteritems():
+    for id, d in concerns.items():
         total_concerns += d['count']
-        if d['count'] not in matching.keys():
+        if d['count'] not in list(matching.keys()):
             matching[d['count']] = {
                 'inter': {'crash': 0, 'no_crash': 0},
                 'non_inter': {'crash': 0, 'no_crash': 0}
@@ -71,7 +71,7 @@ def summary_concern_counts(crashes, concerns):
             non_inter_total += d['count']
             non_inter_loc += 1
 
-        if id in crashes.keys():
+        if id in list(crashes.keys()):
             matching[d['count']][key]['crash'] += 1
         else:
             matching[d['count']][key]['no_crash'] += 1
@@ -156,7 +156,7 @@ def concern_counts_by_type(
     locations = {}
     for concern in concern_data:
 
-        if concern['near_id'] not in locations.keys():
+        if concern['near_id'] not in list(locations.keys()):
             locations[concern['near_id']] = {}
 
         request = concern[category_field]
@@ -165,7 +165,7 @@ def concern_counts_by_type(
         if len(vals) > 1:
             request = vals[1]
 
-        if request not in requests.keys():
+        if request not in list(requests.keys()):
             requests[request] = {
                 'crashes': 0,
                 'total': 0,
@@ -178,25 +178,25 @@ def concern_counts_by_type(
         # Only count this request if we haven't seen it in this location
         # before.  We might eventually want to count the number of certain
         # types of requests, but not doing that here
-        if request not in locations[concern['near_id']].keys():
+        if request not in list(locations[concern['near_id']].keys()):
 
             # count totals
-            if str(concern['near_id']) in crashes.keys():
+            if str(concern['near_id']) in list(crashes.keys()):
                 requests[request]['crashes'] += 1
             requests[request]['total'] += 1
 
             # count intersection totals
             if is_inter(concern['near_id']):
-                if str(concern['near_id']) in crashes.keys():
+                if str(concern['near_id']) in list(crashes.keys()):
                     requests[request]['inter_crashes'] += 1
                 requests[request]['inter_total'] += 1
             # count non-intersection totals
             else:
-                if str(concern['near_id']) in crashes.keys():
+                if str(concern['near_id']) in list(crashes.keys()):
                     requests[request]['non_inter_crashes'] += 1
                 requests[request]['non_inter_total'] += 1
 
-        if request not in locations[concern['near_id']].keys():
+        if request not in list(locations[concern['near_id']].keys()):
             locations[concern['near_id']][request] = 0
         locations[concern['near_id']][request] += 1
 
@@ -207,7 +207,7 @@ def concern_percentages_by_type(
         requests, cutoff=100):
 
     results = []
-    for k, v in requests.iteritems():
+    for k, v in requests.items():
         if requests[k]['total'] >= cutoff:
             total_percent = round(100 * float(
                 requests[k]['crashes'])/float(requests[k]['total']))
