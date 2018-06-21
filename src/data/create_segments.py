@@ -180,7 +180,8 @@ def get_intersection_name(inter_segments):
 
     streets = []
     # Some open street maps segments have more than one name in them
-    for street in [x['name'] for x in inter_segments]:
+    for street in [x['name'] if 'name' in x.keys() else None
+                   for x in inter_segments]:
         if street:
             if '[' in street:
                 streets.extend(re.sub("['\[\]]", '', street).split(', '))
