@@ -282,12 +282,14 @@ def write_segments(non_inters, inters, mapfp, datafp):
     with open(os.path.join(datafp, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
 
-    import ipdb; ipdb.set_trace()
     # Store the individual intersections without properties, since QGIS appears
     # to have trouble with dicts of dicts, and viewing maps can be helpful
     int_w_ids = [{
         'geometry': x['geometry'],
-        'properties': {'id': x['properties']['id']}
+        'properties': {
+            'id': x['properties']['id'],
+            'name': x['properties']['name']
+        }
     } for x in inters]
 
     int_w_ids = util.prepare_geojson(int_w_ids)
