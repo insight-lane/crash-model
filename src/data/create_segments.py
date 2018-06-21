@@ -15,6 +15,7 @@ import argparse
 import os
 import geojson
 import fiona
+import re
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -168,6 +169,37 @@ def add_point_based_features(non_inters, inters, feats_filename):
     return non_inters, inters
 
 
+def get_intersection_name(inter_segments):
+    """
+    Get an intersection name from a set of intersection segment names
+    Args:
+        inter_segments - a list of properties
+    Returns:
+        intersection name - a string, e.g. First St and Second St
+    """
+
+    streets = []
+    # Some open street maps segments have more than one name in them
+    for street in [x['name'] for x in inter_segments]:
+        if street:
+            if '[' in street:
+                streets.extend(re.sub("['\[\]]", '', street).split(', '))
+            else:
+                streets.append(street)
+    streets = list(set(streets))
+
+    name = ''
+    if not streets:
+        return name
+    if len(streets) == 2:
+        name = streets[0] + " and " + streets[1]
+    else:
+        name = streets[0] + " near "
+        name += ', '.join(streets[1:-1]) + ' and ' + streets[-1]
+
+    return name
+
+
 def create_segments_from_json(roads_shp_path, mapfp):
 
     data = fiona.open(roads_shp_path)
@@ -196,7 +228,6 @@ def create_segments_from_json(roads_shp_path, mapfp):
         roads, int_buffers)
 
     non_int_w_ids = []
-
     for i, l in enumerate(non_int_lines):
         value = copy.deepcopy(l)
         value['type'] = 'Feature'
@@ -218,9 +249,11 @@ def create_segments_from_json(roads_shp_path, mapfp):
         for line in lines:
             coords += [[x for x in line.coords]]
 
+        name = get_intersection_name(inter_segments['data'][idx])
         properties = {
             'id': idx,
-            'data': inter_segments['data'][idx]
+            'data': inter_segments['data'][idx],
+            'name': name
         }
 
         union_inter.append(geojson.Feature(
@@ -228,7 +261,6 @@ def create_segments_from_json(roads_shp_path, mapfp):
             id=idx,
             properties=properties,
         ))
-
     return non_int_w_ids, union_inter
 
 
@@ -250,6 +282,7 @@ def write_segments(non_inters, inters, mapfp, datafp):
     with open(os.path.join(datafp, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
 
+    import ipdb; ipdb.set_trace()
     # Store the individual intersections without properties, since QGIS appears
     # to have trouble with dicts of dicts, and viewing maps can be helpful
     int_w_ids = [{
