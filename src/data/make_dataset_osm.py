@@ -19,7 +19,7 @@ if __name__ == '__main__':
                         help="Config file")
     parser.add_argument("-d", "--datadir", type=str, required=True,
                         help="Data directory")
-    
+
     parser.add_argument("-s", "--startyear", type=str,
                         help="Can limit data to crashes this year or later")
     parser.add_argument("-e", "--endyear", type=str,
@@ -58,7 +58,7 @@ if __name__ == '__main__':
            or config['additional_features'] is None:
             sys.exit("If extra_map is given, additional_features " +
                      "are required.")
-            
+
         extra_map = config['extra_map']
         additional_features = config['additional_features'].split()
 
@@ -81,7 +81,9 @@ if __name__ == '__main__':
         'python',
         '-m',
         'data.osm_create_maps',
-        city,
+        '-c',
+        config_file,
+        '-d',
         DATA_FP,
     ] + (['--forceupdate'] if recreate else []))
 
