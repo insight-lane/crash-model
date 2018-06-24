@@ -2,11 +2,11 @@
 city: Brisbane, Queensland, Australia
 # The folder under data where this city's data is stored
 name: brisbane
-city_latitude: 152.7123276
-city_longitude: -27.381252
+city_latitude: -27.4719173
+city_longitude: 153.0256082
 # If given, limit crashes to after start_year and before end_year
-start_year: 2015
-end_year: 2018
+start_year: 2016
+end_year: 2017
 
 ##############################################################################
 # Configuration for data standardization
