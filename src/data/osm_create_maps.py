@@ -9,6 +9,7 @@ import geojson
 import json
 import requests
 import yaml
+import sys
 
 MAP_FP = None
 
