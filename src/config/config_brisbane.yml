@@ -1,5 +1,6 @@
 # City name
 city: Brisbane, Queensland, Australia
+
 # The folder under data where this city's data is stored
 name: brisbane
 city_latitude: -27.4719173
