@@ -19,7 +19,6 @@ dependencies:
 - gdal
 - geopandas
 - geos
-- geojson
 - hdf4
 - hdf5
 - html5lib

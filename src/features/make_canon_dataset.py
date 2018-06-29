@@ -4,7 +4,7 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from data.util import read_geojson, group_json_by_location, group_json_by_field
+from data.util import read_shp, group_json_by_location, group_json_by_field
 import os
 import argparse
 
@@ -69,7 +69,7 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
 
     # Read in non_inters data:
     print "reading ", non_inters_fp
-    non_inters = read_geojson(non_inters_fp)
+    non_inters = read_shp(non_inters_fp)
     non_inters_df = pd.DataFrame([x[1] for x in non_inters])
     non_inters_df.set_index('id', inplace=True)
 
@@ -118,7 +118,7 @@ def aggregate_roads(feats, datadir, concerns=[]):
 
     # combined road feature dataset parameters
     inters_fp = os.path.join(datadir, 'inters_data.json')
-    non_inters_fp = os.path.join(datadir, 'maps', 'non_inters_segments.geojson')
+    non_inters_fp = os.path.join(datadir, 'maps', 'non_inters_segments.shp')
 
     # create combined road feature dataset
     aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)

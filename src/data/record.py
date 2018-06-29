@@ -8,7 +8,6 @@ class Record(object):
     "A record contains a dict of properties and a point in 4326 projection"
 
     def __init__(self, properties):
-
         self.point = self._get_reproject_point(properties['location'])
         self.properties = properties
 
@@ -35,13 +34,6 @@ class Record(object):
             location['longitude'], location['latitude']
         )
         return Point(float(lon), float(lat))
-
-    @property
-    def timestamp(self):
-        if 'timestamp' in self.properties:
-            return self.properties['timestamp']
-        else:
-            return ''
 
 
 class Crash(Record):

@@ -74,11 +74,13 @@ def make_preds_gdf(city, year):
 
     # Read in shapefile as a GeoDataframe
     map_fp = os.path.join(DATA_FP, city, 'processed/maps')
+    streets = gpd.read_file(map_fp + '/inter_and_non_int.shp')
 
-    streets = gpd.read_file(map_fp + '/inter_and_non_int.geojson')
+    # Set the projection as EPSG:3857 since the shapefile didn't export with one
+    streets.crs = {'init': 'epsg:3857'}
 
-    # Set the projection as EPSG:4326 since the shapefile didn't export with one
-    streets.crs = {'init': 'epsg:4326'}
+    # Then reproject to EPSG:4326 to match what Leaflet uses
+    streets = streets.to_crs({'init': 'epsg:4326'})
 
     # Join geometry to the crash data
     preds_joined = streets.merge(output, on='id')

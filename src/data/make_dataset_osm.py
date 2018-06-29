@@ -50,17 +50,21 @@ if __name__ == '__main__':
     # This block handles any extra map info as we have in Boston
     extra_map = None
     additional_features = None
+    extra_map3857 = None
     recreate = False
     outputdir = city.split(',')[0]
     if 'extra_map' in config.keys() and config['extra_map']:
         # Require additional features and additional shapefile in 3857 proj
         if 'additional_features' not in config.keys() \
-           or config['additional_features'] is None:
-            sys.exit("If extra_map is given, additional_features " +
-                     "are required.")
+           or config['additional_features'] is None \
+           or 'extra_map3857' not in config.keys() \
+           or config['extra_map3857'] is None:
+            sys.exit("If extra_map is given, additional_features and" +
+                     "extra_map3857 are required.")
             
         extra_map = config['extra_map']
         additional_features = config['additional_features'].split()
+        extra_map3857 = config['extra_map3857']
 
     # Whether to regenerate maps from open street map
     if args.forceupdate:
@@ -91,7 +95,11 @@ if __name__ == '__main__':
         '-m',
         'data.create_segments',
         '-d',
-        DATA_FP
+        DATA_FP,
+        '-r',
+        os.path.join(DATA_FP, 'processed/maps/osm_ways_3857.shp'),
+        '-i',
+        os.path.join(DATA_FP, 'processed/maps/osm_nodes.shp')
     ])
 
     if extra_map:
@@ -118,8 +126,7 @@ if __name__ == '__main__':
             '-n',
             outputdir,
             '-r',
-            os.path.join(
-                DATA_FP, 'processed', 'maps', outputdir, 'elements.geojson')
+            extra_map3857
         ])
 
         # Map the boston segments to the open street map segments
