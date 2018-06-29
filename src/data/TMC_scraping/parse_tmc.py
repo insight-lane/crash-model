@@ -100,8 +100,8 @@ def find_address_from_filename(filename, cached):
 
 
 def snap_inter_and_non_inter(summary):
-    inter = util.read_geojson(
-        os.path.join(PROCESSED_DATA_FP, 'maps/inters_segments.geojson'))
+    inter = util.read_shp(
+        os.path.join(PROCESSED_DATA_FP, 'maps/inters_segments.shp'))
 
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()

@@ -12,7 +12,6 @@ from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
 from record import Crash, Concern, Record
-import geojson
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -147,13 +146,11 @@ def plot_hourly_rates(all_counts, outfile):
     pyplot.savefig(outfile)
 
 
-def read_geojson(fp):
-    """ Read geojson file, reproject to 3857, and
-    output tuple geometry + property """
-
-    data = fiona.open(fp)
-    data = reproject_records([x for x in data])
-    return [(x['geometry'], x['properties']) for x in data]
+def read_shp(fp):
+    """ Read shp, output tuple geometry + property """
+    out = [(shape(line['geometry']), line['properties'])
+           for line in fiona.open(fp)]
+    return(out)
 
 
 def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
@@ -274,33 +271,7 @@ def csv_to_projected_records(filename, x='X', y='Y'):
     return records
 
 
-def read_records_from_geojson(filename):
-    """
-    Reads appropriately formatted geojson file,
-    converts latitude and longitude to projection 4326, and turns into
-    a Record object
-    Args:
-        filename - geojson file
-    Returns:
-        A list of Records
-    """
-
-    records = []
-    with open(filename) as f:
-        items = geojson.load(f)
-        for item in items['features']:
-            properties = item['properties']
-            properties['location'] = {
-                'latitude': item['geometry']['coordinates'][1],
-                'longitude': item['geometry']['coordinates'][0]
-            }
-            record = Record(properties)
-            records.append(record)
-    return records
-
-
-def read_records(filename, record_type,
-                 startyear=None, endyear=None):
+def read_records(filename, record_type, startyear=None, endyear=None):
     """
     Reads appropriately formatted json file,
     pulls out currently relevant features,
@@ -337,11 +308,8 @@ def read_records(filename, record_type,
     # Keep track of the earliest and latest crash date used
     start = min([x.timestamp for x in records])
     end = max([x.timestamp for x in records])
-    if start and end:
-        print "Read in data from {} crashes from {} to {}".format(
-            len(records), start.date(), end.date())
-    print "Read in data from {} records".format(len(records))
-
+    print "Read in data from {} crashes from {} to {}".format(
+        len(records), start.date(), end.date())
     return records
 
 
@@ -405,48 +373,24 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     Returns:
         The segments and spatial index
     """
-
+    # Read in segments
     inter = []
     non_inter = []
 
     if get_inter:
-        inter = fiona.open(dirname + '/inters_segments.geojson')
-        inter = reproject_records([x for x in inter])
-        inter = [{
-            'geometry': mapping(x['geometry']),
-            'properties': x['properties']} for x in inter]
-
+        inter = read_shp(dirname + '/inters_segments.shp')
     if get_non_inter:
-        non_inter = fiona.open(
-            dirname + '/non_inters_segments.geojson')
-        non_inter = reproject_records([x for x in non_inter])
-        non_inter = [{
-            'geometry': mapping(x['geometry']),
-            'properties': x['properties']} for x in non_inter]
-
+        non_inter = read_shp(dirname + '/non_inters_segments.shp')
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 
-    return index_segments(list(inter) + list(non_inter))
-
-
-def index_segments(segments):
-    """
-    Reads a list of segments in geojson format, and makes
-    a spatial index for lookup
-    Args:
-        list of segments
-    """
-
-    # Read in segments and turn them into shape, propery tuples
-    combined_seg = [(shape(x['geometry']), x['properties']) for x in
-                    segments]
+    # Combine inter + non_inter
+    combined_seg = inter + non_inter
 
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
         segments_index.insert(idx, element[0].bounds)
-
     return combined_seg, segments_index
 
 
@@ -517,18 +461,6 @@ def write_points(points, schema, filename):
             output.write({'geometry': mapping(pt), 'properties': prop})
 
 
-def reproject(coords, inproj='epsg:4326', outproj='epsg:3857'):
-    new_coords = []
-    inproj = pyproj.Proj(init=inproj)
-    outproj = pyproj.Proj(init=outproj)
-
-    for coord in coords:
-        re_point = pyproj.transform(inproj, outproj, coord[0], coord[1])
-        point = Point(re_point)
-        new_coords.append(mapping(point))
-    return new_coords
-
-
 def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     """
     Reprojects a set of records from one projection to another
@@ -543,18 +475,19 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     results = []
     inproj = pyproj.Proj(init=inproj)
     outproj = pyproj.Proj(init=outproj)
-
     for record in records:
 
         coords = record['geometry']['coordinates']
         if record['geometry']['type'] == 'Point':
             re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
             point = Point(re_point)
-            results.append({'geometry': point,
+            results.append({'geometry': mapping(point),
                             'properties': record['properties']})
         elif record['geometry']['type'] == 'MultiLineString':
             new_coords = []
+            print coords
             for segment in coords:
+                print segment
                 new_segment = [
                     pyproj.transform(
                         inproj, outproj, segment[0][0], segment[0][1]),
@@ -573,28 +506,7 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
                 )
             results.append({'geometry': LineString(new_coords),
                             'properties': record['properties']})
-
     return results
-
-
-def prepare_geojson(records):
-    """
-    Prepares a set of records to be written as geojson, reprojecting
-    from 3857 to 4326
-    Args:
-        records - a list of dicts with geometry and properties
-    Results:
-        A geojson feature collection
-    """
-
-    records = reproject_records(records, inproj='epsg:3857',
-                                outproj='epsg:4326')
-    results = [geojson.Feature(
-        geometry=mapping(x['geometry']),
-        id=x['properties']['id'] if 'id' in x['properties'] else '',
-        properties=x['properties']) for x in records]
-
-    return geojson.FeatureCollection(results)
 
 
 def make_schema(geometry, properties):

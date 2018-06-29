@@ -5,8 +5,7 @@ import itertools
 import cPickle
 import os
 import argparse
-from util import track, prepare_geojson
-import geojson
+from util import track, write_points
 
 MAP_DATA_FP = os.path.dirname(
     os.path.dirname(
@@ -85,7 +84,7 @@ def generate_intersections(lines):
     return inters
 
 
-def write_intersections(inters, roads):
+def write_intersections(inters):
     """
     Given a list of shapely intersections,
     de-dupe and write shape files
@@ -93,30 +92,15 @@ def write_intersections(inters, roads):
     Args:
         inters: list of points indicating intersections
     """
-    output_inters = []
-
-    # De-dupe and add intersection as a property
-    seen_points = {}
-    for x in inters:
-        properties = x[1]
-
-        if str(x[0].x) + str(x[0].y) not in seen_points.keys():
-            properties.update({'intersection': 1})
-            output_inters.append(geojson.Feature(
-                geometry=geojson.Point([x[0].x, x[0].y]),
-                properties=properties
-            ))
-        seen_points[str(x[0].x) + str(x[0].y)] = True
-
-    output_inters = prepare_geojson(output_inters)
-    roads = prepare_geojson(roads)
-
-    elements = geojson.FeatureCollection(
-        output_inters['features'] + roads['features'])
-
-    outfp = os.path.join(MAP_DATA_FP, 'elements.geojson')
-    with open(outfp, 'w') as outfile:
-        geojson.dump(elements, outfile)
+    # schema of the shapefile
+    schema = {
+        'geometry': 'Point',
+        'properties': {
+            'id_1': 'int',
+            'id_2': 'int'
+        }
+    }
+    write_points(inters, schema, os.path.join(MAP_DATA_FP, 'inters.shp'))
 
 
 if __name__ == '__main__':
@@ -147,23 +131,20 @@ if __name__ == '__main__':
         if not os.path.exists(MAP_DATA_FP):
             os.mkdir(MAP_DATA_FP)
 
-    roads = fiona.open(shp)
     # Get all lines, dummy id
     lines = [
         (
-            i,
-            shape(line['geometry'])
-        ) for i, line in enumerate(roads)
+            line[0],
+            shape(line[1]['geometry'])
+        ) for line in enumerate(fiona.open(shp))
     ]
 
     print 'Extracting intersections and writing into ' + MAP_DATA_FP
     inters = []
     pkl_file = os.path.join(MAP_DATA_FP, 'inters.pkl')
-
     if not os.path.exists(pkl_file) or args.forceupdate:
         print 'Generating intersections...'
         inters = generate_intersections(lines)
-
         # Save to pickle in case script breaks
         with open(pkl_file, 'w') as f:
             cPickle.dump(inters, f)
@@ -171,6 +152,4 @@ if __name__ == '__main__':
         print 'Reading intersections from ' + pkl_file
         with open(pkl_file, 'r') as f:
             inters = cPickle.load(f)
-
-    print "writing intersections and road segments to geojson"
-    write_intersections(inters, roads)
+    write_intersections(inters)
