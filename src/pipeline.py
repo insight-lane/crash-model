@@ -75,6 +75,7 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
     ]
         + (['-s', str(start_year)] if start_year else [])
         + (['-e', str(end_year)] if end_year else [])
+        + (['--forceupdate'] if forceupdate else [])
     )
 
 

@@ -5,6 +5,7 @@ from shapely.geometry import Point
 import rtree
 import os
 import json
+import geojson
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -145,8 +146,6 @@ def get_mapping(lines, features):
         float(result_counts[0]+result_counts[1])) * 100
     print 'Found matches for ' + str(percent_matched) + '% of segments'
 
-    print result_counts
-
 
 def get_int_mapping(lines, buffered, buffered_index):
     """
@@ -251,7 +250,7 @@ def add_int_features(int_lines, dir1, dir2, featlist):
     with open(os.path.join(dir2, 'inters_data.json'), 'r') as f:
         inters_new = json.load(f)
     
-    inters_data_fp = os.path.join(dir1, 'inters_data_orig.json')
+    inters_data_fp = os.path.join(dir1, 'inters_data.json')
     with open(inters_data_fp, 'r') as f:
         inters_orig = json.load(f)
 
@@ -300,15 +299,16 @@ if __name__ == '__main__':
     PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
     MAP_FP = os.path.join(PROCESSED_DATA_FP, 'maps')
 
-    non_inters_orig_file = os.path.join(
-        MAP_FP, 'non_inters_segments_orig.shp')
-    print "Reading original map from " + non_inters_orig_file
-    orig_map_non_inter = util.read_shp(non_inters_orig_file)
+    non_inters_osm_file = os.path.join(
+        MAP_FP, 'non_inters_segments.geojson')
+    print "Reading original map from " + non_inters_osm_file
+    osm_map_non_inter = util.read_geojson(non_inters_osm_file)
 
     non_inters_new_file = os.path.join(
-        MAP_FP, args.map2dir, 'non_inters_segments.shp')
+        MAP_FP, args.map2dir, 'non_inters_segments.geojson')
     print "Reading new map from " + non_inters_new_file
-    new_map_non_inter = util.read_shp(non_inters_new_file)
+
+    new_map_non_inter = util.read_geojson(non_inters_new_file)
 
     # Index for the new map
     new_buffered = []
@@ -321,27 +321,26 @@ if __name__ == '__main__':
         new_index.insert(idx, b.bounds)
 
     non_ints_with_candidates = get_candidates(
-        new_buffered, new_index, orig_map_non_inter)
+        new_buffered, new_index, osm_map_non_inter)
 
     print "Adding features: " + ','.join(feats)
     get_mapping(non_ints_with_candidates, feats)
 
+    output = [{
+        'geometry': geojson.LineString([y for y in x['line'].coords]),
+        'properties': x['properties']} for x in non_ints_with_candidates]
+    output = util.prepare_geojson(output)
+
     # Write the non-intersections segments back out with the new features
-    schema = {
-        'geometry': 'LineString',
-        'properties': {k: 'str' for k in orig_map_non_inter[0][1].keys()}
-    }
-    util.write_shp(
-        schema,
-        os.path.join(MAP_FP, 'non_inters_segments.shp'),
-        orig_map_non_inter, 0, 1)
+    with open(os.path.join(
+            MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
+        geojson.dump(output, outfile)
 
     # Now do intersections
-    orig_map_inter = util.read_shp(
-        os.path.join(MAP_FP, 'inters_segments_orig.shp'))
-
-    new_map_inter = util.read_shp(
-        os.path.join(MAP_FP, args.map2dir, 'inters_segments.shp'))
+    osm_map_inter = util.read_geojson(
+        os.path.join(MAP_FP, 'inters_segments.geojson'))
+    new_map_inter = util.read_geojson(os.path.join(
+        MAP_FP, args.map2dir, 'inters_segments.geojson'))
 
     orig_buffered_inter = []
     orig_index_inter = rtree.index.Index()
@@ -354,7 +353,7 @@ if __name__ == '__main__':
         new_index_inter.insert(idx, b.bounds)
 
     int_results = get_int_mapping(
-        orig_map_inter, new_buffered_inter, new_index_inter)
+        osm_map_inter, new_buffered_inter, new_index_inter)
 
     add_int_features(
         int_results,
