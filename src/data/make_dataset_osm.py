@@ -41,7 +41,7 @@ if __name__ == '__main__':
         config = yaml.safe_load(f)
 
     # City
-    if 'city' not in config.keys() or config['city'] is None:
+    if 'city' not in list(config.keys()) or config['city'] is None:
         sys.exit('City is required in config file')
     city = config['city']
 
@@ -52,9 +52,9 @@ if __name__ == '__main__':
     additional_features = None
     recreate = False
     outputdir = city.split(',')[0]
-    if 'extra_map' in config.keys() and config['extra_map']:
+    if 'extra_map' in list(config.keys()) and config['extra_map']:
         # Require additional features and additional shapefile in 3857 proj
-        if 'additional_features' not in config.keys() \
+        if 'additional_features' not in list(config.keys()) \
            or config['additional_features'] is None:
             sys.exit("If extra_map is given, additional_features " +
                      "are required.")
@@ -73,9 +73,9 @@ if __name__ == '__main__':
     features = [
         'width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway']
 
-    print "Generating maps for " + city + ' in ' + DATA_FP
+    print("Generating maps for " + city + ' in ' + DATA_FP)
     if recreate:
-        print "Overwriting existing data..."
+        print("Overwriting existing data...")
     # Get the maps out of open street map, both projections
     subprocess.check_call([
         'python',

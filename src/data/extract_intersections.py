@@ -2,10 +2,10 @@ import fiona
 import math
 from shapely.geometry import Point, shape
 import itertools
-import cPickle
+import pickle
 import os
 import argparse
-from util import track, prepare_geojson
+from .util import track, prepare_geojson
 import geojson
 
 MAP_DATA_FP = os.path.dirname(
@@ -69,7 +69,7 @@ def generate_intersections(lines):
     # Total combinations of two road segments
     def nCr(n, r):
         f = math.factorial
-        return f(n) / f(r) / f(n-r)
+        return f(n) // f(r) // f(n-r)
     tot = nCr(len(lines), 2)
     # Look at all pairs of segments to extract intersections
     for segment1, segment2 in itertools.combinations(lines, 2):
@@ -100,7 +100,7 @@ def write_intersections(inters, roads):
     for x in inters:
         properties = x[1]
 
-        if str(x[0].x) + str(x[0].y) not in seen_points.keys():
+        if str(x[0].x) + str(x[0].y) not in list(seen_points.keys()):
             properties.update({'intersection': 1})
             output_inters.append(geojson.Feature(
                 geometry=geojson.Point([x[0].x, x[0].y]),
@@ -156,21 +156,21 @@ if __name__ == '__main__':
         ) for i, line in enumerate(roads)
     ]
 
-    print 'Extracting intersections and writing into ' + MAP_DATA_FP
+    print('Extracting intersections and writing into ' + MAP_DATA_FP)
     inters = []
     pkl_file = os.path.join(MAP_DATA_FP, 'inters.pkl')
 
     if not os.path.exists(pkl_file) or args.forceupdate:
-        print 'Generating intersections...'
+        print('Generating intersections...')
         inters = generate_intersections(lines)
 
         # Save to pickle in case script breaks
-        with open(pkl_file, 'w') as f:
-            cPickle.dump(inters, f)
+        with open(pkl_file, 'wb') as f:
+            pickle.dump(inters, f)
     else:
-        print 'Reading intersections from ' + pkl_file
-        with open(pkl_file, 'r') as f:
-            inters = cPickle.load(f)
+        print('Reading intersections from ' + pkl_file)
+        with open(pkl_file, 'rb') as f:
+            inters = pickle.load(f)
 
-    print "writing intersections and road segments to geojson"
+    print("writing intersections and road segments to geojson")
     write_intersections(inters, roads)

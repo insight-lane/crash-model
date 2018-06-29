@@ -11,7 +11,7 @@ import os
 from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
-from record import Crash, Concern, Record
+from .record import Crash, Concern, Record
 import geojson
 
 
@@ -65,7 +65,7 @@ def write_geocode_cache(results,
         filename - file to write to (defaults to geocoded_addresses.csv)
     """
 
-    with open(filename, 'wb') as f:
+    with open(filename, 'w') as f:
         writer = csv.writer(f)
         writer.writerow([
             'Input Address',
@@ -73,7 +73,7 @@ def write_geocode_cache(results,
             'Latitude',
             'Longitude'
         ])
-        for key, value in results.iteritems():
+        for key, value in results.items():
             writer.writerow([key, value[0], value[1], value[2]])
 
 
@@ -90,7 +90,7 @@ def geocode_address(address, cached={}):
     Returns:
         address, latitude, longitude
     """
-    if address in cached.keys():
+    if address in list(cached.keys()):
         return cached[address]
     g = geocoder.google(address)
     attempts = 0
@@ -113,9 +113,9 @@ def get_hourly_rates(files):
     all_counts = []
     for f in files:
         wb = openpyxl.load_workbook(f, data_only=True)
-        sheet_names = wb.get_sheet_names()
+        sheet_names = wb.sheetnames
         if 'Classification-Combined' in sheet_names:
-            sheet = wb.get_sheet_by_name('Classification-Combined')
+            sheet = wb['Classification-Combined']
             # Right now the cell locations are hardcoded,
             # but if we expand to cover different formats, will need to change
             counts = []
@@ -140,7 +140,7 @@ def plot_hourly_rates(all_counts, outfile):
         outfile - where to write the resulting plot
     """
 
-    bins = range(0, 24)
+    bins = list(range(0, 24))
     for val in all_counts:
         pyplot.plot(bins, val)
     pyplot.legend(loc='upper right')
@@ -196,7 +196,7 @@ def records_to_shapefile(schema, fp, records, crs={}):
             c.write({
                 'geometry': mapping(record.point),
                 'properties': {
-                    k: str(v) for (k, v) in record.properties.items()}
+                    k: str(v) for (k, v) in list(record.properties.items())}
             })
 
 
@@ -210,7 +210,7 @@ def record_to_csv(filename, records):
 
     with open(filename, 'w') as csvfile:
         writer = csv.DictWriter(csvfile,
-                                fieldnames=records[0]['properties'].keys())
+                                fieldnames=list(records[0]['properties'].keys()))
         writer.writeheader()
         for record in records:
             writer.writerow(record['properties'])
@@ -338,9 +338,9 @@ def read_records(filename, record_type,
     start = min([x.timestamp for x in records])
     end = max([x.timestamp for x in records])
     if start and end:
-        print "Read in data from {} crashes from {} to {}".format(
-            len(records), start.date(), end.date())
-    print "Read in data from {} records".format(len(records))
+        print("Read in data from {} crashes from {} to {}".format(
+            len(records), start.date(), end.date()))
+    print("Read in data from {} records".format(len(records)))
 
     return records
 
@@ -351,7 +351,7 @@ def find_nearest(records, segments, segments_index, tolerance,
     tolerance : max units distance from record point to consider
     """
 
-    print "Using tolerance {}".format(tolerance)
+    print("Using tolerance {}".format(tolerance))
 
     for record in records:
 
@@ -424,8 +424,8 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
             'geometry': mapping(x['geometry']),
             'properties': x['properties']} for x in non_inter]
 
-    print "Read in {} intersection, {} non-intersection segments".format(
-        len(inter), len(non_inter))
+    print("Read in {} intersection, {} non-intersection segments".format(
+        len(inter), len(non_inter)))
 
     return index_segments(list(inter) + list(non_inter))
 
@@ -453,7 +453,7 @@ def index_segments(segments):
 def group_json_by_field(items, field):
     results = {}
     for item in items:
-        if item[field] not in results.keys():
+        if item[field] not in list(results.keys()):
             results[item[field]] = []
         results[item[field]].append(item)
     return results
@@ -475,7 +475,7 @@ def group_json_by_location(
     for item in items:
         if not years or (
                 years and yearfield and parse(item[yearfield]).year in years):
-            if str(item['near_id']) not in locations.keys():
+            if str(item['near_id']) not in list(locations.keys()):
                 d = {'count': 0}
                 for field in otherfields:
                     d[field] = []
@@ -492,7 +492,7 @@ def track(index, step, tot):
     Prints progress at interval
     """
     if index % step == 0:
-        print "finished {} of {}".format(index, tot)
+        print("finished {} of {}".format(index, tot))
 
 
 def write_points(points, schema, filename):
@@ -509,7 +509,7 @@ def write_points(points, schema, filename):
     deduped_points = {}
     # remove duplicate points
     for pt, prop in points:
-        if (pt.x, pt.y) not in deduped_points.keys():
+        if (pt.x, pt.y) not in list(deduped_points.keys()):
             deduped_points[(pt.x, pt.y)] = pt, prop
     with fiona.open(filename, 'w', 'ESRI Shapefile', schema) as output:
         for i, (pt, prop) in enumerate(deduped_points.values()):
@@ -555,12 +555,10 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
         elif record['geometry']['type'] == 'MultiLineString':
             new_coords = []
             for segment in coords:
-                new_segment = [
-                    pyproj.transform(
-                        inproj, outproj, segment[0][0], segment[0][1]),
-                    pyproj.transform(
-                        inproj, outproj, segment[1][0], segment[1][1])
-                ]
+                new_segment = []
+                for coord in segment:
+                    new_segment.append(pyproj.transform(
+                        inproj, outproj, coord[0], coord[1]))
                 new_coords.append(new_segment)
 
             results.append({'geometry': MultiLineString(new_coords),
@@ -601,7 +599,7 @@ def make_schema(geometry, properties):
     """
     Utility for making schema with 'str' value for each key in properties
     """
-    properties_dict = {k: 'str' for k, v in properties.items()}
+    properties_dict = {k: 'str' for k, v in list(properties.items())}
     schema = {
         'geometry': geometry,
         'properties': properties_dict

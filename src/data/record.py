@@ -1,4 +1,4 @@
-import util
+from . import util
 import pyproj
 from shapely.geometry import Point
 from dateutil.parser import parse

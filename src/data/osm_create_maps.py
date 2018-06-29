@@ -1,5 +1,4 @@
 import argparse
-import util
 import osmnx as ox
 import fiona
 import shutil
@@ -32,7 +31,7 @@ def simple_get_roads(city):
 
     # Label endpoints
     streets_per_node = ox.count_streets_per_node(G)
-    for node, count in streets_per_node.items():
+    for node, count in list(streets_per_node.items()):
         if count <= 1:
             G.nodes()[node]['dead_end'] = True
 
@@ -90,10 +89,10 @@ def write_highway_keys(DOC_FP, highway_keys):
     # Write highway keys to docs if needed for reference
     if not os.path.exists(DOC_FP):
         os.makedirs(DOC_FP)
-    with open(os.path.join(DOC_FP, 'highway_keys.csv'), 'wb') as f:
+    with open(os.path.join(DOC_FP, 'highway_keys.csv'), 'w') as f:
         w = csv.writer(f)
         w.writerow(['type', 'value'])
-        for item in highway_keys.iteritems():
+        for item in highway_keys.items():
             w.writerow(item)
 
 
@@ -136,7 +135,7 @@ def clean_ways(orig_file, DOC_FP):
 
         # round width
         width = 0
-        if ['width'] in way_line['properties'].keys():
+        if ['width'] in list(way_line['properties'].keys()):
             width = way_line['properties']['width']
             if not width or ';' in width or '[' in width:
                 width = 0
@@ -150,7 +149,7 @@ def clean_ways(orig_file, DOC_FP):
             lanes = 0
 
         # Need to have an int highway field
-        if way_line['properties']['highway'] not in highway_keys.keys():
+        if way_line['properties']['highway'] not in list(highway_keys.keys()):
             highway_keys[way_line['properties']['highway']] = len(highway_keys)
 
         # Use oneway
@@ -250,12 +249,12 @@ if __name__ == '__main__':
     # If maps do not exist, create
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
        or args.forceupdate:
-        print 'Generating map from open street map...'
+        print('Generating map from open street map...')
         simple_get_roads(city)
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
        or args.forceupdate:
-        print "Cleaning and writing to {}...".format('osm_elements.geojson')
+        print("Cleaning and writing to {}...".format('osm_elements.geojson'))
 
         clean_and_write(
             os.path.join(MAP_FP, 'osm_ways.shp'),

@@ -1,5 +1,5 @@
 import argparse
-import util
+from . import util
 from shapely.ops import unary_union
 from shapely.geometry import Point
 import rtree
@@ -22,7 +22,7 @@ def add_match_features(line, features):
     """
     feats_list = {}
     for m in line['matches']:
-        for k, v in m[1].items():
+        for k, v in list(m[1].items()):
             if k in features:
                 if k not in feats_list:
                     feats_list[k] = []
@@ -30,7 +30,7 @@ def add_match_features(line, features):
                     feats_list[k].append(v)
 
     # Add new features to existing ones
-    for feat, values in feats_list.items():
+    for feat, values in list(feats_list.items()):
         if values and len(set(values)) == 1:
             line['properties'][feat] = values[0]
         else:
@@ -46,7 +46,7 @@ def get_mapping(lines, features):
             and nearby segments on the original map because we may want to
             combine two for the purposes of mapping
     """
-    print len(lines)
+    print(len(lines))
     result_counts = [0, 0]
     buff = 5
 
@@ -55,16 +55,16 @@ def get_mapping(lines, features):
 
     new_id = 0
     while buff <= 20:
-        print "Looking at buffer " + str(buff)
+        print("Looking at buffer " + str(buff))
         for i in range(len(lines)):
             util.track(i, 1000, len(lines))
-            if 'matches' in lines[i].keys():
+            if 'matches' in list(lines[i].keys()):
                 continue
 
             matched_candidates = []
 
             for j, candidate in enumerate(lines[i]['candidates']):
-                if 'id' not in lines[i]['candidates'][j][1].keys():
+                if 'id' not in list(lines[i]['candidates'][j][1].keys()):
                     lines[i]['candidates'][j][1]['id'] = new_id
                     new_id += 1
                 match = True
@@ -76,7 +76,7 @@ def get_mapping(lines, features):
                     matched_candidates.append((candidate, buff))
 
                     if lines[i]['candidates'][j][1]['id'] \
-                       not in buff_match.keys():
+                       not in list(buff_match.keys()):
                         buff_match[lines[i]['candidates'][j][1]['id']] = buff
 
             if matched_candidates:
@@ -88,10 +88,10 @@ def get_mapping(lines, features):
     # this time, see if they are a subset of any of their candidates
     for i in range(len(lines)):
         matched_candidates = []
-        if 'matches' in lines[i].keys():
+        if 'matches' in list(lines[i].keys()):
             continue
         for j, candidate in enumerate(lines[i]['candidates']):
-            if 'id' not in lines[i]['candidates'][j][1].keys():
+            if 'id' not in list(lines[i]['candidates'][j][1].keys()):
                 lines[i]['candidates'][j][1]['id'] = new_id
                 new_id += 1
 
@@ -101,7 +101,7 @@ def get_mapping(lines, features):
                     match = False
             if match:
                 matched_candidates.append((candidate, 20))
-                if lines[i]['candidates'][j][1]['id'] not in buff_match.keys():
+                if lines[i]['candidates'][j][1]['id'] not in list(buff_match.keys()):
                     buff_match[lines[i]['candidates'][j][1]['id']] = buff
         if matched_candidates:
             lines[i]['matches'] = matched_candidates
@@ -109,7 +109,7 @@ def get_mapping(lines, features):
     # Remove matches that matched better on a different segment
     # But only if there's a match for that segment already
     for i in range(len(lines)):
-        if 'matches' in lines[i].keys():
+        if 'matches' in list(lines[i].keys()):
             matches = lines[i]['matches']
             new_matches = []
             for (m, buff) in matches:
@@ -124,7 +124,7 @@ def get_mapping(lines, features):
     orig = []
     matched = []
     for i, line in enumerate(lines):
-        if 'matches' in line.keys() and line['matches']:
+        if 'matches' in list(line.keys()) and line['matches']:
             result_counts[0] += 1
             
             orig.append((line['line'], line['properties']))
@@ -144,7 +144,7 @@ def get_mapping(lines, features):
 
     percent_matched = float(result_counts[0])/(
         float(result_counts[0]+result_counts[1])) * 100
-    print 'Found matches for ' + str(percent_matched) + '% of segments'
+    print('Found matches for ' + str(percent_matched) + '% of segments')
 
 
 def get_int_mapping(lines, buffered, buffered_index):
@@ -155,7 +155,7 @@ def get_int_mapping(lines, buffered, buffered_index):
         buffered - the buffered lines for the intersections in the other map
         buffered_index - the rtree index
     """
-    print "Getting intersection mappings"
+    print("Getting intersection mappings")
 
     line_results = []
     # Go through each line from the osm map
@@ -183,7 +183,7 @@ def get_int_mapping(lines, buffered, buffered_index):
     total = len(line_results)
     percent_matched = 100 - 100 * float(
         len([x for x in line_results if not x[2]]))/float(total)
-    print "Found matches for " + str(percent_matched) + "% of intersections"
+    print("Found matches for " + str(percent_matched) + "% of intersections")
     return line_results
 
 
@@ -202,7 +202,7 @@ def get_candidates(buffered, buffered_index, lines):
     """
     results = []
 
-    print "Getting candidate overlapping lines"
+    print("Getting candidate overlapping lines")
 
     # Go through each line from the osm map
     for i, line in enumerate(lines):
@@ -301,12 +301,12 @@ if __name__ == '__main__':
 
     non_inters_osm_file = os.path.join(
         MAP_FP, 'non_inters_segments.geojson')
-    print "Reading original map from " + non_inters_osm_file
+    print("Reading original map from " + non_inters_osm_file)
     osm_map_non_inter = util.read_geojson(non_inters_osm_file)
 
     non_inters_new_file = os.path.join(
         MAP_FP, args.map2dir, 'non_inters_segments.geojson')
-    print "Reading new map from " + non_inters_new_file
+    print("Reading new map from " + non_inters_new_file)
 
     new_map_non_inter = util.read_geojson(non_inters_new_file)
 
@@ -323,7 +323,7 @@ if __name__ == '__main__':
     non_ints_with_candidates = get_candidates(
         new_buffered, new_index, osm_map_non_inter)
 
-    print "Adding features: " + ','.join(feats)
+    print("Adding features: " + ','.join(feats))
     get_mapping(non_ints_with_candidates, feats)
 
     output = [{
