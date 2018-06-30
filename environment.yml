@@ -1,4 +1,4 @@
-name: boston-crash-model
+name: crash-model
 channels:
 - conda-forge
 - defaults
