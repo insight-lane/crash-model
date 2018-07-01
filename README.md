@@ -99,7 +99,7 @@ Getting Started
 
 ### Dependencies:
 Most of the work on this project so far has been done in Python, in Jupyter notebooks.
-- Python 2.7 (we recommend [Anaconda](https://www.continuum.io/downloads))
+- Python 3.6 (we recommend [Anaconda](https://www.continuum.io/downloads))
 - conda (included with Anaconda)
 
 ### Environment:

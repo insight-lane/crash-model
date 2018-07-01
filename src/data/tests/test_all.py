@@ -11,7 +11,7 @@ def test_all(tmpdir):
         os.path.abspath(__file__)) + '/data/'
     path = tmpdir.strpath + '/data'
     shutil.copytree(orig_path, path)
-    filename = path + '/raw/Boston_Segments.shp'
+    filename = path + '/raw/ma_cob_spatially_joined_streets.shp'
 
     subprocess.check_call([
         'python',
@@ -28,6 +28,8 @@ def test_all(tmpdir):
         'data.create_segments',
         '-d',
         path,
+        '-r',
+        path + '/processed/maps/elements.geojson'
     ])
 
     subprocess.check_call([

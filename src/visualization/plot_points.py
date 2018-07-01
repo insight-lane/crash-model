@@ -53,7 +53,7 @@ args = parser.parse_args()
 
 # zip layer names and filenames
 if len(args.name) == len(args.filename):
-    match = zip(args.name, args.filename)
+    match = list(zip(args.name, args.filename))
 else:
     raise Exception("Number of layers and files must match")
 

@@ -25,7 +25,7 @@ def test_add_map(tmpdir):
         'python',
         '-m',
         'data.extract_intersections',
-        os.path.join(data_path, 'osm.shp'),
+        os.path.join(data_path, 'osm3857.shp'),
         '-d',
         path
     ])
@@ -37,7 +37,7 @@ def test_add_map(tmpdir):
         '-d',
         path,
         '-r',
-        os.path.join(data_path, 'osm3857.shp')
+        os.path.join(data_path, 'elements.geojson')
     ])
 
     # Extract and create on supplemental map
@@ -45,7 +45,7 @@ def test_add_map(tmpdir):
         'python',
         '-m',
         'data.extract_intersections',
-        os.path.join(data_path, 'boston_small.shp'),
+        os.path.join(data_path, 'ma_cob_small.shp'),
         '-d',
         path,
         '-n',
@@ -59,7 +59,7 @@ def test_add_map(tmpdir):
         '-d',
         path,
         '-r',
-        os.path.join(data_path, 'ma_cob_small.shp'),
+        os.path.join(data_path, 'boston/elements.geojson'),
         '-n',
         'boston'
     ])
