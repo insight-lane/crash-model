@@ -555,12 +555,10 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
         elif record['geometry']['type'] == 'MultiLineString':
             new_coords = []
             for segment in coords:
-                new_segment = [
-                    pyproj.transform(
-                        inproj, outproj, segment[0][0], segment[0][1]),
-                    pyproj.transform(
-                        inproj, outproj, segment[1][0], segment[1][1])
-                ]
+                new_segment = []
+                for coord in segment:
+                    new_segment.append(pyproj.transform(
+                        inproj, outproj, coord[0], coord[1]))
                 new_coords.append(new_segment)
 
             results.append({'geometry': MultiLineString(new_coords),

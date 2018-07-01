@@ -41,7 +41,6 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
 
     return unary_union(buffered_intersections)
 
-
 def find_non_ints(roads, int_buffers):
     """
     Find the segments that aren't intersections
@@ -111,6 +110,9 @@ def find_non_ints(roads, int_buffers):
                     geometry=geojson.LineString(coords),
                     properties=road['properties'])
                 )
+        else:
+            non_int_lines.append(geojson.Feature(
+                geometry=geojson.LineString([x for x in road['geometry'].coords])))
 
     return non_int_lines, inter_segments
 
@@ -166,7 +168,7 @@ def add_point_based_features(non_inters, inters, feats_filename):
     return non_inters, inters
 
 
-def create_segments_from_json(roads_shp_path):
+def create_segments_from_json(roads_shp_path, mapfp):
 
     data = fiona.open(roads_shp_path)
     data = util.reproject_records([x for x in data])
@@ -190,17 +192,6 @@ def create_segments_from_json(roads_shp_path):
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
 
-    polys = []
-    for buffer in int_buffers:
-        coords = [[x for x in buffer.exterior.coords]]
-        polys.append(geojson.Feature(
-            geometry=geojson.Polygon(coords), properties={}))
-
-    buff = geojson.FeatureCollection(polys)
-    with open(os.path.join(
-            MAP_FP, 'buffers.geojson'), 'w') as outfile:
-        geojson.dump(buff, outfile)
-
     non_int_lines, inter_segments = find_non_ints(
         roads, int_buffers)
 
@@ -218,6 +209,7 @@ def create_segments_from_json(roads_shp_path):
     # Planarize intersection segments
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
+
     for idx, lines in list(inter_segments['lines'].items()):
 
         lines = unary_union(lines)
@@ -230,6 +222,7 @@ def create_segments_from_json(roads_shp_path):
             'id': idx,
             'data': inter_segments['data'][idx]
         }
+
         union_inter.append(geojson.Feature(
             geometry=geojson.MultiLineString(coords),
             id=idx,
@@ -239,7 +232,7 @@ def create_segments_from_json(roads_shp_path):
     return non_int_w_ids, union_inter
 
 
-def write_segments(non_inters, inters):
+def write_segments(non_inters, inters, mapfp, datafp):
 
     # Store non-intersection segments
 
@@ -247,14 +240,14 @@ def write_segments(non_inters, inters):
     non_inters = util.prepare_geojson(non_inters)
 
     with open(os.path.join(
-            MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
+            mapfp, 'non_inters_segments.geojson'), 'w') as outfile:
         geojson.dump(non_inters, outfile)
 
     # Get just the properties for the intersections
     inter_data = {
         str(x['properties']['id']): x['properties']['data'] for x in inters}
 
-    with open(os.path.join(DATA_FP, 'inters_data.json'), 'w') as f:
+    with open(os.path.join(datafp, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
 
     # Store the individual intersections without properties, since QGIS appears
@@ -265,13 +258,14 @@ def write_segments(non_inters, inters):
     } for x in inters]
 
     int_w_ids = util.prepare_geojson(int_w_ids)
-    with open(os.path.join(MAP_FP, 'inters_segments.geojson'), 'w') as outfile:
+
+    with open(os.path.join(mapfp, 'inters_segments.geojson'), 'w') as outfile:
         geojson.dump(int_w_ids, outfile)
 
     # Store the combined segments with all properties
     segments = non_inters['features'] + int_w_ids['features']
 
-    with open(os.path.join(MAP_FP, 'inter_and_non_int.geojson'), 'w') as outfile:
+    with open(os.path.join(mapfp, 'inter_and_non_int.geojson'), 'w') as outfile:
         geojson.dump(geojson.FeatureCollection(segments), outfile)
 
 
@@ -302,7 +296,7 @@ if __name__ == '__main__':
     if args.altroad:
         elements = args.altroad
 
-    non_inters, inters = create_segments_from_json(elements)
+    non_inters, inters = create_segments_from_json(elements, MAP_FP)
 
     feats_file = os.path.join(MAP_FP, 'features.geojson')
     if os.path.exists(feats_file):
@@ -311,5 +305,5 @@ if __name__ == '__main__':
             inters,
             os.path.join(MAP_FP, 'features.geojson')
         )
-    write_segments(non_inters, inters)
+    write_segments(non_inters, inters, MAP_FP, DATA_FP)
 

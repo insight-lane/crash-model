@@ -3,6 +3,7 @@ import fiona
 import os
 import geojson
 from .. import util
+import shutil
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -52,4 +53,24 @@ def test_find_non_ints():
         roads, int_buffers)
     assert len(non_int_lines) == 7
 
+
+def test_create_segments_from_json(tmpdir):
+    """
+    Just test that this runs, for now
+    """
+    # Copy test data into temp directory
+    orig_path = os.path.dirname(
+        os.path.abspath(__file__)) + '/data/'
+    path = tmpdir.strpath + '/data/processed/maps/'
+    os.makedirs(path)
+    shutil.copyfile(
+        orig_path + 'missing_segments_test.geojson',
+        path + 'osm_elements.geojson'
+    )
+    non_inters, inters = create_segments.create_segments_from_json(
+        path + 'osm_elements.geojson',
+        path
+    )
+    create_segments.write_segments(
+        non_inters, inters, path, tmpdir.strpath + '/data/')
 
