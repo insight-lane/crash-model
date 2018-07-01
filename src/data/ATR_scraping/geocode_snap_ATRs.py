@@ -99,10 +99,10 @@ if __name__ == '__main__':
 
     geocode_and_parse(atrs, args.forceupdate)
     # Read in segments
-    inter = util.read_shp(os.path.join(
-        PROCESSED_DATA_FP, 'maps/inters_segments.shp'))
-    non_inter = util.read_shp(
-        os.path.join(PROCESSED_DATA_FP, 'maps/non_inters_segments.shp'))
+    inter = util.read_geojson(os.path.join(
+        PROCESSED_DATA_FP, 'maps/inters_segments.geojson'))
+    non_inter = util.read_geojson(
+        os.path.join(PROCESSED_DATA_FP, 'maps/non_inters_segments.geojson'))
     print "Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter))
 
