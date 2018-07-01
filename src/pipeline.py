@@ -18,7 +18,7 @@ def data_standardization(config, DATA_FP, forceupdate=False):
     """
     # standardize data, if the files don't already exist
     # or forceupdate
-    print "Standardizing data..."
+    print("Standardizing data...")
     if not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'crashes.json')) or forceupdate:
         subprocess.check_call([
@@ -31,10 +31,10 @@ def data_standardization(config, DATA_FP, forceupdate=False):
             DATA_FP
         ])
     else:
-        print "Already standardized crash data, skipping"
+        print("Already standardized crash data, skipping")
 
     # There has to be concern data in the config file to try processing it
-    if ('concern_files' in config.keys()
+    if ('concern_files' in list(config.keys())
         and config['concern_files'] and not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'concerns.json'))) or forceupdate:
         subprocess.check_call([
@@ -47,10 +47,10 @@ def data_standardization(config, DATA_FP, forceupdate=False):
             DATA_FP
         ])
     else:
-        if 'concern_files' not in config.keys() or not config['concern_files']:
-            print "No concerns defined in config file"
+        if 'concern_files' not in list(config.keys()) or not config['concern_files']:
+            print("No concerns defined in config file")
         elif not forceupdate:
-            print "Already standardized concern data, skipping"
+            print("Already standardized concern data, skipping")
 
 
 def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
@@ -63,7 +63,7 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
         start_year (optional)
         end_year (optional)
     """
-    print "Generating data and features..."
+    print("Generating data and features...")
     subprocess.check_call([
         'python',
         '-m',
@@ -75,6 +75,7 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
     ]
         + (['-s', str(start_year)] if start_year else [])
         + (['-e', str(end_year)] if end_year else [])
+        + (['--forceupdate'] if forceupdate else [])
     )
 
 
@@ -85,7 +86,7 @@ def train_model(config_file, DATA_FP):
         config_file - path to config file
         DATA_FP - path to data directory, e.g. ../data/boston/
     """
-    print "Training model..."
+    print("Training model...")
     subprocess.check_call([
         'python',
         '-m',
@@ -105,7 +106,7 @@ def visualize(name, end_year):
         end_year - year we're visualizing, typically the last year for
                    for which we have data
     """
-    print "Generating visualization data"
+    print("Generating visualization data")
     subprocess.check_call([
         'python',
         '-m',

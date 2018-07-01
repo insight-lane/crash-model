@@ -14,8 +14,8 @@ def format_crash_data(data, col, target_week, target_year):
     target_idx = all_dates[(all_dates.year==target_year)&(all_dates.week==target_week)].index.values[0]
 
     pre_week = tuple(all_dates.loc[target_idx-1].values)
-    pre_month = all_dates.loc[range(target_idx-4, target_idx)].values
-    pre_quarter = all_dates.loc[range(target_idx-12, target_idx)].values
+    pre_month = all_dates.loc[list(range(target_idx-4, target_idx))].values
+    pre_quarter = all_dates.loc[list(range(target_idx-12, target_idx))].values
 
     # format data to take in intervals defined above
     formatted_data = data.set_index(['segment_id','year','week'])[col].unstack(level=[1,2])

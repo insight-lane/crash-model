@@ -74,13 +74,11 @@ def make_preds_gdf(city, year):
 
     # Read in shapefile as a GeoDataframe
     map_fp = os.path.join(DATA_FP, city, 'processed/maps')
-    streets = gpd.read_file(map_fp + '/inter_and_non_int.shp')
 
-    # Set the projection as EPSG:3857 since the shapefile didn't export with one
-    streets.crs = {'init': 'epsg:3857'}
+    streets = gpd.read_file(map_fp + '/inter_and_non_int.geojson')
 
-    # Then reproject to EPSG:4326 to match what Leaflet uses
-    streets = streets.to_crs({'init': 'epsg:4326'})
+    # Set the projection as EPSG:4326 since the shapefile didn't export with one
+    streets.crs = {'init': 'epsg:4326'}
 
     # Join geometry to the crash data
     preds_joined = streets.merge(output, on='id')
@@ -129,7 +127,7 @@ if __name__ == '__main__':
     elif args.demo:
         cities = ['boston', 'cambridge', 'dc']
     else:
-        print "Either city needs to be given, or --demo flag set"
+        print("Either city needs to be given, or --demo flag set")
         sys.exit()
 
     crashes = []

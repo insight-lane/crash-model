@@ -7,7 +7,7 @@
 # Developed by: bpben
 
 import json
-import util
+from . import util
 import os
 import argparse
 
@@ -28,11 +28,11 @@ def snap_records(
 
     records = util.read_records(infile, record_type, startyear, endyear)
     if record_type == 'concern' and not records:
-        print "no concerns found"
+        print("no concerns found")
         return
 
     # Find nearest crashes - 30 tolerance
-    print "snapping " + record_type + " records to segments"
+    print("snapping " + record_type + " records to segments")
     util.find_nearest(
         records, combined_seg, segments_index, 30, type_record=True)
 
@@ -44,7 +44,7 @@ def snap_records(
     jsonfile = os.path.join(
         PROCESSED_DATA_FP, record_type + '_joined.json')
 
-    print "output " + record_type + " data to " + jsonfile
+    print("output " + record_type + " data to " + jsonfile)
     with open(jsonfile, 'w') as f:
         json.dump([r.properties for r in records], f)
 

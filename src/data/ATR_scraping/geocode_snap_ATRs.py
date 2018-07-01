@@ -5,7 +5,7 @@ import rtree
 import pyproj
 import argparse
 from .. import util
-import ATR_util
+from . import ATR_util
 import numpy as np
 import pandas as pd
 from pandas.io.json import json_normalize
@@ -29,7 +29,7 @@ def geocode_and_parse(atrs, forceupdate):
 
     if not os.path.exists(os.path.join(
             PROCESSED_DATA_FP, 'geocoded_atrs.csv')) or forceupdate:
-        print "No geocoded_atrs.csv found, geocoding addresses"
+        print("No geocoded_atrs.csv found, geocoding addresses")
 
         # geocode, parse result - address, lat long
         results = []
@@ -38,9 +38,9 @@ def geocode_and_parse(atrs, forceupdate):
             if ATR_util.is_readable_ATR(os.path.join(ATR_FP, atr)):
                 atr_address = ATR_util.clean_ATR_fname(
                     os.path.join(ATR_FP, atr))
-                print atr_address
+                print(atr_address)
                 geocoded_add, lat, lng = util.geocode_address(atr_address)
-                print str(geocoded_add) + ',' + str(lat) + ',' + str(lng)
+                print(str(geocoded_add) + ',' + str(lat) + ',' + str(lng))
                 vol, speed, motos, light, heavy = ATR_util.read_ATR(
                     os.path.join(ATR_FP, atr))
                 r = [
@@ -56,10 +56,10 @@ def geocode_and_parse(atrs, forceupdate):
                     atr
                 ]
                 results.append(r)
-                print('Number geocoded: {}'.format(len(results)))
+                print(('Number geocoded: {}'.format(len(results))))
 
         with open(os.path.join(
-                PROCESSED_DATA_FP, 'geocoded_atrs.csv'), 'wb') as f:
+                PROCESSED_DATA_FP, 'geocoded_atrs.csv'), 'w') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([
                 'orig',
@@ -93,18 +93,18 @@ if __name__ == '__main__':
         ATR_FP = os.path.join(
             args.datadir, 'raw', 'volume', 'ATRs')
         if not os.path.exists(ATR_FP):
-            print "NO ATR directory found, skipping..."
+            print("NO ATR directory found, skipping...")
             sys.exit()
     atrs = os.listdir(ATR_FP)
 
     geocode_and_parse(atrs, args.forceupdate)
     # Read in segments
-    inter = util.read_shp(os.path.join(
-        PROCESSED_DATA_FP, 'maps/inters_segments.shp'))
-    non_inter = util.read_shp(
-        os.path.join(PROCESSED_DATA_FP, 'maps/non_inters_segments.shp'))
-    print "Read in {} intersection, {} non-intersection segments".format(
-        len(inter), len(non_inter))
+    inter = util.read_geojson(os.path.join(
+        PROCESSED_DATA_FP, 'maps/inters_segments.geojson'))
+    non_inter = util.read_geojson(
+        os.path.join(PROCESSED_DATA_FP, 'maps/non_inters_segments.geojson'))
+    print("Read in {} intersection, {} non-intersection segments".format(
+        len(inter), len(non_inter)))
 
     # Combine inter + non_inter
     combined_seg = inter + non_inter
@@ -119,10 +119,10 @@ if __name__ == '__main__':
     # Read in atr lats
     atrs = util.csv_to_projected_records(
         os.path.join(PROCESSED_DATA_FP, 'geocoded_atrs.csv'), x='lng', y='lat')
-    print "Read in data from {} atrs".format(len(atrs))
+    print("Read in data from {} atrs".format(len(atrs)))
 
     # Find nearest atr - 20 tolerance
-    print "Snapping atr to segments"
+    print("Snapping atr to segments")
     util.find_nearest(atrs, combined_seg, segments_index, 20)
 
     # Should deprecate once imputed atrs are used, but for the moment
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     before = len(atrs_df)
     atrs_df = atrs_df[atrs_df['id'] != '']
     after = len(atrs_df)
-    print('Removed {} ATR(s) that did not bind to a segment'.format(before-after))
+    print(('Removed {} ATR(s) that did not bind to a segment'.format(before-after)))
 
     # change dtypes
     atrs_df['id'] = atrs_df['id']
@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
     # remove ATRs that bound to same segment
     atrs_df.drop_duplicates('id', inplace=True)
-    print('Dropped {} ATRs that bound to same segment as another'.format(after - len(atrs_df)))
+    print(('Dropped {} ATRs that bound to same segment as another'.format(after - len(atrs_df))))
 
     # create dataframe of all segments
     seg_df = pd.DataFrame(combined_seg)
@@ -183,13 +183,13 @@ if __name__ == '__main__':
     # merge atrs and seg_gdf
     merged_df = pd.merge(seg_gdf, atrs_df, on='id', how='left')
 
-    print('Length of merged: {}, Length of seg_gdf: {}'.format(len(merged_df), len(seg_gdf)))
+    print(('Length of merged: {}, Length of seg_gdf: {}'.format(len(merged_df), len(seg_gdf))))
     
     # values to run KNN on
     col_to_predict = ['heavy','light','motos','speed','volume']
 
     for col in col_to_predict:
-        print('Predicting missing values for {} column'.format(col))
+        print(('Predicting missing values for {} column'.format(col)))
         # split into X, y, X_pred for KNN regression
         X = merged_df[merged_df[col].notnull()][['px', 'py']]
         y = merged_df[merged_df[col].notnull()][col]
