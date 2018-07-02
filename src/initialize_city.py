@@ -15,6 +15,11 @@ def make_config_file(yml_file, city, folder, crash, concern):
     f.write(
         "# City name\n" +
         "city: {}\n".format(city) +
+        "# City centerpoint latitude & longitude\n" +
+        "city_latitude: \n" +
+        "city_longitude: \n" +
+        "# Radius of city's road network from centerpoint in km (required if OSM has no polygon data)\n" +
+        "city_radius: \n" +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n".format(folder) +
         "# If given, limit crashes to after start_year and before end_year\n" +
@@ -53,7 +58,7 @@ def make_config_file(yml_file, city, folder, crash, concern):
         "# week on which to predict crashes (week, year)\n" +
         "# Best practice is to choose a week towards the end of your crash data set\n" +
         "# in format [month, year]\n" +
-        "time_target: [30, 2017]\n" + 
+        "time_target: [30, 2017]\n" +
         "# specify how many weeks back to predict in output of train_model\n"+
         "weeks_back: 1"
     )

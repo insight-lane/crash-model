@@ -39,7 +39,7 @@ def find_osm_polygon(city):
 
     return None
 
-def simple_get_roads(city, city_latitude, city_longitude):
+def simple_get_roads(config):
     """
     Use osmnx to get a simplified version of open street maps for the city
     Writes osm_nodes and osm_ways shapefiles to MAP_FP
@@ -55,16 +55,16 @@ def simple_get_roads(city, city_latitude, city_longitude):
     """
 
     # confirm if a polygon is available for this city, which determines which graph function is appropriate
-    print("searching nominatim for "+str(city)+" polygon")
-    polygon_pos = find_osm_polygon(city)
+    print("searching nominatim for " + str(config['city']) + " polygon")
+    polygon_pos = find_osm_polygon(config['city'])
 
     if (polygon_pos != None):
         print("match found at position "+str(polygon_pos)+", loading roads within defined polygon")
-        G1 = ox.graph_from_place(city, network_type='drive', simplify=False, which_result=polygon_pos)
+        G1 = ox.graph_from_place(config['city'], network_type='drive', simplify=False, which_result=polygon_pos)
 
     else:
-        print("no match found, loading roads within 10km of city centerpoint")
-        G1 = ox.graph_from_point((city_latitude, city_longitude), distance=10000, network_type='drive', simplify=False)
+        print("no match found, loading roads within " + str(config['city_radius']) + "km of city centerpoint")
+        G1 = ox.graph_from_point((config['city_latitude'], config['city_longitude']), distance=config['city_radius'] * 1000, network_type='drive', simplify=False)
 
     G = ox.simplify_graph(G1)
 
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
-    # City & lat+lng required from config
+    # City & lat+lng+radius required from config
     if 'city' not in list(config.keys()) or config['city'] is None:
         sys.exit('city is required in config file')
 
@@ -293,9 +293,8 @@ if __name__ == '__main__':
     if 'city_longitude' not in list(config.keys()) or config['city_longitude'] is None:
         sys.exit('city_longitude is required in config file')
 
-    city = config['city']
-    city_latitude = config['city_latitude']
-    city_longitude = config['city_longitude']
+    if 'city_radius' not in list(config.keys()) or config['city_radius'] is None:
+        sys.exit('city_radius is required in config file')
 
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
     DOC_FP = os.path.join(args.datadir, 'docs')
@@ -304,7 +303,7 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
        or args.forceupdate:
         print('Generating map from open street map...')
-        simple_get_roads(city, city_latitude, city_longitude)
+        simple_get_roads(config)
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
        or args.forceupdate:

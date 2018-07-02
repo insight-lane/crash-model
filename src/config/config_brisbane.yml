@@ -5,6 +5,7 @@ city: Brisbane, Queensland, Australia
 name: brisbane
 city_latitude: -27.4719173
 city_longitude: 153.0256082
+city_radius: 10
 # If given, limit crashes to after start_year and before end_year
 start_year: 2015
 end_year: 2017
