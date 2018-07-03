@@ -21,6 +21,7 @@ dependencies:
 - pytest
 - python=3.6
 - pyyaml
+- pytest-cov
 - rtree
 - seaborn
 - scikit-learn
