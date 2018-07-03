@@ -11,5 +11,3 @@ install:
 script:
 - cd src && py.test --cov=data --cov=data_standardization --cov=features --cov=models --cov=visualization --cov-report term-missing
 
-after_success:
-- coveralls
