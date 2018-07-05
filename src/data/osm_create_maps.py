@@ -32,9 +32,8 @@ def find_osm_polygon(city):
     response = requests.get(url, params=search_params)
 
     for index, match in enumerate(response.json()):
-        # a match that can be used by graph_from_place requires:
-        # osm_type = relation, type = city, geojson.type = Polygon|MultiPolygon
-        if (match['type'] == "city" and (match['geojson']['type'] == "Polygon" or match['geojson']['type'] == "MultiPolygon")):
+        # a match that can be used by graph_from_place needs to be a Polygon or MultiPolygon
+        if (match['geojson']['type'] in ['Polygon', 'MultiPolygon']):
             return index+1
 
     return None
@@ -59,11 +58,11 @@ def simple_get_roads(config):
     polygon_pos = find_osm_polygon(config['city'])
 
     if (polygon_pos != None):
-        print("match found at position "+str(polygon_pos)+", loading roads within defined polygon")
+        print("city polygon found in OpenStreetMaps at position " + str(polygon_pos) + ", building graph of roads within specified bounds")
         G1 = ox.graph_from_place(config['city'], network_type='drive', simplify=False, which_result=polygon_pos)
 
     else:
-        print("no match found, loading roads within " + str(config['city_radius']) + "km of city centerpoint")
+        print("no city polygon found in OpenStreetMaps, building graph of roads within " + str(config['city_radius']) + "km of city centerpoint " + str(config['city_latitude']) + " / " + str(config['city_longitude']))
         G1 = ox.graph_from_point((config['city_latitude'], config['city_longitude']), distance=config['city_radius'] * 1000, network_type='drive', simplify=False)
 
     G = ox.simplify_graph(G1)

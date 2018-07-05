@@ -2,8 +2,11 @@
 city: Cambridge, Massachusetts, USA
 # The folder under data where this city's data is stored
 name: cambridge
+# City centerpoint latitude & longitude
 city_latitude: 42.3736158
 city_longitude: -71.10973349999999
+# Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
+city_radius: 10
 # If given, limit crashes to after start_year and before end_year
 start_year:
 end_year:

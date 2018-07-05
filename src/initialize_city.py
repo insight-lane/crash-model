@@ -46,13 +46,13 @@ def make_config_file(yml_file, city, folder, crash, concern):
 
     if concern:
         f.write(
-            "# List of concern type information" +
+            "# List of concern type information\n" +
             "concern_files:\n" +
-            "- name: concern\n" +
-            "filename: {}\n".format(concern) +
-            "latitude: \n" +
-            "longitude: \n" +
-            "time: \n\n\n"
+            "  - name: concern\n" +
+            "      filename: {}\n".format(concern) +
+            "      latitude: \n" +
+            "      longitude: \n" +
+            "      time: \n\n\n"
         )
     f.write(
         "# week on which to predict crashes (week, year)\n" +
