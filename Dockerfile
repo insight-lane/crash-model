@@ -1,4 +1,4 @@
-FROM continuumio/miniconda
+FROM continuumio/miniconda3
 # update
 RUN conda update -n base conda
 
@@ -43,7 +43,7 @@ RUN ["conda", "env", "create", "--file", "environment.yml"]
 ENTRYPOINT ["/bin/bash", "-c"]
 
 # Activate the project's virtual environment
-RUN echo "conda activate boston-crash-model" >> ~/.bashrc
+RUN echo "conda activate crash-model" >> ~/.bashrc
 
 # this startup script runs supervisor in foreground (which in turn starts apache) to keep container running
 CMD ["/start.sh"]
