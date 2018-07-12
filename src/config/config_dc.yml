@@ -1,14 +1,19 @@
 # City name
 city: Washington, DC, USA
-# The folder under data where this city's data is stored
-name: dc
+# City centerpoint latitude & longitude
 city_latitude: 38.9071923
 city_longitude: -77.0368707
+# Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
+city_radius: 25
+# The folder under data where this city's data is stored
+name: dc
 # If given, limit crashes to after start_year and before end_year
+# Recommended to limit to just a few years for now
 start_year: 2014
 end_year: 2017
 
-##############################################################################
+
+#################################################################
 # Configuration for data standardization
 
 # crash file configurations
@@ -32,12 +37,10 @@ concern_files:
     longitude: X
     time: REQUESTDATE
 
-# concern column name
-# leave as '' if not adding concerns
-concern: visionzero
 
 # week on which to predict crashes (week, year)
-# will output predictions for all weeks up to this week
-# Choose a week towards the end of your crash data set
+# Best practice is to choose a week towards the end of your crash data set
 # in format [month, year]
 time_target: [51, 2016]
+# specify how many weeks back to predict in output of train_model
+weeks_back: 1

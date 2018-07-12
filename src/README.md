@@ -45,6 +45,7 @@ The demo city data is hosted on data.world. The 1.1 compatible zip can be downlo
     - The concern file is a csv of concerns that includes (at minimum) a latitude, longitude and date of a concern file.
 		- Windows users should modify their filepath to use forward slashes (/) rather than the default backslash (\\)
     - Manually edit the configuration file found in e.g. src/config/config_cambridge:
+        - If OpenStreetMaps does not have polygon data for your city, the road network will need to be constructed manually. Set the city_latitude and city_longitude values to the centerpoint of the city, and the city_radius to an appropriate distance (in km) that you would like the road network to be built for, e.g 15 for 15km radius from the specified lat / lng.
         - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well.
         - If you have a csv concern file, enter the column headers for latitude, longitude, and date.
         - Modify time_target to be the last month and year of your crash data
