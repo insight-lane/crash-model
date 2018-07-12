@@ -29,6 +29,6 @@
                 "type": "number"
             }
         },
-        "required": ["id", "segment_id", "year", "week", "value"]
+        "required": ["id", "segment_id", "value"]
     }
 }
