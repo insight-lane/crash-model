@@ -13,11 +13,15 @@ import sys
 
 MAP_FP = None
 
+
 def find_osm_polygon(city):
     """Interrogate the OSM nominatim API for a city polygon.
 
-    Nominatim may not always return city matches in the most intuitive order, so results need to be searched for a compatible polygon. The index of the polygon is required for proper use of osmnx.graph_from_place()
-    Some cities do not have a polygon at all, in which case they defer to using graph_from_point() with city lat & lng.
+    Nominatim may not always return city matches in the most intuitive order,
+    so results need to be searched for a compatible polygon. The index of the
+    polygon is required for proper use of osmnx.graph_from_place(). Some cities
+    do not have a polygon at all, in which case they defer to using
+    graph_from_point() with city lat & lng.
 
     Args:
         city (str): city to search for
@@ -26,17 +30,20 @@ def find_osm_polygon(city):
         None: if no polygon found
     """
 
-    search_params = {'format': 'json', 'limit': 5, 'dedupe': 0, 'polygon_geojson': 1, 'q': city}
+    search_params = {'format': 'json', 'limit': 5,
+                     'dedupe': 0, 'polygon_geojson': 1, 'q': city}
     url = 'https://nominatim.openstreetmap.org/search'
 
     response = requests.get(url, params=search_params)
 
     for index, match in enumerate(response.json()):
-        # a match that can be used by graph_from_place needs to be a Polygon or MultiPolygon
+        # a match that can be used by graph_from_place needs to be a Polygon
+        # or MultiPolygon
         if (match['geojson']['type'] in ['Polygon', 'MultiPolygon']):
             return index+1
 
     return None
+
 
 def simple_get_roads(config):
     """
@@ -53,17 +60,43 @@ def simple_get_roads(config):
                for the unsimplified road network
     """
 
-    # confirm if a polygon is available for this city, which determines which graph function is appropriate
+    # confirm if a polygon is available for this city, which determines which
+    # graph function is appropriate
     print("searching nominatim for " + str(config['city']) + " polygon")
     polygon_pos = find_osm_polygon(config['city'])
 
     if (polygon_pos != None):
-        print("city polygon found in OpenStreetMaps at position " + str(polygon_pos) + ", building graph of roads within specified bounds")
-        G1 = ox.graph_from_place(config['city'], network_type='drive', simplify=False, which_result=polygon_pos)
+        print("city polygon found in OpenStreetMaps at position " +
+              str(polygon_pos) + ", building graph of roads within " +
+              "specified bounds")
+        G1 = ox.graph_from_place(config['city'], network_type='drive',
+                                 simplify=False, which_result=polygon_pos)
 
     else:
-        print("no city polygon found in OpenStreetMaps, building graph of roads within " + str(config['city_radius']) + "km of city centerpoint " + str(config['city_latitude']) + " / " + str(config['city_longitude']))
-        G1 = ox.graph_from_point((config['city_latitude'], config['city_longitude']), distance=config['city_radius'] * 1000, network_type='drive', simplify=False)
+        # City & lat+lng+radius required from config to graph from point
+        if ('city' not in list(config.keys()) or config['city'] is None):
+            sys.exit('city is required in config file')
+
+        if ('city_latitude' not in list(config.keys()) or
+                config['city_latitude'] is None):
+            sys.exit('city_latitude is required in config file')
+
+        if ('city_longitude' not in list(config.keys()) or
+                config['city_longitude'] is None):
+            sys.exit('city_longitude is required in config file')
+
+        if ('city_radius' not in list(config.keys()) or
+                config['city_radius'] is None):
+            sys.exit('city_radius is required in config file')
+
+        print("no city polygon found in OpenStreetMaps, building graph of " +
+              "roads within " + str(config['city_radius']) + "km of city " +
+              str(config['city_latitude']) + " / " +
+              str(config['city_longitude']))
+        G1 = ox.graph_from_point((config['city_latitude'],
+                                  config['city_longitude']),
+                                 distance=config['city_radius'] * 1000,
+                                 network_type='drive', simplify=False)
 
     G = ox.simplify_graph(G1)
 
@@ -281,19 +314,6 @@ if __name__ == '__main__':
     config_file = args.config
     with open(config_file) as f:
         config = yaml.safe_load(f)
-
-    # City & lat+lng+radius required from config
-    if 'city' not in list(config.keys()) or config['city'] is None:
-        sys.exit('city is required in config file')
-
-    if 'city_latitude' not in list(config.keys()) or config['city_latitude'] is None:
-        sys.exit('city_latitude is required in config file')
-
-    if 'city_longitude' not in list(config.keys()) or config['city_longitude'] is None:
-        sys.exit('city_longitude is required in config file')
-
-    if 'city_radius' not in list(config.keys()) or config['city_radius'] is None:
-        sys.exit('city_radius is required in config file')
 
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
     DOC_FP = os.path.join(args.datadir, 'docs')

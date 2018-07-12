@@ -1,4 +1,4 @@
-FROM continuumio/miniconda
+FROM continuumio/miniconda3
 # update
 RUN conda update -n base conda
 
