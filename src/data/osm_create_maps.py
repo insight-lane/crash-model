@@ -65,7 +65,7 @@ def simple_get_roads(config):
     print("searching nominatim for " + str(config['city']) + " polygon")
     polygon_pos = find_osm_polygon(config['city'])
 
-    if (polygon_pos != None):
+    if (polygon_pos is not None):
         print("city polygon found in OpenStreetMaps at position " +
               str(polygon_pos) + ", building graph of roads within " +
               "specified bounds")
