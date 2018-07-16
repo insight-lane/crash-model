@@ -95,6 +95,15 @@ def get_connections(ways, nodes):
         # There are some collector roads and others that don't
         # have names. Skip these
         if way['properties']['name']:
+
+            # While we are still merging segments with different names,
+            # just use both roads. This should be revisited
+            if '[' in way['properties']['name']:
+                way['properties']['name'] = re.sub(
+                    r'[^\s\w,]|_', '', way['properties']['name'])
+                way['properties']['name'] = "/".join(
+                    way['properties']['name'].split(', '))
+
             if way['properties']['from'] not in node_info.keys():
                 node_info[way['properties']['from']] = []
             node_info[way['properties']['from']].append(
@@ -102,7 +111,6 @@ def get_connections(ways, nodes):
 
             if way['properties']['to'] not in node_info.keys():
                 node_info[way['properties']['to']] = []
-
             node_info[way['properties']['to']].append(
                 way['properties']['name'])
 

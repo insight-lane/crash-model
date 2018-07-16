@@ -201,6 +201,62 @@ def get_intersection_name(inter_segments):
     return name
 
 
+def get_non_intersection_name(non_inter_segment, inters_by_id):
+    """
+    Get non-intersection segment names. Mostly in the form:
+    X Street between Y Street and Z Street, but sometimes the
+    intersection has streets with two different names, in which case
+    it will be X Street between Y Street/Z Street and A Street,
+    or it's a dead end, in which case it will be X Street from Y Street
+    Args:
+        non_inter_segment - a geojson non intersection segment
+        inters_by_id - a dict with osm node ids as keys
+    Returns:
+        The display name string
+    """
+    properties = non_inter_segment['properties']
+
+    if not properties['name']:
+        return ''
+    segment_street = properties['name']
+    from_streets = None
+    to_streets = None
+    if properties['from'] in inters_by_id:
+        from_street = inters_by_id[properties['from']]
+        from_streets = from_street.split(', ')
+
+        # Remove any street that's part of the named street sections
+        if segment_street in from_streets:
+            from_streets.remove(segment_street)
+    if properties['to'] in inters_by_id:
+        to_street = inters_by_id[properties['to']]
+        to_streets = to_street.split(', ')
+
+        # Remove any street that's part of the named street sections
+        if segment_street in to_streets:
+            to_streets.remove(segment_street)
+
+    if not from_streets and not to_streets:
+        return segment_street
+
+    from_street = None
+    if from_streets:
+        from_street = '/'.join(from_streets)
+    to_street = None
+    if to_streets:
+        to_street = '/'.join(to_streets)
+
+    if not to_streets:
+        return segment_street + ' from ' + from_street
+    if not from_streets:
+        return segment_street + ' from ' + to_street
+
+    return segment_street + ' between ' + from_street + \
+        ' and ' + to_street
+
+    return segment_street
+
+
 def create_segments_from_json(roads_shp_path, mapfp):
 
     data = fiona.open(roads_shp_path)
@@ -229,11 +285,16 @@ def create_segments_from_json(roads_shp_path, mapfp):
         roads, int_buffers)
 
     non_int_w_ids = []
+
+    inters_by_id = {x['properties']['osmid']: x['properties']['streets']
+                    for x in inters}
     for i, l in enumerate(non_int_lines):
         value = copy.deepcopy(l)
         value['type'] = 'Feature'
         value['properties']['id'] = '00' + str(i)
         value['properties']['inter'] = 0
+        value['properties']['display_name'] = get_non_intersection_name(
+            l, inters_by_id)
         non_int_w_ids.append(value)
 
     print("extracted {} non-intersection segments".format(len(non_int_w_ids)))
@@ -254,7 +315,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
         properties = {
             'id': idx,
             'data': inter_segments['data'][idx],
-            'name': name
+            'display_name': name
         }
 
         union_inter.append(geojson.Feature(
@@ -289,10 +350,10 @@ def write_segments(non_inters, inters, mapfp, datafp):
         'geometry': x['geometry'],
         'properties': {
             'id': x['properties']['id'],
-            'name': x['properties']['name']
+            'display_name': x['properties']['display_name']
+                    if 'display_name' in x['properties'] else ''
         }
     } for x in inters]
-
     int_w_ids = util.prepare_geojson(int_w_ids)
 
     with open(os.path.join(mapfp, 'inters_segments.geojson'), 'w') as outfile:
