@@ -1,6 +1,7 @@
 import re
 import openpyxl
 import matplotlib.pyplot as pyplot
+from dateutil.parser import parse
 
 MAP_FP = 'data/processed/maps'
 
@@ -122,7 +123,9 @@ def read_ATR(fname):
         light = 0
         heavy = 0
 
-    return vol, speed, motos, light, heavy
+    date = parse(fname.split('.')[-2].split('_')[-1]).strftime("%Y-%m-%d")
+
+    return vol, speed, motos, light, heavy, date
 
 
 

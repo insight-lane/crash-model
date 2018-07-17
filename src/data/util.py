@@ -32,6 +32,9 @@ def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
         Output address
         Latitude
         Longitude
+        Status (whether the geocoding was successful 'S', or the address
+            could not be found 'F', or there was an intermittent error such as
+            a time out, '')
     Args:
         filename
     Results:
@@ -47,7 +50,8 @@ def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
             cached[r['Input Address']] = [
                 r['Output Address'],
                 r['Latitude'],
-                r['Longitude']
+                r['Longitude'],
+                r['Status'],
             ]
     return cached
 
@@ -71,10 +75,30 @@ def write_geocode_cache(results,
             'Input Address',
             'Output Address',
             'Latitude',
-            'Longitude'
+            'Longitude',
+            'Status',
         ])
         for key, value in results.items():
-            writer.writerow([key, value[0], value[1], value[2]])
+            writer.writerow([key, value[0], value[1], value[2], value[3]])
+
+
+def lookup_address(intersection, cached):
+    """
+    Look up an intersection first in the cache, and if it
+    doesn't exist, geocode it
+
+    Args:
+        intersection: string
+        cached: dict
+    Returns:
+        tuple of original address, geocoded address, latitude, longitude
+    """
+    if intersection in list(cached.keys()):
+        print(intersection + ' is cached')
+        return cached[intersection]
+    else:
+        print('geocoding ' + intersection)
+        return list(geocode_address(intersection))
 
 
 def geocode_address(address, cached={}):
@@ -88,7 +112,7 @@ def geocode_address(address, cached={}):
         address
         cached (optional)
     Returns:
-        address, latitude, longitude
+        address, latitude, longitude, statusx
     """
     if address in list(cached.keys()):
         return cached[address]
@@ -98,7 +122,13 @@ def geocode_address(address, cached={}):
         attempts += 1
         sleep(attempts ** 2)
         g = geocoder.google(address)
-    return g.address, g.lat, g.lng
+
+    status = ''
+    if g.status == 'OK':
+        status = 'S'
+    elif g.status == 'ZERO_RESULTS':
+        status = 'F'
+    return g.address, g.lat, g.lng, status
 
 
 def get_hourly_rates(files):
