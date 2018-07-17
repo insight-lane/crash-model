@@ -216,19 +216,19 @@ def get_non_intersection_name(non_inter_segment, inters_by_id):
     """
     properties = non_inter_segment['properties']
 
-    if not properties['name']:
+    if 'name' not in properties or not properties['name']:
         return ''
     segment_street = properties['name']
     from_streets = None
     to_streets = None
-    if properties['from'] in inters_by_id:
+    if properties['from'] in inters_by_id and inters_by_id[properties['from']]:
         from_street = inters_by_id[properties['from']]
         from_streets = from_street.split(', ')
 
         # Remove any street that's part of the named street sections
         if segment_street in from_streets:
             from_streets.remove(segment_street)
-    if properties['to'] in inters_by_id:
+    if properties['to'] in inters_by_id and inters_by_id[properties['to']]:
         to_street = inters_by_id[properties['to']]
         to_streets = to_street.split(', ')
 
@@ -286,8 +286,17 @@ def create_segments_from_json(roads_shp_path, mapfp):
 
     non_int_w_ids = []
 
-    inters_by_id = {x['properties']['osmid']: x['properties']['streets']
-                    for x in inters}
+    # Allow intersections that don't have osmids, because this
+    # happens when we generate alternate maps from city data
+    # They won't have display names, and this is okay, because
+    # we only use them to map to the osm segments
+    inters_by_id = {
+        x['properties']['osmid'] if 'osmid' in x['properties'] else '0':
+        x['properties']['streets']
+        if 'streets' in x['properties'] else None
+        for x in inters
+    }
+
     for i, l in enumerate(non_int_lines):
         value = copy.deepcopy(l)
         value['type'] = 'Feature'
