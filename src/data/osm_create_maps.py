@@ -144,8 +144,61 @@ def clean_and_write(ways_file, nodes_file,
     """
     cleaned_ways = clean_ways(ways_file, DOC_FP)
     nodes = fiona.open(nodes_file)
+    nodes, cleaned_ways = get_connections(cleaned_ways, nodes)
     write_geojson(cleaned_ways, nodes,
                   result_file)
+
+
+def get_connections(ways, nodes):
+    """
+    Populate the cross streets for each node,
+    and add unique ids to the ways
+    Args:
+        ways - a list of geojson linestrings
+        nodes - a list of geojson points
+    Returns:
+        nodes - a dict containing the roads connected to each node
+        ways - the ways, with a unique osmid-fromnode-to-node string
+    """
+
+    node_info = {}
+    for way in ways:
+        # There are some collector roads and others that don't
+        # have names. Skip these
+        if way['properties']['name']:
+
+            # While we are still merging segments with different names,
+            # just use both roads. This should be revisited
+            if '[' in way['properties']['name']:
+                way['properties']['name'] = re.sub(
+                    r'[^\s\w,]|_', '', way['properties']['name'])
+                way['properties']['name'] = "/".join(
+                    way['properties']['name'].split(', '))
+
+            if way['properties']['from'] not in node_info.keys():
+                node_info[way['properties']['from']] = []
+            node_info[way['properties']['from']].append(
+                way['properties']['name'])
+
+            if way['properties']['to'] not in node_info.keys():
+                node_info[way['properties']['to']] = []
+            node_info[way['properties']['to']].append(
+                way['properties']['name'])
+
+        ident = str(way['properties']['osmid']) + '-' \
+            + str(way['properties']['from']) + '-' \
+            + str(way['properties']['to'])
+        way['properties']['segment_id'] = ident
+
+    nodes_with_streets = []
+    for node in nodes:
+        if node['properties']['osmid'] in node_info:
+            node['properties']['streets'] = ', '.join(
+                set(node_info[node['properties']['osmid']]))
+        else:
+            node['properties']['streets'] = ''
+        nodes_with_streets.append(node)
+    return nodes_with_streets, ways
 
 
 def write_highway_keys(DOC_FP, highway_keys):
@@ -254,7 +307,6 @@ def write_geojson(way_results, node_results, outfp):
             node['properties']['intersection'] = 1
         if node['properties']['highway'] == 'traffic_signals':
             node['properties']['signal'] = 1
-
         feats.append(geojson.Feature(
             geometry=geojson.Point(node['geometry']['coordinates']),
             properties=node['properties'])
