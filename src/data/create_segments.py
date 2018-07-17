@@ -187,7 +187,7 @@ def get_intersection_name(inter_segments):
                 streets.extend(re.sub("['\[\]]", '', street).split(', '))
             else:
                 streets.append(street)
-    streets = list(set(streets))
+    streets = sorted(list(set(streets)))
 
     name = ''
     if not streets:
@@ -214,6 +214,7 @@ def get_non_intersection_name(non_inter_segment, inters_by_id):
     Returns:
         The display name string
     """
+
     properties = non_inter_segment['properties']
 
     if 'name' not in properties or not properties['name']:
