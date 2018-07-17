@@ -25,8 +25,7 @@ def Boston_ATRs(atrs, ATR_FP):
                                 'processed', 'geocoded_addresses.csv'))
 
     results = []
-    json_results = []
-    for atr in atrs[0:10]:
+    for atr in atrs:
         if ATR_util.is_readable_ATR(os.path.join(ATR_FP, atr)):
             atr_address = ATR_util.clean_ATR_fname(
                 os.path.join(ATR_FP, atr))
@@ -39,14 +38,13 @@ def Boston_ATRs(atrs, ATR_FP):
             print(str(geocoded_add) + ',' + str(lat) + ',' + str(lng))
             vol, speed, motos, light, heavy, date = ATR_util.read_ATR(
                 os.path.join(ATR_FP, atr))
-#            import ipdb; ipdb.set_trace()
 
             r = OrderedDict([
                 ("date", date),
                 ("location", OrderedDict([
-                    ("latitude", float(lat)),
-                    ("longitude", float(lng)),
-                    ("address", geocoded_add)
+                    ("latitude", float(lat) if lat else ''),
+                    ("longitude", float(lng) if lng else ''),
+                    ("address", geocoded_add if geocoded_add else '')
                 ])),
                 ("volume", OrderedDict([
                     ("totalVolume", vol),
@@ -125,11 +123,5 @@ if __name__ == '__main__':
     if not os.path.exists(raw_path):
         print(raw_path+" not found, exiting")
         exit(1)
-
-#    # load config for this city
-#    config_file = os.path.join(BASE_FP, 'src/config',
-#                               "config_"+args.destination+".yml")
-#    with open(config_file) as f:
-#        config = yaml.safe_load(f)
 
     parse_ATRs(os.path.join(raw_path, 'ATRs'), args.city)

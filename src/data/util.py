@@ -93,7 +93,10 @@ def lookup_address(intersection, cached):
     Returns:
         tuple of original address, geocoded address, latitude, longitude
     """
-    if intersection in list(cached.keys()):
+
+    # If we've cached this either successfully or were unable to find
+    # the address previously
+    if intersection in list(cached.keys()) and cached[intersection][3]:
         print(intersection + ' is cached')
         return cached[intersection]
     else:
