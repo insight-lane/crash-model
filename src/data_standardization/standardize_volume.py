@@ -93,7 +93,9 @@ def parse_ATRs(ATR_FP, city):
         print("NO ATR directory found, skipping...")
         sys.exit()
     atrs = os.listdir(ATR_FP)
+
     if city == 'boston':
+        print("Standardizing volume data for {}".format(city))
         ATRs = Boston_ATRs(atrs, ATR_FP)
         schema_path = os.path.join(os.path.dirname(os.path.dirname(
             CURR_FP)), "standards", "volume-schema.json")
@@ -103,13 +105,14 @@ def parse_ATRs(ATR_FP, city):
         with open(volume_output, "w") as f:
             json.dump(ATRs, f)
 
-    print("- output written to {}".format(volume_output))
-    
+        print("- output written to {}".format(volume_output))
+    else:
+        print("No volume data given for {}".format(city))
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--city", type=str,
+    parser.add_argument("-c", "--city", type=str, required=True,
                         help="city short name, e.g. boston")
     parser.add_argument("-d", "--datadir", type=str,
                         help="data directory")

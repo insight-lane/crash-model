@@ -52,6 +52,21 @@ def data_standardization(config, DATA_FP, forceupdate=False):
         elif not forceupdate:
             print("Already standardized concern data, skipping")
 
+    # Handling volume data
+    if (not os.path.exists(os.path.join(
+            DATA_FP, 'standardized', 'volume.json'))) or forceupdate:
+        subprocess.check_call([
+            'python',
+            '-m',
+            'data_standardization.standardize_volume',
+            '-c',
+            config['name'],
+            '-d',
+            DATA_FP
+        ])
+    else:
+        print("Already standardized volume data, skipping")
+
 
 def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
                     forceupdate=False):
