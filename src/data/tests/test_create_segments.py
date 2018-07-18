@@ -74,3 +74,49 @@ def test_create_segments_from_json(tmpdir):
     create_segments.write_segments(
         non_inters, inters, path, tmpdir.strpath + '/data/')
 
+
+def test_get_intersection_name():
+    inter_segments = [{
+        'id': 1,
+        'name': 'Test Street',
+    }, {
+        'id': 2,
+        'name': 'Test Street',
+    }, {
+        'id': 3,
+        'name': '[Another Street, One More Road]',
+    }]
+    name = create_segments.get_intersection_name(inter_segments)
+    assert name == 'Another Street near One More Road and Test Street'
+
+
+def test_get_non_intersection_name():
+    non_inter_segment = {'properties': {
+        'osmid': 1,
+        'name': 'Main Street',
+        'from': '100',
+        'to': '200'
+    }}
+    inters_by_id = {
+    }
+    name = create_segments.get_non_intersection_name(
+        non_inter_segment, inters_by_id)
+    assert name == 'Main Street'
+
+    inters_by_id['100'] = 'From Street'
+    name = create_segments.get_non_intersection_name(
+        non_inter_segment, inters_by_id)
+    assert name == 'Main Street from From Street'
+
+    inters_by_id['100'] = None
+    inters_by_id['200'] = 'To Street, Another Street'
+    name = create_segments.get_non_intersection_name(
+        non_inter_segment, inters_by_id)
+    assert name == 'Main Street from To Street/Another Street'
+
+    inters_by_id['100'] = 'From Street'
+    name = create_segments.get_non_intersection_name(
+        non_inter_segment, inters_by_id)
+    assert name == 'Main Street between From Street and To Street/Another Street'
+
+    
