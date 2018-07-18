@@ -7,11 +7,45 @@ import re
 import csv
 import geojson
 import json
+import requests
+import yaml
+import sys
 
 MAP_FP = None
 
 
-def simple_get_roads(city):
+def find_osm_polygon(city):
+    """Interrogate the OSM nominatim API for a city polygon.
+
+    Nominatim may not always return city matches in the most intuitive order,
+    so results need to be searched for a compatible polygon. The index of the
+    polygon is required for proper use of osmnx.graph_from_place(). Some cities
+    do not have a polygon at all, in which case they defer to using
+    graph_from_point() with city lat & lng.
+
+    Args:
+        city (str): city to search for
+    Returns:
+        int: index of polygon+1 (becomes the correct 'which_result' value)
+        None: if no polygon found
+    """
+
+    search_params = {'format': 'json', 'limit': 5,
+                     'dedupe': 0, 'polygon_geojson': 1, 'q': city}
+    url = 'https://nominatim.openstreetmap.org/search'
+
+    response = requests.get(url, params=search_params)
+
+    for index, match in enumerate(response.json()):
+        # a match that can be used by graph_from_place needs to be a Polygon
+        # or MultiPolygon
+        if (match['geojson']['type'] in ['Polygon', 'MultiPolygon']):
+            return index+1
+
+    return None
+
+
+def simple_get_roads(config):
     """
     Use osmnx to get a simplified version of open street maps for the city
     Writes osm_nodes and osm_ways shapefiles to MAP_FP
@@ -26,7 +60,44 @@ def simple_get_roads(city):
                for the unsimplified road network
     """
 
-    G1 = ox.graph_from_place(city, network_type='drive', simplify=False)
+    # confirm if a polygon is available for this city, which determines which
+    # graph function is appropriate
+    print("searching nominatim for " + str(config['city']) + " polygon")
+    polygon_pos = find_osm_polygon(config['city'])
+
+    if (polygon_pos is not None):
+        print("city polygon found in OpenStreetMaps at position " +
+              str(polygon_pos) + ", building graph of roads within " +
+              "specified bounds")
+        G1 = ox.graph_from_place(config['city'], network_type='drive',
+                                 simplify=False, which_result=polygon_pos)
+
+    else:
+        # City & lat+lng+radius required from config to graph from point
+        if ('city' not in list(config.keys()) or config['city'] is None):
+            sys.exit('city is required in config file')
+
+        if ('city_latitude' not in list(config.keys()) or
+                config['city_latitude'] is None):
+            sys.exit('city_latitude is required in config file')
+
+        if ('city_longitude' not in list(config.keys()) or
+                config['city_longitude'] is None):
+            sys.exit('city_longitude is required in config file')
+
+        if ('city_radius' not in list(config.keys()) or
+                config['city_radius'] is None):
+            sys.exit('city_radius is required in config file')
+
+        print("no city polygon found in OpenStreetMaps, building graph of " +
+              "roads within " + str(config['city_radius']) + "km of city " +
+              str(config['city_latitude']) + " / " +
+              str(config['city_longitude']))
+        G1 = ox.graph_from_point((config['city_latitude'],
+                                  config['city_longitude']),
+                                 distance=config['city_radius'] * 1000,
+                                 network_type='drive', simplify=False)
+
     G = ox.simplify_graph(G1)
 
     # Label endpoints
@@ -73,8 +144,61 @@ def clean_and_write(ways_file, nodes_file,
     """
     cleaned_ways = clean_ways(ways_file, DOC_FP)
     nodes = fiona.open(nodes_file)
+    nodes, cleaned_ways = get_connections(cleaned_ways, nodes)
     write_geojson(cleaned_ways, nodes,
                   result_file)
+
+
+def get_connections(ways, nodes):
+    """
+    Populate the cross streets for each node,
+    and add unique ids to the ways
+    Args:
+        ways - a list of geojson linestrings
+        nodes - a list of geojson points
+    Returns:
+        nodes - a dict containing the roads connected to each node
+        ways - the ways, with a unique osmid-fromnode-to-node string
+    """
+
+    node_info = {}
+    for way in ways:
+        # There are some collector roads and others that don't
+        # have names. Skip these
+        if way['properties']['name']:
+
+            # While we are still merging segments with different names,
+            # just use both roads. This should be revisited
+            if '[' in way['properties']['name']:
+                way['properties']['name'] = re.sub(
+                    r'[^\s\w,]|_', '', way['properties']['name'])
+                way['properties']['name'] = "/".join(
+                    way['properties']['name'].split(', '))
+
+            if way['properties']['from'] not in node_info.keys():
+                node_info[way['properties']['from']] = []
+            node_info[way['properties']['from']].append(
+                way['properties']['name'])
+
+            if way['properties']['to'] not in node_info.keys():
+                node_info[way['properties']['to']] = []
+            node_info[way['properties']['to']].append(
+                way['properties']['name'])
+
+        ident = str(way['properties']['osmid']) + '-' \
+            + str(way['properties']['from']) + '-' \
+            + str(way['properties']['to'])
+        way['properties']['segment_id'] = ident
+
+    nodes_with_streets = []
+    for node in nodes:
+        if node['properties']['osmid'] in node_info:
+            node['properties']['streets'] = ', '.join(
+                set(node_info[node['properties']['osmid']]))
+        else:
+            node['properties']['streets'] = ''
+        nodes_with_streets.append(node)
+    return nodes_with_streets, ways
 
 
 def write_highway_keys(DOC_FP, highway_keys):
@@ -183,7 +307,6 @@ def write_geojson(way_results, node_results, outfp):
             node['properties']['intersection'] = 1
         if node['properties']['highway'] == 'traffic_signals':
             node['properties']['signal'] = 1
-
         feats.append(geojson.Feature(
             geometry=geojson.Point(node['geometry']['coordinates']),
             properties=node['properties'])
@@ -230,18 +353,19 @@ def write_features(all_nodes_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("city", help="e.g. 'Boston, Massachusetts, USA'")
-
-    # Directory where the city's data is stored
-    parser.add_argument("datadir", type=str,
-                        help="data directory")
-
+    parser.add_argument("-c", "--config", type=str, required=True,
+                        help="Config file")
+    parser.add_argument("-d", "--datadir", type=str, required=True,
+                        help="Data directory")
     # Can force update
     parser.add_argument('--forceupdate', action='store_true',
                         help='Whether to force update the maps')
 
     args = parser.parse_args()
-    city = args.city
+
+    config_file = args.config
+    with open(config_file) as f:
+        config = yaml.safe_load(f)
 
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
     DOC_FP = os.path.join(args.datadir, 'docs')
@@ -250,7 +374,7 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
        or args.forceupdate:
         print('Generating map from open street map...')
-        simple_get_roads(city)
+        simple_get_roads(config)
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
        or args.forceupdate:

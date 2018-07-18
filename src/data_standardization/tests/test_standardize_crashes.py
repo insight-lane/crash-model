@@ -1,4 +1,6 @@
 from .. import standardize_crashes
+from jsonschema import validate
+import json
 import os
 import csv
 
@@ -52,3 +54,28 @@ def test_add_id(tmpdir):
         csv_reader = csv.DictReader(f)
         for i, row in enumerate(csv_reader):
             assert row == expected[i]
+
+
+def test_numeric_and_string_ids():
+    """
+    Confirm that crashes with both numeric and string ids pass validation
+    """
+    test_crashes = [{
+        "id": 12345,
+        "dateOccurred": "2016-01-01T02:30:23-05:00",
+        "location": {
+            "latitude": 42.317987926802246,
+            "longitude": -71.06188127008645
+        }
+    },
+    {
+        "id": "A1B2C3D4E5",
+        "dateOccurred": "2016-01-01T02:30:23-05:00",
+        "location": {
+            "latitude": 42.317987926802246,
+            "longitude": -71.06188127008645
+        }
+    }
+    ]
+
+    validate(test_crashes, json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "standards", "crashes-schema.json"))))
