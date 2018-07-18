@@ -29,17 +29,21 @@ def read_volume():
     with open(os.path.join(STANDARDIZED_DATA_FP, 'volume.json')) as data_file:
         data = json.load(data_file)
         for record in data:
-            volume.append(util.read_record(
-                {
-                    'speed': record['speed']['averageSpeed'],
-                    'heavy': record['volume']['totalHeavyVehicles'],
-                    'light': record['volume']['totalLightVehicles'],
-                    'bikes': record['volume']['bikes'],
-                    'volume': record['volume']['totalVolume']
-                },
-                data[0]['location']['longitude'],
-                data[0]['location']['latitude'],
-                orig=pyproj.Proj(init='epsg:4326')))
+
+            if record['location']['longitude'] and record[
+                    'location']['latitude']:
+                volume.append(util.read_record(
+                    {
+                        'speed': record['speed']['averageSpeed'],
+                        'heavy': record['volume']['totalHeavyVehicles'],
+                        'light': record['volume']['totalLightVehicles'],
+                        'bikes': record['volume']['bikes'],
+                        'volume': record['volume']['totalVolume'],
+                        'orig': record['location']['address']
+                    },
+                    float(record['location']['longitude']),
+                    float(record['location']['latitude']),
+                    orig=pyproj.Proj(init='epsg:4326')))
     return volume
 
 
