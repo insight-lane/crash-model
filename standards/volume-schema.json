@@ -49,6 +49,10 @@
             "description": "Traffic speed information",
             "type": "object",
             "properties": {
+		"hourlyVolume": {
+		    "description": "Hourly total vehicle count",
+		    "type": "list"
+		},
                 "totalVolume": {
                     "description": "Total vehicle count, averaged over a 24 hour period",
                     "type": "number"

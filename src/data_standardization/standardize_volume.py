@@ -1,6 +1,5 @@
 import argparse
 import os
-import yaml
 from . import ATR_util
 import sys
 from data.util import read_geocode_cache, lookup_address
@@ -25,6 +24,7 @@ def Boston_ATRs(atrs, ATR_FP):
                                 'processed', 'geocoded_addresses.csv'))
 
     results = []
+    geocoded_count = [0, 0, 0]
     for atr in atrs:
         if ATR_util.is_readable_ATR(os.path.join(ATR_FP, atr)):
             atr_address = ATR_util.clean_ATR_fname(
@@ -36,8 +36,14 @@ def Boston_ATRs(atrs, ATR_FP):
             cached[atr_address] = [geocoded_add, lat, lng, status]
         
             print(str(geocoded_add) + ',' + str(lat) + ',' + str(lng))
-            vol, speed, motos, light, heavy, date = ATR_util.read_ATR(
+            vol, speed, motos, light, heavy, date, counts = ATR_util.read_ATR(
                 os.path.join(ATR_FP, atr))
+            if status == 'S':
+                geocoded_count[0] += 1
+            elif status == 'F':
+                geocoded_count[1] += 1
+            else:
+                geocoded_count[2] += 1
 
             r = OrderedDict([
                 ("date", date),
@@ -51,6 +57,7 @@ def Boston_ATRs(atrs, ATR_FP):
                     ("totalLightVehicles", light),
                     ("totalHeavyVehicles", heavy),
                     ("bikes", motos),
+                    ("hourlyVolume", counts)
                 ])),
                 ("speed", OrderedDict([
                     ("averageSpeed", speed)
@@ -58,7 +65,10 @@ def Boston_ATRs(atrs, ATR_FP):
             ])
             results.append(r)
 
-    print(('Number geocoded: {}'.format(len(results))))
+    print('Number successfully geocoded: {}'.format(geocoded_count[0]))
+    print('Unabled to geocode: {}'.format(geocoded_count[1]))
+    print('Timed out on {} addresses'.format(geocoded_count[2]))
+
     # Write out the cache
     with open(os.path.join(
             PROCESSED_DATA_FP, 'geocoded_addresses.csv'), 'w') as csvfile:

@@ -13,15 +13,16 @@ def is_readable_ATR(fname):
 
      1) of 'XXX' type (contains speed, volume, and classification data)
      2) of 24-HOURS type
-     3) .XLSX file type 
+     3) .XLSX file type
     """
 
     # split file name so we can check relevant info
     meta_info = fname.split('_')
     file_type = meta_info[8].split('.')[1]
 
-    # only look at files that are .xlsx, are over 24 hours, and are of type XXX
-    if (meta_info[7] == 'XXX') and (meta_info[6] == '24-HOURS') and (file_type == 'XLSX'):
+    # only look at files that are .xlsx, are 24 hours, and are of type XXX
+    if (meta_info[7] == 'XXX') and (
+            meta_info[6] == '24-HOURS') and (file_type == 'XLSX'):
         return True
     else:
         return False
@@ -36,9 +37,12 @@ def clean_ATR_fname(fname):
     147 TRAIN ST Boston, MA
     """
 
-    atr_address = fname.split('_') # split address on underscore character
-    atr_address = ' '.join(atr_address[3:5]) # combine elements that make up the address
-    atr_address = re.sub('-', ' ', atr_address) # replace '-' with spaces
+    # split address on underscore character
+    atr_address = fname.split('_')
+    # combine elements that make up the address
+    atr_address = ' '.join(atr_address[3:5])
+    # replace '-' with spaces
+    atr_address = re.sub('-', ' ', atr_address)
     atr_address += ' Boston, MA'
     return atr_address
 
@@ -82,7 +86,7 @@ def read_ATR(fname):
     """
     Function to read ATR data
     data to collect:
-    mean speed, volume, motos (# of motorcycles), light(# of cars/trucks), 
+    mean speed, volume, motos (# of motorcycles), light(# of cars/trucks),
     and heavy(# of heavy duty vehicles)
     """
 
@@ -108,16 +112,28 @@ def read_ATR(fname):
         speed = 0
 
     # get classification data
+    counts = []
     if 'Classification-Combined' in sheet_names:
         sheet = wb['Classification-Combined']
         motos = sheet['D38'].value
         light = sheet['D39'].value
         heavy = sheet['D40'].value
+
+        for row_index in range(9, 33):
+            cell = "{}{}".format('O', row_index)
+            val = sheet[cell].value
+            counts.append(val)
+
     elif 'Classification-1' in sheet_names:
         sheet = wb['Classification-1']
         motos = sheet['D38'].value
         light = sheet['D39'].value
         heavy = sheet['D40'].value
+
+        for row_index in range(9, 33):
+            cell = "{}{}".format('O', row_index)
+            val = sheet[cell].value
+            counts.append(val)
     else:
         motos = 0
         light = 0
@@ -125,7 +141,5 @@ def read_ATR(fname):
 
     date = parse(fname.split('.')[-2].split('_')[-1]).strftime("%Y-%m-%d")
 
-    return vol, speed, motos, light, heavy, date
-
-
+    return vol, speed, motos, light, heavy, date, counts
 
