@@ -1,10 +1,9 @@
 import json
 import os
-import csv
 import rtree
 import pyproj
 import argparse
-from .. import util
+from . import util
 import numpy as np
 import pandas as pd
 from pandas.io.json import json_normalize
@@ -15,16 +14,21 @@ import sys
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
-            os.path.dirname(
-                os.path.abspath(__file__)))))
+            os.path.abspath(__file__))))
 
-ATR_FP = os.path.join(BASE_DIR, 'data/raw/volume/ATRs')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 STANDARDIZED_DATA_FP = os.path.join(BASE_DIR, 'data', 'standardized')
 
 
 def read_volume():
-
+    """
+    Read the standardized volume data, snap to nearest segments,
+    and read relevant data
+    Args:
+        None - reads from file
+    Returns:
+        volume - a list of geojson points with volume properties
+    """
     volume = []
     with open(os.path.join(STANDARDIZED_DATA_FP, 'volume.json')) as data_file:
         data = json.load(data_file)
@@ -48,6 +52,13 @@ def read_volume():
 
 
 def propagate_volume():
+    """
+    Propagate volume from given volume data to other segments
+    Args:
+        None - reads segment and volume data from file
+    Returns:
+        None - writes results to file
+    """
     # Read in segments
     inter = util.read_geojson(os.path.join(
         PROCESSED_DATA_FP, 'maps/inters_segments.geojson'))
