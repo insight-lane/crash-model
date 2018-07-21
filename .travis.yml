@@ -9,4 +9,7 @@ install:
 - source activate crash-model
 
 script:
-- cd src && py.test
+- cd src && py.test --cov=data --cov=data_standardization --cov=features --cov=models --cov=visualization
+
+after_success:
+- codecov
