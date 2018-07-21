@@ -134,7 +134,6 @@ if __name__ == '__main__':
 
     raw_path = os.path.join(BASE_FP, "raw/volume")
     if not os.path.exists(raw_path):
-        print(raw_path+" not found, exiting")
-        exit(1)
-
-    parse_ATRs(os.path.join(raw_path, 'ATRs'), args.city)
+        parse_ATRs(os.path.join(raw_path, 'ATRs'), args.city)
+    else:
+        print("No volume data given for {}".format(args.city))

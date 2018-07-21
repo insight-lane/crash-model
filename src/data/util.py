@@ -134,33 +134,28 @@ def geocode_address(address, cached={}):
     return g.address, g.lat, g.lng, status
 
 
-def get_hourly_rates(files):
+def get_hourly_rates(volume_file):
     """
-    Function that reads ATRs and generates a sparkline plot
-    of percentages of traffic over time
-    
+    Give the average percentage of traffic that occurs each hour
     Args:
-        files - list of filenames to process
-        outfile - where to write the resulting plot
+        volume_file - path to standarized volume file
+    Returns:
+        counts - the average percentage of traffic that occurs each hour
     """
     all_counts = []
-    for f in files:
-        wb = openpyxl.load_workbook(f, data_only=True)
-        sheet_names = wb.sheetnames
-        if 'Classification-Combined' in sheet_names:
-            sheet = wb['Classification-Combined']
-            # Right now the cell locations are hardcoded,
-            # but if we expand to cover different formats, will need to change
-            counts = []
-            for row_index in range(9, 33):
-                cell = "{}{}".format('O', row_index)
-                val = sheet[cell].value
-                counts.append(float(val))
-            total = sheet['O34'].value
-            for i in range(len(counts)):
-                counts[i] = counts[i]/total
-            all_counts.append(counts)
-    return all_counts
+    with open(volume_file) as data_file:
+        volumes = json.load(data_file)
+    
+        for v in volumes:
+            counts = v['volume']['hourlyVolume']
+            total = sum(counts)
+            counts = [x/total for x in counts]
+            if counts:
+                all_counts.append(counts)
+
+    counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
+
+    return counts
 
 
 def plot_hourly_rates(all_counts, outfile):
