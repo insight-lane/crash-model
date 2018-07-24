@@ -7,6 +7,7 @@ import csv
 from collections import OrderedDict
 from jsonschema import validate
 import json
+from .boston_volume import BostonVolumeParser
 
 BASE_FP = None
 PROCESSED_DATA_FP = None
@@ -119,6 +120,18 @@ def parse_ATRs(ATR_FP, city):
     else:
         print("No volume data given for {}".format(city))
 
+
+def write_volume(volume_counts):
+
+    schema_path = os.path.join(os.path.dirname(os.path.dirname(
+        CURR_FP)), "standards", "volume-schema.json")
+    with open(schema_path) as volume_schema:
+        validate(volume_counts, json.load(volume_schema))
+        volume_output = os.path.join(BASE_FP, "standardized", "volume.json")
+        with open(volume_output, "w") as f:
+            json.dump(volume_counts, f)
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -128,12 +141,9 @@ if __name__ == '__main__':
                         help="data directory")
 
     args = parser.parse_args()
-
     BASE_FP = os.path.join(args.datadir)
-    PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
-
-    raw_path = os.path.join(BASE_FP, "raw/volume")
-    if not os.path.exists(raw_path):
-        parse_ATRs(os.path.join(raw_path, 'ATRs'), args.city)
+    if args.city == 'boston':
+        volume_counts = BostonVolumeParser(args.datadir).get_volume()
+        write_volume(volume_counts)
     else:
         print("No volume data given for {}".format(args.city))
