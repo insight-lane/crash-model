@@ -322,12 +322,19 @@ def create_segments_from_json(roads_shp_path, mapfp):
             coords += [[x for x in line.coords]]
 
         name = get_intersection_name(inter_segments['data'][idx])
+        # Add the number of segments coming into this intersection
+        segment_data = []
+        for segment in list(inter_segments['data'][idx]):
+            segment['intersection_segments'] = len(
+                inter_segments['data'][idx])
+            segment_data.append(segment)
+
         properties = {
             'id': idx,
-            'data': inter_segments['data'][idx],
+            'data': segment_data,
             'display_name': name
         }
-
+        
         union_inter.append(geojson.Feature(
             geometry=geojson.MultiLineString(coords),
             id=idx,
