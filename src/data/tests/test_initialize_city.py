@@ -1,4 +1,4 @@
-import .. import initialize_city
+import initialize_city
 
 def test_initialize_city_brisbane():
 
