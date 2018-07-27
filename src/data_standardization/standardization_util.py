@@ -4,7 +4,10 @@ from datetime import timedelta
 
 
 def parse_date(date, time=None):
-
+    """
+    Turn a date (and optional time) into a datetime string
+    in standardized format
+    """
     # Date can either be a date or a date time
     date = date_parser.parse(date)
     # If there's no time in the date given, look at the time field
@@ -26,3 +29,12 @@ def parse_date(date, time=None):
     date_time = date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     return date_time
+
+
+def parse_address(address):
+    """
+    Some cities have the lat/lon as part of the address.
+    If that's the format, parse out these values
+    """
+    lines = address.split('\n')
+    import ipdb; ipdb.set_trace()
