@@ -4,8 +4,9 @@ channels:
 - defaults
 dependencies:
 - codecov
-- fiona=1.7.11
+- fiona
 - folium
+- gdal=2.2.4
 - geopandas
 - geocoder
 - geojson
