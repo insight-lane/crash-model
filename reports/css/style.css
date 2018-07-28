@@ -1,80 +1,105 @@
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #ededed;
+    color: #fff;
     margin: 0px;
-}
-
-#header {
-    width: 100%;
-    height: 60px;
-    top: 0px;
-    background-color: #7f7f7f;
 }
 
 h1 {
     font-weight: normal;
-    padding-left: 40px;
-    color: #fff;
     margin: 0px;
     line-height: 60px;
 }
 
-#content {
-    padding-left: 40px;
-}
-
-h3 {
-    margin-top: 20px;
-    margin-bottom: 5px;
-    margin-left: 30px;
-    font-size: 1em;
+h2 {
     font-weight: normal;
+    text-transform: uppercase;
 }
 
 h4 {
-    margin-top: 5px;
-    margin-bottom: 5px;
-    font-size: 1em;
+    text-transform: uppercase;
     font-weight: normal;
+    margin-bottom: 5%;
 }
 
-#city_selection {
-    padding: 20px 0px 0px 2px;
-}
-
-.wrapper {
-    background-color: #fff;
-    height: 650px;
-    width: 960px;
-    margin: 20px 10px 10px 10px;
-    padding: 20px;
-}
-
-.plot {
-    box-sizing: border-box;
-    position: relative;
-    width: 900px;
-    float: left;
-    background-color: #fff;
-    margin: 10px;
-    padding-left: 10px;
+hr {
+    width: 95%;
 }
 
 .map {
-	position: absolute;
-    margin-top: 10px;
-	width: 960px;
-	height: 600px;
+	/*position: absolute;*/
+    /*margin-top: 10px;*/
+	width: 100vw;
+	height: 100vh;
 }
 
-.input_overlay {
-	width: 80%;
+.overlay {
+    position: absolute;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 1vw;
+}
+
+.title {
+    left: 0;
+    width: 20vw;
+}
+
+.side {
+    right: 0;
+    width: 20vw;
+}
+
+.legend {
+    margin: 2% 0;
+    overflow: hidden;
+}
+
+.legend_box {
+    width: 12%;
+    height: 15px;
+    margin: 1px;
+    float: left;
+}
+
+.risk0 {
+    background-color: #ffe0b2;
+}
+
+.risk1 {
+    background-color: #ffb74d;
+}
+
+.risk2 {
+    background-color: #ff9800;
+}
+
+.risk3 {
+    background-color: #f57c00;
+}
+
+.legend_label {
+    font-size: 0.8rem;
+    float: left;
+    margin: 0;
+}
+
+.legend_label.low {
+    margin-right: 8px;
+}
+
+.legend_label.high {
+    margin-left: 8px;
+}
+
+.filter {
+	width: 90%;
 }
 
 input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
     background: transparent;
+    padding: 8px 0;
 }
 
 input[type="range"]:focus {
@@ -141,31 +166,4 @@ input[type="range"]::-ms-thumb {
 
 .colors {
     background: linear-gradient(to right, #ffe0b2, #ffb74d, #ff9800, #f57c00);
-}
-
-.label {
-    width: 23%;
-    display: inline-block;
-    text-align: center;
-    font: 10px sans-serif;
-}
-
-.axis {
-    font: 10px sans-serif;
-}
-
-.axis path {
-    visibility: hidden;
-}
-
-.y.axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-}
-
-#daytype-controls {
-    position: absolute;
-    right: 30px;
-    font-size: 0.8em;
 }

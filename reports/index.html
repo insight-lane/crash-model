@@ -18,42 +18,43 @@
 	<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-	<div id="header">
-		<h1>Crash Modeling</h1>
-	</div>
 
-	<div id="content">
-		<div id="city">
-			<p>Viewing Predictions for: <span id="city_name"></span></p>
-		</div>
-		<div class="wrapper">
-			<div class="box input_overlay">
-				<label for="week_selector">Week: </label>
-				<output for="week_selector" id="week_num">1</output>
-				<input type="range" id="week_selector" autocomplete="off" min="1" max="52" step="1" value="1" />
-			</div>
-			<div id="before" class="map">
-				<div id="legend">
-					<h4>Risk Score:</h4>
-					<div class="row colors"></div>
-					<div class="row labels">
-						<div class="label">0.2</div>
-						<div class="label">0.4</div>
-						<div class="label">0.6</div>
-						<div class="label">0.8</div>
-					</div>
-				</div>
-			</div>
-		</div>
+	<div id="city_map" class="map"></div>
 
-		<div id="weekly_barplot" class="plot">
-			<h3>Total Crashes by Week</h3>
+	<div class="title overlay">
+		<h1 id="city_name"></h1>
+		<hr>
+		<h4>Predicted Risk</h4>
+		<div class="legend">
+			<p class="legend_label low">Low risk</p>
+			<div class="legend_box risk0"></div>
+			<div class="legend_box risk1"></div>
+			<div class="legend_box risk2"></div>
+			<div class="legend_box risk3"></div>
+			<p class="legend_label high">High risk</p>
+		</div>
+		<p>Model confidence: <span>80%</span></p>
+		<hr>
+		<h2>Filter Segments:</h2>
+		<div class="filter risk">
+			<label for="risk_selector">Risk score greater than: </label>
+			<output for="risk_selector" id="selected_risk">0</output>
+			<input type="range" id="risk_slider" autocomplete="off" min="0" max="1" step="0.05" value="0.0">
 		</div>
 	</div>
 
-	<script src="https://d3js.org/d3.v3.min.js"></script>
-	<script src="js/make_plots.js"></script>
-	<script src="js/update_map.js"></script>
+	<div class="side overlay">
+		<!-- address search here -->
+		<hr>
+		<h2>Highest Risk Segments:</h2>
+		<ol>
+			<li>Test</li>
+		</ol>
+	</div>
+
+	<script src="https://d3js.org/d3.v5.min.js"></script>
+	<!-- // <script src="js/make_plots.js"></script> -->
+	<!-- // <script src="js/update_map.js"></script> -->
 
 	<script>
 		var city = config.cities[0];
@@ -64,81 +65,76 @@
 		// create base map
 		mapboxgl.accessToken = config.MAPBOX_TOKEN;
 
-		var beforeMap = new mapboxgl.Map({
-		  container: 'before',
-		  style: 'mapbox://styles/mapbox/light-v9',
+		var map = new mapboxgl.Map({
+		  container: 'city_map',
+		  style: 'mapbox://styles/mapbox/dark-v9',
 		  center: [city.longitude, city.latitude],
 		  zoom: 11
 		});
 
-		beforeMap.on('load', function() {
-		  	beforeMap.addLayer({
-				id: 'predictions',
-				type: 'line',
-				source: {
-				  type: 'geojson',
-				  data: 'preds.json'
-				},
-				paint: {
-				  'line-color': {
-					property: 'prediction',
-					stops: [
-					  [0.2, '#ffe0b2'],
-					  [0.4, '#ffb74d'],
-					  [0.6, '#ff9800'],
-					  [0.8, '#f57c00']
-					]
-				  },
-				  'line-width': [
-						'interpolate', ['linear'], ['zoom'],
-						11, 2,
-						15, 3,
-					],
-				  'line-opacity': 1
-				}
-			}, 'admin-2-boundaries-dispute');
+		// map.on('load', function() {
+		//   	map.addLayer({
+		// 		id: 'predictions',
+		// 		type: 'line',
+		// 		source: {
+		// 		  type: 'geojson',
+		// 		  data: 'preds.json'
+		// 		},
+		// 		paint: {
+		// 		  'line-color': {
+		// 			property: 'prediction',
+		// 			stops: [
+		// 			  [0.2, '#ffe0b2'],
+		// 			  [0.4, '#ffb74d'],
+		// 			  [0.6, '#ff9800'],
+		// 			  [0.8, '#f57c00']
+		// 			]
+		// 		  },
+		// 		  'line-width': [
+		// 				'interpolate', ['linear'], ['zoom'],
+		// 				11, 2,
+		// 				15, 3,
+		// 			],
+		// 		  'line-opacity': 1
+		// 		}
+		// 	}, 'admin-2-boundaries-dispute');
 
-			beforeMap.addLayer({
-				id: 'crashes',
-				type: 'circle',
-				source: {
-					type: 'geojson',
-					data: 'crashes.geojson'
-				},
-				paint: {
-					'circle-radius': [
-						'interpolate', ['linear'], ['zoom'],
-						12, 4,
-						15, 8,
-					],
-					'circle-color': '#d500f9',
-					'circle-stroke-color': '#9e00c5',
-					'circle-opacity': 0.8
-				},
-				filter: ['all', ['==', 'week', 1]]
-			}, 'admin-2-boundaries-dispute');
+		// 	map.addLayer({
+		// 		id: 'crashes',
+		// 		type: 'circle',
+		// 		source: {
+		// 			type: 'geojson',
+		// 			data: 'crashes.geojson'
+		// 		},
+		// 		paint: {
+		// 			'circle-radius': [
+		// 				'interpolate', ['linear'], ['zoom'],
+		// 				12, 4,
+		// 				15, 8,
+		// 			],
+		// 			'circle-color': '#d500f9',
+		// 			'circle-stroke-color': '#9e00c5',
+		// 			'circle-opacity': 0.8
+		// 		},
+		// 		filter: ['all', ['==', 'week', 1]]
+		// 	}, 'admin-2-boundaries-dispute');
 
-			// add popup for predictions
-			beforeMap.on('click', 'predictions', function(e) {
-				var popupText = "Risk Score for Week " + e.features[0].properties.week + ": " + e.features[0].properties.prediction.toFixed(2);
+		// 	// add popup for predictions
+		// 	map.on('click', 'predictions', function(e) {
+		// 		zoom into segment view
+		// 	});
 
-				new mapboxgl.Popup()
-					.setLngLat(e.lngLat)
-					.setHTML(popupText)
-					.addTo(beforeMap);
-			});
+		// 	map.on('mouseenter', 'predictions', function () {
+		// 		map.getCanvas().style.cursor = 'pointer';
+		// 	});
 
-			beforeMap.on('mouseenter', 'predictions', function () {
-				beforeMap.getCanvas().style.cursor = 'pointer';
-			});
-
-			beforeMap.on('mouseleave', 'predictions', function () {
-				beforeMap.getCanvas().style.cursor = '';
-			});
-		});
+		// 	map.on('mouseleave', 'predictions', function () {
+		// 		map.getCanvas().style.cursor = '';
+		// 	});
+		// });
 
 		// Add zoom controls to map
-		beforeMap.addControl(new mapboxgl.NavigationControl());
+		map.addControl(new mapboxgl.NavigationControl());
 	</script>
 
 </body>
