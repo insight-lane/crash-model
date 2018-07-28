@@ -11,6 +11,8 @@
 
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
+	<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script type='text/javascript', src='config.js'></script>
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
@@ -72,7 +74,14 @@
 		  zoom: 11
 		});
 
-		// map.on('load', function() {
+		var geocoder = new MapboxGeocoder({
+		    accessToken: mapboxgl.accessToken,
+		    zoom: 14
+		});
+
+		map.addControl(geocoder);
+
+		map.on('load', function() {
 		//   	map.addLayer({
 		// 		id: 'predictions',
 		// 		type: 'line',
@@ -131,7 +140,7 @@
 		// 	map.on('mouseleave', 'predictions', function () {
 		// 		map.getCanvas().style.cursor = '';
 		// 	});
-		// });
+		});
 
 		// Add zoom controls to map
 		map.addControl(new mapboxgl.NavigationControl());

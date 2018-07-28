@@ -35,7 +35,7 @@ hr {
 .overlay {
     position: absolute;
     top: 0;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.6);
     padding: 1vw;
 }
 
@@ -47,6 +47,7 @@ hr {
 .side {
     right: 0;
     width: 20vw;
+    padding-top: 60px;
 }
 
 .legend {
@@ -167,3 +168,19 @@ input[type="range"]::-ms-thumb {
 .colors {
     background: linear-gradient(to right, #ffe0b2, #ffb74d, #ff9800, #f57c00);
 }
+
+/***** Styles for Mapbox geocoder input *****/
+.mapboxgl-ctrl-geocoder {
+  border: 0;
+  border-radius: 10px;
+  position: relative;
+  top: 0;
+  width: 20vw;
+  margin-top: 5%;
+}
+
+.mapboxgl-ctrl-geocoder > div {
+  min-width: 100%;
+  margin-left: 0;
+}
+
