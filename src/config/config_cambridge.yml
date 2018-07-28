@@ -53,5 +53,5 @@ data_source:
     address: Location
     date: Ticket Issue Date
     time: Issue Time
-    fields:
-      - Violation Description  
+    category: Violation Description
+    notes: 

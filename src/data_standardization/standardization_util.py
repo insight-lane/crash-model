@@ -41,7 +41,7 @@ def parse_address(address):
     lines = address.split('\n')
     if len(lines) == 3 and lines[2]:
         lat, lon = lines[2][1:-1].split(', ')
-        return lat, lon
+        return float(lat), float(lon)
     return None, None
 
 
@@ -53,6 +53,7 @@ def validate_and_write_schema(schema_path, schema_values, output_file):
         schema_values - a list of dicts
         output_file
     """
+
     with open(schema_path) as schema:
         validate(schema_values, json.load(schema))
 
