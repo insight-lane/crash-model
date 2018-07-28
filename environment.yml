@@ -6,6 +6,7 @@ dependencies:
 - codecov
 - fiona
 - folium
+- gdal=2.2.4
 - geopandas
 - geocoder
 - geojson
