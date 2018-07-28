@@ -2,14 +2,12 @@
 # Author terryf82 https://github.com/terryf82
 
 import argparse
-import json
 import os
 import pandas as pd
 import yaml
 from collections import OrderedDict
-from jsonschema import validate
 import csv
-from .standardization_util import parse_date
+from .standardization_util import parse_date, validate_and_write_schema
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -165,12 +163,6 @@ if __name__ == '__main__':
 
     schema_path = os.path.join(BASE_FP, "standards", "crashes-schema.json")
     list_city_crashes = list(dict_city_crashes.values())
-    with open(schema_path) as crashes_schema:
-        validate(list_city_crashes, json.load(crashes_schema))
-
     crashes_output = os.path.join(args.folder, "standardized/crashes.json")
+    validate_and_write_schema(schema_path, list_city_crashes, crashes_output)
 
-    with open(crashes_output, "w") as f:
-        json.dump(list_city_crashes, f)
-
-    print("- output written to {}".format(crashes_output))

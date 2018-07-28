@@ -1,6 +1,8 @@
 import dateutil.parser as date_parser
 import re
 from datetime import timedelta
+import json
+from jsonschema import validate
 
 
 def parse_date(date, time=None):
@@ -37,4 +39,24 @@ def parse_address(address):
     If that's the format, parse out these values
     """
     lines = address.split('\n')
-    import ipdb; ipdb.set_trace()
+    if len(lines) == 3 and lines[2]:
+        lat, lon = lines[2][1:-1].split(', ')
+        return lat, lon
+    return None, None
+
+
+def validate_and_write_schema(schema_path, schema_values, output_file):
+    """
+    Validate a schema according to a schema file, and write to file
+    Args:
+        schema_path - the schema filename
+        schema_values - a list of dicts
+        output_file
+    """
+    with open(schema_path) as schema:
+        validate(schema_values, json.load(schema))
+
+    with open(output_file, "w") as f:
+        json.dump(schema_values, f)
+
+    print("- output written to {}".format(output_file))
