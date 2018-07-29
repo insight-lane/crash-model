@@ -77,7 +77,8 @@
 
 		var geocoder = new MapboxGeocoder({
 		    accessToken: mapboxgl.accessToken,
-		    country: countryCodeLookup(country)
+		    country: countryCodeLookup(country),
+		    placeholder: "Search for an address"
 		});
 
 		map.addControl(geocoder);  // TODO: implement proxomity bias
