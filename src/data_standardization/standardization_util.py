@@ -10,6 +10,7 @@ def parse_date(date, time=None):
     Turn a date (and optional time) into a datetime string
     in standardized format
     """
+
     # Date can either be a date or a date time
     date = date_parser.parse(date)
     # If there's no time in the date given, look at the time field
@@ -20,7 +21,7 @@ def parse_date(date, time=None):
         # special case of seconds past midnight
         if re.match(r"^\d+$", str(time)) and int(time) >= 0 \
            and int(time) < 86400:
-            date = date + timedelta(seconds=time)
+            date = date + timedelta(seconds=int(time))
 
         else:
             date = date_parser.parse(

@@ -67,8 +67,7 @@ def test_numeric_and_string_ids():
             "latitude": 42.317987926802246,
             "longitude": -71.06188127008645
         }
-    },
-    {
+    }, {
         "id": "A1B2C3D4E5",
         "dateOccurred": "2016-01-01T02:30:23-05:00",
         "location": {
@@ -78,4 +77,12 @@ def test_numeric_and_string_ids():
     }
     ]
 
-    validate(test_crashes, json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "standards", "crashes-schema.json"))))
+    validate(
+        test_crashes,
+        json.load(open(
+            os.path.join(
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(
+                            os.path.dirname(
+                                os.path.abspath(__file__))))), "standards", "crashes-schema.json"))))
