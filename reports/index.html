@@ -60,6 +60,7 @@
 
 	<script>
 		var city = config.cities[0];
+		var country = city.name.split(", ")[2];
 
 		// insert city name
 		$('#city_name').text(city.name);
@@ -75,7 +76,8 @@
 		});
 
 		var geocoder = new MapboxGeocoder({
-		    accessToken: mapboxgl.accessToken
+		    accessToken: mapboxgl.accessToken,
+		    country: countryCodeLookup(country)
 		});
 
 		map.addControl(geocoder);  // TODO: implement proxomity bias
@@ -139,10 +141,30 @@
 		// 	map.on('mouseleave', 'predictions', function () {
 		// 		map.getCanvas().style.cursor = '';
 		// 	});
+			updateGeocoderProximity();
 		});
 
 		// Add zoom controls to map
 		map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'bottom-right');
+
+		function updateGeocoderProximity() {
+		    // proximity is designed for local scale, if the user is looking at the whole world,
+		    // it doesn't make sense to factor in the arbitrary centre of the map
+		    if (map.getZoom() > 9) {
+		        var center = map.getCenter().wrap(); // ensures the longitude falls within -180 to 180 as the Geocoding API doesn't accept values outside this range
+		        geocoder.setProximity({ longitude: center.lng, latitude: center.lat });
+		    } else {
+		        geocoder.setProximity(null);
+		    }
+		}
+
+		function countryCodeLookup(country) {
+			switch(country) {
+				case "USA":
+					return "us";
+					break;
+			}
+		}
 	</script>
 
 </body>
