@@ -75,38 +75,37 @@
 		});
 
 		var geocoder = new MapboxGeocoder({
-		    accessToken: mapboxgl.accessToken,
-		    zoom: 14
+		    accessToken: mapboxgl.accessToken
 		});
 
-		map.addControl(geocoder);
+		map.addControl(geocoder);  // TODO: implement proxomity bias
 
 		map.on('load', function() {
-		//   	map.addLayer({
-		// 		id: 'predictions',
-		// 		type: 'line',
-		// 		source: {
-		// 		  type: 'geojson',
-		// 		  data: 'preds.json'
-		// 		},
-		// 		paint: {
-		// 		  'line-color': {
-		// 			property: 'prediction',
-		// 			stops: [
-		// 			  [0.2, '#ffe0b2'],
-		// 			  [0.4, '#ffb74d'],
-		// 			  [0.6, '#ff9800'],
-		// 			  [0.8, '#f57c00']
-		// 			]
-		// 		  },
-		// 		  'line-width': [
-		// 				'interpolate', ['linear'], ['zoom'],
-		// 				11, 2,
-		// 				15, 3,
-		// 			],
-		// 		  'line-opacity': 1
-		// 		}
-		// 	}, 'admin-2-boundaries-dispute');
+		  	map.addLayer({
+				id: 'predictions',
+				type: 'line',
+				source: {
+				  type: 'geojson',
+				  data: 'preds.json'
+				},
+				paint: {
+				  'line-color': {
+					property: 'prediction',
+					stops: [
+					  [0.2, '#ffe0b2'],
+					  [0.4, '#ffb74d'],
+					  [0.6, '#ff9800'],
+					  [0.8, '#f57c00']
+					]
+				  },
+				  'line-width': [
+						'interpolate', ['linear'], ['zoom'],
+						11, 2,
+						15, 3,
+					],
+				  'line-opacity': 1
+				}
+			}, 'admin-2-boundaries-dispute');
 
 		// 	map.addLayer({
 		// 		id: 'crashes',
@@ -143,7 +142,7 @@
 		});
 
 		// Add zoom controls to map
-		map.addControl(new mapboxgl.NavigationControl());
+		map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'bottom-right');
 	</script>
 
 </body>
