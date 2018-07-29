@@ -15,7 +15,7 @@
 	<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script type='text/javascript', src='config.js'></script>
-	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
 
 	<link rel="stylesheet" href="css/style.css" />
 </head>
@@ -25,8 +25,8 @@
 
 	<div class="title overlay">
 		<h1 id="city_name"></h1>
-		<hr>
-		<h4>Predicted Risk</h4>
+		<!-- <hr> -->
+		<!-- <h4>Predicted Risk</h4> -->
 		<div class="legend">
 			<p class="legend_label low">Low risk</p>
 			<div class="legend_box risk0"></div>
@@ -35,7 +35,7 @@
 			<div class="legend_box risk3"></div>
 			<p class="legend_label high">High risk</p>
 		</div>
-		<p>Model confidence: <span>80%</span></p>
+		<p class="model_confidence">Model confidence: <span>80%</span></p>
 		<hr>
 		<h2>Filter Segments:</h2>
 		<div class="filter risk">
@@ -45,7 +45,7 @@
 		</div>
 	</div>
 
-	<div class="side overlay">
+	<div class="side overlay visible">
 		<!-- address search here -->
 		<hr>
 		<h2>Highest Risk Segments:</h2>

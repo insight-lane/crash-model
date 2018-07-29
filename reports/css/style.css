@@ -8,14 +8,17 @@ h1 {
     font-weight: normal;
     margin: 0px;
     line-height: 60px;
+    font-size: 2.44rem;
 }
 
 h2 {
-    font-weight: normal;
+    font-size: 1.25rem;
+    font-weight: 500;
     text-transform: uppercase;
 }
 
 h4 {
+    /*font-size: 1.25rem;*/
     text-transform: uppercase;
     font-weight: normal;
     margin-bottom: 5%;
@@ -23,6 +26,7 @@ h4 {
 
 hr {
     width: 95%;
+    margin: 7% 0 10% 0;
 }
 
 .map {
@@ -35,8 +39,12 @@ hr {
 .overlay {
     position: absolute;
     top: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.8);
     padding: 1vw;
+}
+
+.visible {
+    visibility: visible;
 }
 
 .title {
@@ -51,7 +59,7 @@ hr {
 }
 
 .legend {
-    margin: 2% 0;
+    margin: 5% 0 2% 0;
     overflow: hidden;
 }
 
@@ -90,6 +98,10 @@ hr {
 
 .legend_label.high {
     margin-left: 8px;
+}
+
+.model_confidence {
+    font-size: 0.8rem;
 }
 
 .filter {
@@ -172,7 +184,7 @@ input[type="range"]::-ms-thumb {
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {
   border: 0;
-  border-radius: 10px;
+  border-radius: 5px;
   position: relative;
   top: 0;
   width: 20vw;
