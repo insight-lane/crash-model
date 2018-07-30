@@ -28,7 +28,7 @@ def read_file_info(config):
             lon = None
             if 'address' in source_config:
                 lat, lon = standardization_util.parse_address(
-                    rows[100][source_config['address']])
+                    row[source_config['address']])
             if lat and lon:
 
                 time = None
@@ -38,7 +38,7 @@ def read_file_info(config):
                 date_time = standardization_util.parse_date(
                     row[source_config['date']], row[time])
                 updated_row = OrderedDict([
-                    ("source", source_config["name"]),
+                    ("feature", source_config["name"]),
                     ("date", date_time),
                     ("location", OrderedDict([
                         ("latitude", lat),

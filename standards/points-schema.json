@@ -8,8 +8,8 @@
         "description": "Defines the structure of a point-based feature",
         "type": "object",
         "properties": {
-            "source": {
-                "description": "Source of feature, e.g. traffic tickets",
+            "feature": {
+                "description": "Type of feature, e.g. traffic tickets",
                 "type": "string"
             },
             "date": {
@@ -40,6 +40,6 @@
                 }
             }
         },
-        "required": ["source", "location"]
+        "required": ["feature", "location"]
     }
 }

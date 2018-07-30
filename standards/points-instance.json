@@ -1,6 +1,6 @@
 [
     {
-        "source": "parking_ticket",
+        "feature": "parking_ticket",
         "date": "2016-01-19T14:48:45.000Z",
         "category": "RESIDENT PERMIT ONLY",
         "location": {
@@ -9,14 +9,14 @@
         }
     },
     {
-        "source": "taxi_stands",
+        "feature": "taxi_stands",
         "location": {
             "latitude": 42.33938397670106,
             "longitude": -71.0994798889095
         },
     },
     {
-        "source": "crime_report",
+        "feature": "crime_report",
         "date": "2016-01-19T15:36:25.000Z",
         "category": "Auto Theft",
         "location": {
