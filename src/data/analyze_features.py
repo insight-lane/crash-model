@@ -8,6 +8,17 @@ import numpy as np
 DATA_FP = None
 
 
+def get_bin(value, bins):
+    return_val = 0
+    if not value:
+        return return_val
+    return_val = 1
+    for i, bin in enumerate(bins):
+        if bin > value:
+            return i + 1
+
+    return len(bins) + 1
+
 def analyze(years=[2016]):
 
     crash_file = os.path.join(DATA_FP, 'processed', 'crash_joined.json')
@@ -36,18 +47,26 @@ def analyze(years=[2016]):
         # ('junction', {'values': []}),
         ('inter', {'values': []}),
         ('lanes', {'values': []}),
-        ('length', {'values': []}),
+        ('length', {'values': [], 'bins': [50, 100, 200]}),
         ('oneway', {'values': []}),
         ('width', {'values': []}),
         ('hwy_type', {'values': []}),
-        ('dead_end', {'values': []}),
-        ('parking_tickets', {'values': []}),
+        # ('dead_end', {'values': []}),
+        ('parking_tickets', {'values': [], 'bins': [100]}),
         ('signal', {'values': []}),
         ('crosswalk', {'values': []}),
         ('osm_speed', {'values': []}),
-        ('intersection_segments', {'values': []})
+        ('intersection_segments', {'values': []}),
+        ('width_per_lane', {'values': [], 'bins': [5, 10, 20]})
     ])
-    for segment in non_inter_segments:
+    # Turn inter segments into similar format to non inters
+    updated_inter_segments = []
+    for segment_id in list(inter_segments.keys()):
+        segment = inter_segments[segment_id]
+        segment[0]['id'] = segment_id
+        updated_inter_segments.append(('', segment[0]))
+
+    for segment in non_inter_segments + updated_inter_segments:
         if segment[1]['id'] in crashes:
             crash_info.append(
                 crashes[segment[1]['id']]['count'])
@@ -61,13 +80,21 @@ def analyze(years=[2016]):
                 # For now, the only string should be length
                 if type(segment[1][feat]) == str:
                     segment[1][feat] = round(float(segment[1][feat]))
-                use_feats[feat]['values'].append(round(segment[1][feat]))
+
+                if 'bins' in use_feats[feat]:
+                    use_feats[feat]['values'].append(get_bin(
+                        segment[1][feat], use_feats[feat]['bins']))
+                else:
+                    use_feats[feat]['values'].append(round(segment[1][feat]))
             else:
                 use_feats[feat]['values'].append(0)
 
     m = [crash_info] + [crash_info_no_count] + [
         x['values'] for x in use_feats.values()]
     result = np.corrcoef(m)
+    print(result[0])
+    print(result[1])
+#    import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
