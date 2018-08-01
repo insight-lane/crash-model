@@ -1,3 +1,0 @@
-"""
-Parses ATR files
-"""
