@@ -1,0 +1,20 @@
+[
+    {
+        "startDateTime": "2014-03-12",
+        "location": {
+            "latitude": 42.3408948,
+            "longitude": -71.16084219999999,
+            "address": "21 Greycliff Rd, Brighton, MA 02135, USA"
+        },
+        "speed": {
+            "averageSpeed": 25
+        },
+        "volume": {
+            "totalVolume": 518,
+            "totalLightVehicles": 508,
+            "totalHeavyVehicles": 8,
+            "bikes": 2,
+            "hourlyVolume": [6, 6, 0, 1, 2, 11, 18, 47, 22, 21, 17, 11, 10, 25, 38, 33, 44, 42, 30, 30, 31, 43, 20, 10]
+        },
+    }
+]
