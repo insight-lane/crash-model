@@ -19,6 +19,7 @@ def get_bin(value, bins):
 
     return len(bins) + 1
 
+
 def analyze(years=[2016]):
 
     crash_file = os.path.join(DATA_FP, 'processed', 'crash_joined.json')
@@ -29,6 +30,13 @@ def analyze(years=[2016]):
         items,
         years=years,
         yearfield='dateOccurred')
+
+    concern_file = os.path.join(DATA_FP, 'processed', 'concern_joined.json')
+    with open(concern_file, "r") as f:
+        items = json.load(f)
+
+    concern_data, concerns = util.group_json_by_location(
+        items)
     
     non_inter_segments = util.read_geojson(
         os.path.join(MAP_FP, 'non_inters_segments.geojson'))
@@ -40,6 +48,8 @@ def analyze(years=[2016]):
     feat_values = []
     crash_info = []
     crash_info_no_count = []
+    concern_info = []
+    concern_info_no_count = []
     use_feats = OrderedDict([
         # bridge has yes or null value; consider using eventually
         # ('bridge', {'values': []}),
@@ -67,6 +77,8 @@ def analyze(years=[2016]):
         updated_inter_segments.append(('', segment[0]))
 
     for segment in non_inter_segments + updated_inter_segments:
+
+        # First add crash columns, with and without counts
         if segment[1]['id'] in crashes:
             crash_info.append(
                 crashes[segment[1]['id']]['count'])
@@ -74,6 +86,17 @@ def analyze(years=[2016]):
         else:
             crash_info.append(0)
             crash_info_no_count.append(0)
+
+        # Then add concern columns, with and without counts
+        if segment[1]['id'] in concerns:
+            concern_info.append(
+                concerns[segment[1]['id']]['count'])
+            concern_info_no_count.append(1)
+        else:
+            concern_info.append(0)
+            concern_info_no_count.append(0)
+        
+        # Then add all features we want info about
         for feat in use_feats:
             if feat in segment[1] and segment[1][feat]:
 
