@@ -415,7 +415,7 @@ if __name__ == '__main__':
 
     if args.newmap:
         PROCESSED_DATA_FP = os.path.join(MAP_FP, args.newmap)
-        MAP_FP = DATA_FP
+        MAP_FP = PROCESSED_DATA_FP
 
     print("Creating segments..........................")
 
