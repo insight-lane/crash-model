@@ -1,0 +1,90 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "title": "Traffic",
+    "description": "Defines the structure of traffic studies",
+    "type": "array",
+    "items": {
+        "startDateTime": {
+            "description": "DateTime of traffic count start, ISO8601 formatted",
+            "type": "string",
+            "format": "date"
+	},
+        "endDateTime": {
+            "description": "DateTime of traffic count end, ISO8601 formatted. Can be left blank if the traffic count is 24 hours",
+            "type": "string",
+            "format": "date"
+        },
+        "location": {
+            "description": "Coordinates of traffic count, WGS84 formatted",
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "description": "Latitude of traffic count",
+                    "type": "number"
+                },
+                "longitude": {
+                    "description": "Longitude of traffic count",
+                    "type": "number"
+                },
+                "address": {
+                    "description": "Address of traffic count",
+                    "type": "string"
+                }
+            }
+        },
+        "speed": {
+            "description": "Traffic speed information",
+            "type": "object",
+            "properties": {
+                "averageSpeed": {
+                    "description": "Average speed in miles per hour",
+                    "type": "number"
+                },
+                "85thPercentileSpeed": {
+                    "description": "85th percentile speed in miles per hour",
+                    "type": "number"
+                }
+            }
+        },
+        "volume": {
+            "description": "Traffic speed information",
+            "type": "object",
+            "properties": {
+                "hourlyVolume": {
+                    "description": "Hourly total vehicle count",
+                    "type": "list"
+                },
+                "totalVolume": {
+                    "description": "Total vehicle count, averaged over a 24 hour period",
+                    "type": "number"
+                },
+                "totalCars": {
+                    "description": "Total car count, averaged over a 24 hour period",
+                    "type": "number"
+                },
+                "totalHeavyVehicles": {
+                    "description": "Total heavy vehicle count, averaged over a 24 hour period",
+                    "type": "number"
+                },
+                "totalCars": {
+                    "description": "Total car count, averaged over a 24 hour period",
+                    "type": "number"
+                },
+                "bikes": {
+                    "description": "Total bicycle count, averaged over a 24 hour period",
+                    "type": "number"
+                },
+                "AMPeak": {
+                    "description": "Average Total vehicle count during AM peak",
+                    "type": "number"
+                },
+                "PMPeak": {
+                    "description": "Average Total vehicle count during PM peak",
+                    "type": "number"
+                }
+            }
+        },
+        "turningMovements": {
+        }
+    }
+}

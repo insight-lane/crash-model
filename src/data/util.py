@@ -32,6 +32,9 @@ def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
         Output address
         Latitude
         Longitude
+        Status (whether the geocoding was successful 'S', or the address
+            could not be found 'F', or there was an intermittent error such as
+            a time out, '')
     Args:
         filename
     Results:
@@ -47,7 +50,8 @@ def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
             cached[r['Input Address']] = [
                 r['Output Address'],
                 r['Latitude'],
-                r['Longitude']
+                r['Longitude'],
+                r['Status'],
             ]
     return cached
 
@@ -71,10 +75,33 @@ def write_geocode_cache(results,
             'Input Address',
             'Output Address',
             'Latitude',
-            'Longitude'
+            'Longitude',
+            'Status',
         ])
         for key, value in results.items():
-            writer.writerow([key, value[0], value[1], value[2]])
+            writer.writerow([key, value[0], value[1], value[2], value[3]])
+
+
+def lookup_address(intersection, cached):
+    """
+    Look up an intersection first in the cache, and if it
+    doesn't exist, geocode it
+
+    Args:
+        intersection: string
+        cached: dict
+    Returns:
+        tuple of original address, geocoded address, latitude, longitude
+    """
+
+    # If we've cached this either successfully or were unable to find
+    # the address previously
+    if intersection in list(cached.keys()) and cached[intersection][3]:
+        print(intersection + ' is cached')
+        return cached[intersection]
+    else:
+        print('geocoding ' + intersection)
+        return list(geocode_address(intersection))
 
 
 def geocode_address(address, cached={}):
@@ -88,7 +115,7 @@ def geocode_address(address, cached={}):
         address
         cached (optional)
     Returns:
-        address, latitude, longitude
+        address, latitude, longitude, status
     """
     if address in list(cached.keys()):
         return cached[address]
@@ -98,36 +125,37 @@ def geocode_address(address, cached={}):
         attempts += 1
         sleep(attempts ** 2)
         g = geocoder.google(address)
-    return g.address, g.lat, g.lng
+
+    status = ''
+    if g.status == 'OK':
+        status = 'S'
+    elif g.status == 'ZERO_RESULTS':
+        status = 'F'
+    return g.address, g.lat, g.lng, status
 
 
-def get_hourly_rates(files):
+def get_hourly_rates(volume_file):
     """
-    Function that reads ATRs and generates a sparkline plot
-    of percentages of traffic over time
-    
+    Give the average percentage of traffic that occurs each hour
     Args:
-        files - list of filenames to process
-        outfile - where to write the resulting plot
+        volume_file - path to standarized volume file
+    Returns:
+        counts - the average percentage of traffic that occurs each hour
     """
     all_counts = []
-    for f in files:
-        wb = openpyxl.load_workbook(f, data_only=True)
-        sheet_names = wb.sheetnames
-        if 'Classification-Combined' in sheet_names:
-            sheet = wb['Classification-Combined']
-            # Right now the cell locations are hardcoded,
-            # but if we expand to cover different formats, will need to change
-            counts = []
-            for row_index in range(9, 33):
-                cell = "{}{}".format('O', row_index)
-                val = sheet[cell].value
-                counts.append(float(val))
-            total = sheet['O34'].value
-            for i in range(len(counts)):
-                counts[i] = counts[i]/total
-            all_counts.append(counts)
-    return all_counts
+    with open(volume_file) as data_file:
+        volumes = json.load(data_file)
+    
+        for v in volumes:
+            counts = v['volume']['hourlyVolume']
+            total = sum(counts)
+            counts = [x/total for x in counts]
+            if counts:
+                all_counts.append(counts)
+
+    counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
+
+    return counts
 
 
 def plot_hourly_rates(all_counts, outfile):
