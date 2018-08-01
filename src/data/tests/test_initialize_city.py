@@ -4,7 +4,7 @@ def test_initialize_city_brisbane():
 
     # Generate a test config for Brisbane
     initialize_city.make_config_file(
-        'test_config_brisbane.yml',
+        '/tmp/test_config_brisbane.yml',
         'Brisbane, Australia',
         'brisbane',
         'test_crashes.csv',
@@ -60,7 +60,7 @@ time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
 weeks_back: 1"""
 
-    with open('test_config_brisbane.yml', 'r') as test_file:
+    with open('/tmp/test_config_brisbane.yml', 'r') as test_file:
         test_file_contents = test_file.read()
 
     assert test_file_contents == expected_file_contents
