@@ -66,7 +66,7 @@ class BostonVolumeParser:
                     geocoded_count[2] += 1
 
                 r = OrderedDict([
-                    ("date", date),
+                    ("startDateTime", date),
                     ("location", OrderedDict([
                         ("latitude", float(lat) if lat else ''),
                         ("longitude", float(lng) if lng else ''),
@@ -86,7 +86,7 @@ class BostonVolumeParser:
                 results.append(r)
 
         print('Number successfully geocoded: {}'.format(geocoded_count[0]))
-        print('Unabled to geocode: {}'.format(geocoded_count[1]))
+        print('Unable to geocode: {}'.format(geocoded_count[1]))
         print('Timed out on {} addresses'.format(geocoded_count[2]))
 
         # Write out the cache

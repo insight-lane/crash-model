@@ -115,7 +115,7 @@ def geocode_address(address, cached={}):
         address
         cached (optional)
     Returns:
-        address, latitude, longitude, statusx
+        address, latitude, longitude, status
     """
     if address in list(cached.keys()):
         return cached[address]
