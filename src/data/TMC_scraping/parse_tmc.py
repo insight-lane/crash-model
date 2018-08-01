@@ -21,6 +21,7 @@ RAW_DATA_FP = os.path.join(BASE_DIR, 'data/raw')
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 ATR_FP = os.path.join(RAW_DATA_FP, 'volume', 'ATRs')
 TMC_FP = os.path.join(RAW_DATA_FP, 'volume', 'TMCs')
+STANDARDIZED_DATA_FP = os.path.join(BASE_DIR, 'data', 'standardized')
 
 
 def num_hours(filename):
@@ -76,6 +77,7 @@ def find_address_from_filename(filename, cached):
     Returns:
         tuple of original address, geocoded address, latitude, longitude
     """
+
     intersection = filename.split('_')[2]
     streets = intersection.split(',')
     streets = [re.sub('-', ' ', s) for s in streets]
@@ -95,8 +97,10 @@ def find_address_from_filename(filename, cached):
             print('trying again, this time geocoding ' + intersection)
             result = list(util.geocode_address(intersection))
         result.insert(0, intersection)
+
         return result
-    return None, None, None, None
+    
+    return None, None, None, None, 'F'
 
 
 def snap_inter_and_non_inter(summary):
@@ -136,14 +140,8 @@ def get_normalization_factor():
     Returns:
         Tuple of 11 hour normalization, 12 hour normalization
     """
-    # Read in atr lats
-    atrs = util.csv_to_projected_records(
-        os.path.join(PROCESSED_DATA_FP, 'geocoded_atrs.csv'), x='lng', y='lat')
-
-    files = [os.path.join(ATR_FP,
-             atr['properties']['filename']) for atr in atrs]
-    all_counts = util.get_hourly_rates(files)
-    counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
+    counts = util.get_hourly_rates(os.path.join(
+        STANDARDIZED_DATA_FP, 'volume.json'))
 
     return sum(counts[7:18]), sum(counts[7:19])
 
@@ -416,14 +414,15 @@ def parse_conflicts():
         if filename.endswith('.XLS'):
 
             # Pull out what we can from the filename itself
-            orig_address, address, latitude, longitude = \
+            orig_address, address, latitude, longitude, status = \
                 find_address_from_filename(filename, cached)
             # If you can't geocode the address then there's not much point
             # in parsing it because you won't be able to snap it to a segment
             if latitude:
 
                 if orig_address:
-                    cached[orig_address] = [address, latitude, longitude]
+                    cached[orig_address] = [
+                        address, latitude, longitude, status]
                 date = str(find_date(filename))
                 hours = num_hours(filename)
                 file_path = path.join(TMC_FP, filename)
@@ -514,16 +513,17 @@ if __name__ == '__main__':
     if args.datadir:
         RAW_DATA_FP = os.path.join(args.datadir, 'raw')
         PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
+        STANDARDIZED_DATA_FP = os.path.join(args.datadir, 'standardized')
         ATR_FP = os.path.join(RAW_DATA_FP, 'volume', 'ATRs')
         TMC_FP = os.path.join(RAW_DATA_FP, 'volume', 'TMCs')
 
     if not os.path.exists(TMC_FP):
         print("No TMC directory, skipping...")
         sys.exit()
-    if not os.path.exists(ATR_FP):
+    if not os.path.exists(os.path.join(STANDARDIZED_DATA_FP, 'volume.json')):
         # At the moment this is true, but it probably can be skipped if
         # not available
-        print("TMC parsing needs ATRs for normalization, skipping...")
+        print("TMC parsing needs volume data for normalization, skipping...")
         sys.exit
 
     address_records = []
