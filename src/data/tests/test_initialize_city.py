@@ -1,10 +1,15 @@
+import os
+import py
 import initialize_city
+
 
 def test_initialize_city_brisbane():
 
+    tmpdir = py.path.local('/tmp')
+
     # Generate a test config for Brisbane
     initialize_city.make_config_file(
-        '/tmp/test_config_brisbane.yml',
+        tmpdir.join('/test_config_brisbane.yml'),
         'Brisbane, Australia',
         'brisbane',
         'test_crashes.csv',
@@ -60,7 +65,7 @@ time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
 weeks_back: 1"""
 
-    with open('/tmp/test_config_brisbane.yml', 'r') as test_file:
+    with open(tmpdir.join('/test_config_brisbane.yml'), 'r') as test_file:
         test_file_contents = test_file.read()
 
     assert test_file_contents == expected_file_contents
