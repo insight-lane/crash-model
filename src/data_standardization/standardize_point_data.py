@@ -15,6 +15,7 @@ def read_file_info(config):
 
     points = []
     for source_config in list(config['data_source']):
+        print("Processing {} data".format(source_config['name']))
         csv_file = source_config['filename']
         filepath = os.path.join(DATA_FP, 'raw', 'supplemental', csv_file)
         if not os.path.exists(filepath):
