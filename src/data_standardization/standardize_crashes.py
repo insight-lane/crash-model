@@ -12,7 +12,6 @@ from collections import OrderedDict
 from datetime import timedelta
 from jsonschema import validate
 import csv
-import datetime
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))

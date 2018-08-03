@@ -80,7 +80,7 @@ def process_data(filename, colname):
 
         # normalize predictions if specified
         if args.normalize:
-            print "Normalizing predictions..."
+            print("Normalizing predictions...")
             streets_w_risk[colname] = streets_w_risk[colname] / streets_w_risk[colname].max()
 
         return streets_w_risk
