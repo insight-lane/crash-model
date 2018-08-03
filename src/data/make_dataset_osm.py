@@ -68,12 +68,15 @@ if __name__ == '__main__':
 
     # Features drawn from open street maps
     # additional_features from config file can add on to
-    # But additional features are only added if you're using an extra map
+    # Additional features can be added if you're using an extra map
     # beyond open street map
     features = [
         'width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
         'intersection_segments', 'width_per_lane'
     ]
+    # Features can also be added if additional data sources are given
+    if 'data_source' in config and config['data_source']:
+        features += [x['name'] for x in config['data_source']]
 
     print("Generating maps for " + city + ' in ' + DATA_FP)
     if recreate:

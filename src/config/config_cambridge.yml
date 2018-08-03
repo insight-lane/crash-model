@@ -55,3 +55,5 @@ data_source:
     time: Issue Time
     category: Violation Description
     notes: 
+    # Feature can be categorical (f_cat) or continuous (f_cont)
+    feat: f_cont
