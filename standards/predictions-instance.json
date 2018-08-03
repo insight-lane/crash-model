@@ -1,21 +1,48 @@
 [
     {
-        "id": 1,
-        "segment_id": "001",
+        "id": 12432,
+        "segment": {
+            "id": "001",
+            "name": "Millstone Road between Prescott Street & Meadowview Road",
+            "osmEntities": [
+                {
+                    "id": "61375093",
+                    "type": "node",
+                    "latitude": 42.2339740,
+                    "longitude": -71.1343460
+                },
+                {
+                    "id": "61364096",
+                    "type": "node",
+                    "latitude": 42.2328250,
+                    "longitude": -71.1299130
+                }
+            ]
+        },
         "year": 2017,
         "week": 51,
         "value": 0.00041256207623519003
     },
     {
-        "id": 2,
-        "segment_id": "0010018",
-        "year": 2017,
-        "week": 51,
+        "id": 12434,
+        "segment": {
+            "id": "8651367",
+            "name": "Clifford Street",
+            "osmEntities": [
+                {
+                    "id": "61374799",
+                    "type": "node",
+                    "latitude": 42.2325360,
+                    "longitude": -71.1318540
+                },
+                {
+                    "id": "61513990",
+                    "type": "node",
+                    "latitude": 42.2364280,
+                    "longitude": -71.1300480
+                }
+            ]
+        },
         "value": 0.005088573321700096
-    },
-    {
-        "id": 3,
-        "segment_id": "0010026",
-        "value": 0.0005539870471693575
     }
 ]

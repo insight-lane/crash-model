@@ -12,9 +12,49 @@
                 "description": "Unique identifier of prediction",
                 "type": "number"
             },
-            "segment_id": {
-                "description": "Identifier of associated segment",
-                "type": "string"
+            "segment": {
+                "title": "Segment",
+                "description": "Segment being predicted on",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "Identifier of segment being predicted on",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Calculated name of segment",
+                        "type": "string"
+                    },
+                    "osmEntities": {
+                        "description": "OSM entities referenced by segment",
+                        "type": "array",
+                        "items": {
+                            "title": "OsmEntity",
+                            "description": "Defines the structure of an OSM entity",
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "description": "Identifier of entity, unique within entities of same type",
+                                    "type": "string"
+                                },
+                                "type": {
+                                    "description": "Type of entity",
+                                    "type": "string",
+                                    "enum": ["node", "relation", "way"]
+                                },
+                                "latitude": {
+                                    "description": "Latitude of entity if type is node",
+                                    "type": "number"
+                                },
+                                "longitude": {
+                                    "description": "Longitude of entity if type is node",
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": ["id", "name"]
             },
             "year": {
                 "description": "Year of prediction",
@@ -29,6 +69,6 @@
                 "type": "number"
             }
         },
-        "required": ["id", "segment_id", "value"]
+        "required": ["id", "segment", "value"]
     }
 }
