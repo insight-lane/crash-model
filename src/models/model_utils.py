@@ -31,3 +31,7 @@ def format_crash_data(data, col, target_week, target_year):
 
     return(week_data[['segment_id','target', 'pre_week',
                       'pre_month', 'pre_quarter', 'avg_week']])
+
+def format_pred_data(model_data, pred_data):
+    """ format in accordance with prediction data standard """
+    
