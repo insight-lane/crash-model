@@ -22,7 +22,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
 import folium
-from folium import FeatureGroup, Map, CircleMarker
+from folium import FeatureGroup, CircleMarker
 import argparse
 import os
 
