@@ -56,7 +56,7 @@
 
 	<script src="https://d3js.org/d3.v5.min.js"></script>
 	<!-- // <script src="js/make_plots.js"></script> -->
-	<!-- // <script src="js/update_map.js"></script> -->
+	<script src="js/update_map.js"></script>
 
 	<script>
 		var city = config.cities[0];
@@ -81,7 +81,7 @@
 		    placeholder: "Search for an address"
 		});
 
-		map.addControl(geocoder);  // TODO: implement proxomity bias
+		map.addControl(geocoder);
 
 		map.on('load', function() {
 		  	map.addLayer({
