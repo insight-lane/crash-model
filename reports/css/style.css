@@ -43,10 +43,6 @@ hr {
     padding: 1vw;
 }
 
-.visible {
-    visibility: visible;
-}
-
 .title {
     left: 0;
     width: 20vw;
@@ -56,6 +52,15 @@ hr {
     right: 0;
     width: 20vw;
     padding-top: 60px;
+    visibility: hidden;
+}
+
+.visible {
+    visibility: visible;
+}
+
+.btn {
+    cursor: pointer;
 }
 
 .legend {

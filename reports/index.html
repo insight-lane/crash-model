@@ -45,7 +45,7 @@
 		</div>
 	</div>
 
-	<div class="side overlay visible">
+	<div id="highest_risk" class="side overlay visible">
 		<!-- address search here -->
 		<hr>
 		<h2>Highest Risk Segments:</h2>
@@ -54,11 +54,24 @@
 		</ol>
 	</div>
 
+	<div id="segment_details" class="side overlay">
+		<div id="close_btn" class="btn">X</div>
+		<h2>Segment Name Here</h2>
+		<h4>Predicted Risk:</h4>
+		<h3>Factors Contributing to Risk</h3>
+		<h3>Estimated Impact of Interventions</h3>
+	</div>
+
 	<script src="https://d3js.org/d3.v5.min.js"></script>
 	<!-- // <script src="js/make_plots.js"></script> -->
 	<script src="js/update_map.js"></script>
 
 	<script>
+		$( '#close_btn' ).on('click', function() {
+			$( '#segment_details' ).removeClass('visible');
+			$( '#highest_risk' ).addClass('visible');
+		});
+
 		var city = config.cities[0];
 		var country = city.name.split(", ")[2];
 
@@ -130,18 +143,20 @@
 		// 		filter: ['all', ['==', 'week', 1]]
 		// 	}, 'admin-2-boundaries-dispute');
 
-		// 	// add popup for predictions
-		// 	map.on('click', 'predictions', function(e) {
-		// 		zoom into segment view
-		// 	});
+			// add popup for predictions
+			map.on('click', 'predictions', function(e) {
+				//zoom into segment view
+				$( '#segment_details' ).addClass('visible');
+				$( '#highest_risk' ).removeClass('visible');
+			});
 
-		// 	map.on('mouseenter', 'predictions', function () {
-		// 		map.getCanvas().style.cursor = 'pointer';
-		// 	});
+			map.on('mouseenter', 'predictions', function () {
+				map.getCanvas().style.cursor = 'pointer';
+			});
 
-		// 	map.on('mouseleave', 'predictions', function () {
-		// 		map.getCanvas().style.cursor = '';
-		// 	});
+			map.on('mouseleave', 'predictions', function () {
+				map.getCanvas().style.cursor = '';
+			});
 			updateGeocoderProximity();
 		});
 
