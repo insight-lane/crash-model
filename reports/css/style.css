@@ -2,6 +2,7 @@ body {
     font-family: 'Roboto', sans-serif;
     color: #fff;
     margin: 0px;
+    overflow: hidden;
 }
 
 h1 {
@@ -49,18 +50,32 @@ hr {
 }
 
 .side {
-    right: 0;
+    right: -25vw;
     width: 20vw;
     padding-top: 60px;
     visibility: hidden;
 }
 
+#segment_details {
+    width: 25vw;
+}
+
 .visible {
     visibility: visible;
+    transition: 0.5s;
+    right: 0;
+}
+
+.slide_right {
+    transition: 0.5s;
+    right: -25vw;
 }
 
 .btn {
     cursor: pointer;
+    position: absolute;
+    top: 60px;
+    right: 15px;
 }
 
 .legend {

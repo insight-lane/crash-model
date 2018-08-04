@@ -69,6 +69,7 @@
 	<script>
 		$( '#close_btn' ).on('click', function() {
 			$( '#segment_details' ).removeClass('visible');
+			$( '#segment_details' ).addClass('slide_right');
 			$( '#highest_risk' ).addClass('visible');
 		});
 
@@ -146,6 +147,7 @@
 			// add popup for predictions
 			map.on('click', 'predictions', function(e) {
 				//zoom into segment view
+				$( '#segment_details' ).removeClass('slide_right');
 				$( '#segment_details' ).addClass('visible');
 				$( '#highest_risk' ).removeClass('visible');
 			});
