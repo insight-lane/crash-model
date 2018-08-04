@@ -10,16 +10,18 @@ BASE_DIR = os.path.dirname(
 
 
 def make_config_file(yml_file, city, folder, crash, concern):
+    address = geocode_address(city)
+
     f = open(yml_file, 'w')
 
     f.write(
         "# City name\n" +
         "city: {}\n".format(city) +
-        "# City centerpoint latitude & longitude\n" +
-        "city_latitude: \n" +
-        "city_longitude: \n" +
-        "# Radius of city's road network from centerpoint in km (required if OSM has no polygon data)\n" +
-        "city_radius: \n" +
+        "# City centerpoint latitude & longitude (default geocoded values set)\n" +
+        "city_latitude: {}\n".format(address[1]) +
+        "city_longitude: {}\n".format(address[2]) +
+        "# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)\n" +
+        "city_radius: 20\n" +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n".format(folder) +
         "# If given, limit crashes to after start_year and before end_year\n" +
