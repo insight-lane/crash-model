@@ -146,10 +146,13 @@
 
 			// add popup for predictions
 			map.on('click', 'predictions', function(e) {
-				//zoom into segment view
+				// hide highest risk panel and slide in segment details panel
 				$( '#segment_details' ).removeClass('slide_right');
 				$( '#segment_details' ).addClass('visible');
 				$( '#highest_risk' ).removeClass('visible');
+
+				// zoom into clicked-on segment
+				zoomToFeature(e);
 			});
 
 			map.on('mouseenter', 'predictions', function () {
@@ -159,6 +162,7 @@
 			map.on('mouseleave', 'predictions', function () {
 				map.getCanvas().style.cursor = '';
 			});
+
 			updateGeocoderProximity();
 		});
 
@@ -182,6 +186,10 @@
 					return "us";
 					break;
 			}
+		}
+
+		function zoomToFeature(e) {
+			map.flyTo({center: e.lngLat, zoom: 16});
 		}
 	</script>
 
