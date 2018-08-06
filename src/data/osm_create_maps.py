@@ -259,7 +259,7 @@ def clean_ways(orig_file, DOC_FP):
 
         # round width
         width = 0
-        if ['width'] in list(way_line['properties'].keys()):
+        if 'width' in list(way_line['properties']):
             width = way_line['properties']['width']
             if not width or ';' in width or '[' in width:
                 width = 0
@@ -276,6 +276,11 @@ def clean_ways(orig_file, DOC_FP):
         if way_line['properties']['highway'] not in list(highway_keys.keys()):
             highway_keys[way_line['properties']['highway']] = len(highway_keys)
 
+        # Width per lane
+        width_per_lane = 0
+        if lanes and width:
+            width_per_lane = round(width/lanes)
+
         # Use oneway
         oneway = 0
         if way_line['properties']['oneway'] == 'True':
@@ -287,7 +292,8 @@ def clean_ways(orig_file, DOC_FP):
             'hwy_type': highway_keys[way_line['properties']['highway']],
             'osm_speed': speed,
             'signal': 0,
-            'oneway': oneway
+            'oneway': oneway,
+            'width_per_lane': width_per_lane
         })
         results.append(way_line)
 

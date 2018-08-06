@@ -71,7 +71,9 @@ if __name__ == '__main__':
     # But additional features are only added if you're using an extra map
     # beyond open street map
     features = [
-        'width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway']
+        'width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
+        'intersection_segments', 'width_per_lane'
+    ]
 
     print("Generating maps for " + city + ' in ' + DATA_FP)
     if recreate:
