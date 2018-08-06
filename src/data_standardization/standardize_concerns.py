@@ -3,12 +3,12 @@
 
 import argparse
 import dateutil.parser as date_parser
-import json
 import os
 import pandas as pd
 from collections import OrderedDict
 from datetime import datetime
-from jsonschema import validate
+from .standardization_util import validate_and_write_schema
+
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -122,12 +122,5 @@ for csv_file in os.listdir(raw_path):
 print("done, {} concerns loaded, validating against schema".format(len(concerns)))
 
 schema_path = os.path.join(BASE_FP, "standards/concerns-schema.json")
-with open(schema_path) as concerns_schema:
-    validate(concerns, json.load(concerns_schema))
-
 concerns_output = os.path.join(args.folder, "standardized/concerns.json")
-
-with open(concerns_output, "w") as f:
-    json.dump(concerns, f)
-
-print("output written to {}".format(concerns_output))
+validate_and_write_schema(schema_path, concerns, concerns_output)

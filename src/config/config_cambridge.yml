@@ -45,3 +45,13 @@ concern: seeclickfix
 # as is, will end up outputting predictions for all weeks up to this week
 # TODO: Make this more relevant for control
 time_target: [30, 2017]
+
+# Additional data sources
+data_source:
+  - name: parking_tickets
+    filename: Cambridge_Parking_Tickets.csv
+    address: Location
+    date: Ticket Issue Date
+    time: Issue Time
+    category: Violation Description
+    notes: 

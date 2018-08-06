@@ -23,7 +23,8 @@ BASE_DIR = os.path.dirname(
             os.path.abspath(__file__))))
 
 MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
-DATA_FP = os.path.join(BASE_DIR, 'data/processed')
+PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
+DATA_FP = None
 
 
 def get_intersection_buffers(intersections, intersection_buffer_units):
@@ -118,7 +119,8 @@ def find_non_ints(roads, int_buffers):
     return non_int_lines, inter_segments
 
 
-def add_point_based_features(non_inters, inters, feats_filename):
+def add_point_based_features(non_inters, inters, feats_filename=None,
+                             additional_feats_filename=None):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
@@ -129,8 +131,14 @@ def add_point_based_features(non_inters, inters, feats_filename):
         feats_filename - geojson file for point-based features data
     """
 
-    features = util.read_records_from_geojson(feats_filename)
-
+    features = []
+    if feats_filename:
+        features = util.read_records_from_geojson(feats_filename)
+        print('len of features:' + str(len(features)))
+    if additional_feats_filename:
+        features += util.read_records(
+            additional_feats_filename, 'record')
+        print('len of features:' + str(len(features)))
     seg, segments_index = util.index_segments(
         inters + non_inters
     )
@@ -142,28 +150,33 @@ def add_point_based_features(non_inters, inters, feats_filename):
     for feature in features:
         near = feature.near_id
         feat_type = feature.properties['feature']
+
         if near:
-            if str(near) not in list(matches.keys()):
-                matches[str(near)] = []
-            matches[str(near)].append(feat_type)
+            if str(near) not in matches:
+                matches[str(near)] = {}
+            if feat_type not in matches[str(near)]:
+                matches[str(near)][feat_type] = 0
+            matches[str(near)][feat_type] += 1
 
     # Add point data to intersections
     for i, inter in enumerate(inters):
         if str(inter['properties']['id']) in list(matches.keys()):
-            matched_features = set(matches[str(inter['properties']['id'])])
+            matched_features = matches[str(inter['properties']['id'])]
             # Since intersections consist of multiple segments, add the
             # point-based properties to each of them
+
             for prop in inter['properties']['data']:
                 for feat in matched_features:
-                    prop[feat] = 1
+                    prop[feat] = matched_features[feat]
 
     # Add point data to non-intersections
     for i, non_inter in enumerate(non_inters):
         if str(non_inter['properties']['id']) in list(matches.keys()):
-            matched_features = set(matches[non_inter['properties']['id']])
+            matched_features = matches[non_inter['properties']['id']]
+
             n = copy.deepcopy(non_inter)
             for feat in matched_features:
-                n[feat] = 1
+                n['properties'][feat] = matched_features[feat]
             non_inters[i] = n
 
     return non_inters, inters
@@ -322,12 +335,19 @@ def create_segments_from_json(roads_shp_path, mapfp):
             coords += [[x for x in line.coords]]
 
         name = get_intersection_name(inter_segments['data'][idx])
+        # Add the number of segments coming into this intersection
+        segment_data = []
+        for segment in list(inter_segments['data'][idx]):
+            segment['intersection_segments'] = len(
+                inter_segments['data'][idx])
+            segment_data.append(segment)
+
         properties = {
             'id': idx,
-            'data': inter_segments['data'][idx],
+            'data': segment_data,
             'display_name': name
         }
-
+        
         union_inter.append(geojson.Feature(
             geometry=geojson.MultiLineString(coords),
             id=idx,
@@ -389,12 +409,13 @@ if __name__ == '__main__':
                         "within the maps directory")
 
     args = parser.parse_args()
-    DATA_FP = os.path.join(args.datadir, 'processed')
+    DATA_FP = args.datadir
+    PROCESSED_DATA_FP = os.path.join(args.datadir, 'processed')
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
 
     if args.newmap:
-        DATA_FP = os.path.join(MAP_FP, args.newmap)
-        MAP_FP = DATA_FP
+        PROCESSED_DATA_FP = os.path.join(MAP_FP, args.newmap)
+        MAP_FP = PROCESSED_DATA_FP
 
     print("Creating segments..........................")
 
@@ -406,11 +427,18 @@ if __name__ == '__main__':
     non_inters, inters = create_segments_from_json(elements, MAP_FP)
 
     feats_file = os.path.join(MAP_FP, 'features.geojson')
-    if os.path.exists(feats_file):
+    additional_feats_file = os.path.join(
+        DATA_FP, 'standardized', 'points.json')
+    if not os.path.exists(feats_file):
+        feats_file = None
+    if not os.path.exists(additional_feats_file):
+        additional_feats_file = None
+    if feats_file or additional_feats_file:
         non_inters, inters = add_point_based_features(
             non_inters,
             inters,
-            os.path.join(MAP_FP, 'features.geojson')
+            feats_filename=feats_file,
+            additional_feats_filename=additional_feats_file
         )
-    write_segments(non_inters, inters, MAP_FP, DATA_FP)
+    write_segments(non_inters, inters, MAP_FP, PROCESSED_DATA_FP)
 
