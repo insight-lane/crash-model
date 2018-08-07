@@ -79,7 +79,7 @@ tmc_cols:
 # week on which to predict crashes (week, year)
 # as is, will end up outputting predictions for all weeks up to this week
 # TODO: Make this more relevant for control
-time_target: [15, 2017]
+time_target: [51, 2017]
 
 # continuous features
 f_cont:

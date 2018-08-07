@@ -34,8 +34,8 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-DATA_FP = BASE_DIR + '/data/processed/'
-MAP_FP = BASE_DIR + '/data/processed/maps/'
+DATA_FP = BASE_DIR + '/data/cambridge/processed/'
+MAP_FP = BASE_DIR + '/data/cambridge/processed/maps/'
 
 # parse arguments
 parser = argparse.ArgumentParser(description="Plot crash predictions on a map")
@@ -80,7 +80,7 @@ def process_data(filename, colname):
 
         # normalize predictions if specified
         if args.normalize:
-            print "Normalizing predictions..."
+            print("Normalizing predictions...")
             streets_w_risk[colname] = streets_w_risk[colname] / streets_w_risk[colname].max()
 
         return streets_w_risk
@@ -105,14 +105,7 @@ def add_layer(dataset, modelname, colname, mapname):
 
         
 # Read in shapefile as a GeoDataframe
-streets = gpd.read_file(MAP_FP + 'inter_and_non_int.shp')
-
-# Set the projection as EPSG:3857 since the shapefile didn't export with one
-streets.crs = {'init': 'epsg:3857'}
-
-# Then reproject to EPSG:4326 to match what Leaflet uses
-streets = streets.to_crs({'init': 'epsg:4326'})
-
+streets = gpd.read_file(MAP_FP + 'inter_and_non_int.geojson')
 
 ### Make map
 
@@ -121,7 +114,7 @@ boston_map = folium.Map([42.3601, -71.0589], tiles='Cartodb dark_matter', zoom_s
 folium.TileLayer('Cartodb Positron').add_to(boston_map)
 
 # Create style function to color segments based on their risk score
-color_scale = cm.linear.YlOrRd.scale(0, 1)
+color_scale = cm.linear.YlOrRd_09.scale(0, 1)
 #color_scale = cm.linear.YlOrRd.scale(streets_w_risk[args.colname].min(), 
 #                                     streets_w_risk[args.colname].max())
 
