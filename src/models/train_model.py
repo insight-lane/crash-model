@@ -307,7 +307,6 @@ if __name__ == '__main__':
 
     # output for manipulation by 
     data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
-    data_plus_pred.set_index(['segment_id', 'year', 'week'], inplace=True)
     data_plus_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
 
 
