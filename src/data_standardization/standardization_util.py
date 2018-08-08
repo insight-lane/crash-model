@@ -11,8 +11,14 @@ def parse_date(date, time=None):
     in standardized format
     """
 
-    # Date can either be a date or a date time
-    date = date_parser.parse(date)
+    # If date is badly formatted, skip
+    try:
+        # Date can either be a date or a date time
+        date = date_parser.parse(date)
+    except ValueError as _:
+        print("{} is badly formatted, skipping".format(date))
+        return None
+
     # If there's no time in the date given, look at the time field
     # if available
     if date.hour == 0 and date.minute == 0 and date.second == 0 \
