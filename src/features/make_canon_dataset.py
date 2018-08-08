@@ -138,6 +138,7 @@ def aggregate_roads(feats, datadir, concerns=[]):
             aggregated = aggregated.fillna(0)
 
     # All features as int
+    aggregated = aggregated.fillna(0)
     aggregated = aggregated.apply(lambda x: x.astype('int'))
 
     return aggregated, adjacent, cr_con

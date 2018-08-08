@@ -15,6 +15,7 @@ def read_file_info(config):
 
     points = []
     for source_config in list(config['data_source']):
+
         print("Processing {} data".format(source_config['name']))
         csv_file = source_config['filename']
         filepath = os.path.join(DATA_FP, 'raw', 'supplemental', csv_file)
@@ -34,10 +35,10 @@ def read_file_info(config):
 
                 time = None
                 if 'time' in source_config and source_config['time']:
-                    time = source_config['time']
+                    time = row[source_config['time']]
 
                 date_time = standardization_util.parse_date(
-                    row[source_config['date']], row[time])
+                    row[source_config['date']], time=time)
                 updated_row = OrderedDict([
                     ("feature", source_config["name"]),
                     ("date", date_time),

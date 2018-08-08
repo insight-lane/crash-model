@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(
         os.path.abspath(__file__)))
 
 
-def make_config_file(yml_file, city, folder, crash, concern):
+def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
     address = geocode_address(city)
 
     f = open(yml_file, 'w')
@@ -56,12 +56,28 @@ def make_config_file(yml_file, city, folder, crash, concern):
             "      longitude: \n" +
             "      time: \n\n\n"
         )
+    if supplemental:
+        f.write("# Additional data sources\n" +
+                "data_source:\n")
+
+        for filename in supplemental:
+            f.write(
+                "  - name: parking_tickets\n" +
+                "    filename: {}\n".format(filename) +
+                "    address: \n" +
+                "    date: \n" +
+                "    time: \n" +
+                "    category: \n" +
+                "    notes: \n" +
+                "    # Feature is categorical (f_cat) or continuous (f_cont)\n" +
+                "    feat: \n")
+        f.write("\n")
     f.write(
         "# week on which to predict crashes (week, year)\n" +
         "# Best practice is to choose a week towards the end of your crash data set\n" +
         "# in format [month, year]\n" +
         "time_target: [30, 2017]\n" +
-        "# specify how many weeks back to predict in output of train_model\n"+
+        "# specify how many weeks back to predict in output of train_model\n" +
         "weeks_back: 1"
     )
     f.close()
@@ -91,13 +107,16 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-city", "--city", type=str, required=True,
-                        help="city name")
+                        help="city name, e.g. 'Boston, Massachusetts, USA'")
     parser.add_argument("-f", "--folder", type=str, required=True,
-                        help="folder name")
+                        help="folder name, e.g. 'boston'")
     parser.add_argument('-crash', '--crash_file', type=str, required=True,
                         help="crash file path")
     parser.add_argument('-concern', '--concern_file', type=str,
                         help="concern file path")
+    parser.add_argument('-supplemental', '--supplemental', type=str,
+                        help="additional point-based feature files" +
+                        "comma separated")
 
     args = parser.parse_args()
 
@@ -106,6 +125,8 @@ if __name__ == '__main__':
     crash = args.crash_file.split('/')[-1]
     crash_dir = os.path.join(DATA_FP, 'raw', 'crashes')
     concern = None
+    supplemental_paths = []
+    supplemental_files = []
     if args.concern_file:
         concern = args.concern_file.split('/')[-1]
 
@@ -126,13 +147,23 @@ if __name__ == '__main__':
             shutil.copyfile(args.concern_file, os.path.join(
                 concern_dir, concern))
 
+        if args.supplemental:
+            supplemental_paths = args.supplemental.split(',')
+            os.makedirs(os.path.join(DATA_FP, 'raw', 'supplemental'))
+            for point_file in supplemental_paths:
+                filename = point_file.split('/')[-1]
+                supplemental_files.append(filename)
+
+                shutil.copyfile(point_file, os.path.join(
+                    DATA_FP, 'raw', 'supplemental', filename))
     else:
         print(args.folder + " already initialized, skipping")
 
     yml_file = os.path.join(
         BASE_DIR, 'src/config/config_' + args.folder + '.yml')
     if not os.path.exists(yml_file):
-        make_config_file(yml_file, args.city, args.folder, crash, concern)
+        make_config_file(yml_file, args.city, args.folder, crash, concern,
+                         supplemental_files)
 
     js_file = os.path.join(
         BASE_DIR, 'reports/config.js')
