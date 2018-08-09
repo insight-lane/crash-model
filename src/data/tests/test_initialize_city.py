@@ -1,10 +1,13 @@
-import os
 import py
 import initialize_city
 
 
-def test_initialize_city_brisbane():
+def test_initialize_city_brisbane(monkeypatch):
 
+    def mockreturn(address):
+        return "Brisbane, Australia", -27.4697707, 153.0251235, 'S'
+
+    monkeypatch.setattr(initialize_city, 'geocode_address', mockreturn)
     tmpdir = py.path.local('/tmp')
 
     # Generate a test config for Brisbane
