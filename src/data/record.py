@@ -60,10 +60,6 @@ class Concern(Record):
     def __init__(self, properties):
         Record.__init__(self, properties)
 
-        # Leaving these out pending ascii encoding on transformation side
-        self.properties['category'] = ''
-        self.properties['summary'] = ''
-
     @property
     def timestamp(self):
         return parse(self.properties['dateCreated'])

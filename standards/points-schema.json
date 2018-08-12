@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "title": "Concerns",
+    "description": "Defines the structure of a set of point-based features",
+    "type": "array",
+    "items": {
+        "title": "Point Feature",
+        "description": "Defines the structure of a point-based feature",
+        "type": "object",
+        "properties": {
+            "feature": {
+                "description": "Type of feature, e.g. traffic tickets",
+                "type": "string"
+            },
+            "date": {
+                "description": "Date for feature, ISO8601 formatted",
+                "type": "string",
+                "format": "date-time"
+            },
+            "category": {
+                "description": "Category of entry",
+                "type": "string"
+            },
+            "notes": {
+                "description": "Notes for entry",
+                "type": "string"
+            },
+            "location": {
+                "description": "Coordinates of concern, WGS84 formatted",
+                "type": "object",
+                "properties": {
+                    "latitude": {
+                        "description": "Latitude of entry",
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "description": "Longitude of entry",
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "required": ["feature", "location"]
+    }
+}
