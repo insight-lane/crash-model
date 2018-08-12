@@ -54,11 +54,10 @@ if __name__ == "__main__":
     print("loading predictions: ", end="")
     predictions = pd.read_json(
         predictions_file, orient="index", typ="series", dtype=False)
-    # predictions = predictions_data.to_dict()
     print("{} found".format(len(predictions)))
 
     print("matching predictions with segments")
-    merged_predictions = []
+    assembled_preds = []
     for pred_id, pred_data in predictions.items():
         for segment in segments:
             # find the matching segment and merge in relevant properties
@@ -66,17 +65,27 @@ if __name__ == "__main__":
                 pred_data["segment"] = {
                     "id": segment["id"],
                     "display_name": segment["properties"]["display_name"],
-                    "geometry": segment["geometry"]
+                    # "geometry": segment["geometry"]
                 }
 
-                merged_predictions.append(pred_data)
+                assembled_preds.append({
+                    "type": "Feature",
+                    "properties": pred_data,
+                    "geometry": segment["geometry"]
+                })
                 break
+    
+    # add the assembled predictions into a geoJSON-comaptible structure
+    geo_assembled_preds = {
+        "type": "FeatureCollection",
+        "features": assembled_preds
+    }
 
-    merged_predictions_file = os.path.join(
-        BASE_FP, args.folder, "processed/merged_predictions.json")
+    geo_assembled_preds_file = os.path.join(
+        BASE_FP, args.folder, "processed/assembled_preds.json")
 
-    with open(merged_predictions_file, "w") as f:
-        json.dump(merged_predictions, f)
+    with open(geo_assembled_preds_file, "w") as f:
+        json.dump(geo_assembled_preds, f)
 
-    print("wrote {} merged predictions to file {}".format(
-        len(merged_predictions), merged_predictions_file))
+    print("wrote {} assembled predictions to file {}".format(
+        len(assembled_preds), geo_assembled_preds_file))
