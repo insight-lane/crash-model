@@ -10,7 +10,7 @@ The data for our pilot cities, Boston, Cambridge, and DC have already been gener
 
 All of the python data generation scripts should be run from the src directory (boston-crash-modeling/src/) using the following scheme: `python -m <import path> <args>`.
 
-The simplest way to run the data generation scripts is `python -m data.make_dataset_osm -c <config file> -d <data directory>`.  This will run each data generation script with the configuration arguments you provide in a .yml file.  There are version controlled configuration files for our demo cities, e.g. src/config/config_boston.yml.  The data directory is where you store your raw crash data.  Typically this is in a data in the top level directory, and the directory stucture looks like this:
+The simplest way to run the data generation scripts is `python -m data.make_dataset -c <config file> -d <data directory>`.  This will run each data generation script with the configuration arguments you provide in a .yml file.  There are version controlled configuration files for our demo cities, e.g. src/config/config_boston.yml.  The data directory is where you store your raw crash data.  Typically this is in a data in the top level directory, and the directory stucture looks like this:
 
     ├── data
     │   ├── boston
@@ -61,7 +61,7 @@ You can alternatively run each of the data generation scripts individually.  Eac
 
 Since Boston was our pilot city, we generate additional features from maps they provided (in addition to the ones we pull from open street map).  Theoretically you can add maps from other cities, but right now we only guarantee support for Boston's additional maps.  If you're not interested in Boston, or in adding additional maps, no need to read this section.
 
-#### To add city-specific map features using the make_dataset_osm script, you add the following arguments to the configuration file:
+#### To add city-specific map features using the make_dataset script, you add the following arguments to the configuration file:
 - extra_map: A map in 4326 projection (for Boston, this is Boston\_Segments.shp : Boston routable road segments [link](http://bostonopendata-boston.opendata.arcgis.com/datasets/cfd1740c2e4b49389f47a9ce2dd236cc_8)
 - extra_map3857: A map in 3857 projection (for Boston, this is ma_cob_spatially_joined_streets.shp with Mass DOT road feature information [link](https://data.world/data4democracy/boston-crash-model) (ask coordinator for invite)
 - additional_features: a list of strings that are features you want to grab from extra_map3857 (for Boston, these are AADT SPEEDLIMIT Struct_Cnd Surface_Tp F_F_Class)
@@ -119,7 +119,7 @@ To add Boston's specific data to the boston model, we need to find the intersect
 - We only process TMCs for Boston at this time
 
 ### 7) Make canonical dataset
-- This script lives in src/features, but can be run using make_dataset_osm
+- This script lives in src/features, but can be run using make_dataset
 - Reads in crash/concern data
 - Aggregates crash/concern (default by week)
 - Reads in road features for intersections and non-intersections
