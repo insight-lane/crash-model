@@ -326,7 +326,6 @@ def create_segments_from_json(roads_shp_path, mapfp):
                               outproj='epsg:4326')[0]['coordinates']
         value['properties']['center_y'] = y
         value['properties']['center_x'] = x
-        import ipdb; ipdb.set_trace()
 
     print("extracted {} non-intersection segments".format(len(non_int_w_ids)))
 
