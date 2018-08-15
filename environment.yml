@@ -22,6 +22,7 @@ dependencies:
 - osmnx
 # Weird conda packaging bug, will want to revisit version of pandas later
 - pandas=0.22
+- pylint
 - pyproj
 - pytest
 - python=3.6

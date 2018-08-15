@@ -55,14 +55,14 @@ def summary_concern_counts(crashes, concerns):
     non_inter_loc = 0
 
     total_concerns = 0
-    for id, d in concerns.items():
+    for seg_id, d in concerns.items():
         total_concerns += d['count']
         if d['count'] not in list(matching.keys()):
             matching[d['count']] = {
                 'inter': {'crash': 0, 'no_crash': 0},
                 'non_inter': {'crash': 0, 'no_crash': 0}
             }
-        if is_inter(id):
+        if is_inter(seg_id):
             key = 'inter'
             inter_total += d['count']
             inter_loc += 1
@@ -71,7 +71,7 @@ def summary_concern_counts(crashes, concerns):
             non_inter_total += d['count']
             non_inter_loc += 1
 
-        if id in list(crashes.keys()):
+        if seg_id in list(crashes.keys()):
             matching[d['count']][key]['crash'] += 1
         else:
             matching[d['count']][key]['no_crash'] += 1
@@ -207,7 +207,7 @@ def concern_percentages_by_type(
         requests, cutoff=100):
 
     results = []
-    for k, v in requests.items():
+    for k in requests:
         if requests[k]['total'] >= cutoff:
             total_percent = round(100 * float(
                 requests[k]['crashes'])/float(requests[k]['total']))
@@ -242,8 +242,9 @@ def get_analysis_for_city(
         category_field='REQUESTTYPE', years=None,
         cutoff=100):
     
-    crash_data, crashes = util.group_json_by_location(
+    crash_info = util.group_json_by_location(
         crash_file, years=years, yearfield='CALENDAR_DATE')
+    crashes = crash_info[1]
 
     concern_data, concerns = util.group_json_by_location(
         concern_file,
@@ -251,8 +252,7 @@ def get_analysis_for_city(
 
     total_crashes, crash_locations, results = summary_crash_rate(crashes)
 
-    total_count, total_loc, inter_total, inter_loc, non_inter_total, \
-        non_inter_loc, concern_summary = summary_concern_counts(
+    _, _, _, _, _, _, concern_summary = summary_concern_counts(
             crashes, concerns)
 
     concern_percent = concern_percentages(concern_summary)
