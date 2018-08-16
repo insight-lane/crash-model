@@ -97,7 +97,7 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
     subprocess.check_call([
         'python',
         '-m',
-        'data.make_dataset_osm',
+        'data.make_dataset',
         '-c',
         config_file,
         '-d',
