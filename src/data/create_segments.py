@@ -16,7 +16,7 @@ import os
 import geojson
 import fiona
 import re
-from shapely.geometry import LineString, MultiLineString
+
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
