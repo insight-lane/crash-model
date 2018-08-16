@@ -47,12 +47,15 @@ def find_osm_polygon(city):
     return None, None
 
 
-def expand_polygon(polygon):
+def expand_polygon(polygon, points_file, max_percent=.1):
     """
     Read the crash data, determine what proportion of crashes fall outside
     the city polygon
     Args:
-        City polygon
+        polygon - city polygon
+        points_file - json points file
+        Optional: max_percent (in case you want to override the maximum
+            percent that can be outside the original polygon to buffer)
     Returns:
         Updated polygon if it was a polygon to start with, None otherwise
     """
@@ -60,21 +63,21 @@ def expand_polygon(polygon):
     # Right now, only support this for polygons
     if polygon['type'] != 'Polygon':
         return None
+
     polygon_coords = [util.get_reproject_point(
         x[1], x[0], coords=True) for x in polygon['coordinates'][0]]
 
     poly_shape = Polygon(polygon_coords)
 
-    records = util.read_records(
-        os.path.join(STANDARDIZED_FP, 'crashes.json'),
-        'crash')
+    records = util.read_records(points_file, 'crash')
 
     outside = []
     for record in records:
         if not poly_shape.contains(record.point):
             outside.append(record.point)
     outside_rate = len(outside)/len(records)
-    if outside_rate > .01 and outside_rate < 10:
+
+    if outside_rate > .01 and outside_rate < max_percent:
         print("{}% of crashes fell outside the city polygon".format(
             int(round(outside_rate, 2)*100)
         ))
@@ -88,9 +91,10 @@ def expand_polygon(polygon):
             outproj='epsg:4326',
             coords=True
         ) for x in poly_shape.exterior.coords]
-        poly_shape = Polygon(coords)
+        updated_poly_shape = Polygon(coords)
 
-        return poly_shape
+        return updated_poly_shape
+
     # If almost no points fall outside the polygon, no need to buffer,
     # and if a large proportion of points fall outside the polygon,
     # the crash data might be for a larger area than just the city
@@ -104,6 +108,8 @@ def buffer_polygon(polygon, points):
     Args:
         polygon - shapely polygon
         points - list of shapely points
+    Returns:
+        new polygon with buffered points added
     """
     not_close = []
     add_buffers = []
@@ -154,7 +160,8 @@ def simple_get_roads(config):
 
     if (polygon_pos is not None):
         # Check to see if polygon needs to be expanded to include other points
-        polygon = expand_polygon(polygon)
+        polygon = expand_polygon(polygon, os.path.join(
+            STANDARDIZED_FP, 'crashes.json'))
         if not polygon:
             print("city polygon found in OpenStreetMaps at position " +
                   str(polygon_pos) + ", building graph of roads within " +
@@ -162,6 +169,7 @@ def simple_get_roads(config):
             G1 = ox.graph_from_place(config['city'], network_type='drive',
                                      simplify=False, which_result=polygon_pos)
         else:
+            print("using buffered city polygon")
             G1 = ox.graph_from_polygon(polygon, network_type='drive',
                                        simplify=False)
     else:
