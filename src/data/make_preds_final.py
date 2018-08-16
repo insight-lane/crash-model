@@ -1,16 +1,16 @@
 """
-Title: assemble_predictions.py
+Title: make_preds_final.py
 
 Author: terryf82 https://github.com/terryf82
 
-Merge predictions with relevant segment data for visualization.
+Merge predictions with relevant segment data for use by visualization.
 
 Inputs:
-    seg_with_predicted.csv (predictions)
+    seg_with_predicted.json (predictions)
     inter_and_non_int.geojson (segments)
 
 Output:
-    assembled_predictions.json
+    preds_final.json
 """
 
 import argparse
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     print("{} found".format(len(predictions)))
 
     print("matching predictions with segments")
-    assembled_preds = []
+    preds_final = []
     for pred_id, pred_data in predictions.items():
         for segment in segments:
             # find the matching segment and merge in relevant properties
@@ -68,24 +68,24 @@ if __name__ == "__main__":
                     # "geometry": segment["geometry"]
                 }
 
-                assembled_preds.append({
+                preds_final.append({
                     "type": "Feature",
                     "properties": pred_data,
                     "geometry": segment["geometry"]
                 })
                 break
-    
+
     # add the assembled predictions into a geoJSON-comaptible structure
-    geo_assembled_preds = {
+    geo_preds_final = {
         "type": "FeatureCollection",
-        "features": assembled_preds
+        "features": preds_final
     }
 
-    geo_assembled_preds_file = os.path.join(
-        BASE_FP, args.folder, "processed/assembled_preds.json")
+    geo_preds_final_file = os.path.join(
+        BASE_FP, args.folder, "processed/preds_final.json")
 
-    with open(geo_assembled_preds_file, "w") as f:
-        json.dump(geo_assembled_preds, f)
+    with open(geo_preds_final_file, "w") as f:
+        json.dump(geo_preds_final, f)
 
     print("wrote {} assembled predictions to file {}".format(
-        len(assembled_preds), geo_assembled_preds_file))
+        len(preds_final), geo_preds_final_file))
