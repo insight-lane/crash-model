@@ -5,7 +5,6 @@ import rtree
 import geocoder
 from time import sleep
 from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
-import openpyxl
 from matplotlib import pyplot
 import os
 from os.path import exists as path_exists
@@ -657,7 +656,7 @@ def make_schema(geometry, properties):
     return(schema)
 
 
-def is_inter(id):
-    if len(str(id)) > 1 and str(id)[0:2] == '00':
+def is_inter(seg_id):
+    if len(str(seg_id)) > 1 and str(seg_id)[0:2] == '00':
         return False
     return True
