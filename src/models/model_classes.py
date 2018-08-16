@@ -7,9 +7,8 @@ import xgboost as xgb
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import metrics
-from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold, GroupKFold, GroupShuffleSplit
+from sklearn.model_selection import RandomizedSearchCV, KFold, GroupShuffleSplit
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.preprocessing import StandardScaler
 
 class Indata():
     scoring = None
@@ -275,10 +274,10 @@ class Tester():
         if model_params:
             pass
         elif model not in self.rundict:
-            preds, probs = self.predsprobs(model, self.data.test_x[features])
+            _, probs = self.predsprobs(model, self.data.test_x[features])
         else:
             model_params = self.rundict[model]
-            preds, probs = self.predsprobs(model_params['m_fit'],
+            _, probs = self.predsprobs(model_params['m_fit'],
                 self.data.test_x[model_params['features']])
         risk_df = pd.DataFrame(
             {'probs':probs, 'target':self.data.test_y})
@@ -287,7 +286,7 @@ class Tester():
         if verbose:
             print(risk_df.probs.describe())
             print(risk_mean)
-        fig, axes = plt.subplots(1, 2)
+        _, axes = plt.subplots(1, 2)
         self.lift_chart('categories', 'target', risk_df, 
                    ax=axes[1])
         self.density(risk_df, 'probs', ax=axes[0])
