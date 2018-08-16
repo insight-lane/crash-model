@@ -9,7 +9,9 @@ install:
 - source activate crash-model
 
 script:
-- cd src && py.test --cov=./
+- cd src
+- pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py
+- py.test --cov=./
 
 after_success:
 - codecov

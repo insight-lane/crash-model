@@ -1,24 +1,12 @@
 # Training code for D4D Boston Crash Model project
 # Developed by: bpben
 
-import re
-import csv
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import scipy.stats as ss
-import json
-from glob import glob
 from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import StandardScaler
-from datetime import datetime
-from scipy.stats import describe
-from .model_utils import *
-from .model_classes import *
 import os
 import argparse
-import random
-import pickle
 import yaml
 
 # all model outputs must be stored in the "data/processed/" directory
@@ -33,10 +21,10 @@ def predict_forward(split_week, split_year, seg_data, crash_data):
     test_crash_segs = test_crash.merge(seg_data, left_on='segment_id', right_on='segment_id')
     preds = trained_model.predict_proba(test_crash_segs[best_model_features])[::,1]
     try: 
-    	perf = roc_auc_score(test_crash_segs['target'], preds)
-    except ValueError as e:
-    	print('Only one class present, likely no crashes in the week')
-    	perf = 0
+        perf = roc_auc_score(test_crash_segs['target'], preds)
+    except ValueError:
+        print('Only one class present, likely no crashes in the week')
+        perf = 0
     print(('Week {0}, year {1}, perf {2}'.format(split_week, split_year, perf)))
     if perf<=perf_cutoff:
         print(('Model performs below AUC %s, may not be usable' % perf_cutoff))

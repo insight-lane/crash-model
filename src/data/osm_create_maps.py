@@ -118,11 +118,11 @@ def simple_get_roads(config):
     # Copy and remove temp directory
     tempdir = os.path.join(MAP_FP, 'temp')
     for filename in os.listdir(os.path.join(tempdir, 'edges')):
-        name, extension = filename.split('.')
+        _, extension = filename.split('.')
         shutil.move(os.path.join(tempdir, 'edges', filename),
                     os.path.join(MAP_FP, 'osm_ways.' + extension))
     for filename in os.listdir(os.path.join(tempdir, 'nodes')):
-        name, extension = filename.split('.')
+        _, extension = filename.split('.')
         shutil.move(os.path.join(tempdir, 'nodes', filename),
                     os.path.join(MAP_FP, 'osm_nodes.' + extension))
     shutil.rmtree(tempdir)

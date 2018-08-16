@@ -1,7 +1,6 @@
 import argparse
 import os
 import shutil
-import sys
 from data.util import geocode_address
 
 BASE_DIR = os.path.dirname(
