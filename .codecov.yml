@@ -5,11 +5,11 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "39...100"
+  range: "38...100"
 
   status:
     project: yes
-    patch: yes
+    patch: no
     changes: no
 
 parsers:
