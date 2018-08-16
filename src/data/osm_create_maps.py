@@ -91,9 +91,9 @@ def expand_polygon(polygon, points_file, max_percent=.1):
             outproj='epsg:4326',
             coords=True
         ) for x in poly_shape.exterior.coords]
-        updated_poly_shape = Polygon(coords)
+        poly_shape = Polygon(coords)
 
-        return updated_poly_shape
+        return poly_shape
 
     # If almost no points fall outside the polygon, no need to buffer,
     # and if a large proportion of points fall outside the polygon,
