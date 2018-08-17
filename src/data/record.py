@@ -1,6 +1,4 @@
 from . import util
-import pyproj
-from shapely.geometry import Point
 from dateutil.parser import parse
 
 
@@ -9,7 +7,9 @@ class Record(object):
 
     def __init__(self, properties):
 
-        self.point = self._get_reproject_point(properties['location'])
+        self.point = util.get_reproject_point(
+            properties['location']['latitude'],
+            properties['location']['longitude'])
         self.properties = properties
 
     @property
@@ -25,16 +25,6 @@ class Record(object):
         self.properties['near_id'] = near_id
     
     near_id = property(_get_near_id, _set_near_id)
-
-    def _get_reproject_point(self, location):
-        """
-        Turn a 4326 projection into 3857
-        """
-        lon, lat = pyproj.transform(
-            pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'),
-            location['longitude'], location['latitude']
-        )
-        return Point(float(lon), float(lat))
 
     @property
     def timestamp(self):

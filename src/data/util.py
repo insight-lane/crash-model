@@ -257,6 +257,28 @@ def read_record(record, x, y, orig=None, new=PROJ):
     return(r_dict)
 
 
+def get_reproject_point(lat, lon, inproj='epsg:4326',
+                        outproj='epsg:3857',
+                        coords=False):
+    """
+    Turn a point in one projection into another
+    Default is to convert from 4326 to 3857
+    Args:
+        lat
+        long
+    Returns:
+        A point in the specified projection
+    """
+    lon, lat = pyproj.transform(
+        pyproj.Proj(init=inproj), pyproj.Proj(init=outproj),
+        lon, lat
+    )
+    if coords:
+        return float(lon), float(lat)
+    else:
+        return Point(float(lon), float(lat))
+
+
 def raw_to_record_list(raw, orig, x='X', y='Y'):
     """
     Takes a list of dicts, and reprojects it into a list of records
