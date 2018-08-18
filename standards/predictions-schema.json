@@ -2,15 +2,31 @@
     "$schema": "http://json-schema.org/draft-06/schema#",
     "title": "Predictions",
     "description": "Defines the structure of a set of predictions",
-    "type": "array",
-    "items": {
+    "type": "object",
+    "features": {
         "title": "Prediction",
         "description": "Defines the structure of a prediction",
-        "type": "object",
+        "type": "array",
         "properties": {
             "id": {
                 "description": "Unique identifier of prediction",
+                "type": "string"
+            },
+            "year": {
+                "description": "Year of prediction",
                 "type": "number"
+            },
+            "week": {
+                "description": "Week of prediction",
+                "type": "number"
+            },
+            "prediction": {
+                "description": "Value of prediction",
+                "type": "number"
+            },
+            "happy_score": {
+              "description": "how happy are you",
+              "type": "number"
             },
             "segment": {
                 "title": "Segment",
@@ -21,54 +37,19 @@
                         "description": "Identifier of segment being predicted on",
                         "type": "string"
                     },
-                    "name": {
-                        "description": "Calculated name of segment",
+                    "display_name": {
+                        "description": "Display name of segment",
                         "type": "string"
-                    },
-                    "osmEntities": {
-                        "description": "OSM entities referenced by segment",
-                        "type": "array",
-                        "items": {
-                            "title": "OsmEntity",
-                            "description": "Defines the structure of an OSM entity",
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "description": "Identifier of entity, unique within entities of same type",
-                                    "type": "string"
-                                },
-                                "type": {
-                                    "description": "Type of entity",
-                                    "type": "string",
-                                    "enum": ["node", "relation", "way"]
-                                },
-                                "latitude": {
-                                    "description": "Latitude of entity if type is node",
-                                    "type": "number"
-                                },
-                                "longitude": {
-                                    "description": "Longitude of entity if type is node",
-                                    "type": "number"
-                                }
-                            }
-                        }
                     }
                 },
-                "required": ["id", "name"]
+                "required": ["id", "display_name", "happy_score"]
             },
-            "year": {
-                "description": "Year of prediction",
-                "type": "number"
-            },
-            "week": {
-                "description": "Week of prediction",
-                "type": "number"
-            },
-            "value": {
-                "description": "Value of prediction",
-                "type": "number"
+            "geometry": {
+              "title": "Geometry",
+              "description": "Segment geometry data in GeoJSON format",
+              "type": "object"
             }
         },
-        "required": ["id", "segment", "value"]
+        "required": ["id", "prediction", "segment", "geometry"]
     }
 }
