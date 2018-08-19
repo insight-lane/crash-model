@@ -75,7 +75,14 @@ def set_defaults(config={}):
     if 'f_cont' not in list(config.keys()):
         config['f_cont'] = ['width']
     if 'f_cat' not in list(config.keys()):
-        config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway']
+        config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway',
+                           'signal']
+
+    # Add features for additional data sources
+    if 'data_source' in config and config['data_source']:
+        for source in config['data_source']:
+            config[source['feat']].append(source['name'])
+
     if 'process' not in list(config.keys()):
         config['process'] = True
     if 'time_target' not in list(config.keys()):
