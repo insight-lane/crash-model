@@ -60,13 +60,9 @@ if __name__ == "__main__":
     preds_final = []
     for pred_id, pred_data in predictions.items():
         for segment in segments:
-            # find the matching segment and merge in relevant properties
+            # find the matching segment to obtain the display name
             if pred_data["segment_id"] == segment["id"]:
-                pred_data["segment"] = {
-                    "id": segment["id"],
-                    "display_name": segment["properties"]["display_name"],
-                    # "geometry": segment["geometry"]
-                }
+                pred_data["segment_display_name"] = segment["properties"]["display_name"]
 
                 preds_final.append({
                     "type": "Feature",
