@@ -15,6 +15,8 @@ def test_parse_date():
     assert standardization_util.parse_date('01/08/2009', time='75180') \
         == '2009-01-08T20:53:00Z'
 
+    assert standardization_util.parse_date('01/08/2009 unk') \
+        is None
 
 def test_parse_address():
 

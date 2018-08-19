@@ -5,7 +5,7 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "38...100"
+  range: "39...100"
 
   status:
     project: yes
