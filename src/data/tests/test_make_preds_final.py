@@ -1,5 +1,4 @@
-from jsonschema import validate
-import json
+import geojson
 import os
 import subprocess
 import shutil
@@ -27,9 +26,7 @@ def test_make_preds_final_boston(tmpdir):
     ])
 
     with open(tmpdir_data_path + "/processed/preds_final.json") as f:
-        test_preds_final = json.load(f)
+        test_preds_final = geojson.load(f)
 
-    # verify schema of output file generated
-    validate(test_preds_final, json.load(open(
-        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-                     "standards", "predictions-schema.json"))))
+    # verify the predictions are valid geojson
+    assert (test_preds_final.is_valid)
