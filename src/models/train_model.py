@@ -1,24 +1,12 @@
 # Training code for D4D Boston Crash Model project
 # Developed by: bpben
 
-import re
-import csv
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import scipy.stats as ss
-import json
-from glob import glob
 from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import StandardScaler
-from datetime import datetime
-from scipy.stats import describe
-from .model_utils import *
-from .model_classes import *
 import os
 import argparse
-import random
-import pickle
 import yaml
 
 # all model outputs must be stored in the "data/processed/" directory
@@ -33,10 +21,10 @@ def predict_forward(split_week, split_year, seg_data, crash_data):
     test_crash_segs = test_crash.merge(seg_data, left_on='segment_id', right_on='segment_id')
     preds = trained_model.predict_proba(test_crash_segs[best_model_features])[::,1]
     try: 
-    	perf = roc_auc_score(test_crash_segs['target'], preds)
-    except ValueError as e:
-    	print('Only one class present, likely no crashes in the week')
-    	perf = 0
+        perf = roc_auc_score(test_crash_segs['target'], preds)
+    except ValueError:
+        print('Only one class present, likely no crashes in the week')
+        perf = 0
     print(('Week {0}, year {1}, perf {2}'.format(split_week, split_year, perf)))
     if perf<=perf_cutoff:
         print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
@@ -93,9 +81,11 @@ def set_defaults(config={}):
     if 'time_target' not in list(config.keys()):
         config['time_target'] = [15, 2017]
     if 'weeks_back' not in list(config.keys()):
-    	config['weeks_back'] = 1
+        config['weeks_back'] = 1
     if 'name' not in list(config.keys()):
         config['name'] = 'boston'
+    if 'level' not in list(config.keys()):
+        config['level']  = 'week'
 
 
 if __name__ == '__main__':
@@ -151,21 +141,23 @@ if __name__ == '__main__':
     # Read in data
     data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
     data.sort_values(['segment_id', 'year', 'week'], inplace=True)
-    # get segments with non-zero crashes
-    data_nonzero = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
-    data_nonzero.reset_index(inplace=True)
+    if config['level'] == 'week':
+        # get segments with non-zero crashes
+        # this is necessary to constrain the problem for weekly predictions
+        data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
+        data.reset_index(inplace=True)
 
     # segment chars
     # Dropping continuous features that don't exist
     new_feats = []
     for f in f_cont:
-        if f not in data_nonzero.columns.values:
+        if f not in data.columns.values:
             print("Feature " + f + " not found, skipping")
         else:
             new_feats.append(f)
     f_cont = new_feats
 
-    data_segs = data_nonzero.groupby('segment_id')[f_cont+f_cat].max()  # grab the highest values from each column
+    data_segs = data.groupby('segment_id')[f_cont+f_cat].max()  # grab the highest values from each column
     data_segs.reset_index(inplace=True)
 
     # create featureset holder
@@ -203,7 +195,7 @@ if __name__ == '__main__':
 
     # add crash data
     # create lagged crash values
-    crash_lags = format_crash_data(data_nonzero, 'crash', week, year)
+    crash_lags = format_crash_data(data, 'crash', week, year)
 
     # add to features
     crash_cols = ['pre_week','pre_month','pre_quarter','avg_week']
@@ -238,11 +230,7 @@ if __name__ == '__main__':
     print("full features:{}".format(features))
 
     #Initialize data
-    try: 
-    	df = Indata(data_model, 'target')
-    except AssertionError:
-    	print('Target has only one class, likely there are no crashes in that week')
-    	raise
+    df = Indata(data_model, 'target')
     #Create train/test split
     df.tr_te_split(.7)
 
@@ -255,11 +243,14 @@ if __name__ == '__main__':
 
     #Initialize tuner
     tune = Tuner(df)
-    #Base XG model
-    tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
-    #Base LR model
-    tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
-
+    try: 
+        #Base XG model
+        tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
+        #Base LR model
+        tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
+    except ValueError:
+        print('CV fails, likely very few of target available, try rerunning at segment-level')
+        raise
     # Run test
     test = Tester(df)
     test.init_tuned(tune)
@@ -285,11 +276,11 @@ if __name__ == '__main__':
     tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
     # predict back number of weeks according to config
-    all_weeks = data_nonzero[['year','week']].drop_duplicates().sort_values(['year','week']).values
+    all_weeks = data[['year','week']].drop_duplicates().sort_values(['year','week']).values
     back_weeks = all_weeks[-config['weeks_back']:]
     pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
     for i, yw in enumerate(back_weeks):
-        preds = predict_forward(yw[1], yw[0], data_segs, data_nonzero)
+        preds = predict_forward(yw[1], yw[0], data_segs, data)
         pred_weeks[i] = preds
 
     # create dataframe with segment-year-week index
@@ -301,3 +292,9 @@ if __name__ == '__main__':
     df_pred = df_pred.reset_index()
     df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
     df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
+
+    # output for manipulation by 
+    data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
+    data_plus_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+
+

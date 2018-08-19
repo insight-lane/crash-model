@@ -13,12 +13,16 @@ dependencies:
 - ipdb
 - ipython
 - jupyter
+# Remove this when gdal stops using wrong version of libkea:
+# (you may need to comment this out for mac or windows)
+- libgdal=2.2.4=ha6e4b24_6
 - matplotlib
 - numpy
 - openpyxl
 - osmnx
 # Weird conda packaging bug, will want to revisit version of pandas later
 - pandas=0.22
+- pylint
 - pyproj
 - pytest
 - python=3.6

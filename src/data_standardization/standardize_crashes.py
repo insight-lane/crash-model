@@ -2,17 +2,12 @@
 # Author terryf82 https://github.com/terryf82
 
 import argparse
-import dateutil.parser as date_parser
-import json
 import os
 import pandas as pd
-import re
 import yaml
 from collections import OrderedDict
-from datetime import timedelta
-from jsonschema import validate
 import csv
-import datetime
+from .standardization_util import parse_date, validate_and_write_schema
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -31,27 +26,13 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
            or crash[fields['date']] == "":
             continue
 
-        # Date can either be a date or a date time
-        date = date_parser.parse(crash[fields['date']])
-        # If there's no time in the date given, look at the time field
-        # if available
-        if date.hour == 0 and date.minute == 0 and date.second == 0 \
-           and 'time' in fields and fields['time']:
-
-            # special case of seconds past midnight
+        time = None
+        if 'time' in fields and fields['time']:
             time = crash[fields['time']]
-            if re.match(r"^\d+$", str(time)) and int(time) >= 0 \
-               and int(time) < 86400:
-                date = date + timedelta(seconds=int(crash[fields['time']]))
-
-            else:
-                date = date_parser.parse(
-                    date.strftime('%Y-%m-%d ') + str(time)
-                )
-
-        # TODO add timezone to config ("Z" is UTC)
-        date_time = date.strftime("%Y-%m-%dT%H:%M:%SZ")
-
+        date_time = parse_date(
+            crash[fields['date']],
+            time=time
+        )
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", date_time),
@@ -182,12 +163,6 @@ if __name__ == '__main__':
 
     schema_path = os.path.join(BASE_FP, "standards", "crashes-schema.json")
     list_city_crashes = list(dict_city_crashes.values())
-    with open(schema_path) as crashes_schema:
-        validate(list_city_crashes, json.load(crashes_schema))
-
     crashes_output = os.path.join(args.folder, "standardized/crashes.json")
+    validate_and_write_schema(schema_path, list_city_crashes, crashes_output)
 
-    with open(crashes_output, "w") as f:
-        json.dump(list_city_crashes, f)
-
-    print("- output written to {}".format(crashes_output))

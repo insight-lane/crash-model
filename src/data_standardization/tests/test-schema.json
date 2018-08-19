@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "title": "Test",
+    "description": "Defines the structure of a set of information",
+    "type": "array",
+    "items": {
+        "title": "Test",
+        "description": "Defines the structure of a test",
+        "type": "object",
+        "properties": {
+            "id": {
+                "description": "Unique identifier of test",
+                "type": ["string", "number"]
+            },
+            "dateOccurred": {
+                "description": "Date test occurred, ISO8601 formatted",
+                "type": "string",
+                "format": "date-time"
+            },
+            "location": {
+                "description": "Coordinates of test, WGS84 formatted",
+                "type": "object",
+                "properties": {
+                    "latitude": {
+                        "description": "Latitude of test",
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "description": "Longitude of test",
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "required": ["id", "dateOccurred", "location"]
+    }
+}

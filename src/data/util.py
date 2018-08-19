@@ -5,7 +5,6 @@ import rtree
 import geocoder
 from time import sleep
 from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
-import openpyxl
 from matplotlib import pyplot
 import os
 from os.path import exists as path_exists
@@ -635,7 +634,42 @@ def make_schema(geometry, properties):
     return(schema)
 
 
-def is_inter(id):
-    if len(str(id)) > 1 and str(id)[0:2] == '00':
+def is_inter(seg_id):
+    if len(str(seg_id)) > 1 and str(seg_id)[0:2] == '00':
         return False
     return True
+
+
+def get_center_point(segment):
+    """
+    Get the centerpoint for a linestring or multiline string
+    Args:
+        segment - Geojson LineString or MultiLineString
+    Returns:
+        Geojson point
+    """
+
+    if segment['geometry']['type'] == 'LineString':
+        point = LineString(
+            segment['geometry']['coordinates']).interpolate(
+            .5, normalized=True)
+        return point.x, point.y
+    elif segment['geometry']['type'] == 'MultiLineString':
+        # Make a rectangle around the multiline
+        coords = [item for coords in segment[
+            'geometry']['coordinates'] for item in coords]
+
+        minx = min([x[0] for x in coords])
+        maxx = max([x[0] for x in coords])
+        miny = min([x[1] for x in coords])
+        maxy = max([x[1] for x in coords])
+
+        point = LineString([[minx, miny], [maxx, maxy]]).interpolate(
+            .5, normalized=True)
+        mlstring = MultiLineString(segment['geometry']['coordinates'])
+        point = mlstring.interpolate(mlstring.project(point))
+
+        return point.x, point.y
+
+    return None, None
+
