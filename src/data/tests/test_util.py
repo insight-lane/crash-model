@@ -4,6 +4,7 @@ from shapely.geometry import Point
 import pyproj
 import csv
 import fiona
+import geojson
 
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
@@ -206,3 +207,16 @@ def test_prepare_geojson():
         }],
         "type": "FeatureCollection"
     }
+
+
+def test_get_center_point():
+    assert util.get_center_point(
+        geojson.Feature(
+            geometry=geojson.LineString([[1, 0], [3, 0]]))) == (2.0, 0.0)
+
+    assert util.get_center_point(geojson.Feature(
+        geometry=geojson.MultiLineString(
+            [[[2, 0], [2, 4]], [[0, 2], [4, 2]]]))) == (2.0, 2.0)
+    assert util.get_center_point(
+        geojson.Feature(geometry=geojson.Point([0, 0]))) == (None, None)
+
