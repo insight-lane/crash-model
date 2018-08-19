@@ -17,6 +17,7 @@ import geojson
 import fiona
 import re
 
+
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
@@ -130,15 +131,14 @@ def add_point_based_features(non_inters, inters, feats_filename=None,
         inters
         feats_filename - geojson file for point-based features data
     """
-
+    additional_feats_filename = None
     features = []
     if feats_filename:
         features = util.read_records_from_geojson(feats_filename)
-        print('len of features:' + str(len(features)))
     if additional_feats_filename:
         features += util.read_records(
             additional_feats_filename, 'record')
-        print('len of features:' + str(len(features)))
+    print('Reading {} point-based features:'.format(len(features)))
     seg, segments_index = util.index_segments(
         inters + non_inters
     )
@@ -320,6 +320,12 @@ def create_segments_from_json(roads_shp_path, mapfp):
             l, inters_by_id)
         non_int_w_ids.append(value)
 
+        x, y = util.get_center_point(value)
+        x, y = util.reproject([[x, y]], inproj='epsg:3857',
+                              outproj='epsg:4326')[0]['coordinates']
+        value['properties']['center_y'] = y
+        value['properties']['center_x'] = x
+
     print("extracted {} non-intersection segments".format(len(non_int_w_ids)))
 
     # Planarize intersection segments
@@ -347,12 +353,19 @@ def create_segments_from_json(roads_shp_path, mapfp):
             'data': segment_data,
             'display_name': name
         }
-        
-        union_inter.append(geojson.Feature(
+        value = geojson.Feature(
             geometry=geojson.MultiLineString(coords),
             id=idx,
             properties=properties,
-        ))
+        )
+        x, y = util.get_center_point(value)
+        x, y = util.reproject([[x, y]], inproj='epsg:3857',
+                              outproj='epsg:4326')[0]['coordinates']
+
+        value['properties']['center_x'] = x
+        value['properties']['center_y'] = y
+        union_inter.append(value)
+
     return non_int_w_ids, union_inter
 
 
@@ -361,6 +374,7 @@ def write_segments(non_inters, inters, mapfp, datafp):
     # Store non-intersection segments
 
     # Project back into 4326 for storage
+
     non_inters = util.prepare_geojson(non_inters)
 
     with open(os.path.join(
@@ -381,7 +395,11 @@ def write_segments(non_inters, inters, mapfp, datafp):
         'properties': {
             'id': x['properties']['id'],
             'display_name': x['properties']['display_name']
-                    if 'display_name' in x['properties'] else ''
+                if 'display_name' in x['properties'] else '',
+            'center_x': x['properties']['center_x']
+                if 'center_x' in x['properties'] else '',
+            'center_y': x['properties']['center_y']
+                if 'center_y' in x['properties'] else ''
         }
     } for x in inters]
     int_w_ids = util.prepare_geojson(int_w_ids)

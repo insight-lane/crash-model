@@ -67,6 +67,21 @@ def data_standardization(config, DATA_FP, forceupdate=False):
     else:
         print("Already standardized volume data, skipping")
 
+    if 'data_source' in config and config['data_source'] and \
+       (not os.path.exists(os.path.join(
+           DATA_FP, 'standardized', 'points.json')) or forceupdate):
+        subprocess.check_call([
+            'python',
+            '-m',
+            'data_standardization.standardize_point_data',
+            '-c',
+            os.path.join(BASE_DIR, 'src', 'config', 'config_' + config['name'] + '.yml'),
+            '-d',
+            DATA_FP
+        ])
+    else:
+        print("Already standardized point data, skipping")
+
 
 def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
                     forceupdate=False):
@@ -82,7 +97,7 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
     subprocess.check_call([
         'python',
         '-m',
-        'data.make_dataset_osm',
+        'data.make_dataset',
         '-c',
         config_file,
         '-d',

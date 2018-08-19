@@ -33,6 +33,10 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
             crash[fields['date']],
             time=time
         )
+        # Skip crashes where date can't be parsed
+        if not date_time:
+            continue
+
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", date_time),
