@@ -56,7 +56,7 @@
 
 	<div id="segment_details" class="side overlay">
 		<div id="close_btn" class="btn">X</div>
-		<h2>Segment Name Here</h2>
+		<h2 class="segment_name">Segment Name Here</h2>
 		<h4>Predicted Risk:</h4>
 		<h3>Factors Contributing to Risk</h3>
 		<h3>Estimated Impact of Interventions</h3>
@@ -103,7 +103,7 @@
 				type: 'line',
 				source: {
 				  type: 'geojson',
-				  data: 'preds.json'
+				  data: 'preds_final.json'
 				},
 				paint: {
 				  'line-color': {
@@ -150,6 +150,9 @@
 				$( '#segment_details' ).removeClass('slide_right');
 				$( '#segment_details' ).addClass('visible');
 				$( '#highest_risk' ).removeClass('visible');
+
+				// populate segment details panel with segment info
+				$( ' #segment_details .segment_name').text(e.features[0].properties.segment_display_name);
 
 				// zoom into clicked-on segment
 				zoomToFeature(e);
