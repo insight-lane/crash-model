@@ -261,10 +261,17 @@ def clean_ways(orig_file, DOC_FP):
         width = 0
         if 'width' in list(way_line['properties']):
             width = way_line['properties']['width']
+            # This indicates two segments combined together
             if not width or ';' in width or '[' in width:
                 width = 0
             else:
-                width = round(float(width))
+                width = re.sub('[^0-9]+', '', width)
+                # Sometimes there's bad (non-numeric) width
+                # If so, skip
+                if width:
+                    width = round(float(width))
+                else:
+                    width = 0
 
         lanes = way_line['properties']['lanes']
         if lanes:

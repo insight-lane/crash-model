@@ -67,7 +67,6 @@ if __name__ == '__main__':
         recreate = True
 
     # Features drawn from open street maps
-    # additional_features from config file can add on to
     # Additional features can be added if you're using an extra map
     # beyond open street map
     features = [
