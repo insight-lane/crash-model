@@ -135,11 +135,10 @@ def add_point_based_features(non_inters, inters, feats_filename=None,
     features = []
     if feats_filename:
         features = util.read_records_from_geojson(feats_filename)
-        print('len of features:' + str(len(features)))
     if additional_feats_filename:
         features += util.read_records(
             additional_feats_filename, 'record')
-        print('len of features:' + str(len(features)))
+    print('Reading {} point-based features:'.format(len(features)))
     seg, segments_index = util.index_segments(
         inters + non_inters
     )
