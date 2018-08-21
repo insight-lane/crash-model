@@ -201,6 +201,10 @@ input[type="range"]::-ms-thumb {
     background: linear-gradient(to right, #ffe0b2, #ffb74d, #ff9800, #f57c00);
 }
 
+li.highRiskSegment {
+    margin-bottom: 10px;
+}
+
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {
   border: 0;
