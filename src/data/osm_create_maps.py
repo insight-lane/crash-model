@@ -220,6 +220,31 @@ def write_highway_keys(DOC_FP, highway_keys):
             w.writerow(item)
 
 
+def get_width(width):
+    """
+    Parse the width from the openstreetmap width property field
+    Args:
+        width - a string
+    Returns:
+        width - an int
+    """
+
+    # This indicates two segments combined together.
+    # For now, we just skip combined segments with different widths
+    if not width or ';' in width or '[' in width:
+        width = 0
+    else:
+        # Sometimes there's bad (non-numeric) width
+        # so remove anything that isn't a number or .
+        # Skip those that don't have some number in them
+        width = re.sub('[^0-9\.]+', '', width)
+        if width:
+            width = round(float(width))
+        else:
+            width = 0
+    return width
+
+
 def clean_ways(orig_file, DOC_FP):
     """
     Reads in osm_ways file, cleans up the features, and reprojects
@@ -257,21 +282,8 @@ def clean_ways(orig_file, DOC_FP):
         if not speed:
             speed = 0
 
-        # round width
-        width = 0
-        if 'width' in list(way_line['properties']):
-            width = way_line['properties']['width']
-            # This indicates two segments combined together
-            if not width or ';' in width or '[' in width:
-                width = 0
-            else:
-                width = re.sub('[^0-9]+', '', width)
-                # Sometimes there's bad (non-numeric) width
-                # If so, skip
-                if width:
-                    width = round(float(width))
-                else:
-                    width = 0
+        width = get_width(way_line['properties']['width']) \
+            if 'width' in list(way_line['properties']) else 0
 
         lanes = way_line['properties']['lanes']
         if lanes:
