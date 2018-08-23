@@ -56,10 +56,10 @@ hr {
     visibility: hidden;
 }
 
-#segment_details {
+/*#segment_details {
     width: 25vw;
 }
-
+*/
 .visible {
     visibility: visible;
     transition: 0.5s;
@@ -126,6 +126,7 @@ hr {
 
 .filter {
 	width: 90%;
+    margin: 10% 0;
 }
 
 input[type="range"] {

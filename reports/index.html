@@ -37,11 +37,18 @@
 		</div>
 		<p class="model_confidence">Model confidence: <span>80%</span></p>
 		<hr>
-		<h2>Filter Segments:</h2>
-		<div class="filter risk">
-			<label for="risk_selector">Risk score greater than: </label>
-			<output for="risk_selector" id="selected_risk">0</output>
-			<input type="range" id="risk_slider" autocomplete="off" min="0" max="1" step="0.05" value="0.0">
+		<div class="filters">
+			<h2>Filter Segments:</h2>
+			<div class="filter risk">
+				<label for="risk_selector">Risk score greater than: </label>
+				<output for="risk_selector" id="selected_risk">0</output>
+				<input type="range" id="risk_slider" autocomplete="off" min="0" max="1" step="0.05" value="0.0">
+			</div>
+			<div class="filter speedlimit">
+				<label for="speed_selector">Speed limit greater than: </label>
+				<output for="speed_selector" id="selected_speed">5mph</output>
+				<input type="range" id="speed_slider" autocomplete="off" min="5" max="50" step="5" value="5">
+			</div>
 		</div>
 	</div>
 
