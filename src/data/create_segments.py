@@ -44,6 +44,7 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
 
     return unary_union(buffered_intersections)
 
+
 def find_non_ints(roads, int_buffers):
     """
     Find the segments that aren't intersections
@@ -131,7 +132,7 @@ def add_point_based_features(non_inters, inters, feats_filename=None,
         inters
         feats_filename - geojson file for point-based features data
     """
-    additional_feats_filename = None
+
     features = []
     if feats_filename:
         features = util.read_records_from_geojson(feats_filename)
@@ -451,6 +452,7 @@ if __name__ == '__main__':
         feats_file = None
     if not os.path.exists(additional_feats_file):
         additional_feats_file = None
+
     if feats_file or additional_feats_file:
         non_inters, inters = add_point_based_features(
             non_inters,
