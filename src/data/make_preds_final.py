@@ -65,7 +65,8 @@ if __name__ == "__main__":
                 pred_data["segment"] = {
                     "id": segment["id"],
                     "display_name": segment["properties"]["display_name"],
-                    # "geometry": segment["geometry"]
+                    "center_x": segment["properties"]["center_x"],
+                    "center_y": segment["properties"]["center_y"]
                 }
 
                 preds_final.append({
