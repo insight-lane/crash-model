@@ -122,7 +122,8 @@ def find_non_ints(roads, int_buffers):
 
 
 def add_point_based_features(non_inters, inters, feats_filename=None,
-                             additional_feats_filename=None):
+                             additional_feats_filename=None,
+                             forceupdate=False):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
@@ -132,20 +133,31 @@ def add_point_based_features(non_inters, inters, feats_filename=None,
         inters
         feats_filename - geojson file for point-based features data
     """
+    jsonfile = os.path.join(MAP_FP, 'points_joined.json')
 
-    features = []
-    if feats_filename:
-        features = util.read_records_from_geojson(feats_filename)
-    if additional_feats_filename:
-        features += util.read_records(
-            additional_feats_filename, 'record')
-    print('Reading {} point-based features:'.format(len(features)))
-    seg, segments_index = util.index_segments(
-        inters + non_inters
-    )
+    if forceupdate:
+        features = []
+        if feats_filename:
+            features = util.read_records_from_geojson(feats_filename)
+        if additional_feats_filename:
+            features += util.read_records(
+                additional_feats_filename, 'record')
+        print('Snapping {} point-based features'.format(len(features)))
+        seg, segments_index = util.index_segments(
+            inters + non_inters
+        )
 
-    util.find_nearest(features, seg, segments_index, 20, type_record=True)
+        util.find_nearest(features, seg, segments_index, 20, type_record=True)
 
+        # Dump to file
+        print("output {} point-based features to {}".format(
+            len(features), jsonfile))
+        with open(jsonfile, 'w') as f:
+            json.dump([r.properties for r in features], f)
+
+    else:
+        features = util.read_records(jsonfile, None)
+        print("Read {} point-based features from file".format(len(features)))
     matches = {}
 
     for feature in features:
@@ -426,6 +438,8 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--newmap", type=str,
                         help="If given, write output to new directory" +
                         "within the maps directory")
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether to force update the points-based data')
 
     args = parser.parse_args()
     DATA_FP = args.datadir
@@ -458,7 +472,8 @@ if __name__ == '__main__':
             non_inters,
             inters,
             feats_filename=feats_file,
-            additional_feats_filename=additional_feats_file
+            additional_feats_filename=additional_feats_file,
+            forceupdate=args.forceupdate
         )
     write_segments(non_inters, inters, MAP_FP, PROCESSED_DATA_FP)
 
