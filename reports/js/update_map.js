@@ -18,9 +18,20 @@ d3.json("preds_final.json", function(data) {
 		.enter()
 		.append("li")
 		.attr("class", "highRiskSegment")
-		.text(function(d) { return d.segment.display_name; });
+		// .text(function(d) { return d.segment.display_name; });
+		.html(function(d) { if(d.segment.display_name.indexOf("between") > -1)
+								{ var nameObj = splitSegmentName(d.segment.display_name);
+								  return nameObj["name"] + "<br><span class='between'>" + nameObj["between"] + "</span>"; }
+							else {
+									return d.segment.display_name;
+								}
+		});
 })
 
+function splitSegmentName(segmentName) {
+	var i = segmentName.indexOf("between");
+	return {name: segmentName.slice(0, i), between: segmentName.slice(i,)};
+}
 
 ///////////////////////// UPDATE MAP ///////////////////////////////////////////////////////
 // event handlers to update map when filters change

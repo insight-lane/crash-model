@@ -203,7 +203,11 @@ input[type="range"]::-ms-thumb {
 }
 
 li.highRiskSegment {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.between {
+    font-size: 0.8rem;
 }
 
 /***** Styles for Mapbox geocoder input *****/
