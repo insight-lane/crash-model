@@ -121,21 +121,24 @@ def find_non_ints(roads, int_buffers):
     return non_int_lines, inter_segments
 
 
-def add_point_based_features(non_inters, inters, feats_filename=None,
+def add_point_based_features(non_inters, inters, jsonfile,
+                             feats_filename=None,
                              additional_feats_filename=None,
                              forceupdate=False):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
-    Point-based features need to be in 3857 projection
     Args:
         non_inters
         inters
+        jsonfile - points_joined.json, storing the results of snapping
         feats_filename - geojson file for point-based features data
+        addtiional_feats_filename (optional) - file for additional
+            points-based data, in json format
+        forceupdate - if True, re-snap points and write to file
     """
-    jsonfile = os.path.join(MAP_FP, 'points_joined.json')
 
-    if forceupdate:
+    if forceupdate or not os.path.exists(jsonfile):
         features = []
         if feats_filename:
             features = util.read_records_from_geojson(feats_filename)
@@ -188,8 +191,10 @@ def add_point_based_features(non_inters, inters, feats_filename=None,
             matched_features = matches[non_inter['properties']['id']]
 
             n = copy.deepcopy(non_inter)
+
             for feat in matched_features:
                 n['properties'][feat] = matched_features[feat]
+
             non_inters[i] = n
 
     return non_inters, inters
@@ -468,9 +473,11 @@ if __name__ == '__main__':
         additional_feats_file = None
 
     if feats_file or additional_feats_file:
+        jsonfile = os.path.join(DATA_FP, 'processed', 'points_joined.json')
         non_inters, inters = add_point_based_features(
             non_inters,
             inters,
+            jsonfile,
             feats_filename=feats_file,
             additional_feats_filename=additional_feats_file,
             forceupdate=args.forceupdate
