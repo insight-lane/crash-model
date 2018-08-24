@@ -61,9 +61,9 @@ if __name__ == "__main__":
     for pred_id, pred_data in predictions.items():
         for segment in segments:
             # find the matching segment to obtain the display name
-            if pred_data["segment_id"] == segment["id"]:
+            if str(pred_data["segment_id"]) == str(segment["id"]):
                 pred_data["segment"] = {
-                    "id": segment["id"],
+                    "id": str(segment["id"]),
                     "display_name": segment["properties"]["display_name"],
                     "center_x": segment["properties"]["center_x"],
                     "center_y": segment["properties"]["center_y"]
