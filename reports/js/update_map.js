@@ -13,7 +13,7 @@ d3.json("preds_final.json", function(data) {
 		return d3.descending(a.prediction, b.prediction);
 	})
 
-	segmentsHash = d3.map(segments.slice(10), function(d) { return d.segment_id; });
+	segmentsHash = d3.map(segments, function(d) { return d.segment_id; });
 
 	d3.select("#highest_risk_list")
 		.selectAll("li")
