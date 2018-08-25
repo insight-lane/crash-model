@@ -158,9 +158,7 @@
 				$( '#segment_details' ).addClass('visible');
 				$( '#highest_risk' ).removeClass('visible');
 
-				// populate segment details panel with segment info
-				$( ' #segment_details .segment_name' ).text(e.features[0].properties.segment_display_name);
-				$( ' #segment_details #prediction' ).text(e.features[0].properties.prediction);
+				populateSegmentInfo(e.features[0].properties.id);
 
 				// zoom into clicked-on segment
 				zoomToFeature(e);

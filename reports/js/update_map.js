@@ -1,6 +1,7 @@
+var segments = [];
+var segmentsHash;
+
 d3.json("preds_final.json", function(data) {
-	// console.log(data.features[0].properties);
-	var segments = [];
 
 	for (var segment in data.features) {
 		segments.push(data.features[segment].properties);
@@ -10,7 +11,7 @@ d3.json("preds_final.json", function(data) {
 		return d3.descending(a.prediction, b.prediction);
 	})
 
-	// console.log(segments);
+	segmentsHash = d3.map(segments.slice(10), function(d) { return d.segment_id; });
 
 	d3.select("#highest_risk_list")
 		.selectAll("li")
@@ -18,7 +19,6 @@ d3.json("preds_final.json", function(data) {
 		.enter()
 		.append("li")
 		.attr("class", "highRiskSegment")
-		// .text(function(d) { return d.segment.display_name; });
 		.html(function(d) { if(d.segment.display_name.indexOf("between") > -1)
 								{ var nameObj = splitSegmentName(d.segment.display_name);
 								  return nameObj["name"] + "<br><span class='between'>" + nameObj["between"] + "</span>"; }
@@ -33,6 +33,19 @@ function splitSegmentName(segmentName) {
 	return {name: segmentName.slice(0, i), between: segmentName.slice(i,)};
 }
 
+function populateSegmentInfo(segmentID) {
+	var segmentData = segmentsHash.get(segmentID);
+
+	d3.select('#segment_details .segment_name')
+		.html(function() { if(segmentData.segment.display_name.indexOf("between") > -1)
+							{ var nameObj = splitSegmentName(segmentData.segment.display_name);
+							  return nameObj["name"] + "<br><span class='between'>" + nameObj["between"] + "</span>"; }
+							else {
+								return segmentData.segment.display_name;
+							}
+		});
+	d3.select('#segment_details #prediction').text(segmentData.prediction);
+}
 ///////////////////////// UPDATE MAP ///////////////////////////////////////////////////////
 // event handlers to update map when filters change
 d3.select('#risk_slider').on("input", function() {
