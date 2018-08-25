@@ -12,7 +12,7 @@ d3.json("preds_final.json", function(data) {
 	segments.sort(function(a, b) {
 		return d3.descending(a.prediction, b.prediction);
 	})
-
+	console.log(segments.length);
 	segmentsHash = d3.map(segments, function(d) { return d.segment_id; });
 
 	d3.select("#highest_risk_list")
@@ -75,13 +75,6 @@ d3.select('#speed_slider').on("input", function() {
 	update_map(map);
 });
 
-function update_map(map) {
-	filters = getFilterValues();
-	var new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
-
-	map.setFilter('predictions', new_filter);
-}
-
 // get current filter values
 function getFilterValues() {
 	var filterValues = {};
@@ -90,4 +83,13 @@ function getFilterValues() {
 	filterValues['speedlimit'] = d3.select('#speed_slider').property('value');
 
 	return filterValues;
+}
+
+function update_map(map) {
+	filters = getFilterValues();
+
+	// var new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'osm_speed', +filters['speedlimit']]];
+	var new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
+
+	map.setFilter('predictions', new_filter);
 }
