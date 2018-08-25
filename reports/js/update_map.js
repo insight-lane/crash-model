@@ -27,7 +27,8 @@ d3.json("preds_final.json", function(data) {
 							else {
 									return d.segment.display_name;
 								}
-		});
+		})
+		.on("click", function(d) { map.flyTo({center: [d.segment.center_x, d.segment.center_y], zoom: 16}); });
 })
 
 function splitSegmentName(segmentName) {

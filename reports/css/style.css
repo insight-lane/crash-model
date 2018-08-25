@@ -213,6 +213,11 @@ input[type="range"]::-ms-thumb {
 
 li.highRiskSegment {
     margin-bottom: 15px;
+    cursor: pointer;
+}
+
+li.highRiskSegment:hover {
+    text-decoration: underline;
 }
 
 .between {
