@@ -13,13 +13,13 @@ h1 {
 }
 
 h2 {
-    font-size: 1.25rem;
+    font-size: 1.42rem;
     font-weight: 500;
     text-transform: uppercase;
 }
 
 h4 {
-    /*font-size: 1.25rem;*/
+    font-size: 1.125rem;
     text-transform: uppercase;
     font-weight: normal;
     margin-bottom: 5%;
@@ -208,6 +208,11 @@ li.highRiskSegment {
 
 .between {
     font-size: 0.8rem;
+}
+
+h2 span.between {
+    text-transform: none;
+    font-size: 1rem;
 }
 
 /***** Styles for Mapbox geocoder input *****/
