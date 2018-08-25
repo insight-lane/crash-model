@@ -93,7 +93,7 @@
 		  container: 'city_map',
 		  style: 'mapbox://styles/mapbox/dark-v9',
 		  center: [city.longitude, city.latitude],
-		  zoom: 11
+		  zoom: 12
 		});
 
 		var geocoder = new MapboxGeocoder({
@@ -153,7 +153,7 @@
 
 			// add popup for predictions
 			map.on('click', 'predictions', function(e) {
-				populateSegmentInfo(e.features[0].properties.id);
+				populateSegmentInfo(e.features[0].properties.segment_id);
 			});
 
 			map.on('mouseenter', 'predictions', function () {
