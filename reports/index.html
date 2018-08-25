@@ -153,15 +153,7 @@
 
 			// add popup for predictions
 			map.on('click', 'predictions', function(e) {
-				// hide highest risk panel and slide in segment details panel
-				$( '#segment_details' ).removeClass('slide_right');
-				$( '#segment_details' ).addClass('visible');
-				$( '#highest_risk' ).removeClass('visible');
-
 				populateSegmentInfo(e.features[0].properties.id);
-
-				// zoom into clicked-on segment
-				zoomToFeature(e);
 			});
 
 			map.on('mouseenter', 'predictions', function () {

@@ -28,7 +28,7 @@ d3.json("preds_final.json", function(data) {
 									return d.segment.display_name;
 								}
 		})
-		.on("click", function(d) { map.flyTo({center: [d.segment.center_x, d.segment.center_y], zoom: 16}); });
+		.on("click", function(d) { populateSegmentInfo(d.segment_id); });
 })
 
 function splitSegmentName(segmentName) {
@@ -48,6 +48,14 @@ function populateSegmentInfo(segmentID) {
 							}
 		});
 	d3.select('#segment_details #prediction').text(DECIMALFMT(segmentData.prediction));
+
+	// hide highest risk panel and slide in segment details panel
+	d3.select('#segment_details').classed('slide_right', false);
+	d3.select('#segment_details').classed('visible', true);
+	d3.select('#highest_risk').classed('visible', false);
+
+	// zoom into clicked-on segment
+	map.flyTo({center: [segmentData.segment.center_x, segmentData.segment.center_y], zoom: 16});
 }
 ///////////////////////// UPDATE MAP ///////////////////////////////////////////////////////
 // event handlers to update map when filters change
