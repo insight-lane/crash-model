@@ -1,3 +1,5 @@
+var DECIMALFMT = d3.format(".2f");
+
 var segments = [];
 var segmentsHash;
 
@@ -44,7 +46,7 @@ function populateSegmentInfo(segmentID) {
 								return segmentData.segment.display_name;
 							}
 		});
-	d3.select('#segment_details #prediction').text(segmentData.prediction);
+	d3.select('#segment_details #prediction').text(DECIMALFMT(segmentData.prediction));
 }
 ///////////////////////// UPDATE MAP ///////////////////////////////////////////////////////
 // event handlers to update map when filters change
