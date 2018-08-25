@@ -18,6 +18,13 @@ h2 {
     text-transform: uppercase;
 }
 
+h3 {
+    font-size: 1.26rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: 8%;
+}
+
 h4 {
     font-size: 1.125rem;
     text-transform: uppercase;
@@ -126,7 +133,7 @@ hr {
 
 .filter {
 	width: 90%;
-    margin: 10% 0;
+    margin: 6% 0;
 }
 
 input[type="range"] {
