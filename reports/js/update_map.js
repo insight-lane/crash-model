@@ -57,7 +57,7 @@ function populateSegmentInfo(segmentID) {
 	d3.select('#highest_risk').classed('visible', false);
 
 	// zoom into clicked-on segment
-	map.flyTo({center: [segmentData.segment.center_x, segmentData.segment.center_y], zoom: 16});
+	map.flyTo({center: [segmentData.segment.center_x, segmentData.segment.center_y], zoom: 18});
 }
 
 
