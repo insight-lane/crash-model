@@ -82,8 +82,9 @@ hr {
 .btn {
     cursor: pointer;
     position: absolute;
-    top: 60px;
+    top: 51px;
     right: 15px;
+    font-size: 24px;
 }
 
 .legend {
