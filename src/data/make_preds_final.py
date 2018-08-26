@@ -97,6 +97,5 @@ if __name__ == "__main__":
     print("{} found".format(len(segs_data)))
     
     preds_final = combine_predictions_and_segments(preds_data, segs_data)
-    #print(preds_final[:10])
     write_preds_as_geojson(preds_final, os.path.join(DATA_FP, args.folder, "processed", "preds_final.geojson"))
     write_preds_as_geojson(preds_final, os.path.join(BASE_DIR, "reports", "preds_final-test.geojson"))
