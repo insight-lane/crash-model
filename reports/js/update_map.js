@@ -99,9 +99,14 @@ function getFilterValues() {
 
 function update_map(map) {
 	filters = getFilterValues();
+	var new_filter;
 
-	// var new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'osm_speed', +filters['speedlimit']]];
-	var new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
+	if(config.cities[0].id === "boston") {
+		new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
+	}
+	else {
+		new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'osm_speed', +filters['speedlimit']]];
+	}
 
 	map.setFilter('predictions', new_filter);
 }
