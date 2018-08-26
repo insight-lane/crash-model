@@ -3,7 +3,7 @@ var DECIMALFMT = d3.format(".2f");
 var segments = [];
 var segmentsHash;
 
-d3.json("preds_final.json", function(data) {
+d3.json("preds_final.geojson", function(data) {
 
 	for (var segment in data.features) {
 		segments.push(data.features[segment].properties);
@@ -12,7 +12,7 @@ d3.json("preds_final.json", function(data) {
 	segments.sort(function(a, b) {
 		return d3.descending(a.prediction, b.prediction);
 	})
-	console.log(segments.length);
+	// console.log(segments.length);
 	segmentsHash = d3.map(segments, function(d) { return d.segment_id; });
 
 	d3.select("#highest_risk_list")
