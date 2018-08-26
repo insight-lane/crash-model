@@ -9,7 +9,7 @@ def test_make_preds_final_boston(tmpdir):
     Confirm that final predictions generated conform to the schema
     """
     
-    # Copy test data into temp directory in appropriate place
+    # Copy test data into temp directory
     test_data_path = os.path.dirname(
         os.path.abspath(__file__)) + "/data/boston_final_preds"
 
@@ -25,7 +25,7 @@ def test_make_preds_final_boston(tmpdir):
         tmpdir_data_path
     ])
 
-    with open(tmpdir_data_path + "/processed/preds_final.json") as f:
+    with open(tmpdir_data_path + "/processed/preds_final.geojson") as f:
         test_preds_final = geojson.load(f)
 
     # verify the predictions are valid geojson
