@@ -17,6 +17,14 @@ import argparse
 import os
 import pandas as pd
 import geojson
+import sys
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))))
+
+DATA_FP = os.path.join(BASE_DIR, 'data')
 
 def combine_predictions_and_segments(predictions, segments):
     """
@@ -64,8 +72,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    #print(os.getcwd())
+
     # confirm files exist & load data
-    predictions_file = os.path.join(args.folder, "processed/seg_with_predicted.json")
+    predictions_file = os.path.join(DATA_FP, args.folder, "processed", "seg_with_predicted.json")
     if not os.path.exists(predictions_file):
         sys.exit("predictions file not found at {}, exiting".format(predictions_file))
     
@@ -75,7 +85,7 @@ if __name__ == "__main__":
         predictions_file, orient="index", typ="series", dtype=False)
     print("{} found".format(len(preds_data)))
         
-    segments_file = os.path.join(args.folder, "processed/maps/inter_and_non_int.geojson")
+    segments_file = os.path.join(DATA_FP, args.folder, "processed", "maps", "inter_and_non_int.geojson")
     if not os.path.exists(segments_file):
         sys.exit("segment file not found at {}, exiting".format(segments_file))
     
@@ -87,4 +97,6 @@ if __name__ == "__main__":
     print("{} found".format(len(segs_data)))
     
     preds_final = combine_predictions_and_segments(preds_data, segs_data)
-    write_preds_as_geojson(preds_final, os.path.join(args.folder, "processed/preds_final.geojson"))
+    #print(preds_final[:10])
+    write_preds_as_geojson(preds_final, os.path.join(DATA_FP, args.folder, "processed", "preds_final.geojson"))
+    write_preds_as_geojson(preds_final, os.path.join(BASE_DIR, "reports", "preds_final-test.geojson"))
