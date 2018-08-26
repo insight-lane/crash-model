@@ -25,7 +25,7 @@ def combine_predictions_and_segments(predictions, segments):
     
     print("combining predictions with segments")
     combined_preds = []
-    for pred_id, pred_data in predictions.items():
+    for pred_data in predictions:
         for segment in segments:
             # find the matching segment to obtain the display name
             if str(pred_data["segment_id"]) == str(segment["id"]):
