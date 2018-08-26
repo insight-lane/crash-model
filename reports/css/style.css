@@ -221,13 +221,14 @@ li.highRiskSegment:hover {
     text-decoration: underline;
 }
 
-.between {
+.secondary {
     font-size: 0.8rem;
 }
 
-h2 span.between {
+h2 span.secondary {
     text-transform: none;
     font-size: 1rem;
+    font-weight: 300;
 }
 
 /***** Styles for Mapbox geocoder input *****/

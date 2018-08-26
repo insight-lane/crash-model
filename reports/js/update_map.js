@@ -21,32 +21,34 @@ d3.json("preds_final.geojson", function(data) {
 		.enter()
 		.append("li")
 		.attr("class", "highRiskSegment")
-		.html(function(d) { if(d.segment.display_name.indexOf("between") > -1)
-								{ var nameObj = splitSegmentName(d.segment.display_name);
-								  return nameObj["name"] + "<br><span class='between'>" + nameObj["between"] + "</span>"; }
-							else {
-									return d.segment.display_name;
-								}
-		})
+		.html(function(d) { var nameObj = splitSegmentName(d.segment.display_name);
+							return nameObj["name"] + "<br><span class='secondary'>" + nameObj["secondary"] + "</span>"; })
 		.on("click", function(d) { populateSegmentInfo(d.segment_id); });
 })
 
 function splitSegmentName(segmentName) {
-	var i = segmentName.indexOf("between");
-	return {name: segmentName.slice(0, i), between: segmentName.slice(i,)};
+	var i = segmentName.length;
+
+	if(segmentName.indexOf(" between ") > -1) {
+		i = segmentName.indexOf(" between ");
+	}
+	else if(segmentName.indexOf(" from ") > -1) {
+		i = segmentName.indexOf(" from ");
+	}
+	else if(segmentName.indexOf(" near ") > -1) {
+		i = segmentName.indexOf(" near ");
+	}
+
+	return {name: segmentName.slice(0, i), secondary: segmentName.slice(i,)};
 }
 
 function populateSegmentInfo(segmentID) {
+	console.log(segmentID);
 	var segmentData = segmentsHash.get(segmentID);
 
 	d3.select('#segment_details .segment_name')
-		.html(function() { if(segmentData.segment.display_name.indexOf("between") > -1)
-							{ var nameObj = splitSegmentName(segmentData.segment.display_name);
-							  return nameObj["name"] + "<br><span class='between'>" + nameObj["between"] + "</span>"; }
-							else {
-								return segmentData.segment.display_name;
-							}
-		});
+		.html(function() { var nameObj = splitSegmentName(segmentData.segment.display_name);
+						   return nameObj["name"] + "<br><span class='secondary'>" + nameObj["secondary"] + "</span>"; });
 	d3.select('#segment_details #prediction').text(DECIMALFMT(segmentData.prediction));
 
 	// hide highest risk panel and slide in segment details panel
@@ -57,6 +59,10 @@ function populateSegmentInfo(segmentID) {
 	// zoom into clicked-on segment
 	map.flyTo({center: [segmentData.segment.center_x, segmentData.segment.center_y], zoom: 16});
 }
+
+
+
+
 ///////////////////////// UPDATE MAP ///////////////////////////////////////////////////////
 // event handlers to update map when filters change
 d3.select('#risk_slider').on("input", function() {
