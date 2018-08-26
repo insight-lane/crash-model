@@ -19,24 +19,11 @@ import pandas as pd
 import geojson
 import json
 
-def combine_predictions_and_segments(preds_file, segs_file):
+def combine_predictions_and_segments(predictions, segments):
     """
     Combine predictions data with certain properties of their related segment.
     """
     
-    # load the predictions
-    print("loading predictions: ", end="")
-    predictions = pd.read_json(
-        preds_file, orient="index", typ="series", dtype=False)
-    print("{} found".format(len(predictions)))
-    
-    # load the segments
-    print("loading segments: ", end="")
-    segments_data = pd.read_json(segs_file)
-    # TODO segments data standard should probably key each segment by its id
-    segments = segments_data["features"]
-    print("{} found".format(len(segments)))
-
     print("combining predictions with segments")
     combined_preds = []
     for pred_id, pred_data in predictions.items():
@@ -78,14 +65,27 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # confirm required files exist
+    # confirm files exist & load data
     predictions_file = os.path.join(args.folder, "processed/seg_with_predicted.json")
     if not os.path.exists(predictions_file):
         sys.exit("predictions file not found at {}, exiting".format(predictions_file))
+    
+    # load the predictions
+    print("loading predictions: ", end="")
+    preds_data = pd.read_json(
+        predictions_file, orient="index", typ="series", dtype=False)
+    print("{} found".format(len(preds_data)))
         
     segments_file = os.path.join(args.folder, "processed/maps/inter_and_non_int.geojson")
     if not os.path.exists(segments_file):
         sys.exit("segment file not found at {}, exiting".format(segments_file))
     
-    preds_final = combine_predictions_and_segments(predictions_file, segments_file)
+    # load the segments
+    print("loading segments: ", end="")
+    segs_features = pd.read_json(segments_file)
+    # TODO segments data standard should probably key each segment by its id
+    segs_data = segs_features["features"]
+    print("{} found".format(len(segs_data)))
+    
+    preds_final = combine_predictions_and_segments(preds_data, segs_data)
     write_preds_as_geojson(preds_final, os.path.join(args.folder, "processed/preds_final.geojson"))
