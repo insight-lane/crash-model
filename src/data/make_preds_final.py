@@ -17,7 +17,6 @@ import argparse
 import os
 import pandas as pd
 import geojson
-import json
 
 def combine_predictions_and_segments(predictions, segments):
     """
