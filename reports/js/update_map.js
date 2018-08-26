@@ -42,13 +42,19 @@ function splitSegmentName(segmentName) {
 	return {name: segmentName.slice(0, i), secondary: segmentName.slice(i,)};
 }
 
+function zoomToSegment(segmentX, segmentY) {
+	map.flyTo({center:[segmentX, segmentY], zoom: 18});
+}
+
 function populateSegmentInfo(segmentID) {
 	console.log(segmentID);
 	var segmentData = segmentsHash.get(segmentID);
 
 	d3.select('#segment_details .segment_name')
 		.html(function() { var nameObj = splitSegmentName(segmentData.segment.display_name);
-						   return nameObj["name"] + "<br><span class='secondary'>" + nameObj["secondary"] + "</span>"; });
+						   return nameObj["name"] + "<br><span class='secondary'>" + nameObj["secondary"] + "</span>"; })
+		.on("click", function(d) { zoomToSegment(segmentData.segment.center_x, segmentData.segment.center_y); });
+
 	d3.select('#segment_details #prediction').text(DECIMALFMT(segmentData.prediction));
 
 	// hide highest risk panel and slide in segment details panel
@@ -57,7 +63,7 @@ function populateSegmentInfo(segmentID) {
 	d3.select('#highest_risk').classed('visible', false);
 
 	// zoom into clicked-on segment
-	map.flyTo({center: [segmentData.segment.center_x, segmentData.segment.center_y], zoom: 18});
+	zoomToSegment(segmentData.segment.center_x, segmentData.segment.center_y);
 }
 
 

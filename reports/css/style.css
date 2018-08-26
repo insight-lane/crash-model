@@ -231,6 +231,13 @@ h2 span.secondary {
     font-weight: 300;
 }
 
+h2.segment_name {
+    cursor: pointer;
+}
+
+h2.segment_name:hover {
+    text-decoration: underline;
+}
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {
   border: 0;
