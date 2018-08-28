@@ -55,7 +55,8 @@ function populateSegmentInfo(segmentID) {
 						   return nameObj["name"] + "<br><span class='secondary'>" + nameObj["secondary"] + "</span>"; })
 		.on("click", function(d) { zoomToSegment(segmentData.segment.center_x, segmentData.segment.center_y); });
 
-	d3.select('#segment_details #prediction').text(DECIMALFMT(segmentData.prediction));
+	d3.select("#segment_details #prediction").text(DECIMALFMT(segmentData.prediction));
+	d3.select("#risk_circle").style("fill", function(d) { return riskColor(segmentData.prediction); });
 
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
@@ -66,6 +67,20 @@ function populateSegmentInfo(segmentID) {
 	zoomToSegment(segmentData.segment.center_x, segmentData.segment.center_y);
 }
 
+function riskColor(prediction) {
+	if(prediction <= 0.25) {
+		return "#ffe0b2";
+	}
+	else if(prediction > 0.25 && prediction <= 0.5) {
+		return "#ffb74d";
+	}
+	else if(prediction > 0.5 && prediction <= 0.75) {
+		return "#ff9800";
+	}
+	else if(prediction > 0.75 && prediction <= 1) {
+		return "#f57c00";
+	}
+}
 
 
 

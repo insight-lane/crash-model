@@ -28,7 +28,7 @@ h3 {
 
 h4 {
     font-size: 1.125rem;
-    text-transform: uppercase;
+    /*text-transform: uppercase;*/
     font-weight: normal;
     margin-bottom: 5%;
 }
@@ -237,6 +237,10 @@ h2.segment_name {
 
 h2.segment_name:hover {
     text-decoration: underline;
+}
+
+#prediction {
+    font-size: 2rem;
 }
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {
