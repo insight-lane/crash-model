@@ -14,7 +14,6 @@ from . import util
 import argparse
 import os
 import geojson
-import fiona
 import re
 
 
