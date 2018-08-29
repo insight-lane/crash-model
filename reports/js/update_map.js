@@ -3,6 +3,8 @@ var DECIMALFMT = d3.format(".2f");
 var segments = [];
 var segmentsHash;
 
+var bostonMedian = 0.20;
+
 d3.json("preds_final.geojson", function(data) {
 
 	for (var segment in data.features) {
@@ -24,6 +26,8 @@ d3.json("preds_final.geojson", function(data) {
 		.html(function(d) { var nameObj = splitSegmentName(d.segment.display_name);
 							return nameObj["name"] + "<br><span class='secondary'>" + nameObj["secondary"] + "</span>"; })
 		.on("click", function(d) { populateSegmentInfo(d.segment_id); });
+
+	makeBarChart(0, bostonMedian);
 })
 
 function splitSegmentName(segmentName) {
@@ -58,6 +62,8 @@ function populateSegmentInfo(segmentID) {
 	d3.select("#segment_details #prediction").text(DECIMALFMT(segmentData.prediction));
 	d3.select("#risk_circle").style("fill", function(d) { return riskColor(segmentData.prediction); });
 
+	// update prediction bar chart gauge
+
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
 	d3.select('#segment_details').classed('visible', true);
@@ -65,6 +71,34 @@ function populateSegmentInfo(segmentID) {
 
 	// zoom into clicked-on segment
 	zoomToSegment(segmentData.segment.center_x, segmentData.segment.center_y);
+}
+
+function makeBarChart(prediction, median) {
+	var margin = {top: 20, right: 20, bottom: 30, left: 0},
+		width = 200,
+		height = 10;
+
+	var xScale = d3.scaleLinear().domain([0, 1]).rangeRound([height, 0]);
+
+	var svg = d3.select("#predChart")
+		.append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	svg.append("rect")
+		.attr("class", "backgroundBar")
+		.attr("x", 0)
+		.attr("y", height)
+		.attr("width", width)
+		.attr("height", height)
+		.style("fill", "#d2d2d2");
+
+}
+
+function updateBarChart() {
+
 }
 
 function riskColor(prediction) {
