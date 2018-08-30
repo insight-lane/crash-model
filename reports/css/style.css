@@ -242,6 +242,12 @@ h2.segment_name:hover {
 #prediction {
     font-size: 2rem;
 }
+
+.avgLabel {
+    fill: #fff;
+    text-anchor: middle;
+    font-size: 0.8rem;
+}
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {
   border: 0;

@@ -80,9 +80,9 @@ function populateSegmentInfo(segmentID) {
 }
 
 function makeBarChart(prediction, median) {
-	var margin = {top: 0, right: 0, bottom: 30, left: 0},
+	var margin = {top: 5, right: 0, bottom: 38, left: 0},
 		width = 250,
-		height = 10;
+		height = 8;
 
 	xScale.rangeRound([0, width]);
 
@@ -96,10 +96,31 @@ function makeBarChart(prediction, median) {
 	svg.append("rect")
 		.attr("class", "backgroundBar")
 		.attr("x", 0)
-		.attr("y", height)
+		.attr("y", 0)
 		.attr("width", width)
 		.attr("height", height)
 		.style("fill", "#666");
+
+	// mark where the city average is
+	svg.append("line")
+		.attr("class", "avgLine")
+		.attr("x1", xScale(median))
+		.attr("y1", 0)
+		.attr("x2", xScale(median))
+		.attr("y2", height * 2)
+		.style("stroke", "#fff");
+
+	svg.append("text")
+		.attr("class", "avgLabel")
+		.attr("x", xScale(median))
+		.attr("y", height * 3.5)
+		.text("City Average:");
+
+	svg.append("text")
+		.attr("class", "avgLabel")
+		.attr("x", xScale(median))
+		.attr("y", height * 5.5)
+		.text(median);
 
 	svg.selectAll(".predBar")
 		.data([prediction])
@@ -107,7 +128,7 @@ function makeBarChart(prediction, median) {
 		.append("rect")
 		.attr("class", "predBar")
 		.attr("x", 0)
-		.attr("y", height)
+		.attr("y", 0)
 		.attr("width", xScale(prediction))
 		.attr("height", height)
 		.style("fill", riskColor(prediction));
@@ -121,20 +142,6 @@ function updateBarChart(prediction) {
 		.style("fill", riskColor(prediction));
 }
 
-// function riskColor(prediction) {
-// 	if(prediction <= 0.25) {
-// 		return "#ffe0b2";
-// 	}
-// 	else if(prediction > 0.25 && prediction <= 0.5) {
-// 		return "#ffb74d";
-// 	}
-// 	else if(prediction > 0.5 && prediction <= 0.75) {
-// 		return "#ff9800";
-// 	}
-// 	else if(prediction > 0.75 && prediction <= 1) {
-// 		return "#f57c00";
-// 	}
-// }
 
 
 
