@@ -4,7 +4,7 @@ import json
 from jsonschema import validate
 
 
-def parse_date(date, time_format, time):
+def parse_date(date, time_format=None, time=None):
     """
     Turn a date (and optional time) into a datetime string
     in standardized format
