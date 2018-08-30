@@ -1,5 +1,4 @@
 import dateutil.parser as date_parser
-import re
 from datetime import datetime, timedelta
 import json
 from jsonschema import validate
