@@ -29,12 +29,25 @@ crashes_files:
       id: ID
       latitude: Y
       longitude: X
-      date: Date Time
+      # If date supplied in single column:
+      date_complete: Date Time
+      # If date is separated into year/month/day:
+      date_year: 
+      date_month: 
+      # Leave date_day empty if not available
+      date_day: 
+      # If time is available and separate from date:
+      time: 
+      # If time specified, time_format is one of:
+      # default (HH:MM:SS)
+      # seconds (since midnight)
+      # military (HHMM)
+      time_format: 
     optional:
       summary: V1 First Event
-      vehicles:
-      bikes:
       address: Location
+      vehicles: 
+      bikes: 
 
 
 # concern column name
