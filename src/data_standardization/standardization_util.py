@@ -4,7 +4,7 @@ import json
 from jsonschema import validate
 
 
-def parse_date(date, time_format=None, time=None):
+def parse_date(date, time=None, time_format=None):
     """
     Turn a date (and optional time) into a datetime string
     in standardized format
@@ -42,7 +42,7 @@ def parse_date(date, time_format=None, time=None):
         elif time_format == "seconds":
             date = date + timedelta(seconds=int(time))
         
-        elif time_format == "default":
+        else:
             date = date_parser.parse(
                 date.strftime('%Y-%m-%d ') + str(time)
             )

@@ -57,8 +57,8 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
             
         crash_date_time = parse_date(
             crash_date,
-            fields["time_format"],
-            time=crash_time
+            crash_time,
+            fields["time_format"]
         )
         # Skip crashes where date can't be parsed
         if not crash_date_time:

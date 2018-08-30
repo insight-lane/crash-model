@@ -12,7 +12,7 @@ def test_parse_date():
     assert standardization_util.parse_date('01/08/2009', time='08:53:00 PM') \
         == '2009-01-08T20:53:00Z'
 
-    assert standardization_util.parse_date('01/08/2009', time='75180') \
+    assert standardization_util.parse_date('01/08/2009', time='75180', time_format='seconds') \
         == '2009-01-08T20:53:00Z'
 
     assert standardization_util.parse_date('01/08/2009 unk') \
