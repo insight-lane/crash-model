@@ -3,6 +3,11 @@ var DECIMALFMT = d3.format(".2f");
 var segments = [];
 var segmentsHash;
 
+var xScale = d3.scaleLinear().domain([0, 1]);
+var riskColor = d3.scaleLinear()
+	.domain([0.2, 0.4, 0.6, 0.8])
+	.range(["#ffe0b2", "#ffb74d", "#ff9800", "#f57c00"]);
+
 var bostonMedian = 0.20;
 
 d3.json("preds_final.geojson", function(data) {
@@ -63,6 +68,7 @@ function populateSegmentInfo(segmentID) {
 	d3.select("#risk_circle").style("fill", function(d) { return riskColor(segmentData.prediction); });
 
 	// update prediction bar chart gauge
+	updateBarChart(segmentData.prediction);
 
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
@@ -74,11 +80,11 @@ function populateSegmentInfo(segmentID) {
 }
 
 function makeBarChart(prediction, median) {
-	var margin = {top: 20, right: 20, bottom: 30, left: 0},
-		width = 200,
+	var margin = {top: 0, right: 0, bottom: 30, left: 0},
+		width = 250,
 		height = 10;
 
-	var xScale = d3.scaleLinear().domain([0, 1]).rangeRound([height, 0]);
+	xScale.rangeRound([0, width]);
 
 	var svg = d3.select("#predChart")
 		.append("svg")
@@ -93,28 +99,42 @@ function makeBarChart(prediction, median) {
 		.attr("y", height)
 		.attr("width", width)
 		.attr("height", height)
-		.style("fill", "#d2d2d2");
+		.style("fill", "#666");
 
+	svg.selectAll(".predBar")
+		.data([prediction])
+		.enter()
+		.append("rect")
+		.attr("class", "predBar")
+		.attr("x", 0)
+		.attr("y", height)
+		.attr("width", xScale(prediction))
+		.attr("height", height)
+		.style("fill", riskColor(prediction));
 }
 
-function updateBarChart() {
-
+function updateBarChart(prediction) {
+	d3.selectAll(".predBar")
+		.data([prediction])
+		.transition()
+		.attr("width", xScale(prediction))
+		.style("fill", riskColor(prediction));
 }
 
-function riskColor(prediction) {
-	if(prediction <= 0.25) {
-		return "#ffe0b2";
-	}
-	else if(prediction > 0.25 && prediction <= 0.5) {
-		return "#ffb74d";
-	}
-	else if(prediction > 0.5 && prediction <= 0.75) {
-		return "#ff9800";
-	}
-	else if(prediction > 0.75 && prediction <= 1) {
-		return "#f57c00";
-	}
-}
+// function riskColor(prediction) {
+// 	if(prediction <= 0.25) {
+// 		return "#ffe0b2";
+// 	}
+// 	else if(prediction > 0.25 && prediction <= 0.5) {
+// 		return "#ffb74d";
+// 	}
+// 	else if(prediction > 0.5 && prediction <= 0.75) {
+// 		return "#ff9800";
+// 	}
+// 	else if(prediction > 0.75 && prediction <= 1) {
+// 		return "#f57c00";
+// 	}
+// }
 
 
 
