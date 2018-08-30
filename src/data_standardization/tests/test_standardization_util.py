@@ -18,6 +18,15 @@ def test_parse_date():
     assert standardization_util.parse_date('01/08/2009 unk') \
         is None
 
+    assert standardization_util.parse_date('01/08/2009', time='0201', time_format='military') \
+        == '2009-01-08T02:01:00Z'
+        
+    assert standardization_util.parse_date('01/08/2009', time='1201', time_format='military') \
+        == '2009-01-08T12:01:00Z'
+
+    assert standardization_util.parse_date('01/08/2009', time='9999', time_format='military') \
+        == '2009-01-08T00:00:00Z'
+
 def test_parse_address():
 
     address = "29 OXFORD ST\n" + \

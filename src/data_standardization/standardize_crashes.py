@@ -37,11 +37,9 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
                 crash_date = crash[fields["date_complete"]]
             
         elif fields["date_year"] and fields["date_month"]:
-            # some cities do not supply a day of month for crashes, randomize if so
             if fields["date_day"]:
-                crash_date = str(crash[fields["date_year"]])
-                + "-" + str(crash[fields["date_month"]])
-                + "-" + crash[fields["date_day"]]
+                crash_date = str(crash[fields["date_year"]]) + "-" + str(crash[fields["date_month"]]) + "-" + crash[fields["date_day"]]
+            # some cities do not supply a day of month for crashes, randomize if so
             else:
                 available_dates = calendar.Calendar().itermonthdates(
                     crash[fields["date_year"]], crash[fields["date_month"]])
@@ -54,12 +52,20 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
         crash_time = None
         if fields["time"]:
             crash_time = crash[fields["time"]]
+        
+        if fields["time_format"]:
+            crash_date_time = parse_date(
+                crash_date,
+                crash_time,
+                fields["time_format"]
+            )
             
-        crash_date_time = parse_date(
-            crash_date,
-            crash_time,
-            fields["time_format"]
-        )
+        else:
+            crash_date_time = parse_date(
+                crash_date,
+                crash_time
+            )
+            
         # Skip crashes where date can't be parsed
         if not crash_date_time:
             continue
