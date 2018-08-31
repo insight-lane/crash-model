@@ -80,7 +80,7 @@ function populateSegmentInfo(segmentID) {
 }
 
 function makeBarChart(prediction, median) {
-	var margin = {top: 5, right: 0, bottom: 38, left: 0},
+	var margin = {top: 0, right: 0, bottom: 48, left: 0},
 		width = 250,
 		height = 8;
 
@@ -98,8 +98,7 @@ function makeBarChart(prediction, median) {
 		.attr("x", 0)
 		.attr("y", 0)
 		.attr("width", width)
-		.attr("height", height)
-		.style("fill", "#666");
+		.attr("height", height);
 
 	// mark where the city average is
 	svg.append("line")
@@ -107,8 +106,7 @@ function makeBarChart(prediction, median) {
 		.attr("x1", xScale(median))
 		.attr("y1", 0)
 		.attr("x2", xScale(median))
-		.attr("y2", height * 2)
-		.style("stroke", "#fff");
+		.attr("y2", height * 2);
 
 	svg.append("text")
 		.attr("class", "avgLabel")
@@ -120,7 +118,7 @@ function makeBarChart(prediction, median) {
 		.attr("class", "avgLabel")
 		.attr("x", xScale(median))
 		.attr("y", height * 5.5)
-		.text(median);
+		.text(DECIMALFMT(median));
 
 	svg.selectAll(".predBar")
 		.data([prediction])
