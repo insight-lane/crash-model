@@ -345,6 +345,22 @@ def get_width(width):
     return width
 
 
+def get_speed(speed):
+    """
+    Parse the speed from the openstreetmap maxspeed property field
+    If there's more than one speed (from merged ways), use the highest speed
+    Args:
+        speed - a string
+    Returns:
+        speed - an int
+    """
+    if speed:
+        speeds = [int(x) for x in re.findall('\d+', speed)]
+        if speeds:
+            return max(speeds)
+    return 0
+
+
 def clean_ways(orig_file, DOC_FP):
     """
     Reads in osm_ways file, cleans up the features, and reprojects
@@ -371,17 +387,8 @@ def clean_ways(orig_file, DOC_FP):
     results = []
     for way_line in way_lines:
 
-        # All features need to be ints, so convert them here
-
-        # Use speed limit if given in osm
-        speed = way_line['properties']['maxspeed']
-        if speed:
-            s = re.search('[0-9]+', speed)
-            if s:
-                speed = s.group(0)
-        if not speed:
-            speed = 0
-
+        speed = get_speed(way_line['properties']['maxspeed']) \
+            if 'maxspeed' in list(way_line['properties']) else 0
         width = get_width(way_line['properties']['width']) \
             if 'width' in list(way_line['properties']) else 0
 
