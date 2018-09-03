@@ -263,6 +263,34 @@ h2.segment_name:hover {
     text-anchor: middle;
     font-size: 0.8rem;
 }
+
+table {
+    /*border-collapse: collapse;*/
+    margin-bottom: 20px;
+}
+
+td, th {
+    padding: 5px 0;
+}
+
+th {
+    text-align: left;
+    font-weight: 500;
+}
+
+.name {
+    padding-right: 10px;
+}
+
+.yes, .no {
+    text-align: center;
+    padding: 5px 15px;
+}
+
+.selected {
+    background-color: #ddd;
+    color: #1a1a1a;
+}
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {
   border: 0;
