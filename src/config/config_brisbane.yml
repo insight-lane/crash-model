@@ -1,16 +1,16 @@
 # City name
-city: Washington, DC, USA
-# City centerpoint latitude & longitude
-city_latitude: 38.9071923
-city_longitude: -77.0368707
-# Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
-city_radius: 25
+city: brisbane
+# City centerpoint latitude & longitude (default geocoded values set)
+city_latitude: -27.4697707
+city_longitude: 153.0251235
+# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
+city_radius: 20
 # The folder under data where this city's data is stored
-name: dc
+name: brisbane
 # If given, limit crashes to after start_year and before end_year
 # Recommended to limit to just a few years for now
-start_year: 2014
-end_year: 2017
+start_year: 
+end_year: 
 
 
 #################################################################
@@ -18,13 +18,13 @@ end_year: 2017
 
 # crash file configurations
 crashes_files:
-  Crashes_in_DC.csv:
+  locations_2014_2017.csv:
     required:
-      id: OBJECTID
-      latitude: Y
-      longitude: X
+      id: Crash_Ref_Number
+      latitude: Crash_Latitude_GDA94
+      longitude: Crash_Longitude_GDA94
       # If date supplied in single column:
-      date_complete: REPORTDATE
+      date_complete: Crash_Date
       # If date is separated into year/month/day:
       date_year: 
       date_month: 
@@ -38,22 +38,14 @@ crashes_files:
       # military (HHMM)
       time_format: 
     optional:
-      summary: MAR_ADDRESS
-      vehicles: TOTAL_VEHICLES
-      bikes: TOTAL_BICYCLES
-
-# List of concern type information
-concern_files:
-  - name: concern
-    filename: Vision_Zero_Safety.csv
-    latitude: Y
-    longitude: X
-    time: REQUESTDATE
-
+      summary: Crash_DCA_Description
+      address: Crash_Street
+      vehicles: 
+      bikes: 
 
 # week on which to predict crashes (week, year)
 # Best practice is to choose a week towards the end of your crash data set
 # in format [month, year]
-time_target: [51, 2016]
+time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
 weeks_back: 1
