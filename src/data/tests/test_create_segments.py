@@ -1,21 +1,11 @@
 from .. import create_segments
 import fiona
 import os
-import geojson
 from .. import util
 import shutil
+import json
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
-
-
-def make_shape_file(tmpdir):
-    tmppath = tmpdir.strpath
-
-    with open(tmppath, 'w') as outfile:
-        geojson.dump(geojson.FeatureCollection(
-            geojson.Feature(
-                geometry=geojson.Point(-71.08724754844711, 42.352043744961),
-                properties={'id_1': 1, 'id_2': 2})), outfile)
 
 
 def test_get_intersection_buffers():
@@ -62,6 +52,7 @@ def test_create_segments_from_json(tmpdir):
     orig_path = os.path.dirname(
         os.path.abspath(__file__)) + '/data/'
     path = tmpdir.strpath + '/data/processed/maps/'
+    print(path)
     os.makedirs(path)
     shutil.copyfile(
         orig_path + 'missing_segments_test.geojson',
@@ -119,4 +110,80 @@ def test_get_non_intersection_name():
         non_inter_segment, inters_by_id)
     assert name == 'Main Street between From Street and To Street/Another Street'
 
+
+def test_add_point_based_features(tmpdir):
+
+    test_path = os.path.join(
+        os.path.dirname(
+            os.path.abspath(__file__)),
+        'data',
+        'test_create_segments')
+    test_file = os.path.join(test_path, 'points_test.json')
+
+    # The points test file contains non_inters and one inter,
+    # in the same format as add_point_based_features requires
+    with open(test_file, 'r') as f:
+        non_inters = json.load(f)
+    inters = [non_inters.pop()]
+
+    featsfile = os.path.join(test_path, 'points.geojson')
+    outputfile = os.path.join(tmpdir.strpath, 'result.json')
+    non_inters, inters = create_segments.add_point_based_features(
+        non_inters, inters, outputfile, featsfile)
+
+    # Check whether the segments we expected got the properties
+    assert inters[0]['properties']['data'][0]['crosswalk'] == 1
+    signalized = [x for x in non_inters if x['properties']['signal']]
+    assert len(signalized) == 1
+    assert signalized[0]['properties']['id'] == '001556'
+
+    # Run again (to read from file) and make sure everything looks the same
+    non_inters, inters = create_segments.add_point_based_features(
+        non_inters, inters, outputfile, featsfile)
+
+    assert inters[0]['properties']['data'][0]['crosswalk'] == 1
+    signalized = [x for x in non_inters if x['properties']['signal']]
+    assert len(signalized) == 1
+    assert signalized[0]['properties']['id'] == '001556'
+
+    # Test writing to the file is as expected
+    expected = [{
+        "feature": "signal",
+        "location": {"latitude": 42.383125, "longitude": -71.138121},
+        "near_id": "001556"
+    }, {
+        "feature": "signal",
+        "location": {"latitude": 42.386904, "longitude": -71.1161581},
+        "near_id": ""
+    }, {
+        "feature": "crosswalk",
+        "location": {"latitude": 42.3834466, "longitude": -71.1377047},
+        "near_id": 975
+    }]
+    with open(outputfile, 'r') as f:
+        output = json.load(f)
+        assert output == expected
+
+    # Now test with adding additional_features, and use forceupdate
+    additional_feats_file = os.path.join(test_path, 'additional_points.json')
+    non_inters, inters = create_segments.add_point_based_features(
+        non_inters, inters, outputfile, featsfile,
+        additional_feats_filename=additional_feats_file, forceupdate=True)
+    assert non_inters[4]['properties']['parking_tickets'] == 2
     
+    expected = expected + [{
+        "feature": "parking_tickets",
+        "date": "2016-05-17T00:00:00Z",
+        "location": {"latitude": 42.38404209999999, "longitude": -71.1370766},
+        "category": "NO PARKING",
+        "near_id": "001557"
+    }, {
+        "feature": "parking_tickets",
+        "date": "2014-01-04T15:50:00Z",
+        "location": {"latitude": 42.38404209999999, "longitude": -71.1370766},
+        "category": "METER EXPIRED", "near_id": "001557"
+    }]
+
+    with open(outputfile, 'r') as f:
+        output = json.load(f)
+        assert output == expected

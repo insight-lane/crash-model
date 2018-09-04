@@ -126,7 +126,7 @@ if __name__ == '__main__':
             '-r',
             os.path.join(
                 DATA_FP, 'processed', 'maps', outputdir, 'elements.geojson')
-        ])
+        ] + (['--forceupdate'] if recreate else []))
 
         # Map the boston segments to the open street map segments
         # and add features

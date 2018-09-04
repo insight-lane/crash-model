@@ -23,7 +23,7 @@ def read_file_info(config, datadir):
 
         df = pd.read_csv(filepath, na_filter=False)
         rows = df.to_dict("records")
-
+        missing = 0
         for row in rows:
             lat = None
             lon = None
@@ -31,8 +31,8 @@ def read_file_info(config, datadir):
                 lat, lon = standardization_util.parse_address(
                     row[source_config['address']])
             if lat and lon:
-
                 time = None
+
                 if 'time' in source_config and source_config['time']:
                     time = row[source_config['time']]
 
@@ -53,7 +53,11 @@ def read_file_info(config, datadir):
                     updated_row['notes'] = row[source_config['notes']]
 
                 points.append(updated_row)
+            else:
+                missing += 1
+                print(row[source_config['address']])
 
+        print("{} entries didn't have a lat/lon".format(missing))
     if points:
 
         schema_path = os.path.join(os.path.dirname(BASE_FP),
