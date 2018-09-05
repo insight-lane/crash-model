@@ -288,8 +288,8 @@ th {
 }
 
 .selected {
-    background-color: #ddd;
-    color: #1a1a1a;
+    background-color: #666;
+    /*color: #1a1a1a;*/
 }
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {

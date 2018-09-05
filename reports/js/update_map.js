@@ -151,6 +151,34 @@ function updateBarChart(prediction) {
 function updateFeatureImportances(segmentData) {
 	d3.selectAll("#featImportancesTbl td").classed("selected", false);
 
+	if(segmentData.AADT >= 10000) {
+		d3.select("#featImportancesTbl .feature.first td.yes").classed("selected", true);
+	}
+	else {
+		d3.select("#featImportancesTbl .feature.first td.no").classed("selected", true);
+	}
+
+	if(segmentData.AADT <= 1000) {
+		d3.select("#featImportancesTbl .feature.second td.yes").classed("selected", true);
+	}
+	else {
+		d3.select("#featImportancesTbl .feature.second td.no").classed("selected", true);
+	}
+
+	if(segmentData.intersection === 1) {
+		d3.select("#featImportancesTbl .feature.third td.yes").classed("selected", true);
+	}
+	else {
+		d3.select("#featImportancesTbl .feature.third td.no").classed("selected", true);
+	}
+
+	if(segmentData.F_F_CLASS <= 3) {
+		d3.select("#featImportancesTbl .feature.fourth td.yes").classed("selected", true);
+	}
+	else {
+		d3.select("#featImportancesTbl .feature.fourth td.no").classed("selected", true);
+	}
+
 	if(segmentData.SPEEDLIMIT25 === 1) {
 		d3.select("#featImportancesTbl .feature.fifth td.yes").classed("selected", true);
 	}
