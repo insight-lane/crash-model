@@ -8,6 +8,9 @@ from sklearn.metrics import roc_auc_score
 import os
 import argparse
 import yaml
+from .model_utils import format_crash_data
+from .model_classes import Indata, Tuner, Tester
+import sklearn.linear_model as skl
 
 # all model outputs must be stored in the "data/processed/" directory
 BASE_DIR = os.path.dirname(
@@ -75,7 +78,14 @@ def set_defaults(config={}):
     if 'f_cont' not in list(config.keys()):
         config['f_cont'] = ['width']
     if 'f_cat' not in list(config.keys()):
-        config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway']
+        config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway',
+                           'signal']
+
+    # Add features for additional data sources
+    if 'data_source' in config and config['data_source']:
+        for source in config['data_source']:
+            config[source['feat']].append(source['name'])
+
     if 'process' not in list(config.keys()):
         config['process'] = True
     if 'time_target' not in list(config.keys()):

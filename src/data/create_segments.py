@@ -44,6 +44,7 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
 
     return unary_union(buffered_intersections)
 
+
 def find_non_ints(roads, int_buffers):
     """
     Find the segments that aren't intersections
@@ -120,32 +121,46 @@ def find_non_ints(roads, int_buffers):
     return non_int_lines, inter_segments
 
 
-def add_point_based_features(non_inters, inters, feats_filename=None,
-                             additional_feats_filename=None):
+def add_point_based_features(non_inters, inters, jsonfile,
+                             feats_filename=None,
+                             additional_feats_filename=None,
+                             forceupdate=False):
     """
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
-    Point-based features need to be in 3857 projection
     Args:
         non_inters
         inters
+        jsonfile - points_joined.json, storing the results of snapping
         feats_filename - geojson file for point-based features data
+        addtiional_feats_filename (optional) - file for additional
+            points-based data, in json format
+        forceupdate - if True, re-snap points and write to file
     """
-    additional_feats_filename = None
-    features = []
-    if feats_filename:
-        features = util.read_records_from_geojson(feats_filename)
-        print('len of features:' + str(len(features)))
-    if additional_feats_filename:
-        features += util.read_records(
-            additional_feats_filename, 'record')
-        print('len of features:' + str(len(features)))
-    seg, segments_index = util.index_segments(
-        inters + non_inters
-    )
 
-    util.find_nearest(features, seg, segments_index, 20, type_record=True)
+    if forceupdate or not os.path.exists(jsonfile):
+        features = []
+        if feats_filename:
+            features = util.read_records_from_geojson(feats_filename)
+        if additional_feats_filename:
+            features += util.read_records(
+                additional_feats_filename, 'record')
+        print('Snapping {} point-based features'.format(len(features)))
+        seg, segments_index = util.index_segments(
+            inters + non_inters
+        )
 
+        util.find_nearest(features, seg, segments_index, 20, type_record=True)
+
+        # Dump to file
+        print("output {} point-based features to {}".format(
+            len(features), jsonfile))
+        with open(jsonfile, 'w') as f:
+            json.dump([r.properties for r in features], f)
+
+    else:
+        features = util.read_records(jsonfile, None)
+        print("Read {} point-based features from file".format(len(features)))
     matches = {}
 
     for feature in features:
@@ -176,8 +191,10 @@ def add_point_based_features(non_inters, inters, feats_filename=None,
             matched_features = matches[non_inter['properties']['id']]
 
             n = copy.deepcopy(non_inter)
+
             for feat in matched_features:
                 n['properties'][feat] = matched_features[feat]
+
             non_inters[i] = n
 
     return non_inters, inters
@@ -426,6 +443,8 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--newmap", type=str,
                         help="If given, write output to new directory" +
                         "within the maps directory")
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether to force update the points-based data')
 
     args = parser.parse_args()
     DATA_FP = args.datadir
@@ -452,12 +471,16 @@ if __name__ == '__main__':
         feats_file = None
     if not os.path.exists(additional_feats_file):
         additional_feats_file = None
+
     if feats_file or additional_feats_file:
+        jsonfile = os.path.join(DATA_FP, 'processed', 'points_joined.json')
         non_inters, inters = add_point_based_features(
             non_inters,
             inters,
+            jsonfile,
             feats_filename=feats_file,
-            additional_feats_filename=additional_feats_file
+            additional_feats_filename=additional_feats_file,
+            forceupdate=args.forceupdate
         )
     write_segments(non_inters, inters, MAP_FP, PROCESSED_DATA_FP)
 

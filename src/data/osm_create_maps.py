@@ -10,8 +10,11 @@ import json
 import requests
 import yaml
 import sys
+from . import util
+from shapely.geometry import Polygon, LineString, LinearRing
 
 MAP_FP = None
+STANDARDIZED_FP = None
 
 
 def find_osm_polygon(city):
@@ -35,14 +38,104 @@ def find_osm_polygon(city):
     url = 'https://nominatim.openstreetmap.org/search'
 
     response = requests.get(url, params=search_params)
-
     for index, match in enumerate(response.json()):
         # a match that can be used by graph_from_place needs to be a Polygon
         # or MultiPolygon
         if (match['geojson']['type'] in ['Polygon', 'MultiPolygon']):
-            return index+1
+            return index+1, match['geojson']
 
+    return None, None
+
+
+def expand_polygon(polygon, points_file, max_percent=.1):
+    """
+    Read the crash data, determine what proportion of crashes fall outside
+    the city polygon
+    Args:
+        polygon - city polygon
+        points_file - json points file
+        Optional: max_percent (in case you want to override the maximum
+            percent that can be outside the original polygon to buffer)
+    Returns:
+        Updated polygon if it was a polygon to start with, None otherwise
+    """
+
+    # Right now, only support this for polygons
+    if polygon['type'] != 'Polygon':
+        return None
+
+    polygon_coords = [util.get_reproject_point(
+        x[1], x[0], coords=True) for x in polygon['coordinates'][0]]
+
+    poly_shape = Polygon(polygon_coords)
+
+    records = util.read_records(points_file, 'crash')
+
+    outside = []
+    for record in records:
+        if not poly_shape.contains(record.point):
+            outside.append(record.point)
+    outside_rate = len(outside)/len(records)
+
+    if outside_rate > .01 and outside_rate < max_percent:
+        print("{}% of crashes fell outside the city polygon".format(
+            int(round(outside_rate, 2)*100)
+        ))
+        poly_shape = buffer_polygon(poly_shape, outside)
+
+        # Convert back to 4326 projection
+        coords = [util.get_reproject_point(
+            x[1],
+            x[0],
+            inproj='epsg:3857',
+            outproj='epsg:4326',
+            coords=True
+        ) for x in poly_shape.exterior.coords]
+        poly_shape = Polygon(coords)
+
+        return poly_shape
+
+    # If almost no points fall outside the polygon, no need to buffer,
+    # and if a large proportion of points fall outside the polygon,
+    # the crash data might be for a larger area than just the city
     return None
+
+
+def buffer_polygon(polygon, points):
+    """
+    Given a set of points outside a polygon, expand the polygon
+    to include points within 250 meters
+    Args:
+        polygon - shapely polygon
+        points - list of shapely points
+    Returns:
+        new polygon with buffered points added
+    """
+    not_close = []
+    add_buffers = []
+
+    poly_ext = LinearRing(polygon.exterior.coords)
+    for point in points:
+        # Find the distance between the point and the city polygon
+        dist = polygon.distance(point)
+        if dist > 250:
+            not_close.append(point)
+        else:
+            # Create a line between the polygon and the point,
+            # and buffer it
+            point2 = poly_ext.interpolate(poly_ext.project(point))
+            line = LineString([(point.x, point.y), (point2.x, point2.y)])
+            buff = line.buffer(50)
+            add_buffers.append(buff)
+    for buff in add_buffers:
+        polygon = polygon.union(buff)
+    if not_close:
+        print("{} crashes fell outside the buffered city polygon".format(
+            len(not_close)
+        ))
+    else:
+        print("Expanded city polygon to include all crash locations")
+    return polygon
 
 
 def simple_get_roads(config):
@@ -63,15 +156,22 @@ def simple_get_roads(config):
     # confirm if a polygon is available for this city, which determines which
     # graph function is appropriate
     print("searching nominatim for " + str(config['city']) + " polygon")
-    polygon_pos = find_osm_polygon(config['city'])
+    polygon_pos, polygon = find_osm_polygon(config['city'])
 
     if (polygon_pos is not None):
-        print("city polygon found in OpenStreetMaps at position " +
-              str(polygon_pos) + ", building graph of roads within " +
-              "specified bounds")
-        G1 = ox.graph_from_place(config['city'], network_type='drive',
-                                 simplify=False, which_result=polygon_pos)
-
+        # Check to see if polygon needs to be expanded to include other points
+        polygon = expand_polygon(polygon, os.path.join(
+            STANDARDIZED_FP, 'crashes.json'))
+        if not polygon:
+            print("city polygon found in OpenStreetMaps at position " +
+                  str(polygon_pos) + ", building graph of roads within " +
+                  "specified bounds")
+            G1 = ox.graph_from_place(config['city'], network_type='drive',
+                                     simplify=False, which_result=polygon_pos)
+        else:
+            print("using buffered city polygon")
+            G1 = ox.graph_from_polygon(polygon, network_type='drive',
+                                       simplify=False)
     else:
         # City & lat+lng+radius required from config to graph from point
         if ('city' not in list(config.keys()) or config['city'] is None):
@@ -220,6 +320,47 @@ def write_highway_keys(DOC_FP, highway_keys):
             w.writerow(item)
 
 
+def get_width(width):
+    """
+    Parse the width from the openstreetmap width property field
+    Args:
+        width - a string
+    Returns:
+        width - an int
+    """
+
+    # This indicates two segments combined together.
+    # For now, we just skip combined segments with different widths
+    if not width or ';' in width or '[' in width:
+        width = 0
+    else:
+        # Sometimes there's bad (non-numeric) width
+        # so remove anything that isn't a number or .
+        # Skip those that don't have some number in them
+        width = re.sub('[^0-9\.]+', '', width)
+        if width:
+            width = round(float(width))
+        else:
+            width = 0
+    return width
+
+
+def get_speed(speed):
+    """
+    Parse the speed from the openstreetmap maxspeed property field
+    If there's more than one speed (from merged ways), use the highest speed
+    Args:
+        speed - a string
+    Returns:
+        speed - an int
+    """
+    if speed:
+        speeds = [int(x) for x in re.findall('\d+', speed)]
+        if speeds:
+            return max(speeds)
+    return 0
+
+
 def clean_ways(orig_file, DOC_FP):
     """
     Reads in osm_ways file, cleans up the features, and reprojects
@@ -246,32 +387,10 @@ def clean_ways(orig_file, DOC_FP):
     results = []
     for way_line in way_lines:
 
-        # All features need to be ints, so convert them here
-
-        # Use speed limit if given in osm
-        speed = way_line['properties']['maxspeed']
-        if speed:
-            s = re.search('[0-9]+', speed)
-            if s:
-                speed = s.group(0)
-        if not speed:
-            speed = 0
-
-        # round width
-        width = 0
-        if 'width' in list(way_line['properties']):
-            width = way_line['properties']['width']
-            # This indicates two segments combined together
-            if not width or ';' in width or '[' in width:
-                width = 0
-            else:
-                width = re.sub('[^0-9]+', '', width)
-                # Sometimes there's bad (non-numeric) width
-                # If so, skip
-                if width:
-                    width = round(float(width))
-                else:
-                    width = 0
+        speed = get_speed(way_line['properties']['maxspeed']) \
+            if 'maxspeed' in list(way_line['properties']) else 0
+        width = get_width(way_line['properties']['width']) \
+            if 'width' in list(way_line['properties']) else 0
 
         lanes = way_line['properties']['lanes']
         if lanes:
@@ -382,7 +501,8 @@ if __name__ == '__main__':
 
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
     DOC_FP = os.path.join(args.datadir, 'docs')
-
+    STANDARDIZED_FP = os.path.join(args.datadir, 'standardized')
+    
     # If maps do not exist, create
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
        or args.forceupdate:
