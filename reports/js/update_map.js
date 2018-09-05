@@ -8,7 +8,6 @@ var riskColor = d3.scaleLinear()
 	.domain([0.2, 0.4, 0.6, 0.8])
 	.range(["#ffe0b2", "#ffb74d", "#ff9800", "#f57c00"]);
 
-var bostonMedian = 0.20;
 
 d3.json("preds_final.geojson", function(data) {
 
@@ -19,7 +18,10 @@ d3.json("preds_final.geojson", function(data) {
 	segments.sort(function(a, b) {
 		return d3.descending(a.prediction, b.prediction);
 	})
-	// console.log(segments.length);
+
+	var midpoint = Math.floor(segments.length/2);
+	var median = segments[midpoint].prediction;
+
 	segmentsHash = d3.map(segments, function(d) { return d.segment_id; });
 
 	d3.select("#highest_risk_list")
@@ -32,7 +34,9 @@ d3.json("preds_final.geojson", function(data) {
 							return nameObj["name"] + "<br><span class='secondary'>" + nameObj["secondary"] + "</span>"; })
 		.on("click", function(d) { populateSegmentInfo(d.segment_id); });
 
-	makeBarChart(0, bostonMedian);
+	makeBarChart(0, median);
+
+	// populateFeatureImportancesTbl(data);
 })
 
 function splitSegmentName(segmentName) {
@@ -56,8 +60,8 @@ function zoomToSegment(segmentX, segmentY) {
 }
 
 function populateSegmentInfo(segmentID) {
-	console.log(segmentID);
 	var segmentData = segmentsHash.get(segmentID);
+	console.log(segmentData);
 
 	d3.select('#segment_details .segment_name')
 		.html(function() { var nameObj = splitSegmentName(segmentData.segment.display_name);
@@ -69,6 +73,9 @@ function populateSegmentInfo(segmentID) {
 
 	// update prediction bar chart gauge
 	updateBarChart(segmentData.prediction);
+
+	// update feature importances based on segment's attributes
+	updateFeatureImportances(segmentData);
 
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
@@ -141,6 +148,21 @@ function updateBarChart(prediction) {
 		.style("fill", riskColor(prediction));
 }
 
+function updateFeatureImportances(segmentData) {
+	d3.selectAll("#featImportancesTbl td").classed("selected", false);
+
+	if(segmentData.SPEEDLIMIT25 === 1) {
+		d3.select("#featImportancesTbl .feature.fifth td.yes").classed("selected", true);
+	}
+	else {
+		d3.select("#featImportancesTbl .feature.fifth td.no").classed("selected", true);
+	}
+}
+
+
+function populateFeatureImportancesTbl(data) {
+
+}
 
 
 
