@@ -24,10 +24,6 @@
                 "description": "Value of prediction",
                 "type": "number"
             },
-            "happy_score": {
-              "description": "how happy are you",
-              "type": "number"
-            },
             "segment": {
                 "title": "Segment",
                 "description": "Segment being predicted on",
@@ -42,7 +38,7 @@
                         "type": "string"
                     }
                 },
-                "required": ["id", "display_name", "happy_score"]
+                "required": ["id", "display_name"]
             },
             "geometry": {
               "title": "Geometry",
