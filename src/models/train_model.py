@@ -6,6 +6,7 @@ import pandas as pd
 import scipy.stats as ss
 from sklearn.metrics import roc_auc_score
 import os
+import json
 import argparse
 import yaml
 from .model_utils import format_crash_data
@@ -203,14 +204,6 @@ if __name__ == '__main__':
     # features for linear model
     lm_features = features
 
-    # add crash data
-    # create lagged crash values
-    crash_lags = format_crash_data(data, 'crash', week, year)
-
-    # add to features
-    crash_cols = ['pre_week','pre_month','pre_quarter','avg_week']
-    features += crash_cols
-
     if config['process']:
         print(('Processing categorical: {}'.format(f_cat)))
         for f in f_cat:
@@ -235,8 +228,21 @@ if __name__ == '__main__':
         features = list(set(features) - set(f_cat+f_cont))
         lm_features = list(set(lm_features) - set(f_cat+f_cont))
 
-    # create model data
-    data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment_id')
+    if config['level'] == 'week':
+        # create lagged crash values
+        crash_lags = format_crash_data(data, 'crash', week, year)
+
+        # add to features
+        crash_cols = ['pre_week','pre_month','pre_quarter','avg_week']
+        features += crash_cols
+        # create model data
+        data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment_id')
+    else:
+        # if not week, get any crash 0/1
+        any_crash = data.groupby('segment_id')['crash'].max()
+        any_crash = (any_crash>0).astype(int)
+        any_crash.name = 'target'
+        data_model = data_segs.set_index('segment_id').join(any_crash).reset_index()
     print("full features:{}".format(features))
 
     #Initialize data
@@ -285,26 +291,39 @@ if __name__ == '__main__':
     # running this to test performance at different weeks
     tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
-    # predict back number of weeks according to config
-    all_weeks = data[['year','week']].drop_duplicates().sort_values(['year','week']).values
-    back_weeks = all_weeks[-config['weeks_back']:]
-    pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
-    for i, yw in enumerate(back_weeks):
-        preds = predict_forward(yw[1], yw[0], data_segs, data)
-        pred_weeks[i] = preds
+    if config['level'] == 'week':
+        # predict back number of weeks according to config
+        all_weeks = data[['year','week']].drop_duplicates().sort_values(['year','week']).values
+        back_weeks = all_weeks[-config['weeks_back']:]
+        pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
+        for i, yw in enumerate(back_weeks):
+            preds = predict_forward(yw[1], yw[0], data_segs, data)
+            pred_weeks[i] = preds
 
-    # create dataframe with segment-year-week index
-    df_pred = pd.DataFrame(pred_weeks.T,
-            index=data_segs.segment_id.values,
-            columns=pd.MultiIndex.from_tuples([tuple(w) for w in back_weeks]))
-    # has year-week column index, need to stack for year-week index
-    df_pred = df_pred.stack(level=[0,1])
-    df_pred = df_pred.reset_index()
-    df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
-    df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
+        # create dataframe with segment-year-week index
+        df_pred = pd.DataFrame(pred_weeks.T,
+                index=data_segs.segment_id.values,
+                columns=pd.MultiIndex.from_tuples([tuple(w) for w in back_weeks]))
+        # has year-week column index, need to stack for year-week index
+        df_pred = df_pred.stack(level=[0,1])
+        df_pred = df_pred.reset_index()
+        df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
+        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
+        data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
+        data_plus_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+    else:
+        preds = trained_model.predict_proba(data_model[features])[::,1]
+        df_pred = data_model.copy(deep=True)
+        df_pred['prediction'] = preds
+        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
+        df_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
 
-    # output for manipulation by 
-    data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
-    data_plus_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+    # output feature importances
+    feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
+    # conversion to json
+    with open(os.path.join(DATA_FP, 'feature_importances.json'), 'w') as f:
+        json.dump(feature_imp_dict, f)
+
+    
 
 
