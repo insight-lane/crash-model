@@ -14,6 +14,13 @@ def test_get_width():
     assert osm_create_maps.get_width('t') == 0
 
 
+def test_get_speed():
+    assert osm_create_maps.get_speed('') == 0
+    assert osm_create_maps.get_speed('signals') == 0
+    assert osm_create_maps.get_speed('60') == 60
+    assert osm_create_maps.get_speed("['90', '100']") == 100
+
+
 def test_reproject_and_clean_feats(tmpdir):
 
     tmppath = tmpdir.strpath

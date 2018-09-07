@@ -38,13 +38,25 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
         "      id: \n" +
         "      latitude: \n" +
         "      longitude: \n" +
-        "      date: \n" +
-        "      # Time is only required if date and time" +
-        " are in different columns\n" +
+        "      # If date supplied in single column:\n" +
+        "      date_complete: \n" +
+        "      # If date is separated into year/month/day:\n" +
+        "      date_year: \n" +
+        "      date_month: \n" +
+        "      # Leave date_day empty if not available\n" +
+        "      date_day: \n"+
+        "      # If time is available and separate from date:\n" +
         "      time: \n" +
+        "      # If time specified, time_format is one of:\n" +
+        "      # default (HH:MM:SS)\n" +
+        "      # seconds (since midnight)\n" +
+        "      # military (HHMM)\n" +
+        "      time_format: \n"+
         "    optional:\n" +
         "      summary: \n" +
-        "      address: \n\n"
+        "      address: \n" +
+        "      vehicles: \n" +
+        "      bikes: \n\n"
     )
 
     if concern:
