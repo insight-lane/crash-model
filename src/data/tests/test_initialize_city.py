@@ -45,12 +45,25 @@ crashes_files:
       id: 
       latitude: 
       longitude: 
-      date: 
-      # Time is only required if date and time are in different columns
+      # If date supplied in single column:
+      date_complete: 
+      # If date is separated into year/month/day:
+      date_year: 
+      date_month: 
+      # Leave date_day empty if not available
+      date_day: 
+      # If time is available and separate from date:
       time: 
+      # If time specified, time_format is one of:
+      # default (HH:MM:SS)
+      # seconds (since midnight)
+      # military (HHMM)
+      time_format: 
     optional:
       summary: 
       address: 
+      vehicles: 
+      bikes: 
 
 # List of concern type information
 concern_files:
