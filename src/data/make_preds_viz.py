@@ -1,5 +1,5 @@
 """
-Title: make_preds_final.py
+Title: make_preds_viz.py
 
 Author: terryf82 https://github.com/terryf82
 
@@ -10,7 +10,7 @@ Inputs:
     inter_and_non_int.geojson (segments)
 
 Output:
-    preds_final.json
+    preds_viz.json
 """
 
 import argparse
@@ -67,15 +67,15 @@ def write_preds_as_geojson(preds, outfp):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--folder", type=str,
-                        help="path to destination's data folder")
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="data directory")
 
     args = parser.parse_args()
 
     #print(os.getcwd())
 
     # confirm files exist & load data
-    predictions_file = os.path.join(DATA_FP, args.folder, "processed", "seg_with_predicted.json")
+    predictions_file = os.path.join(DATA_FP, args.datadir, "processed", "seg_with_predicted.json")
     if not os.path.exists(predictions_file):
         sys.exit("predictions file not found at {}, exiting".format(predictions_file))
     
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         predictions_file, orient="index", typ="series", dtype=False)
     print("{} found".format(len(preds_data)))
         
-    segments_file = os.path.join(DATA_FP, args.folder, "processed", "maps", "inter_and_non_int.geojson")
+    segments_file = os.path.join(DATA_FP, args.datadir, "processed", "maps", "inter_and_non_int.geojson")
     if not os.path.exists(segments_file):
         sys.exit("segment file not found at {}, exiting".format(segments_file))
     
@@ -96,6 +96,6 @@ if __name__ == "__main__":
     segs_data = segs_features["features"]
     print("{} found".format(len(segs_data)))
     
-    preds_final = combine_predictions_and_segments(preds_data, segs_data)
-    write_preds_as_geojson(preds_final, os.path.join(DATA_FP, args.folder, "processed", "preds_final.geojson"))
-    write_preds_as_geojson(preds_final, os.path.join(BASE_DIR, "reports", "preds_final-test.geojson"))
+    # output the combined prediction + segment data for use 
+    preds_viz = combine_predictions_and_segments(preds_data, segs_data)    
+    write_preds_as_geojson(preds_final, os.path.join(DATA_FP, args.folder, "processed", "preds_viz.geojson"))

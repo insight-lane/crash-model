@@ -132,20 +132,16 @@ def visualize(name, end_year):
     """
     Creates the visualization data set for a city
     Args:
-        name - e.g. Boston, MA, USA
-        end_year - year we're visualizing, typically the last year for
-                   for which we have data
+        DATA_FP - path to data directory, e.g. ../data/boston/
     """
     print("Generating visualization data")
     subprocess.check_call([
         'python',
         '-m',
-        'visualization.make_viz_data',
-        '-c',
-        name
-    ]
-        + (['-y', str(end_year-1)] if end_year else [])
-    )
+        'data.make_preds_viz',
+        '-d',
+        DATA_FP
+    ])
 
 
 if __name__ == '__main__':
