@@ -22,7 +22,6 @@ def get_buffer(filename, lat, lon, buff, outputfile):
     """
 
     segments = read_geojson(filename)
-    segments, segments_index = index_segments(segments, geojson=False)
 
     # Calculate the bounding circle
     overlapping = []
