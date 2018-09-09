@@ -75,7 +75,8 @@ def data_standardization(config, DATA_FP, forceupdate=False):
             '-m',
             'data_standardization.standardize_point_data',
             '-c',
-            os.path.join(BASE_DIR, 'src', 'config', 'config_' + config['name'] + '.yml'),
+            os.path.join(BASE_DIR, 'src', 'config',
+                         'config_' + config['name'] + '.yml'),
             '-d',
             DATA_FP
         ])
@@ -128,7 +129,7 @@ def train_model(config_file, DATA_FP):
     ])
 
 
-def visualize(name, end_year):
+def visualize(DATA_FP):
     """
     Creates the visualization data set for a city
     Args:
@@ -186,4 +187,4 @@ if __name__ == '__main__':
         train_model(args.config_file, DATA_FP)
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
-        visualize(config['name'], config['end_year'])
+        visualize(DATA_FP)
