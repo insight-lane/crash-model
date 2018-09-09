@@ -425,18 +425,23 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return index_segments(list(inter) + list(non_inter))
 
 
-def index_segments(segments):
+def index_segments(segments, geojson=True):
     """
     Reads a list of segments in geojson format, and makes
     a spatial index for lookup
     Args:
         list of segments
+        geojson - whether or not the list of tuples are in geojson format
+            (the other option is shapely shapes) defaults to True
+    Returns:
+        segments (in shapely format), and segments_index
     """
 
-    # Read in segments and turn them into shape, propery tuples
-    combined_seg = [(shape(x['geometry']), x['properties']) for x in
-                    segments]
-
+    combined_seg = segments
+    if geojson:
+        # Read in segments and turn them into shape, propery tuples
+        combined_seg = [(shape(x['geometry']), x['properties']) for x in
+                        segments]
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
