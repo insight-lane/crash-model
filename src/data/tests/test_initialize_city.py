@@ -1,4 +1,5 @@
 import py
+import sys
 import initialize_city
 
 
@@ -82,6 +83,41 @@ time_target: [30, 2017]
 weeks_back: 1"""
 
     with open(tmpdir.join('/test_config_brisbane.yml'), 'r') as test_file:
+        test_file_contents = test_file.read()
+
+    assert test_file_contents == expected_file_contents
+
+
+def test_make_js_config_brisbane(monkeypatch):
+
+    def mockreturn(address):
+        return "Brisbane, Australia", -27.4697707, 153.0251235, 'S'
+
+    monkeypatch.setattr(initialize_city, 'geocode_address', mockreturn)
+    tmpdir = py.path.local('/tmp')
+
+    # Generate a test config for Brisbane
+    initialize_city.make_js_config(
+        tmpdir.join('/test_js_config_brisbane.js'),
+        'Brisbane, Australia',
+        'brisbane',
+    )
+
+    # check that the file contents generated is identical to a pre-built string
+    expected_file_contents = """var config = {
+    MAPBOX_TOKEN: "",
+    cities: [
+        {
+            name: "Brisbane, Australia",
+            id: "brisbane",
+            latitude: -27.4697707,
+            longitude: 153.0251235,
+        }
+    ]
+}
+"""
+
+    with open(tmpdir.join('/test_js_config_brisbane.js'), 'r') as test_file:
         test_file_contents = test_file.read()
 
     assert test_file_contents == expected_file_contents
