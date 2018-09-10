@@ -194,3 +194,13 @@ def test_get_center_point():
     assert util.get_center_point(
         geojson.Feature(geometry=geojson.Point([0, 0]))) == (None, None)
 
+
+def test_get_roads_and_inters():
+
+    path = os.path.join(
+        TEST_FP, 'data',
+        'test_get_roads_and_inters.geojson')
+    print(path)
+    roads, inters = util.get_roads_and_inters(path)
+    assert len(roads) == 4
+    assert len(inters) == 1
