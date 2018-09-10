@@ -3,11 +3,11 @@
 import argparse
 from shapely.geometry import LineString, Point
 import geojson
-from data.util import read_geojson, index_segments, get_reproject_point
+from data.util import read_geojson, get_reproject_point
 from data.util import prepare_geojson
 
 
-def get_buffer(filename, lat, lon, buff, outputfile):
+def get_buffer(filename, lat, lon, buff):
     """
     Given a geojson file, latitude and longitude in 4326 projection,
     and a buffer, write to file (as geojson) all the LineStrings and
@@ -18,7 +18,7 @@ def get_buffer(filename, lat, lon, buff, outputfile):
         lon
         buff
     Returns:
-        Nothing, writes to geojson file
+        A list of overlapping geojson features 4326 projection
     """
 
     segments = read_geojson(filename)
@@ -49,11 +49,8 @@ def get_buffer(filename, lat, lon, buff, outputfile):
                 print("MultiLineString not implented yet, skipping...")
 
     if overlapping:
-        results = prepare_geojson(overlapping)
-        with open(outputfile, 'w') as outfile:
-            geojson.dump(results, outfile)
-        print("Copied {} features to {}".format(
-            len(results['features']), outputfile))
+        overlapping = prepare_geojson(overlapping)
+    return overlapping
 
 
 if __name__ == '__main__':
@@ -75,5 +72,13 @@ if __name__ == '__main__':
                         required=True)
     args = parser.parse_args()
     
-    get_buffer(args.filename, args.latitude, args.longitude, args.buffer,
-               args.outputfile)
+    overlapping = get_buffer(args.filename, args.latitude, args.longitude,
+                             args.buffer)
+
+    if overlapping:
+        with open(args.outputfile, 'w') as outfile:
+            geojson.dump(overlapping, outfile)
+        print("Copied {} features to {}".format(
+            len(overlapping['features']), args.outputfile))
+    else:
+        print("No overlapping elements found")
