@@ -33,7 +33,8 @@ name: brisbane
 # Recommended to limit to just a few years for now
 start_year: 
 end_year: 
-
+# level of predictions, either 'week' or 'segment'
+level: 'segment'
 
 #################################################################
 # Configuration for data standardization
