@@ -27,12 +27,14 @@ PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 DATA_FP = None
 
 
-def get_intersection_buffers(intersections, intersection_buffer_units):
+def get_intersection_buffers(intersections, intersection_buffer_units,
+                             debug=False):
     """
     Buffers intersection according to proj units
     Args:
         intersections
         intersection_buffer_units - in meters
+        debug - if true, will output the buffers to file for debugging
     Returns:
         a list of polygons, buffering the intersections
         these are circles, or groups of overlapping circles
@@ -41,7 +43,11 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
     buffered_intersections = [intersection['geometry'].buffer(
         intersection_buffer_units) for intersection in intersections]
 
-    return unary_union(buffered_intersections)
+    result = unary_union(buffered_intersections)
+    if debug:
+        util.output_polygons(result, os.path.join(
+            MAP_FP, 'int_buffers.geojson'))
+    return result
 
 
 def find_non_ints(roads, int_buffers):
