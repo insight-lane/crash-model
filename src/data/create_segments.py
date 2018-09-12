@@ -15,6 +15,7 @@ import argparse
 import os
 import geojson
 import re
+from shapely.geometry import MultiLineString, LineString
 
 
 BASE_DIR = os.path.dirname(
@@ -342,12 +343,16 @@ def create_segments_from_json(roads_shp_path, mapfp):
     # Planarize intersection segments
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
-
     for idx, lines in list(inter_segments['lines'].items()):
 
         lines = unary_union(lines)
 
         coords = []
+        # Very infrequent edge case where lines is a LineString
+        # In 6 cities, has happened only once
+        # Simply turn into a MultiLineString
+        if type(lines) == LineString:
+            lines = MultiLineString([lines.coords])
         for line in lines:
             coords += [[x for x in line.coords]]
 
@@ -413,6 +418,7 @@ def write_segments(non_inters, inters, mapfp, datafp):
                 if 'center_y' in x['properties'] else ''
         }
     } for x in inters]
+    
     int_w_ids = util.prepare_geojson(int_w_ids)
 
     with open(os.path.join(mapfp, 'inters_segments.geojson'), 'w') as outfile:
