@@ -348,9 +348,10 @@ def create_segments_from_json(roads_shp_path, mapfp):
         lines = unary_union(lines)
 
         coords = []
-        # Very infrequent edge case where lines is a LineString
-        # In 6 cities, has happened only once
-        # Simply turn into a MultiLineString
+        # Fixing issue where we had previously thought a dead-end node
+        # was an intersection. Once this is fixed in osmnx
+        # (or we have a better work around), this should be able to
+        # be taken out
         if type(lines) == LineString:
             lines = MultiLineString([lines.coords])
         for line in lines:

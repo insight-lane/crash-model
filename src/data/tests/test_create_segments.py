@@ -65,7 +65,18 @@ def test_create_segments_from_json(tmpdir):
     create_segments.write_segments(
         non_inters, inters, path, tmpdir.strpath + '/data/')
 
+    # Now test for the issue where we thought a dead end was an intersection
+    # Just make sure that doesn't die
+    shutil.copyfile(
+        orig_path + 'bad_intersection_test.geojson',
+        path + 'osm_elements.geojson'
+    )
+    create_segments.create_segments_from_json(
+        path + 'osm_elements.geojson',
+        path
+    )
 
+    
 def test_get_intersection_name():
     inter_segments = [{
         'id': 1,
