@@ -26,9 +26,9 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
         "# If given, limit crashes to after start_year and before end_year\n" +
         "# Recommended to limit to just a few years for now\n" +
         "start_year: \n" +
-        "end_year: \n\n\n" +
-        "# level of predictions, either 'week' or 'segment' \n"
-        "level: 'segment'\n"+
+        "end_year: \n" +
+        "# level of predictions, either 'week' or 'segment'\n" +
+        "level: 'segment'\n\n" +
         "#################################################################\n" +
         "# Configuration for data standardization\n\n" +
         "# crash file configurations\n" +

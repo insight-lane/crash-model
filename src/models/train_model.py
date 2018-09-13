@@ -34,6 +34,18 @@ def predict_forward(split_week, split_year, seg_data, crash_data):
         print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
     return(preds)
 
+def output_importance(model):
+    # output feature importances or coefficients
+    if hasattr(trained_model.feature_importances_):
+        feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
+    elif hasattr(trained_model.coefficients):
+        feature_imp_dict = dict(zip(features, trained_model.coefficients.astype(float)))
+    else:
+        return("No feature importances/coefficients detected")
+    # conversion to json
+    with open(os.path.join(DATA_FP, 'feature_importances.json'), 'w') as f:
+        json.dump(feature_imp_dict, f)
+
 #Model parameters
 params = dict()
 
@@ -318,11 +330,8 @@ if __name__ == '__main__':
         df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
         df_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
 
-    # output feature importances
-    feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
-    # conversion to json
-    with open(os.path.join(DATA_FP, 'feature_importances.json'), 'w') as f:
-        json.dump(feature_imp_dict, f)
+    # output feature importances or coefficients
+    output_importance(trained_model)
 
     
 
