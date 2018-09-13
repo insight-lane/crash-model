@@ -7,16 +7,16 @@ from data.util import read_geojson, get_reproject_point
 from data.util import prepare_geojson
 
 
-def get_buffer(filename, lat, lon, buff):
+def get_buffer(filename, lat, lon, radius):
     """
     Given a geojson file, latitude and longitude in 4326 projection,
-    and a buffer, write to file (as geojson) all the LineStrings and
+    and a radius, write to file (as geojson) all the LineStrings and
     Points that overlap a circular buffer around the coordinates.
     Args:
         filename
         lat
         lon
-        buff
+        radius
     Returns:
         A list of overlapping geojson features 4326 projection
     """
@@ -26,9 +26,9 @@ def get_buffer(filename, lat, lon, buff):
     # Calculate the bounding circle
     overlapping = []
     point = get_reproject_point(lat, lon)
-    buff_poly = point.buffer(buff)
+    buffered_poly = point.buffer(radius)
     for segment in segments:
-        if segment[0].intersects(buff_poly):
+        if segment[0].intersects(buffered_poly):
             
             if type(segment[0]) == LineString:
                 coords = [x for x in segment[0].coords]
@@ -64,8 +64,8 @@ if __name__ == '__main__':
     parser.add_argument("-lon", "--longitude", type=str,
                         help="Longitude of center point",
                         required=True)
-    parser.add_argument("-b", "--buffer", type=int,
-                        help="Size of buffer around coordinates, in meters",
+    parser.add_argument("-r", "--radius", type=int,
+                        help="Radius of buffer around coordinates, in meters",
                         required=True)
     parser.add_argument("-o", "--outputfile", type=str,
                         help="Output filename",
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     overlapping = get_buffer(args.filename, args.latitude, args.longitude,
-                             args.buffer)
+                             args.radius)
 
     if overlapping:
         with open(args.outputfile, 'w') as outfile:
