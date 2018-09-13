@@ -99,6 +99,42 @@ def set_defaults(config={}):
         config['level']  = 'week'
 
 
+def predict(config_level):
+    """
+
+    Args:
+        config_level - either week or segment
+    Returns
+        nothing, writes prediction segments to file
+    """
+    if config_level == 'week':
+        # predict back number of weeks according to config
+        all_weeks = data[['year','week']].drop_duplicates().sort_values(['year','week']).values
+        back_weeks = all_weeks[-config['weeks_back']:]
+        pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
+        for i, yw in enumerate(back_weeks):
+            preds = predict_forward(yw[1], yw[0], data_segs, data)
+            pred_weeks[i] = preds
+
+        # create dataframe with segment-year-week index
+        df_pred = pd.DataFrame(pred_weeks.T,
+                index=data_segs.segment_id.values,
+                columns=pd.MultiIndex.from_tuples([tuple(w) for w in back_weeks]))
+        # has year-week column index, need to stack for year-week index
+        df_pred = df_pred.stack(level=[0,1])
+        df_pred = df_pred.reset_index()
+        df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
+        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
+        data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
+        data_plus_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+    else:
+        preds = trained_model.predict_proba(data_model[features])[::,1]
+        df_pred = data_model.copy(deep=True)
+        df_pred['prediction'] = preds
+        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
+        df_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -291,32 +327,7 @@ if __name__ == '__main__':
     # running this to test performance at different weeks
     tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
-    if config['level'] == 'week':
-        # predict back number of weeks according to config
-        all_weeks = data[['year','week']].drop_duplicates().sort_values(['year','week']).values
-        back_weeks = all_weeks[-config['weeks_back']:]
-        pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
-        for i, yw in enumerate(back_weeks):
-            preds = predict_forward(yw[1], yw[0], data_segs, data)
-            pred_weeks[i] = preds
-
-        # create dataframe with segment-year-week index
-        df_pred = pd.DataFrame(pred_weeks.T,
-                index=data_segs.segment_id.values,
-                columns=pd.MultiIndex.from_tuples([tuple(w) for w in back_weeks]))
-        # has year-week column index, need to stack for year-week index
-        df_pred = df_pred.stack(level=[0,1])
-        df_pred = df_pred.reset_index()
-        df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
-        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
-        data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
-        data_plus_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
-    else:
-        preds = trained_model.predict_proba(data_model[features])[::,1]
-        df_pred = data_model.copy(deep=True)
-        df_pred['prediction'] = preds
-        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
-        df_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+    predict(config['level'])
 
     # output feature importances
     feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
