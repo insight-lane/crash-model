@@ -36,11 +36,6 @@ def snap_records(
     util.find_nearest(
         records, combined_seg, segments_index, 30, type_record=True)
 
-    # Write out snapped records
-    schema = records[0].schema
-    shpfile = os.path.join(MAP_FP, record_type + '_joined.shp')
-    util.records_to_shapefile(schema, shpfile, records)
-
     jsonfile = os.path.join(
         PROCESSED_DATA_FP, record_type + '_joined.json')
 

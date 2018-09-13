@@ -14,7 +14,6 @@ from . import util
 import argparse
 import os
 import geojson
-import fiona
 import re
 
 
@@ -291,24 +290,12 @@ def get_non_intersection_name(non_inter_segment, inters_by_id):
 
 def create_segments_from_json(roads_shp_path, mapfp):
 
-    data = fiona.open(roads_shp_path)
-    data = util.reproject_records([x for x in data])
-
-    # All the line strings are roads
-    roads = [x for x in data
-             if x['geometry'].type == 'LineString']
-
+    roads, inters = util.get_roads_and_inters(roads_shp_path)
     print("read in {} road segments".format(len(roads)))
 
     # unique id did not get included in shapefile, need to add it for adjacency
     for i, road in enumerate(roads):
         road['properties']['orig_id'] = int(str(99) + str(i))
-
-    # Get the intersection list by excluding anything that's not labeled
-    # as an intersection
-    inters = [x for x in data if x['geometry'].type == 'Point'
-              and 'intersection' in list(x['properties'].keys())
-              and x['properties']['intersection']]
 
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
