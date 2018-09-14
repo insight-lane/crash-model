@@ -46,32 +46,36 @@ def output_importance(model):
     with open(os.path.join(DATA_FP, 'feature_importances.json'), 'w') as f:
         json.dump(feature_imp_dict, f)
 
-#Model parameters
-params = dict()
 
-#cv parameters
-cvp = dict()
-cvp['pmetric'] = 'roc_auc'
-cvp['iter'] = 5 #number of iterations
-cvp['folds'] = 5 #folds for cv (default)
-cvp['shuffle'] = True
+def set_params():
+    #Model parameters
+    params = dict()
 
-#LR parameters
-mp = dict()
-mp['LogisticRegression'] = dict()
-mp['LogisticRegression']['penalty'] = ['l1','l2']
-mp['LogisticRegression']['C'] = ss.beta(a=5,b=2) #beta distribution for selecting reg strength
-mp['LogisticRegression']['class_weight'] = ['balanced']
+    #cv parameters
+    cvp = dict()
+    cvp['pmetric'] = 'roc_auc'
+    cvp['iter'] = 5 #number of iterations
+    cvp['folds'] = 5 #folds for cv (default)
+    cvp['shuffle'] = True
 
-#xgBoost model parameters
-mp['XGBClassifier'] = dict()
-mp['XGBClassifier']['max_depth'] = list(range(3, 7))
-mp['XGBClassifier']['min_child_weight'] = list(range(1, 5))
-mp['XGBClassifier']['learning_rate'] = ss.beta(a=2,b=15)
+    #LR parameters
+    mp = dict()
+    mp['LogisticRegression'] = dict()
+    mp['LogisticRegression']['penalty'] = ['l1','l2']
+    mp['LogisticRegression']['C'] = ss.beta(a=5,b=2) #beta distribution for selecting reg strength
+    mp['LogisticRegression']['class_weight'] = ['balanced']
 
-# cut-off for model performance
-# generally, if the model isn't better than chance, it's not worth reporting
-perf_cutoff = 0.5
+    #xgBoost model parameters
+    mp['XGBClassifier'] = dict()
+    mp['XGBClassifier']['max_depth'] = list(range(3, 7))
+    mp['XGBClassifier']['min_child_weight'] = list(range(1, 5))
+    mp['XGBClassifier']['learning_rate'] = ss.beta(a=2,b=15)
+
+    # cut-off for model performance
+    # generally, if the model isn't better than chance, it's not worth reporting
+    perf_cutoff = 0.5
+    return cvp, mp, perf_cutoff
+
 
 def set_defaults(config={}):
     """
@@ -108,7 +112,32 @@ def set_defaults(config={}):
     if 'name' not in list(config.keys()):
         config['name'] = 'boston'
     if 'level' not in list(config.keys()):
-        config['level']  = 'week'
+        config['level'] = 'week'
+
+
+def get_features(config):
+
+    f_cat = config['f_cat']
+    f_cont = config['f_cont']
+    # segment chars
+    # Dropping continuous features that don't exist
+    new_feats = []
+    for f in f_cont:
+        if f not in data.columns.values:
+            print("Feature " + f + " not found, skipping")
+        else:
+            new_feats.append(f)
+    f_cont = new_feats
+    # create featureset holder
+    features = f_cont+f_cat
+    print(('Segment features included: {}'.format(features)))
+    if config['concern'] != '':
+        features.append(config['concern'])
+    if config['atr'] != '':
+        features += config['atr_cols']
+    if config['tmc'] != '':
+        features += config['tmc_cols']
+    return f_cat, f_cont, features
 
 
 def predict(config_level):
@@ -166,36 +195,15 @@ if __name__ == '__main__':
         with open(config_file) as f:
             config = yaml.safe_load(f)
     set_defaults(config)
+    cvp, mp, perf_cutoff = set_params()
 
     DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
+    seg_data = os.path.join(DATA_FP, config['seg_data'])
+
     print(('Outputting to: %s' % DATA_FP))
-
-    # Default
-    seg_data = os.path.join(DATA_FP, 'vz_predict_dataset.csv.gz')
-    # Override default if given
-    if config['seg_data'] is not None:
-        seg_data = os.path.join(DATA_FP, config['seg_data'])
-
-    # Default
-    atr_data = os.path.join(DATA_FP, 'atrs_predicted.csv')
-    # Override default if given
-    if config['atr'] == '':
-        atr_data = ''
-    elif config['atr'] is not None:
-        atr_data = config['atr']
-
-    # Default
-    tmc_data = os.path.join(DATA_FP, 'tmc_summary.json')
-    # Override default if given
-    if config['tmc'] == '':
-        tmc_data = ''
-    elif config['tmc'] is not None:
-        tmc_data = config['tmc']
 
     week = int(config['time_target'][0])
     year = int(config['time_target'][1])
-    f_cat = config['f_cat']
-    f_cont = config['f_cont']
 
     # Read in data
     data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
@@ -206,28 +214,14 @@ if __name__ == '__main__':
         data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
         data.reset_index(inplace=True)
 
-    # segment chars
-    # Dropping continuous features that don't exist
-    new_feats = []
-    for f in f_cont:
-        if f not in data.columns.values:
-            print("Feature " + f + " not found, skipping")
-        else:
-            new_feats.append(f)
-    f_cont = new_feats
-
+    f_cat, f_cont, features = get_features(config)
     data_segs = data.groupby('segment_id')[f_cont+f_cat].max()  # grab the highest values from each column
     data_segs.reset_index(inplace=True)
-
-    # create featureset holder
-    features = f_cont+f_cat
-    print(('Segment features included: {}'.format(features)))
 
     # add concern
     if config['concern']!='':
         print('Adding concerns')
         concern_observed = data[data.year==2016].groupby('segment_id')[config['concern']].max()
-        features.append(config['concern'])
         data_segs = data_segs.merge(concern_observed.reset_index(), on='segment_id')
 
     # add in atrs if filepath present
@@ -238,7 +232,6 @@ if __name__ == '__main__':
         atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
         data_segs = data_segs.merge(atrs[['id']+config['atr_cols']],
                                                                 left_on='segment_id', right_on='id')
-        features += config['atr_cols']
 
     # add in tmcs if filepath present
     if config['tmc']!='':
@@ -247,7 +240,6 @@ if __name__ == '__main__':
                                            dtype={'near_id':str})[['near_id']+config['tmc_cols']]
         data_segs = data_segs.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
         data_segs[config['tmc_cols']] = data_segs[config['tmc_cols']].fillna(0)
-        features += config['tmc_cols']
 
     # features for linear model
     lm_features = features
