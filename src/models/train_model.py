@@ -48,8 +48,6 @@ def output_importance(model):
 
 
 def set_params():
-    #Model parameters
-    params = dict()
 
     #cv parameters
     cvp = dict()
