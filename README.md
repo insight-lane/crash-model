@@ -8,7 +8,6 @@ Outline:
  - Connect
  - Getting Started
 
-
 Project Overview
 -----------------------
 **What is the goal of the project?**
@@ -51,14 +50,11 @@ Any city that wishes to can make use of the project. At a minimum, geo-coded his
 
 **What is the release schedule?**
 
-The intended roadmap of development for the project can be found at [https://github.com/Data4Democracy/crash-model/projects](https://github.com/Data4Democracy/crash-model/projects)
+The intended roadmap of development for the project can be found at [https://github.com/Data4Democracy/crash-model/projects](https://github.com/Data4Democracy/crash-model/projects).
 
 **How can I access the project?**
 
-This repo can be downloaded and run in its entirity using Docker, or you can see a current deployment of the project at [https://boston-crash-model.firebaseapp.com/](https://github.com/Data4Democracy/crash-model/projects)
-
-
-
+This repo can be downloaded and run in its entirity using Docker, or you can see a current deployment of the project at [https://boston-crash-model.firebaseapp.com/](https://boston-crash-model.firebaseapp.com/).
 
 Project Background
 -----------------------
@@ -73,7 +69,6 @@ This is part of the City's long-term [Vision Zero initiative](http://www.visionz
 >
 > — Mayor Martin J. Walsh
 
-
 Connect
 -----------------------
 Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-boston-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](http://datafordemocracy.org/contact.html)!
@@ -87,7 +82,6 @@ Leads:
  - [@j-t-t](https://datafordemocracy.slack.com/messages/@j-t-t)
  - [@alicefeng](https://datafordemocracy.slack.com/messages/@alicefeng)
  - [@terryf82](https://datafordemocracy.slack.com/messages/@terryf82)
-
 
 Getting Started
 -----------------------
@@ -129,10 +123,10 @@ Once you have the image, you can run it in a container. The project folder (/app
 
 The arguments to this command perform the following:
 
-1. -d detaches the container and runs it in the background (gives you your shell back)
-2. -p 8080:8080 maps port 8080 from the container to 8080 on your local machine (required if you want to view the visualization via browser)
-3. --name bcm.local names the container 'bcm.local' (or whatever value you specify)
-4. -v /local/path/to/project_repo:/app mounts your local machine's copy of the project repo into /app in the container.
+1. `-d` detaches the container and runs it in the background (gives you your shell back)
+2. `-p 8080:8080` maps port 8080 from the container to 8080 on your local machine (required if you want to view the visualization via browser)
+3. `--name bcm.local` names the container 'bcm.local' (or whatever value you specify)
+4. `-v /local/path/to/project_repo:/app` mounts your local machine's copy of the project repo into /app in the container.
 
 Once you have a running container, you can get a shell on it to run the pipeline, test scripts etc. by running:
 
@@ -149,7 +143,6 @@ At a high level, there are a variety of raw data sources available to us:
 - Street segment inventories
 - The Vision Zero crowdsourced [concerns map](http://app01.cityofboston.gov/VZSafety)
 - [Other open city data](https://data.boston.gov/) (constituent requests, liquor licenses, assessing data)
--
 
 Building off of [Vision Zero crash data](http://app01.cityofboston.gov/VisionZero) & the [Vision Zero concerns map](http://app01.cityofboston.gov/VZSafety).
 
@@ -196,6 +189,5 @@ Building off of [Vision Zero crash data](http://app01.cityofboston.gov/VisionZer
     │   │
     │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
     │       └── visualize.py
-
 
 <p><small>Project structure based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
