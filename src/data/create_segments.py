@@ -44,11 +44,20 @@ def get_intersection_buffers(intersections, intersection_buffer_units,
     buffered_intersections = [intersection['geometry'].buffer(
         intersection_buffer_units) for intersection in intersections]
 
-    result = unary_union(buffered_intersections)
+    buffered_intersections = unary_union(buffered_intersections)
     if debug:
-        util.output_polygons(result, os.path.join(
+        util.output_polygons([(x, {}) for x in buffered_intersections], os.path.join(
             MAP_FP, 'int_buffers.geojson'))
-    return result
+
+    results = []
+    # Get the points that overlap with the buffers
+    for buff in buffered_intersections:
+        matches = []
+        for inter in intersections:
+            if inter['geometry'].within(buff):
+                matches.append(inter)
+        results.append([buff, matches])
+    return results
 
 
 def find_non_ints(roads, int_buffers):
@@ -73,8 +82,7 @@ def find_non_ints(roads, int_buffers):
     print("creating rindex")
 
     int_buffers_index = rtree.index.Index()
-
-    for idx, intersection_buffer in enumerate(int_buffers):
+    for idx, intersection_buffer in enumerate([x[0] for x in int_buffers]):
         int_buffers_index.insert(idx, intersection_buffer.bounds)
 
     # Split intersection lines (within buffer) and non-intersection lines
@@ -91,7 +99,7 @@ def find_non_ints(roads, int_buffers):
         road_line = road['geometry']
         for idx in int_buffers_index.intersection(road_line.bounds):
 
-            int_buffer = int_buffers[idx]
+            int_buffer = int_buffers[idx][0]
             if int_buffer.intersects(road_line):
                 # Add intersecting road segment line
                 inter_segments['lines'][idx].append(
@@ -99,7 +107,6 @@ def find_non_ints(roads, int_buffers):
                 # Add intersecting road segment data
                 road['properties']['inter'] = 1
                 inter_segments['data'][idx].append(road['properties'])
-
                 road_int_buffers.append(int_buffer)
 
         # If intersection buffers intersect roads
