@@ -105,4 +105,4 @@ if __name__ == "__main__":
     # output the combined prediction + segment data for use
     preds_viz = combine_predictions_and_segments(preds_data, segs_data)
     write_preds_as_geojson(preds_viz, os.path.join(
-        DATA_FP, args.folder, "processed", "preds_viz.geojson"))
+        DATA_FP, args.datadir, "processed", "preds_viz.geojson"))
