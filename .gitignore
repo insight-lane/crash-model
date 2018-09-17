@@ -4,9 +4,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# remove data
-data/*
-
 # C extensions
 *.so
 
@@ -95,9 +92,6 @@ ENV/
 
 # Conda envs
 Scripts
-
-# Data
-data/*
 
 # API Keys
 config.js
