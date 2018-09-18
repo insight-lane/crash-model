@@ -12,6 +12,7 @@ import json
 from dateutil.parser import parse
 from .record import Crash, Concern, Record
 import geojson
+from .segment import Segment
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -640,7 +641,7 @@ def get_roads_and_inters(filename):
     data = reproject_records([x for x in data])
 
     # All the line strings are roads
-    roads = [x for x in data
+    roads = [Segment(x['geometry'], x['properties']) for x in data
              if x['geometry'].type == 'LineString']
 
     # Get the intersection list by excluding anything that's not labeled
@@ -648,10 +649,11 @@ def get_roads_and_inters(filename):
     inters = [x for x in data if x['geometry'].type == 'Point'
               and 'intersection' in list(x['properties'].keys())
               and x['properties']['intersection']]
+
     return roads, inters
 
 
-def output_polygons(polys, filename):
+def output_polygons(items, filename):
     """
     Write a list of polygons in 3857 projection to file in 4326 projection
     Used for debugging purposes
@@ -665,17 +667,34 @@ def output_polygons(polys, filename):
         nothing, writes to file
     """
     output = []
-    for poly in polys:
-        coords = [x for x in poly.exterior.coords]
-        reprojected_coords = [get_reproject_point(
-            x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
-                              for x in coords]
+    for item, properties in items:
+        if item.type == 'Polygon':
+            coords = [x for x in item.exterior.coords]
+            reprojected_coords = [[get_reproject_point(
+                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                                  for x in coords]]
+        elif item.type == 'MultiLineString':
+            lines = [x for x in item]
+            reprojected_coords = []
+            for line in lines:
+                reprojected_coords.append([get_reproject_point(
+                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                                  for x in line.coords])
+        elif item.type == 'LineString':
+            coords = [x for x in item.coords]
+            reprojected_coords = [get_reproject_point(
+                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                                  for x in coords]
+        else:
+            print("{} not supported, skipping".format(item.type))
+            continue
         output.append({
             'type': 'Feature',
             'geometry': {
-                'type': 'Polygon',
-                'coordinates': [reprojected_coords]
-            }
+                'type': item.type,
+                'coordinates': reprojected_coords
+            },
+            'properties': properties
         })
 
     with open(filename, 'w') as outfile:
