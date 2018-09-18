@@ -198,3 +198,28 @@ def test_add_point_based_features(tmpdir):
     with open(outputfile, 'r') as f:
         output = json.load(f)
         assert output == expected
+
+
+def test_get_connections():
+    test_path = os.path.join(
+        os.path.dirname(
+            os.path.abspath(__file__)),
+        'data',
+        'test_create_segments')
+    test_file = os.path.join(test_path, 'test_get_connections1.geojson')
+
+    roads, inters = util.get_roads_and_inters(test_file)
+
+    # Test the segment on the other side of the median
+    # getting dropped from the intersection
+    connections = create_segments.get_connections(
+        [inters[0]['geometry']], roads)
+
+    # One intersection is found
+    assert len(connections) == 1
+    # And it only has three components
+    assert len(connections[0]) == 3
+    ids = [int(x.properties['id']) for x in connections[0]]
+    ids.sort()
+    assert ids == [263, 1167, 1168]
+
