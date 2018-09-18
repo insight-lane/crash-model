@@ -4,7 +4,8 @@ channels:
 - defaults
 dependencies:
 - codecov
-- fiona
+# Conda packacking issue, will want to revisit later
+- fiona=1.7.13
 - folium
 - geopandas
 - geocoder
@@ -16,8 +17,7 @@ dependencies:
 - numpy
 - openpyxl
 - osmnx
-# Weird conda packaging bug, will want to revisit version of pandas later
-- pandas=0.22
+- pandas
 - pylint
 - pyproj
 - pytest
