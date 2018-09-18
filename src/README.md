@@ -33,10 +33,10 @@ We also can map city-specific maps (and features associated with their roads) to
 
 This section walks you through how to generate and visualize data for any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), or for any city that you suitable data for (at a minimum crashes, ideally concerns as well).
 
-The demo city data is hosted on data.world. The 1.1 compatible zip can be downloaded from https://query.data.world/s/wwd5od3qrapm5nlenq44caxb5ba5rq
+The demo city data is under version control in */data* using [Git Large File Storage](https://git-lfs.github.com/). Each city is archived individually using tar & bzip2. To access the archives as part of the repo, you need to have Git LFS installed on your local machine (see link above for instructions). If you don't install LFS the archives will still appear, but are effectively placeholders and cannot be used.
 
 - If you want to visualize the data, you'll need to create a mapbox account (https://www.mapbox.com/)
-- If you're running one of the demo cities, extract the 1.1 zip and move the /data folder into the root application folder
+- If you're running one of the demo cities, extract the city's archive in */data* to expose the input files (crashes, concerns etc.). For example on linux systems, this can be achieved by running *tar -xjvf boston.tar.bz2*
 - If you're running a different city, you need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file>`.
     - City name is the full name of the city, e.g. "Cambridge, MA, USA".
     - Folder name is what you'd like the city's data directory to  be named, e.g. "cambridge".
