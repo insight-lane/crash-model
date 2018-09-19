@@ -76,48 +76,41 @@ def get_connections(points, segments):
     # Create a dict with each intersection point's coords as key
     # The values are the point itself and an empty list that will
     # store all the linestrings with a connection to the point
-    point_dict = {}
+
+#    test_output = [(x, {}) for x in points] + [(x.geometry, x.properties) for x in segments]
+#    util.output_polygons(test_output, 'debug_out.geojson')
+    print("-----------------")
+    print(len(segments))
+    inters = []
     for p in points:
-        point_dict[str(list(p.coords))] = (p, [])
+        inters.append([p, []])
 
     # Get a starting list of all lines that touch any of the
     # intersection points
     connected_ids = []
     for line in segments:
-        for point, linelist in point_dict.values():
-            if line.geometry.intersects(point):
-                point_dict[str(list(point.coords))][1].append(line)
-                connected_ids.append(line.properties['id'])
-                
-    prev_length = len(segments)
-    # Take out all the lines that we already know are connected
-    segments = [x for x in segments if x.properties['id'] not in connected_ids]
+        for i, (curr_shape, lines) in enumerate(inters):
+            if line.geometry.intersects(curr_shape):
+                inters[i][1].append(line)
+                inters[i][0] = unary_union([inters[i][0], line.geometry])
+                connected_ids.append(line.properties['orig_id'])
 
-    while len(segments) != prev_length:
-        for segment in segments:
-            for point, segmentlist in point_dict.values():
-                if segment.geometry.intersects(
-                        unary_union([x.geometry for x in segmentlist])):
-                    point_dict[str(list(point.coords))][1].append(segment)
-                    connected_ids.append(segment.properties['id'])
-        prev_length = len(segments)
-        # Take out all the lines that we already know are connected
-        segments = [x for x in segments if x.properties['id'] not in connected_ids]
+    # Merge connected components
+    resulting_inters = []
+    while inters:
+        curr = inters.pop(0)
+        if inters:
+            connected_lines = set(
+                curr[1] + [x[1] for x in inters if x[0].intersects(
+                    curr[0]
+                )][0]
+            )
+        else:
+            connected_lines = set(curr[1])
+        inters = [x for x in inters if not x[0].intersects(curr[0])]
+        resulting_inters.append(connected_lines)
 
-    # Now figure out whether the individual points' segments are connected
-    merged_inters = []
-    inters = [x[1] for x in point_dict.values()]
-    for key, value in enumerate(inters):
-
-        inter = value
-        for key2, value2 in enumerate(inters):
-            if key != key2 and unary_union([x.geometry for x in value]).intersects(
-                    unary_union([x.geometry for x in value2])):
-                inter.extend(value2)
-        merged_inters.append(inter)
-
-    # remove any duplicate segments
-    return [set(x) for x in merged_inters]
+    return resulting_inters
 
 
 def find_non_ints(roads, int_buffers):
@@ -153,38 +146,86 @@ def find_non_ints(roads, int_buffers):
         road_lines_index.insert(idx, b.bounds)
 
     inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
-    roads_with_int_segments = []
+    roads_with_int_segments = {}
     count = 0
-    for int_buffer in int_buffers:
+    for i, int_buffer in enumerate(int_buffers):
+        print("buffer id:{}".format(i))
         match_segments = []
+        matched_roads = []
         for idx in road_lines_index.intersection(int_buffer[0].bounds):
-            match_segments.append(Segment(roads[idx].geometry.intersection(
-                int_buffer[0]), roads[idx].properties))
+            road = roads[idx]
+            print(road.properties["orig_id"])
+            match_segments.append(Segment(road.geometry.intersection(
+                int_buffer[0]), road.properties))
+            matched_roads.append(road)
+#            import ipdb; ipdb.set_trace()
+#            if roads[idx].properties['orig_id'] == 991:
+#                import ipdb; ipdb.set_trace()
+
         int_segments = get_connections(int_buffer[1], match_segments)
+#        if i == 1:
+#            import ipdb; ipdb.set_trace()
+
+#        if i == 5:
+        test_output = [(int_buffer[0], {})]
+        util.output_polygons(test_output, 'debug_buffer.geojson')
+
         # Each road_with_int is a road segment and a list of lists of segments
         # representing the intersections
         # to-do: turn these into intersection objects
-        roads_with_int_segments.append((roads[idx], int_segments))
 
+        for r in matched_roads:
+            if r.properties['orig_id'] == 9910:
+                import ipdb; ipdb.set_trace()
+
+#            if idx == 1:
+#                import ipdb; ipdb.set_trace()
+#            if i == 1:
+#                pdb
+            if r.properties['orig_id'] not in roads_with_int_segments:
+                roads_with_int_segments[r.properties['orig_id']] = []
+            roads_with_int_segments[r.properties['orig_id']] += int_segments
+        if i == 1:
+            test_output = [(x.geometry, x.properties) for x in roads_with_int_segments[9910][0]]
+            util.output_polygons(test_output, 'debug_int1.geojson')
+#            test_output = [(x.geometry, x.properties) for x in roads_with_int_segments[9910][1]]
+#            util.output_polygons(test_output, 'debug_int2.geojson')
+
+#            import ipdb; ipdb.set_trace()
+
+            #        if i == 5:
+#            import ipdb; ipdb.set_trace()
+            
         for int_segment in int_segments:
             inter_segments['lines'][count] = [x.geometry for x in int_segment]
             inter_segments['data'][count] = [x.properties for x in int_segment]
             count += 1
 
     non_int_lines = []
-    for road_info in roads_with_int_segments:
+#    inter_info = []
+    import ipdb; ipdb.set_trace()
 
-#        util.output_polygons([(road_info[0].geometry, {})], 'non_inter.geojson')
-        # Check against each separate intersection
-        inter_lines = []
-        for inter in road_info[1]:
-            inter_lines.append(unary_union([x.geometry for x in inter]))
-#        util.output_polygons([(unary_union([x for x in inter_lines]), {})], 'inter_combo.geojson')
+    for road in roads:
+        if road.properties['orig_id'] not in roads_with_int_segments:
+            non_int_lines.append(geojson.Feature(
+                geometry=geojson.LineString([x for x in road.geometry.coords]),
+                properties=road.properties
+            ))
 
-        diff = road_info[0].geometry.difference(unary_union([x for x in inter_lines]))
-#            diff = diff.difference(unary_union([x.geometry for x in inter]))
+        else:
+    #        util.output_polygons([(road_info[0].geometry, {})], 'non_inter.geojson')
+            # Check against each separate intersection
+            inter_lines = []
 
-        if diff != road_info[0]:
+            road_info = roads_with_int_segments[road.properties['orig_id']]
+            for inter in road_info:
+                inter_lines.append(unary_union([x.geometry for x in inter]))
+#                inter_info.append((unary_union([x.geometry for x in inter]), {}))
+    ##        util.output_polygons([(unary_union([x for x in inter_lines]), {}], 'inter_combo.geojson')
+
+            diff = road.geometry.difference(unary_union([x for x in inter_lines]))
+    #            diff = diff.difference(unary_union([x.geometry for x in inter]))
+
             if 'LineString' == diff.type:
                 non_int_lines.append(geojson.Feature(
                     geometry=geojson.LineString([x for x in diff.coords]),
@@ -199,10 +240,9 @@ def find_non_ints(roads, int_buffers):
                     geometry=geojson.LineString(coords),
                     properties=road.properties)
                 )
-        else:
-            non_int_lines.append(geojson.Feature(
-                geometry=geojson.LineString([x for x in road_info[0].geometry.coords])))
-
+            else:
+                print("{} found, skipping".format(diff.type))
+#    util.output_polygons(inter_info, 'inter_combo.geojson')
     return non_int_lines, inter_segments
 
 

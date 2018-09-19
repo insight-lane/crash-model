@@ -206,6 +206,7 @@ def test_get_connections():
             os.path.abspath(__file__)),
         'data',
         'test_create_segments')
+
     test_file = os.path.join(test_path, 'test_get_connections1.geojson')
 
     roads, inters = util.get_roads_and_inters(test_file)
@@ -223,3 +224,15 @@ def test_get_connections():
     ids.sort()
     assert ids == [263, 1167, 1168]
 
+    # Test an intersection with two connected points getting merged
+    # into one intersection
+    test_file = os.path.join(test_path, 'test_get_connections2.geojson')
+    roads, inters = util.get_roads_and_inters(test_file)
+    # The initial file should have 7 roads and 2 intersections
+    assert len(roads) == 7
+    assert len(inters) == 2
+    connections = create_segments.get_connections(
+        [x['geometry'] for x in inters], roads)
+
+    assert len(connections) == 1
+    assert len(connections[0]) == 7
