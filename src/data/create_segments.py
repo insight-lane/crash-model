@@ -47,8 +47,10 @@ def get_intersection_buffers(intersections, intersection_buffer_units,
 
     buffered_intersections = unary_union(buffered_intersections)
     if debug:
-        util.output_polygons([(x, {}) for x in buffered_intersections], os.path.join(
-            MAP_FP, 'int_buffers.geojson'))
+        util.output_from_shapes(
+            [(x, {}) for x in buffered_intersections],
+            os.path.join(MAP_FP, 'int_buffers.geojson')
+        )
 
     results = []
     # Get the points that overlap with the buffers
@@ -131,12 +133,10 @@ def find_non_ints(roads, int_buffers):
     roads_with_int_segments = {}
     count = 0
     for i, int_buffer in enumerate(int_buffers):
-        print("buffer id:{}".format(i))
         match_segments = []
         matched_roads = []
         for idx in road_lines_index.intersection(int_buffer[0].bounds):
             road = roads[idx]
-            print(road.properties["orig_id"])
             match_segments.append(Segment(road.geometry.intersection(
                 int_buffer[0]), road.properties))
             matched_roads.append(road)

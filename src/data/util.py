@@ -653,7 +653,7 @@ def get_roads_and_inters(filename):
     return roads, inters
 
 
-def output_polygons(items, filename):
+def output_from_shapes(items, filename):
     """
     Write a list of polygons in 3857 projection to file in 4326 projection
     Used for debugging purposes
@@ -685,6 +685,11 @@ def output_polygons(items, filename):
             reprojected_coords = [get_reproject_point(
                 x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
                                   for x in coords]
+        elif item.type == 'Point':
+            reprojected_coords = get_reproject_point(
+                item.y, item.x, inproj='epsg:3857', outproj='epsg:4326',
+                coords=True
+            )
         else:
             print("{} not supported, skipping".format(item.type))
             continue
