@@ -81,7 +81,7 @@ def get_connections(points, segments):
             if line.geometry.intersects(curr_shape):
                 inters[i][1].append(line)
                 inters[i][0] = unary_union([inters[i][0], line.geometry])
-                connected_ids.append(line.properties['orig_id'])
+                connected_ids.append(line.properties['id'])
 
     # Merge connected components
     resulting_inters = []
@@ -140,16 +140,16 @@ def find_non_ints(roads, int_buffers):
             match_segments.append(Segment(road.geometry.intersection(
                 int_buffer[0]), road.properties))
             matched_roads.append(road)
-
+        print(match_segments[0].properties['id'])
         int_segments = get_connections(int_buffer[1], match_segments)
 
         # Each road_with_int is a road segment and a list of lists of segments
         # representing the intersections
         # to-do: turn these into intersection objects
         for r in matched_roads:
-            if r.properties['orig_id'] not in roads_with_int_segments:
-                roads_with_int_segments[r.properties['orig_id']] = []
-            roads_with_int_segments[r.properties['orig_id']] += int_segments
+            if r.properties['id'] not in roads_with_int_segments:
+                roads_with_int_segments[r.properties['id']] = []
+            roads_with_int_segments[r.properties['id']] += int_segments
 
         for int_segment in int_segments:
             inter_segments['lines'][count] = [x.geometry for x in int_segment]
@@ -159,7 +159,7 @@ def find_non_ints(roads, int_buffers):
     non_int_lines = []
     for road in roads:
         # If there's no overlap between the road segment and any intersections
-        if road.properties['orig_id'] not in roads_with_int_segments:
+        if road.properties['id'] not in roads_with_int_segments:
             non_int_lines.append(geojson.Feature(
                 geometry=geojson.LineString([x for x in road.geometry.coords]),
                 properties=road.properties
@@ -167,7 +167,7 @@ def find_non_ints(roads, int_buffers):
         else:
 
             # Check against each separate intersection
-            road_info = roads_with_int_segments[road.properties['orig_id']]
+            road_info = roads_with_int_segments[road.properties['id']]
 
             diff = road.geometry
             for inter in road_info:

@@ -30,14 +30,15 @@ def test_get_intersection_buffers():
 
 def test_find_non_ints():
 
-    roads = fiona.open(TEST_FP +
-                       '/data/processed/maps/boston_test_elements.geojson')
+    roads, _ = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/processed/maps/boston_test_elements.geojson'
+    ))
 
-    roads = util.reproject_records([x for x in roads])
-
-    inters = fiona.open(TEST_FP + '/data/processed/maps/inters.geojson')
-    inters = util.reproject_records([x for x in inters])
-
+    _, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/processed/maps/inters.geojson'
+    ))
     int_buffers = create_segments.get_intersection_buffers(inters, 20)
     non_int_lines, inter_segments = create_segments.find_non_ints(
         roads, int_buffers)
@@ -236,3 +237,4 @@ def test_get_connections():
 
     assert len(connections) == 1
     assert len(connections[0]) == 7
+
