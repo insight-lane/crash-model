@@ -68,7 +68,6 @@ def get_connections(points, segments):
     # Create a dict with each intersection point's coords as key
     # The values are the point itself and an empty list that will
     # store all the linestrings with a connection to the point
-
     inters = []
     for p in points:
         inters.append([p, []])
@@ -85,14 +84,19 @@ def get_connections(points, segments):
 
     # Merge connected components
     resulting_inters = []
+    connected_lines = []
     while inters:
         curr = inters.pop(0)
         if inters:
-            connected_lines = set(
-                curr[1] + [x[1] for x in inters if x[0].intersects(
+
+            connected = [x[1] for x in inters if x[0].intersects(
                     curr[0]
-                )][0]
-            )
+            )]
+
+            if connected:
+                connected_lines = set(
+                    curr[1] + connected[0]
+                )
         else:
             connected_lines = set(curr[1])
         inters = [x for x in inters if not x[0].intersects(curr[0])]
@@ -140,7 +144,7 @@ def find_non_ints(roads, int_buffers):
             match_segments.append(Segment(road.geometry.intersection(
                 int_buffer[0]), road.properties))
             matched_roads.append(road)
-        print(match_segments[0].properties['id'])
+
         int_segments = get_connections(int_buffer[1], match_segments)
 
         # Each road_with_int is a road segment and a list of lists of segments
@@ -195,6 +199,7 @@ def find_non_ints(roads, int_buffers):
                 print("{} found, skipping".format(diff.type))
 
     return non_int_lines, inter_segments
+
 
 def add_point_based_features(non_inters, inters, jsonfile,
                              feats_filename=None,
