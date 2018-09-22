@@ -49,7 +49,7 @@ def test_create_segments_from_json(tmpdir):
     orig_path = os.path.dirname(
         os.path.abspath(__file__)) + '/data/'
     path = tmpdir.strpath + '/data/processed/maps/'
-    print(path)
+
     os.makedirs(path)
     shutil.copyfile(
         orig_path + 'missing_segments_test.geojson',
@@ -234,3 +234,7 @@ def test_get_connections():
     assert len(connections) == 1
     assert len(connections[0]) == 7
 
+    test_file = os.path.join(test_path, 'no_non_inter.geojson')
+    roads, inters = util.get_roads_and_inters(test_file)
+    connections = create_segments.get_connections(
+        [x['geometry'] for x in inters], roads)
