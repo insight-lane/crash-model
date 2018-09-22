@@ -30,15 +30,11 @@ def test_get_intersection_buffers():
 
 def test_find_non_ints():
 
-    roads, _ = util.get_roads_and_inters(os.path.join(
+    roads, inters = util.get_roads_and_inters(os.path.join(
         TEST_FP,
         'data/processed/maps/boston_test_elements.geojson'
     ))
 
-    _, inters = util.get_roads_and_inters(os.path.join(
-        TEST_FP,
-        'data/processed/maps/inters.geojson'
-    ))
     int_buffers = create_segments.get_intersection_buffers(inters, 20)
     non_int_lines, inter_segments = create_segments.find_non_ints(
         roads, int_buffers)
