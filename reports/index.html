@@ -25,6 +25,9 @@
 
 	<div class="title overlay">
 		<h1 id="city_name"></h1>
+		<select id="city_selector">
+			<option>change city:</option>
+		</select>
 		<!-- <hr> -->
 		<!-- <h4>Predicted Risk</h4> -->
 		<div class="legend">
@@ -107,6 +110,45 @@
 		<h3>Estimated Impact of Interventions</h3>
  -->	</div>
 
+	<script>
+		// If no valid cityId specified swap to the first in the showcase
+		if (RegExp("\/(.+)").test(window.location.pathname) == false)
+		{
+			window.location.href = "/"+config.showcase[0].id;
+		}
+		// Load the requested city
+		else
+		{
+			cityId = window.location.pathname.match(/\/(.+)/)[1];
+			
+			for (c = 0; c < config.showcase.length; c++)
+			{
+				if (config.showcase[c].id == cityId)
+				{
+					var city = config.showcase[c];
+					var country = city.name.split(", ")[2];
+					break;
+				}
+			}
+		}
+		
+		// Populate the city selector with all other cities
+		var citySelector = $('#city_selector');
+		$.each(config.showcase, function(key, scCity) {
+			if (scCity.id != cityId)
+			{
+    			citySelector.append($('<option />').val(scCity.id).text(scCity.name));
+			}
+		});
+		
+		// Swap cities when requested
+		$('#city_selector').on('change', function ()
+		{
+			window.location.href = $(this).val();
+		});
+		
+	</script>
+	
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<!-- // <script src="js/make_plots.js"></script> -->
 	<script src="js/update_map.js"></script>
@@ -117,9 +159,6 @@
 			$( '#segment_details' ).addClass('slide_right');
 			$( '#highest_risk' ).addClass('visible');
 		});
-
-		var city = config.cities[0];
-		var country = city.name.split(", ")[2];
 
 		// insert city name
 		$('#city_name').text(city.name);
@@ -148,7 +187,7 @@
 				type: 'line',
 				source: {
 				  type: 'geojson',
-				  data: 'preds_final.geojson'
+				  data: city.file
 				},
 				paint: {
 				  'line-color': {
