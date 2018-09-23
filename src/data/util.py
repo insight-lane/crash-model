@@ -215,34 +215,6 @@ def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
             c.write(entry)
 
 
-def records_to_shapefile(schema, fp, records, crs={}):
-
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
-
-        for record in records:
-            c.write({
-                'geometry': mapping(record.point),
-                'properties': {
-                    k: str(v) for (k, v) in list(record.properties.items())}
-            })
-
-
-def record_to_csv(filename, records):
-    """
-    Write a csv file from records
-    Args:
-        filename
-        records - list of records (a dict of dicts)
-    """
-
-    with open(filename, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile,
-                                fieldnames=list(records[0]['properties'].keys()))
-        writer.writeheader()
-        for record in records:
-            writer.writerow(record['properties'])
-
-
 def read_record(record, x, y, orig=None, new=PROJ):
     """
     Reads record, outputs dictionary with point and properties
@@ -295,32 +267,6 @@ def raw_to_record_list(raw, orig, x='X', y='Y'):
                         orig=orig)
         )
     return result
-
-
-def csv_to_projected_records(filename, x='X', y='Y'):
-    """
-    Reads a csv file in and creates a list of records,
-    reprojecting x and y coordinates from projection 4326
-    to projection 3857
-
-    Args:
-        filename (csv file)
-        optional:
-            x coordinate name (defaults to 'X')
-            y coordinate name (defaults to 'Y')
-    """
-    records = []
-    with open(filename) as f:
-        csv_reader = csv.DictReader(f)
-        for r in csv_reader:
-            # Can possibly have 0 / blank coordinates
-            if r[x] != '':
-                records.append(
-                    read_record(r, r[x], r[y],
-                                orig=pyproj.Proj(init='epsg:4326'))
-                )
-
-    return records
 
 
 def read_records_from_geojson(filename):
@@ -479,18 +425,23 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return index_segments(list(inter) + list(non_inter))
 
 
-def index_segments(segments):
+def index_segments(segments, geojson=True):
     """
     Reads a list of segments in geojson format, and makes
     a spatial index for lookup
     Args:
         list of segments
+        geojson - whether or not the list of tuples are in geojson format
+            (the other option is shapely shapes) defaults to True
+    Returns:
+        segments (in shapely format), and segments_index
     """
 
-    # Read in segments and turn them into shape, propery tuples
-    combined_seg = [(shape(x['geometry']), x['properties']) for x in
-                    segments]
-
+    combined_seg = segments
+    if geojson:
+        # Read in segments and turn them into shape, propery tuples
+        combined_seg = [(shape(x['geometry']), x['properties']) for x in
+                        segments]
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
@@ -542,28 +493,6 @@ def track(index, step, tot):
     """
     if index % step == 0:
         print("finished {} of {}".format(index, tot))
-
-
-def write_points(points, schema, filename):
-    """
-    Given a list of shapely points,
-    de-dupe and write shape files
-
-    Args:
-        points: list of points indicating intersections
-        schema: schema of the shapefile
-        filename: filename for the shapefile
-    """
-
-    deduped_points = {}
-    # remove duplicate points
-    for pt, prop in points:
-        if (pt.x, pt.y) not in list(deduped_points.keys()):
-            deduped_points[(pt.x, pt.y)] = pt, prop
-    with fiona.open(filename, 'w', 'ESRI Shapefile', schema) as output:
-        for i, (pt, prop) in enumerate(deduped_points.values()):
-            track(i, 500, len(deduped_points))
-            output.write({'geometry': mapping(pt), 'properties': prop})
 
 
 def reproject(coords, inproj='epsg:4326', outproj='epsg:3857'):
@@ -695,3 +624,28 @@ def get_center_point(segment):
 
     return None, None
 
+
+def get_roads_and_inters(filename):
+    """
+    Pull the roads and the intersections from a geojson file
+    Typically this will read from the standardized osm_elements.geojson.
+    Since that file includes dead ends, these will also be stripped.
+    Everything will also be reprojected into 3857 projection
+    Args:
+        filename - geojson file of linestrings and points
+    Returns:
+        roads, intersections
+    """
+    data = fiona.open(filename)
+    data = reproject_records([x for x in data])
+
+    # All the line strings are roads
+    roads = [x for x in data
+             if x['geometry'].type == 'LineString']
+
+    # Get the intersection list by excluding anything that's not labeled
+    # as an intersection
+    inters = [x for x in data if x['geometry'].type == 'Point'
+              and 'intersection' in list(x['properties'].keys())
+              and x['properties']['intersection']]
+    return roads, inters

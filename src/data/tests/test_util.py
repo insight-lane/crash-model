@@ -67,28 +67,6 @@ def test_read_record():
     assert result == expected
 
 
-def test_csv_to_projected_records(tmpdir):
-    x = float(-71.07)
-    y = float(42.3)
-    print(tmpdir)
-    file = str(tmpdir) + '/test.csv'
-    with open(file, 'w') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',')
-        writer.writerow(['col1', 'col2', 'col3'])
-        writer.writerow(['test', x, y])
-    results = util.csv_to_projected_records(file,
-                                            'col2', 'col3')
-    expected_props = {
-        'col1': 'test',
-        'col2': '-71.07',
-        'col3': '42.3'
-    }
-    expected_point = Point(float(-7911476.210677952), float(5206024.46129235))
-
-    assert results[0]['point'] == expected_point
-    assert results[0]['properties'] == expected_props
-
-
 def find_nearest():
     # todo
     pass
@@ -96,10 +74,6 @@ def find_nearest():
 
 def test_read_segments():
     # todo
-    pass
-
-
-def test_write_points():
     pass
 
 
@@ -220,3 +194,13 @@ def test_get_center_point():
     assert util.get_center_point(
         geojson.Feature(geometry=geojson.Point([0, 0]))) == (None, None)
 
+
+def test_get_roads_and_inters():
+
+    path = os.path.join(
+        TEST_FP, 'data',
+        'test_get_roads_and_inters.geojson')
+    print(path)
+    roads, inters = util.get_roads_and_inters(path)
+    assert len(roads) == 4
+    assert len(inters) == 1
