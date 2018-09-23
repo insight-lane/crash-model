@@ -40,6 +40,18 @@ def test_find_non_ints():
         roads, int_buffers)
     assert len(non_int_lines) == 7
 
+    # Test that when a segment falls entirely within an intersection buffer
+    # it is not included as a non intersection segment
+    roads, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/test_create_segments/no_non_inter.geojson'
+    ))
+
+    int_buffers = create_segments.get_intersection_buffers(inters, 20)
+    non_int_lines, inter_segments = create_segments.find_non_ints(
+        roads, int_buffers)
+    assert len(non_int_lines) == 8
+    assert len(inter_segments) == 2
 
 def test_create_segments_from_json(tmpdir):
     """
@@ -234,7 +246,8 @@ def test_get_connections():
     assert len(connections) == 1
     assert len(connections[0]) == 7
 
-    test_file = os.path.join(test_path, 'no_non_inter.geojson')
+    # Test that the case with two unconnected intersections works
+    test_file = os.path.join(test_path, 'unconnected.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
         [x['geometry'] for x in inters], roads)

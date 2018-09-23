@@ -180,7 +180,6 @@ def find_non_ints(roads, int_buffers):
                 buffered_int = unary_union(
                     [x.geometry for x in inter]).buffer(.001)
                 diff = diff.difference(buffered_int)
-
             if 'LineString' == diff.type:
                 non_int_lines.append(geojson.Feature(
                     geometry=geojson.LineString([x for x in diff.coords]),
@@ -196,6 +195,11 @@ def find_non_ints(roads, int_buffers):
                     properties=road.properties)
                 )
             else:
+                # There may be no sections of the segment that fall outside
+                # of an intersection, in which case it's skipped
+                if len(diff) == 0:
+                    continue
+
                 print("{} found, skipping".format(diff.type))
 
     return non_int_lines, inter_segments
