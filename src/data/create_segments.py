@@ -88,8 +88,7 @@ def get_connections(points, segments):
     # intersection points
     connected_ids = []
     for line in segments:
-
-        for i, (curr_shape, lines) in enumerate(inters):
+        for i, (curr_shape, _) in enumerate(inters):
             if line.geometry.intersects(curr_shape):
                 inters[i][1].append(line)
                 inters[i][0] = unary_union([inters[i][0], line.geometry])
@@ -153,7 +152,7 @@ def find_non_ints(roads, int_buffers):
     inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
     roads_with_int_segments = {}
     count = 0
-    for i, int_buffer in enumerate(int_buffers):
+    for int_buffer in int_buffers:
         match_segments = []
         matched_roads = []
         for idx in road_lines_index.intersection(int_buffer[0].bounds):
