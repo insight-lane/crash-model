@@ -252,3 +252,5 @@ def test_get_connections():
     connections = create_segments.get_connections(
         [x['geometry'] for x in inters], roads)
     assert len(connections) == 2
+    assert connections[0]
+    assert connections[1]

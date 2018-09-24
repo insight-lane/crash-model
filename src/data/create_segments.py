@@ -88,7 +88,6 @@ def get_connections(points, segments):
     while inters:
         curr = inters.pop(0)
         if inters:
-
             connected = [x[1] for x in inters if x[0].intersects(
                     curr[0]
             )]
@@ -97,9 +96,12 @@ def get_connections(points, segments):
                 connected_lines = set(
                     curr[1] + connected[0]
                 )
+            else:
+                connected_lines = set(curr[1])
         else:
             connected_lines = set(curr[1])
         inters = [x for x in inters if not x[0].intersects(curr[0])]
+        
         resulting_inters.append(connected_lines)
 
     return resulting_inters
