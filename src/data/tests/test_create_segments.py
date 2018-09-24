@@ -229,8 +229,8 @@ def test_get_connections():
     # One intersection is found
     assert len(connections) == 1
     # And it only has three components
-    assert len(connections[0]) == 3
-    ids = [int(x.properties['id']) for x in connections[0]]
+    assert len(connections[0][0]) == 3
+    ids = [int(x.properties['id']) for x in connections[0][0]]
     ids.sort()
     assert ids == [263, 1167, 1168]
 
@@ -245,7 +245,7 @@ def test_get_connections():
         [x['geometry'] for x in inters], roads)
 
     assert len(connections) == 1
-    assert len(connections[0]) == 7
+    assert len(connections[0][0]) == 7
 
     # Test that the case with two unconnected intersections works
     test_file = os.path.join(test_path, 'unconnected.geojson')
@@ -253,12 +253,12 @@ def test_get_connections():
     connections = create_segments.get_connections(
         [x['geometry'] for x in inters], roads)
     assert len(connections) == 2
-    assert connections[0]
-    assert connections[1]
+    assert connections[0][0]
+    assert connections[1][0]
 
     test_file = os.path.join(test_path, 'missing_int_segments.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
         [x['geometry'] for x in inters], roads)
     assert len(connections) == 1
-    assert len(connections[0]) == 7
+    assert len(connections[0][0]) == 7

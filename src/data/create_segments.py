@@ -64,7 +64,19 @@ def get_intersection_buffers(intersections, intersection_buffer_units,
 
 
 def get_connections(points, segments):
-
+    """
+    Gets intersections by looking at the connections between points
+    and segments that fall within an intersection buffer
+    Args:
+        points - a list of points
+        segments - a list of segment objects
+    Returns:
+        A list of tuples for each intersection.
+        Each tuple contains a set of segment objects
+        and the buffer of the unary_union of the segment objects
+        with a little bit of padding, because of a slight precision error
+        in shapely operations
+    """
     # Create a dict with each intersection point's coords as key
     # The values are the point itself and an empty list that will
     # store all the linestrings with a connection to the point
@@ -103,7 +115,9 @@ def get_connections(points, segments):
             connected_lines = set(curr[1])
         inters = [x for x in inters if not x[0].intersects(curr[0])]
         
-        resulting_inters.append(connected_lines)
+        resulting_inters.append((connected_lines, unary_union(
+            [x.geometry for x in connected_lines]).buffer(.001)
+        ))
 
     return resulting_inters
 
@@ -159,8 +173,10 @@ def find_non_ints(roads, int_buffers):
             roads_with_int_segments[r.properties['id']] += int_segments
 
         for int_segment in int_segments:
-            inter_segments['lines'][count] = [x.geometry for x in int_segment]
-            inter_segments['data'][count] = [x.properties for x in int_segment]
+            inter_segments['lines'][count] = [
+                x.geometry for x in int_segment[0]]
+            inter_segments['data'][count] = [
+                x.properties for x in int_segment[0]]
             count += 1
 
     non_int_lines = []
@@ -178,10 +194,7 @@ def find_non_ints(roads, int_buffers):
 
             diff = road.geometry
             for inter in road_info:
-                # Because of a slight precision error in shapely operations,
-                # need to buffer the intersections just a tiny bit
-                buffered_int = unary_union(
-                    [x.geometry for x in inter]).buffer(.001)
+                buffered_int = inter[1]
                 diff = diff.difference(buffered_int)
             if 'LineString' == diff.type:
                 non_int_lines.append(geojson.Feature(
