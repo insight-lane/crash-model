@@ -53,6 +53,7 @@ def test_find_non_ints():
     assert len(non_int_lines) == 8
     assert len(inter_segments) == 2
 
+
 def test_create_segments_from_json(tmpdir):
     """
     Just test that this runs, for now
@@ -254,3 +255,10 @@ def test_get_connections():
     assert len(connections) == 2
     assert connections[0]
     assert connections[1]
+
+    test_file = os.path.join(test_path, 'missing_int_segments.geojson')
+    roads, inters = util.get_roads_and_inters(test_file)
+    connections = create_segments.get_connections(
+        [x['geometry'] for x in inters], roads)
+    assert len(connections) == 1
+    assert len(connections[0]) == 7

@@ -76,6 +76,7 @@ def get_connections(points, segments):
     # intersection points
     connected_ids = []
     for line in segments:
+
         for i, (curr_shape, lines) in enumerate(inters):
             if line.geometry.intersects(curr_shape):
                 inters[i][1].append(line)
@@ -94,7 +95,7 @@ def get_connections(points, segments):
 
             if connected:
                 connected_lines = set(
-                    curr[1] + connected[0]
+                    curr[1] + [x for y in connected for x in y]
                 )
             else:
                 connected_lines = set(curr[1])
