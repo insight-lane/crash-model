@@ -53,13 +53,20 @@ def get_intersection_buffers(intersections, intersection_buffer_units,
         )
 
     results = []
+
+    # Index the intersection points for fast lookup
+    inter_index = rtree.index.Index()
+    for idx, inter_point in enumerate(intersections):
+        inter_index.insert(idx, inter_point['geometry'].bounds)
+
     # Get the points that overlap with the buffers
     for buff in buffered_intersections:
         matches = []
-        for inter in intersections:
-            if inter['geometry'].within(buff):
-                matches.append(inter['geometry'])
+        for idx in inter_index.intersection(buff.bounds):
+            if intersections[idx]['geometry'].within(buff):
+                matches.append(intersections[idx]['geometry'])
         results.append([buff, matches])
+
     return results
 
 
@@ -179,7 +186,8 @@ def find_non_ints(roads, int_buffers):
             count += 1
 
     non_int_lines = []
-    for road in roads:
+    for i, road in enumerate(roads):
+        util.track(i, 100, len(roads))
         # If there's no overlap between the road segment and any intersections
         if road.properties['id'] not in roads_with_int_segments:
             non_int_lines.append(geojson.Feature(
@@ -399,7 +407,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
 
     # Initial buffer = 20 meters
     int_buffers = get_intersection_buffers(inters, 20)
-
+    print("Found {} intersection buffers".format(len(int_buffers)))
     non_int_lines, inter_segments = find_non_ints(
         roads, int_buffers)
 
