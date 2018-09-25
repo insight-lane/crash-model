@@ -226,7 +226,7 @@ function update_map(map) {
 	filters = getFilterValues();
 	var new_filter;
 	
-	if(config.showcase[0].id === "boston") {
+	if(cityId === "boston") {
 		new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
 	}
 	else {
