@@ -97,5 +97,4 @@ Scripts
 config.js
 
 # Data
-data/*
-
+data/

@@ -24,13 +24,13 @@ concern_files:
 
 # crash file configurations
 crashes_files:
-  crash_data_through_2017.csv:
+  Crashes20152017.csv:
     required:
       id: ID
       latitude: Y
       longitude: X
       # If date supplied in single column:
-      date_complete: Date Time
+      date_complete: DateTime
       # If date is separated into year/month/day:
       date_year: 
       date_month: 
@@ -44,8 +44,8 @@ crashes_files:
       # military (HHMM)
       time_format: 
     optional:
-      summary: V1 First Event
-      address: Location
+      summary:
+      address: Address
       vehicles: 
       bikes: 
 
