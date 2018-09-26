@@ -11,6 +11,7 @@ import yaml
 from .model_utils import format_crash_data
 from .model_classes import Indata, Tuner, Tester
 import sklearn.linear_model as skl
+import pickle
 
 # all model outputs must be stored in the "data/processed/" directory
 BASE_DIR = os.path.dirname(
@@ -242,6 +243,10 @@ if __name__ == '__main__':
     #Initialize data
     df = Indata(data_model, 'target')
     #Create train/test split
+
+    #create pickle file
+    pickle.dump(df.data, open("model_df.pkl", "wb"))
+
     df.tr_te_split(.7)
 
     #Parameters for model
