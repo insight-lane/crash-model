@@ -262,3 +262,17 @@ def test_get_connections():
         [x['geometry'] for x in inters], roads)
     assert len(connections) == 1
     assert len(connections[0][0]) == 7
+
+    # Test an edge case where the point is slightly off from the line
+    # This happens at least once in the Boston data, although it should
+    # never happen in the openstreetmap data
+    test_file = os.path.join(test_path, 'empty_set_inter.geojson')
+
+    roads, inters = util.get_roads_and_inters(test_file)
+
+    # Test the segment on the other side of the median
+    # getting dropped from the intersection
+    connections = create_segments.get_connections(
+        [inters[0]['geometry']], roads)
+    assert connections[0][0]
+    

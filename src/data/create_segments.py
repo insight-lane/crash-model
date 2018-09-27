@@ -93,13 +93,11 @@ def get_connections(points, segments):
 
     # Get a starting list of all lines that touch any of the
     # intersection points
-    connected_ids = []
     for line in segments:
         for i, (curr_shape, _) in enumerate(inters):
-            if line.geometry.intersects(curr_shape):
+            if line.geometry.distance(curr_shape) < .0001:
                 inters[i][1].append(line)
                 inters[i][0] = unary_union([inters[i][0], line.geometry])
-                connected_ids.append(line.properties['id'])
 
     # Merge connected components
     resulting_inters = []
@@ -159,7 +157,9 @@ def find_non_ints(roads, int_buffers):
     inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
     roads_with_int_segments = {}
     count = 0
-    for int_buffer in int_buffers:
+    print("Generating intersection segments")
+    for i, int_buffer in enumerate(int_buffers):
+        util.track(i, 1000, len(int_buffers))
         match_segments = []
         matched_roads = []
         for idx in road_lines_index.intersection(int_buffer[0].bounds):
@@ -184,10 +184,10 @@ def find_non_ints(roads, int_buffers):
             inter_segments['data'][count] = [
                 x.properties for x in int_segment[0]]
             count += 1
-
     non_int_lines = []
+    print("Generating non-intersection segments")
     for i, road in enumerate(roads):
-        util.track(i, 100, len(roads))
+        util.track(i, 1000, len(roads))
         # If there's no overlap between the road segment and any intersections
         if road.properties['id'] not in roads_with_int_segments:
             non_int_lines.append(geojson.Feature(
@@ -222,7 +222,6 @@ def find_non_ints(roads, int_buffers):
                 # of an intersection, in which case it's skipped
                 if len(diff) == 0:
                     continue
-
                 print("{} found, skipping".format(diff.type))
 
     return non_int_lines, inter_segments
@@ -397,7 +396,6 @@ def get_non_intersection_name(non_inter_segment, inters_by_id):
 
 
 def create_segments_from_json(roads_shp_path, mapfp):
-
     roads, inters = util.get_roads_and_inters(roads_shp_path)
     print("read in {} road segments".format(len(roads)))
 
