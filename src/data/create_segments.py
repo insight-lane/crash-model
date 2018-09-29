@@ -15,6 +15,7 @@ import argparse
 import os
 import geojson
 import re
+from shapely.geometry import MultiLineString, LineString
 
 
 BASE_DIR = os.path.dirname(
@@ -27,12 +28,14 @@ PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 DATA_FP = None
 
 
-def get_intersection_buffers(intersections, intersection_buffer_units):
+def get_intersection_buffers(intersections, intersection_buffer_units,
+                             debug=False):
     """
     Buffers intersection according to proj units
     Args:
         intersections
         intersection_buffer_units - in meters
+        debug - if true, will output the buffers to file for debugging
     Returns:
         a list of polygons, buffering the intersections
         these are circles, or groups of overlapping circles
@@ -41,7 +44,11 @@ def get_intersection_buffers(intersections, intersection_buffer_units):
     buffered_intersections = [intersection['geometry'].buffer(
         intersection_buffer_units) for intersection in intersections]
 
-    return unary_union(buffered_intersections)
+    result = unary_union(buffered_intersections)
+    if debug:
+        util.output_polygons(result, os.path.join(
+            MAP_FP, 'int_buffers.geojson'))
+    return result
 
 
 def find_non_ints(roads, int_buffers):
@@ -336,12 +343,17 @@ def create_segments_from_json(roads_shp_path, mapfp):
     # Planarize intersection segments
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
-
     for idx, lines in list(inter_segments['lines'].items()):
 
         lines = unary_union(lines)
 
         coords = []
+        # Fixing issue where we had previously thought a dead-end node
+        # was an intersection. Once this is fixed in osmnx
+        # (or we have a better work around), this should be able to
+        # be taken out
+        if type(lines) == LineString:
+            lines = MultiLineString([lines.coords])
         for line in lines:
             coords += [[x for x in line.coords]]
 
@@ -407,6 +419,7 @@ def write_segments(non_inters, inters, mapfp, datafp):
                 if 'center_y' in x['properties'] else ''
         }
     } for x in inters]
+    
     int_w_ids = util.prepare_geojson(int_w_ids)
 
     with open(os.path.join(mapfp, 'inters_segments.geojson'), 'w') as outfile:

@@ -649,3 +649,37 @@ def get_roads_and_inters(filename):
               and 'intersection' in list(x['properties'].keys())
               and x['properties']['intersection']]
     return roads, inters
+
+
+def output_polygons(polys, filename):
+    """
+    Write a list of polygons in 3857 projection to file in 4326 projection
+    Used for debugging purposes
+    At the moment, since this has only output intersection buffers,
+    the resulting output won't contain any properties
+
+    Args:
+        polys - list of polygon objects
+        filename - output file
+    Returns:
+        nothing, writes to file
+    """
+    output = []
+    for poly in polys:
+        coords = [x for x in poly.exterior.coords]
+        reprojected_coords = [get_reproject_point(
+            x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                              for x in coords]
+        output.append({
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [reprojected_coords]
+            }
+        })
+
+    with open(filename, 'w') as outfile:
+        geojson.dump(geojson.FeatureCollection(output), outfile)
+
+
+

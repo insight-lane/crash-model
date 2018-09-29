@@ -1,8 +1,8 @@
 from .. import util
 import os
 from shapely.geometry import Point
+from shapely.ops import unary_union
 import pyproj
-import csv
 import fiona
 import geojson
 
@@ -204,3 +204,43 @@ def test_get_roads_and_inters():
     roads, inters = util.get_roads_and_inters(path)
     assert len(roads) == 4
     assert len(inters) == 1
+
+
+def test_output_polygons(tmpdir):
+    tmppath = tmpdir.strpath
+
+    path = os.path.join(tmppath, 'test_output.geojson')
+    records = [
+        {
+            'geometry': {
+                'coordinates': (-71.112940, 42.370110),
+                'type': 'Point'
+            },
+            'properties': {}
+        },
+        {
+            'geometry': {
+                'coordinates': (-71.112010, 42.371440),
+                'type': 'Point'
+            },
+            'properties': {}
+        }
+    ]
+    
+    records = util.reproject_records(records)
+    polys = unary_union([
+        records[0]['geometry'].buffer(3),
+        records[1]['geometry'].buffer(3)
+    ])
+
+    util.output_polygons(polys, path)
+    # Read in the output, and just validate a couple of coordinates
+    with open(path) as f:
+        items = geojson.load(f)
+        assert items['features'][0]['geometry']['type'] == 'Polygon'
+        assert items['features'][0]['geometry']['coordinates'][0][0] \
+            == [-71.11291305054148, 42.370109999999976]
+
+        assert items['features'][1]['geometry']['type'] == 'Polygon'
+        assert items['features'][1]['geometry']['coordinates'][0][0] \
+            == [-71.11198305054148, 42.37143999999999]
