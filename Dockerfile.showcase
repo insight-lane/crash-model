@@ -45,4 +45,4 @@ RUN chmod +x /start.sh
 CMD ["/start.sh"]
 
 # Make the apache port available
-EXPOSE 80
+EXPOSE 8080
