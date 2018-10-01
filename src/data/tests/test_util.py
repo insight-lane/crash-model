@@ -206,7 +206,7 @@ def test_get_roads_and_inters():
     assert len(inters) == 1
 
 
-def test_output_polygons(tmpdir):
+def test_output_from_shapes(tmpdir):
     tmppath = tmpdir.strpath
 
     path = os.path.join(tmppath, 'test_output.geojson')
@@ -228,15 +228,17 @@ def test_output_polygons(tmpdir):
     ]
     
     records = util.reproject_records(records)
-    polys = unary_union([
-        records[0]['geometry'].buffer(3),
-        records[1]['geometry'].buffer(3)
-    ])
+    polys = [
+        (records[0]['geometry'].buffer(3), {}),
+        (records[1]['geometry'].buffer(3), {})
+    ]
 
-    util.output_polygons(polys, path)
+    util.output_from_shapes(polys, path)
     # Read in the output, and just validate a couple of coordinates
     with open(path) as f:
         items = geojson.load(f)
+        print(len(items))
+
         assert items['features'][0]['geometry']['type'] == 'Polygon'
         assert items['features'][0]['geometry']['coordinates'][0][0] \
             == [-71.11291305054148, 42.370109999999976]
