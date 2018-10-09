@@ -290,13 +290,6 @@ def add_point_based_features(non_inters, inters, jsonfile,
                     matches[str(near)][feat_type] = 0
                 matches[str(near)][feat_type] += 1
 
-        if near:
-            if str(near) not in matches:
-                matches[str(near)] = {}
-            if feat_type not in matches[str(near)]:
-                matches[str(near)][feat_type] = 0
-            matches[str(near)][feat_type] += 1
-
     # Add point data to intersections
     for i, inter in enumerate(inters):
         if str(inter['properties']['id']) in list(matches.keys()):
