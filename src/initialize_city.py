@@ -73,7 +73,7 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
 
         for filename in supplemental:
             f.write(
-                "  - name: parking_tickets\n" +
+                "  - name: \n" +
                 "    filename: {}\n".format(filename) +
                 "    address: \n" +
                 "    date: \n" +
@@ -81,7 +81,12 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
                 "    category: \n" +
                 "    notes: \n" +
                 "    # Feature is categorical (f_cat) or continuous (f_cont)\n" +
-                "    feat: \n")
+                "    feat: \n" + 
+                "    #feat_agg (feature aggregation) can be total count (default) or latest value \n" +
+                "    feat_agg: \n"
+                "    # if latest, the desired value \n" +
+                "    value: \n"
+                )
         f.write("\n")
     f.write(
         "# week on which to predict crashes (week, year)\n" +

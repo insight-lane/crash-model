@@ -273,6 +273,23 @@ def add_point_based_features(non_inters, inters, jsonfile,
         near = feature.near_id
         feat_type = feature.properties['feature']
 
+        if 'feat_agg' in feature.properties and 'value' in feature.properties:
+            feat_agg_type = feature.properties['feat_agg']
+        else:
+            feat_agg_type = 'default'
+
+        if near:
+            if feat_agg_type == 'latest':
+                if str(near) not in matches:
+                    matches[str(near)] = {}
+                matches[str(near)][feat_type] = feature.properties['value']
+            else:
+                if str(near) not in matches:
+                    matches[str(near)] = {}
+                if feat_type not in matches[str(near)]:
+                    matches[str(near)][feat_type] = 0
+                matches[str(near)][feat_type] += 1
+
         if near:
             if str(near) not in matches:
                 matches[str(near)] = {}

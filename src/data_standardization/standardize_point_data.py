@@ -51,6 +51,10 @@ def read_file_info(config, datadir):
                     updated_row['category'] = row[source_config['category']]
                 if "notes" in source_config and source_config['notes']:
                     updated_row['notes'] = row[source_config['notes']]
+                if "feat_agg" in source_config and source_config['feat_agg']:
+                    updated_row['feat_agg'] = row[source_config['feat_agg']]
+                if "value" in source_config and source_config['value']:
+                    updated_row['value'] = row[source_config['value']]
 
                 points.append(updated_row)
             else:
