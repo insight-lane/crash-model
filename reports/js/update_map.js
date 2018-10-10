@@ -75,7 +75,7 @@ function populateSegmentInfo(segmentID) {
 	updateBarChart(segmentData.prediction);
 
 	// update feature importances based on segment's attributes
-	updateFeatureImportances(segmentData);
+	// updateFeatureImportances(segmentData);
 
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
