@@ -186,11 +186,11 @@ def test_date_formats():
 
     # filter crashes after an end year
     assert len(standardize_crashes.read_standardized_fields(
-        crashes_in_different_years, fields_date_constructed, {}, None, 2017)) == 2
+        crashes_in_different_years, fields_date_constructed, {}, None, 2017)) == 1
 
     # filter crashes between a start and end year
     assert len(standardize_crashes.read_standardized_fields(
-        crashes_in_different_years, fields_date_constructed, {}, 2017, 2017)) == 1
+        crashes_in_different_years, fields_date_constructed, {}, 2016, 2017)) == 1
 
     # Confirm crashes using deconstructed date but missing a day are standardized with a random day
     fields_date_no_day = {

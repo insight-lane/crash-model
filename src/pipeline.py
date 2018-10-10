@@ -33,10 +33,11 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
     else:
         print("Already standardized crash data, skipping")
 
-    # There has to be concern data in the config file to try processing it
+    
     with open(config_file) as f:
         config = yaml.safe_load(f)
     
+    # There has to be concern data in the config file to try processing it
     if ('concern_files' in list(config.keys())
         and config['concern_files'] and not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'concerns.json'))) or forceupdate:

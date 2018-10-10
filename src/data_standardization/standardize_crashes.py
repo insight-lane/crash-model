@@ -76,7 +76,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields, start_year=None, e
         # Drop crashes that occur outside of the range, if specified
         crash_year = date_parser.parse(crash_date_time).year
         if ((start_year is not None and crash_year < start_year) or
-                (end_year is not None and crash_year > end_year)):
+                (end_year is not None and crash_year > (end_year - 1))):
             continue
 
         formatted_crash = OrderedDict([
