@@ -264,6 +264,14 @@ h2.segment_name:hover {
     font-size: 0.8rem;
 }
 
+.avgLabel.leftAligned {
+    text-anchor: start;
+}
+
+.avgLabel.rightAligned {
+    text-anchor: end;
+}
+
 table {
     /*border-collapse: collapse;*/
     margin-bottom: 20px;

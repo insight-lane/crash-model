@@ -88,7 +88,7 @@ function populateSegmentInfo(segmentID) {
 
 function makeBarChart(prediction, median) {
 
-	var margin = {top: 0, right: 0, bottom: 48, left: 0},
+	var margin = {top: 0, right: 10, bottom: 48, left: 10},
 		width = 250,
 		height = 10;
 
@@ -138,6 +138,14 @@ function makeBarChart(prediction, median) {
 		.attr("width", xScale(prediction))
 		.attr("height", height)
 		.style("fill", riskColor(prediction));
+
+	// adjust text alignment of City Average label if average is particularly low or high
+	if(median <= 0.1) {
+		d3.selectAll("#predChart .avgLabel").classed("leftAligned", true);
+	}
+	else if(median >= 0.9) {
+		d3.selectAll("#predChart .avgLabel").classed("rightAligned", true);
+	}
 }
 
 function updateBarChart(prediction) {
