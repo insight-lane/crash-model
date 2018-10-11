@@ -298,7 +298,7 @@ def initialize_and_run(data_model):
     trained_model = best_model.fit(data_model[best_model_features], data_model['target'])
 
     # running this to test performance at different weeks
-    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
+#    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
     predict(trained_model, best_model_features, perf_cutoff, config['level'])
 
