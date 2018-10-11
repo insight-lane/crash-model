@@ -36,9 +36,9 @@ def predict_forward(split_week, split_year, seg_data, crash_data):
 
 def output_importance(model):
     # output feature importances or coefficients
-    if hasattr(trained_model, feature_importances_):
+    if hasattr(trained_model, 'feature_importances_'):
         feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
-    elif hasattr(trained_model, coefficients):
+    elif hasattr(trained_model, 'coefficients'):
         feature_imp_dict = dict(zip(features, trained_model.coefficients.astype(float)))
     else:
         return("No feature importances/coefficients detected")
@@ -283,19 +283,19 @@ if __name__ == '__main__':
         data_model = data_segs.set_index('segment_id').join(any_crash).reset_index()
     print("full features:{}".format(features))
 
-    #Initialize data
+    # Initialize data
     df = Indata(data_model, 'target')
-    #Create train/test split
+    # Create train/test split
     df.tr_te_split(.7)
 
-    #Parameters for model
+    # Parameters for model
     # class weight
     # this needs to adapt to the model data, so can't be specified up from
     a = data_model['target'].value_counts(normalize=True)
     w = 1/a[1]
     mp['XGBClassifier']['scale_pos_weight'] = [w]
 
-    #Initialize tuner
+    # Initialize tuner
     tune = Tuner(df)
     try: 
         #Base XG model

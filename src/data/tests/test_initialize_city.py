@@ -119,7 +119,8 @@ name: brisbane
 # Recommended to limit to just a few years for now
 start_year: 
 end_year: 
-
+# level of predictions, either 'week' or 'segment'
+level: 'segment'
 
 #################################################################
 # Configuration for data standardization
@@ -181,7 +182,6 @@ weeks_back: 1"""
 
     with open(tmpdir.join('/test_config_brisbane.yml'), 'r') as test_file:
         test_file_contents = test_file.read()
-
     assert test_file_contents == expected_file_contents
 
 
