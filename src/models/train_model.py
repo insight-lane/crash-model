@@ -250,7 +250,7 @@ def initialize_and_run(data_model):
     # Initialize data
     df = Indata(data_model, 'target')
     # Create train/test split
-    df.tr_te_split(.7, seed=1)
+    df.tr_te_split(.7)
 
     # Parameters for model
     # class weight
