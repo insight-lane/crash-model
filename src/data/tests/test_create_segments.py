@@ -30,18 +30,28 @@ def test_get_intersection_buffers():
 
 def test_find_non_ints():
 
-    roads = fiona.open(TEST_FP +
-                       '/data/processed/maps/boston_test_elements.geojson')
-
-    roads = util.reproject_records([x for x in roads])
-
-    inters = fiona.open(TEST_FP + '/data/processed/maps/inters.geojson')
-    inters = util.reproject_records([x for x in inters])
+    roads, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/processed/maps/boston_test_elements.geojson'
+    ))
 
     int_buffers = create_segments.get_intersection_buffers(inters, 20)
     non_int_lines, inter_segments = create_segments.find_non_ints(
         roads, int_buffers)
     assert len(non_int_lines) == 7
+
+    # Test that when a segment falls entirely within an intersection buffer
+    # it is not included as a non intersection segment
+    roads, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/test_create_segments/no_non_inter.geojson'
+    ))
+
+    int_buffers = create_segments.get_intersection_buffers(inters, 20)
+    non_int_lines, inter_segments = create_segments.find_non_ints(
+        roads, int_buffers)
+    assert len(non_int_lines) == 8
+    assert len(inter_segments) == 2
 
 
 def test_create_segments_from_json(tmpdir):
@@ -52,7 +62,7 @@ def test_create_segments_from_json(tmpdir):
     orig_path = os.path.dirname(
         os.path.abspath(__file__)) + '/data/'
     path = tmpdir.strpath + '/data/processed/maps/'
-    print(path)
+
     os.makedirs(path)
     shutil.copyfile(
         orig_path + 'missing_segments_test.geojson',
@@ -65,7 +75,18 @@ def test_create_segments_from_json(tmpdir):
     create_segments.write_segments(
         non_inters, inters, path, tmpdir.strpath + '/data/')
 
+    # Now test for the issue where we thought a dead end was an intersection
+    # Just make sure that doesn't die
+    shutil.copyfile(
+        orig_path + 'bad_intersection_test.geojson',
+        path + 'osm_elements.geojson'
+    )
+    create_segments.create_segments_from_json(
+        path + 'osm_elements.geojson',
+        path
+    )
 
+    
 def test_get_intersection_name():
     inter_segments = [{
         'id': 1,
@@ -187,3 +208,71 @@ def test_add_point_based_features(tmpdir):
     with open(outputfile, 'r') as f:
         output = json.load(f)
         assert output == expected
+
+
+def test_get_connections():
+    test_path = os.path.join(
+        os.path.dirname(
+            os.path.abspath(__file__)),
+        'data',
+        'test_create_segments')
+
+    test_file = os.path.join(test_path, 'test_get_connections1.geojson')
+
+    roads, inters = util.get_roads_and_inters(test_file)
+
+    # Test the segment on the other side of the median
+    # getting dropped from the intersection
+    connections = create_segments.get_connections(
+        [inters[0]['geometry']], roads)
+
+    # One intersection is found
+    assert len(connections) == 1
+    # And it only has three components
+    assert len(connections[0][0]) == 3
+    ids = [int(x.properties['id']) for x in connections[0][0]]
+    ids.sort()
+    assert ids == [263, 1167, 1168]
+
+    # Test an intersection with two connected points getting merged
+    # into one intersection
+    test_file = os.path.join(test_path, 'test_get_connections2.geojson')
+    roads, inters = util.get_roads_and_inters(test_file)
+    # The initial file should have 7 roads and 2 intersections
+    assert len(roads) == 7
+    assert len(inters) == 2
+    connections = create_segments.get_connections(
+        [x['geometry'] for x in inters], roads)
+
+    assert len(connections) == 1
+    assert len(connections[0][0]) == 7
+
+    # Test that the case with two unconnected intersections works
+    test_file = os.path.join(test_path, 'unconnected.geojson')
+    roads, inters = util.get_roads_and_inters(test_file)
+    connections = create_segments.get_connections(
+        [x['geometry'] for x in inters], roads)
+    assert len(connections) == 2
+    assert connections[0][0]
+    assert connections[1][0]
+
+    test_file = os.path.join(test_path, 'missing_int_segments.geojson')
+    roads, inters = util.get_roads_and_inters(test_file)
+    connections = create_segments.get_connections(
+        [x['geometry'] for x in inters], roads)
+    assert len(connections) == 1
+    assert len(connections[0][0]) == 7
+
+    # Test an edge case where the point is slightly off from the line
+    # This happens at least once in the Boston data, although it should
+    # never happen in the openstreetmap data
+    test_file = os.path.join(test_path, 'empty_set_inter.geojson')
+
+    roads, inters = util.get_roads_and_inters(test_file)
+
+    # Test the segment on the other side of the median
+    # getting dropped from the intersection
+    connections = create_segments.get_connections(
+        [inters[0]['geometry']], roads)
+    assert connections[0][0]
+    

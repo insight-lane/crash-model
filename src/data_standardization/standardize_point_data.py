@@ -55,7 +55,6 @@ def read_file_info(config, datadir):
                 points.append(updated_row)
             else:
                 missing += 1
-                print(row[source_config['address']])
 
         print("{} entries didn't have a lat/lon".format(missing))
     if points:
