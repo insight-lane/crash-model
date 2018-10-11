@@ -34,7 +34,7 @@ def predict_forward(split_week, split_year, seg_data, crash_data):
         print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
     return(preds)
 
-def output_importance(model):
+def output_importance(trained_model):
     # output feature importances or coefficients
     if hasattr(trained_model, 'feature_importances_'):
         feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
@@ -138,7 +138,7 @@ def get_features(config):
     return f_cat, f_cont, features
 
 
-def predict(config_level):
+def predict(trained_model, config_level):
     """
 
     Args:
@@ -174,71 +174,46 @@ def predict(config_level):
         df_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
 
 
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser()
-    # parse arguments
-    parser.add_argument("-c", "--config", type=str,
-                        help="yml file for model config, default is a " + 
-                        "base config with open street map data and crashes only"
-    )
-    parser.add_argument('-d', '--datadir', type=str,
-                        help="data directory")
-
-    args = parser.parse_args()
-
-    config = {}
-    if args.config:
-        config_file = args.config
-        with open(config_file) as f:
-            config = yaml.safe_load(f)
-    set_defaults(config)
-    cvp, mp, perf_cutoff = set_params()
-
-    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
-    seg_data = os.path.join(DATA_FP, config['seg_data'])
-
-    print(('Outputting to: %s' % DATA_FP))
-
-    week = int(config['time_target'][0])
-    year = int(config['time_target'][1])
-
-    # Read in data
-    data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
-    data.sort_values(['segment_id', 'year', 'week'], inplace=True)
-    if config['level'] == 'week':
-        # get segments with non-zero crashes
-        # this is necessary to constrain the problem for weekly predictions
-        data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
-        data.reset_index(inplace=True)
-
-    f_cat, f_cont, features = get_features(config)
-    data_segs = data.groupby('segment_id')[f_cont+f_cat].max()  # grab the highest values from each column
-    data_segs.reset_index(inplace=True)
+def add_extra_features(data, data_segs, config):
+    """
+    Add concerns, atrs and tmcs
+    Args:
+        data
+        data_segs
+        config
+    Returns:
+        updated data_segs
+    """
 
     # add concern
-    if config['concern']!='':
+    if config['concern'] != '':
         print('Adding concerns')
-        concern_observed = data[data.year==2016].groupby('segment_id')[config['concern']].max()
-        data_segs = data_segs.merge(concern_observed.reset_index(), on='segment_id')
+        concern_observed = data[data.year == 2016].groupby(
+            'segment_id')[config['concern']].max()
+        data_segs = data_segs.merge(
+            concern_observed.reset_index(), on='segment_id')
 
     # add in atrs if filepath present
-    if config['atr']!='':
+    if config['atr'] != '':
         print('Adding atrs')
-        atrs = pd.read_csv(DATA_FP+config['atr'], dtype={'id':'str'})
+        atrs = pd.read_csv(DATA_FP+config['atr'], dtype={'id': 'str'})
         # for some reason pandas reads the id as float before str conversions
         atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
         data_segs = data_segs.merge(atrs[['id']+config['atr_cols']],
-                                                                left_on='segment_id', right_on='id')
+                                    left_on='segment_id', right_on='id')
 
     # add in tmcs if filepath present
-    if config['tmc']!='':
+    if config['tmc'] != '':
         print('Adding tmcs')
-        tmcs = pd.read_json(DATA_FP+config['tmc'],
-                                           dtype={'near_id':str})[['near_id']+config['tmc_cols']]
-        data_segs = data_segs.merge(tmcs, left_on='segment_id', right_on='near_id', how='left')
+        tmcs = pd.read_json(DATA_FP+config['tmc'], dtype={'near_id': str})[
+            ['near_id'] + config['tmc_cols']]
+        data_segs = data_segs.merge(
+            tmcs, left_on='segment_id', right_on='near_id', how='left')
         data_segs[config['tmc_cols']] = data_segs[config['tmc_cols']].fillna(0)
+    return data_segs
 
+
+def process_features(features, config, f_cat, f_cont, data_segs):
     # features for linear model
     lm_features = features
 
@@ -265,7 +240,112 @@ if __name__ == '__main__':
         # remove duplicated features
         features = list(set(features) - set(f_cat+f_cont))
         lm_features = list(set(lm_features) - set(f_cat+f_cont))
+    return data_segs, features, lm_features
 
+
+def initialize_and_run(data_model):
+
+    cvp, mp, perf_cutoff = set_params()
+
+    # Initialize data
+    df = Indata(data_model, 'target')
+    # Create train/test split
+    df.tr_te_split(.7, seed=1)
+
+    # Parameters for model
+    # class weight
+    # this needs to adapt to the model data, so can't be specified up from
+    a = data_model['target'].value_counts(normalize=True)
+    w = 1/a[1]
+    mp['XGBClassifier']['scale_pos_weight'] = [w]
+
+    # Initialize tuner
+    tune = Tuner(df)
+    try: 
+        # Base XG model
+        tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
+        # Base LR model
+        tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
+    except ValueError:
+        print('CV fails, likely very few of target available, try rerunning at segment-level')
+        raise
+    # Run test
+    test = Tester(df)
+    test.init_tuned(tune)
+    test.run_tuned('LR_base', cal=False)
+    test.run_tuned('XG_base', cal=False)
+
+    # choose best performing model
+    best_perf = 0
+    best_model = None
+    for m in test.rundict:
+        if test.rundict[m]['roc_auc'] > best_perf:
+            best_perf = test.rundict[m]['roc_auc']
+            best_model = test.rundict[m]['model']
+            best_model_features = test.rundict[m]['features']
+    # check for performance above certain level
+    if best_perf <= perf_cutoff:
+        print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
+
+    # train on full data
+    trained_model = best_model.fit(data_model[best_model_features], data_model['target'])
+
+    # running this to test performance at different weeks
+    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
+
+    predict(trained_model, config['level'])
+
+    # output feature importances or coefficients
+    output_importance(trained_model)
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    # parse arguments
+    parser.add_argument("-c", "--config", type=str,
+                        help="yml file for model config, default is a " + 
+                        "base config with open street map data and crashes only"
+    )
+    parser.add_argument('-d', '--datadir', type=str,
+                        help="data directory")
+
+    args = parser.parse_args()
+
+    config = {}
+    if args.config:
+        config_file = args.config
+        with open(config_file) as f:
+            config = yaml.safe_load(f)
+    set_defaults(config)
+
+    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
+    seg_data = os.path.join(DATA_FP, config['seg_data'])
+
+    print(('Outputting to: %s' % DATA_FP))
+
+    # Read in data
+    data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
+    data.sort_values(['segment_id', 'year', 'week'], inplace=True)
+    if config['level'] == 'week':
+        week = int(config['time_target'][0])
+        year = int(config['time_target'][1])
+
+        # get segments with non-zero crashes
+        # this is necessary to constrain the problem for weekly predictions
+        data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
+        data.reset_index(inplace=True)
+
+    f_cat, f_cont, features = get_features(config)
+
+    # grab the highest values from each column
+    data_segs = data.groupby('segment_id')[f_cont+f_cat].max()
+    data_segs.reset_index(inplace=True)
+    data_segs = add_extra_features(data, data_segs, config)
+
+    data_segs, features, lm_features = process_features(
+        features, config, f_cat, f_cont, data_segs)
+    
     if config['level'] == 'week':
         # create lagged crash values
         crash_lags = format_crash_data(data, 'crash', week, year)
@@ -283,56 +363,8 @@ if __name__ == '__main__':
         data_model = data_segs.set_index('segment_id').join(any_crash).reset_index()
     print("full features:{}".format(features))
 
-    # Initialize data
-    df = Indata(data_model, 'target')
-    # Create train/test split
-    df.tr_te_split(.7)
+    initialize_and_run(data_model)
 
-    # Parameters for model
-    # class weight
-    # this needs to adapt to the model data, so can't be specified up from
-    a = data_model['target'].value_counts(normalize=True)
-    w = 1/a[1]
-    mp['XGBClassifier']['scale_pos_weight'] = [w]
-
-    # Initialize tuner
-    tune = Tuner(df)
-    try: 
-        #Base XG model
-        tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
-        #Base LR model
-        tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
-    except ValueError:
-        print('CV fails, likely very few of target available, try rerunning at segment-level')
-        raise
-    # Run test
-    test = Tester(df)
-    test.init_tuned(tune)
-    test.run_tuned('LR_base', cal=False)
-    test.run_tuned('XG_base', cal=False)
-
-    # choose best performing model
-    best_perf = 0
-    best_model = None
-    for m in test.rundict:
-        if test.rundict[m]['roc_auc']>best_perf:
-            best_perf = test.rundict[m]['roc_auc']
-            best_model = test.rundict[m]['model']
-            best_model_features = test.rundict[m]['features']
-    # check for performance above certain level
-    if best_perf<=perf_cutoff:
-        print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
-
-    # train on full data
-    trained_model = best_model.fit(data_model[best_model_features], data_model['target'])
-
-    # running this to test performance at different weeks
-    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
-
-    predict(config['level'])
-
-    # output feature importances or coefficients
-    output_importance(trained_model)
 
     
 
