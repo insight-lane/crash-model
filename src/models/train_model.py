@@ -11,7 +11,7 @@ import argparse
 import yaml
 from .model_utils import format_crash_data
 from .model_classes import Indata, Tuner, Tester
-import sklearn.linear_model as skl
+# import sklearn.linear_model as skl
 
 # all model outputs must be stored in the "data/processed/" directory
 BASE_DIR = os.path.dirname(
@@ -38,7 +38,8 @@ def predict_forward(trained_model, best_model_features, perf_cutoff,
         print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
     return(preds)
 
-def output_importance(trained_model):
+
+def output_importance(trained_model, features, datadir):
     # output feature importances or coefficients
     if hasattr(trained_model, 'feature_importances_'):
         feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
@@ -47,7 +48,7 @@ def output_importance(trained_model):
     else:
         return("No feature importances/coefficients detected")
     # conversion to json
-    with open(os.path.join(DATA_FP, 'feature_importances.json'), 'w') as f:
+    with open(os.path.join(datadir, 'feature_importances.json'), 'w') as f:
         json.dump(feature_imp_dict, f)
 
 
@@ -104,7 +105,6 @@ def set_defaults(config={}):
     if 'data_source' in config and config['data_source']:
         for source in config['data_source']:
             config[source['feat']].append(source['name'])
-
     if 'process' not in list(config.keys()):
         config['process'] = True
     if 'time_target' not in list(config.keys()):
@@ -142,7 +142,8 @@ def get_features(config):
     return f_cat, f_cont, features
 
 
-def predict(trained_model, best_model_features, perf_cutoff, config_level):
+def predict(trained_model, data_model, best_model_features,
+            features, perf_cutoff, config_level, datadir):
     """
 
     Args:
@@ -168,18 +169,18 @@ def predict(trained_model, best_model_features, perf_cutoff, config_level):
         df_pred = df_pred.stack(level=[0,1])
         df_pred = df_pred.reset_index()
         df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
-        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
+        df_pred.to_csv(os.path.join(datadir, 'seg_with_predicted.csv'), index=False)
         data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
-        data_plus_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+        data_plus_pred.to_json(os.path.join(datadir, 'seg_with_predicted.json'), orient='index')
     else:
-        preds = trained_model.predict_proba(data_model[features])[::,1]
+        preds = trained_model.predict_proba(data_model[features])[::, 1]
         df_pred = data_model.copy(deep=True)
         df_pred['prediction'] = preds
-        df_pred.to_csv(os.path.join(DATA_FP, 'seg_with_predicted.csv'), index=False)
-        df_pred.to_json(os.path.join(DATA_FP, 'seg_with_predicted.json'), orient='index')
+        df_pred.to_csv(os.path.join(datadir, 'seg_with_predicted.csv'), index=False)
+        df_pred.to_json(os.path.join(datadir, 'seg_with_predicted.json'), orient='index')
 
 
-def add_extra_features(data, data_segs, config):
+def add_extra_features(data, data_segs, config, datadir):
     """
     Add concerns, atrs and tmcs
     Args:
@@ -201,7 +202,7 @@ def add_extra_features(data, data_segs, config):
     # add in atrs if filepath present
     if config['atr'] != '':
         print('Adding atrs')
-        atrs = pd.read_csv(DATA_FP+config['atr'], dtype={'id': 'str'})
+        atrs = pd.read_csv(datadir+config['atr'], dtype={'id': 'str'})
         # for some reason pandas reads the id as float before str conversions
         atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
         data_segs = data_segs.merge(atrs[['id']+config['atr_cols']],
@@ -210,7 +211,7 @@ def add_extra_features(data, data_segs, config):
     # add in tmcs if filepath present
     if config['tmc'] != '':
         print('Adding tmcs')
-        tmcs = pd.read_json(DATA_FP+config['tmc'], dtype={'near_id': str})[
+        tmcs = pd.read_json(datadir+config['tmc'], dtype={'near_id': str})[
             ['near_id'] + config['tmc_cols']]
         data_segs = data_segs.merge(
             tmcs, left_on='segment_id', right_on='near_id', how='left')
@@ -245,19 +246,19 @@ def process_features(features, config, f_cat, f_cont, data_segs):
         # remove duplicated features
         features = list(set(features) - set(f_cat+f_cont))
         lm_features = list(set(lm_features) - set(f_cat+f_cont))
+
     return data_segs, features, lm_features
 
 
-def initialize_and_run(data_model):
-
-    import ipdb; ipdb.set_trace()
+def initialize_and_run(data_model, features, lm_features, config_level,
+                       datadir, seed=None):
 
     cvp, mp, perf_cutoff = set_params()
 
     # Initialize data
     df = Indata(data_model, 'target')
     # Create train/test split
-    df.tr_te_split(.7)
+    df.tr_te_split(.7, seed=seed)
 
     # Parameters for model
     # class weight
@@ -300,10 +301,11 @@ def initialize_and_run(data_model):
     # running this to test performance at different weeks
 #    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
-    predict(trained_model, best_model_features, perf_cutoff, config['level'])
+    predict(trained_model, data_model, best_model_features,
+            features, perf_cutoff, config_level, datadir)
 
     # output feature importances or coefficients
-    output_importance(trained_model)
+    output_importance(trained_model, features, datadir)
 
 
 if __name__ == '__main__':
@@ -348,7 +350,7 @@ if __name__ == '__main__':
     # grab the highest values from each column
     data_segs = data.groupby('segment_id')[f_cont+f_cat].max()
     data_segs.reset_index(inplace=True)
-    data_segs = add_extra_features(data, data_segs, config)
+    data_segs = add_extra_features(data, data_segs, config, DATA_FP)
 
     data_segs, features, lm_features = process_features(
         features, config, f_cat, f_cont, data_segs)
@@ -370,7 +372,8 @@ if __name__ == '__main__':
         data_model = data_segs.set_index('segment_id').join(any_crash).reset_index()
     print("full features:{}".format(features))
 
-    initialize_and_run(data_model)
+    initialize_and_run(data_model, features, lm_features, config['level'],
+                       DATA_FP)
 
 
     
