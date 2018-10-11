@@ -19,18 +19,22 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-def predict_forward(split_week, split_year, seg_data, crash_data):
+
+def predict_forward(trained_model, best_model_features, perf_cutoff,
+                    split_week, split_year, seg_data, crash_data):
     """simple function to predict crashes for specific week/year"""
     test_crash = format_crash_data(crash_data, 'crash', split_week, split_year)
-    test_crash_segs = test_crash.merge(seg_data, left_on='segment_id', right_on='segment_id')
-    preds = trained_model.predict_proba(test_crash_segs[best_model_features])[::,1]
+    test_crash_segs = test_crash.merge(
+        seg_data, left_on='segment_id', right_on='segment_id')
+    preds = trained_model.predict_proba(
+        test_crash_segs[best_model_features])[::, 1]
     try: 
         perf = roc_auc_score(test_crash_segs['target'], preds)
     except ValueError:
         print('Only one class present, likely no crashes in the week')
         perf = 0
     print(('Week {0}, year {1}, perf {2}'.format(split_week, split_year, perf)))
-    if perf<=perf_cutoff:
+    if perf <= perf_cutoff:
         print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
     return(preds)
 
@@ -138,7 +142,7 @@ def get_features(config):
     return f_cat, f_cont, features
 
 
-def predict(trained_model, config_level):
+def predict(trained_model, best_model_features, perf_cutoff, config_level):
     """
 
     Args:
@@ -152,7 +156,8 @@ def predict(trained_model, config_level):
         back_weeks = all_weeks[-config['weeks_back']:]
         pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
         for i, yw in enumerate(back_weeks):
-            preds = predict_forward(yw[1], yw[0], data_segs, data)
+            preds = predict_forward(trained_model, best_model_features, perf_cutoff,
+                yw[1], yw[0], data_segs, data)
             pred_weeks[i] = preds
 
         # create dataframe with segment-year-week index
@@ -245,6 +250,8 @@ def process_features(features, config, f_cat, f_cont, data_segs):
 
 def initialize_and_run(data_model):
 
+    import ipdb; ipdb.set_trace()
+
     cvp, mp, perf_cutoff = set_params()
 
     # Initialize data
@@ -293,7 +300,7 @@ def initialize_and_run(data_model):
     # running this to test performance at different weeks
     tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
-    predict(trained_model, config['level'])
+    predict(trained_model, best_model_features, perf_cutoff, config['level'])
 
     # output feature importances or coefficients
     output_importance(trained_model)
