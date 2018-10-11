@@ -36,9 +36,9 @@ def predict_forward(split_week, split_year, seg_data, crash_data):
 
 def output_importance(model):
     # output feature importances or coefficients
-    if hasattr(trained_model.feature_importances_):
+    if hasattr(trained_model, feature_importances_):
         feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
-    elif hasattr(trained_model.coefficients):
+    elif hasattr(trained_model, coefficients):
         feature_imp_dict = dict(zip(features, trained_model.coefficients.astype(float)))
     else:
         return("No feature importances/coefficients detected")
