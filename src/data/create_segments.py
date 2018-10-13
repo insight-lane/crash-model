@@ -275,16 +275,17 @@ def add_point_based_features(non_inters, inters, jsonfile,
     for feature in features:
         near = feature.near_id
         feat_type = feature.properties['feature']
-        date = feature.properties['date']
+        feat_agg_type = ""
 
         if 'feat_agg' in feature.properties and 'value' in feature.properties:
             feat_agg_type = feature.properties['feat_agg']
+            date = feature.properties['date']
 
         if near:
             if str(near) not in matches:
                 matches[str(near)] = {}
 
-            if feat_agg_type and feat_agg_type == 'latest':  
+            if feat_agg_type == 'latest':  
                 aggregation_values[(str(near), feat_type)][date] = feature.properties['value']
             else:
                 if feat_type not in matches[str(near)]:
