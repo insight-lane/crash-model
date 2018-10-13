@@ -269,31 +269,42 @@ def add_point_based_features(non_inters, inters, jsonfile,
         print("Read {} point-based features from file".format(len(features)))
     matches = {}
 
+
+    aggregation_values = defaultdict(dict)
+
     for feature in features:
         near = feature.near_id
         feat_type = feature.properties['feature']
+        date = feature.properties['date']
 
         if 'feat_agg' in feature.properties and 'value' in feature.properties:
             feat_agg_type = feature.properties['feat_agg']
-        else:
-            feat_agg_type = 'default'
 
         if near:
-            if feat_agg_type == 'latest':
-                if str(near) not in matches:
-                    matches[str(near)] = {}
-                matches[str(near)][feat_type] = feature.properties['value']
+            if str(near) not in matches:
+                matches[str(near)] = {}
+
+            if feat_agg_type and feat_agg_type == 'latest':  
+                aggregation_values[(str(near), feat_type)][date] = feature.properties['value']
             else:
-                if str(near) not in matches:
-                    matches[str(near)] = {}
                 if feat_type not in matches[str(near)]:
                     matches[str(near)][feat_type] = 0
                 matches[str(near)][feat_type] += 1
+
+    # if latest, sorts dates for each near/feat_type and puts latest in proper loc. in matches dict 
+    for str_near, feat_type in aggregation_values.keys(): 
+        values_all_dates = aggregation_values[(str_near, feat_type)]
+        dates = list(values_all_dates.keys())
+        dates.sort()
+        print(dates)
+        latest_date = dates[-1]
+        matches[str(near)][feat_type] = values_all_dates[latest_date]
 
     # Add point data to intersections
     for i, inter in enumerate(inters):
         if str(inter['properties']['id']) in list(matches.keys()):
             matched_features = matches[str(inter['properties']['id'])]
+            
             # Since intersections consist of multiple segments, add the
             # point-based properties to each of them
 

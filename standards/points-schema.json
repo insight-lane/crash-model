@@ -43,7 +43,7 @@
                 "description": "Type of Feature Aggregation",
                 "type": "string"
             },
-            "value":{
+            "value": {
                 "description": "Value of entry",
                 "type": "number"
             }
