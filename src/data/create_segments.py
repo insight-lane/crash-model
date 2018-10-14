@@ -297,9 +297,8 @@ def add_point_based_features(non_inters, inters, jsonfile,
         values_all_dates = aggregation_values[(str_near, feat_type)]
         dates = list(values_all_dates.keys())
         dates.sort()
-        print(dates)
         latest_date = dates[-1]
-        matches[str(near)][feat_type] = values_all_dates[latest_date]
+        matches[str_near][feat_type] = values_all_dates[latest_date]
 
     # Add point data to intersections
     for i, inter in enumerate(inters):

@@ -17,7 +17,8 @@ BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
 def read_standardized_fields(raw_crashes, fields, opt_fields):
-
+    print("OPT FIELDS")
+    print(opt_fields)
     crashes = {}
 
     for i, crash in enumerate(raw_crashes):
@@ -81,6 +82,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
         formatted_crash = add_city_specific_fields(crash, formatted_crash,
                                                    opt_fields)
         crashes[formatted_crash["id"]] = formatted_crash
+
     return crashes
 
 

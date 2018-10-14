@@ -21,13 +21,20 @@ def read_file_info(config, datadir):
         if not os.path.exists(filepath):
             raise SystemExit(csv_file + " not found, exiting")
 
+        print("FILE PATH")
+        print(filepath)
+
         df = pd.read_csv(filepath, na_filter=False)
         rows = df.to_dict("records")
         missing = 0
         for row in rows:
             lat = None
             lon = None
-            if 'address' in source_config:
+            
+            if 'latitude' in source_config and 'longitude' in source_config:
+                lat = row[source_config['latitude']]
+                lon = row[source_config['longitude']]
+            elif 'address' in source_config:
                 lat, lon = standardization_util.parse_address(
                     row[source_config['address']])
             if lat and lon:
@@ -52,9 +59,10 @@ def read_file_info(config, datadir):
                 if "notes" in source_config and source_config['notes']:
                     updated_row['notes'] = row[source_config['notes']]
                 if "feat_agg" in source_config and source_config['feat_agg']:
-                    updated_row['feat_agg'] = row[source_config['feat_agg']]
+                    updated_row['feat_agg'] = source_config['feat_agg']
                 if "value" in source_config and source_config['value']:
                     updated_row['value'] = row[source_config['value']]
+                    print(updated_row)
 
                 points.append(updated_row)
             else:
