@@ -21,9 +21,6 @@ def read_file_info(config, datadir):
         if not os.path.exists(filepath):
             raise SystemExit(csv_file + " not found, exiting")
 
-        print("FILE PATH")
-        print(filepath)
-
         df = pd.read_csv(filepath, na_filter=False)
         rows = df.to_dict("records")
         missing = 0
@@ -62,7 +59,6 @@ def read_file_info(config, datadir):
                     updated_row['feat_agg'] = source_config['feat_agg']
                 if "value" in source_config and source_config['value']:
                     updated_row['value'] = row[source_config['value']]
-                    print(updated_row)
 
                 points.append(updated_row)
             else:
