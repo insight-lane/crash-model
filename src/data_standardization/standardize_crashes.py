@@ -17,8 +17,6 @@ BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
 def read_standardized_fields(raw_crashes, fields, opt_fields):
-    print("OPT FIELDS")
-    print(opt_fields)
     crashes = {}
 
     for i, crash in enumerate(raw_crashes):
