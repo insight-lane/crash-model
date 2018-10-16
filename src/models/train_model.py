@@ -261,8 +261,8 @@ def initialize_and_run(data_model, features, lm_features, config_level,
     df = Indata(data_model, 'target')
     #Create train/test split
 
-    #create pickle file
-    pickle.dump(df.data, open("model_df.pkl", "wb"))
+    #create pickle file. Change name as per city for which its being run.
+    pickle.dump(df.data, open("model_df_cambridge.pkl", "wb"))
 
     # Create train/test split
     df.tr_te_split(.7, seed=seed)
