@@ -426,7 +426,7 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return index_segments(list(inter) + list(non_inter))
 
 
-def index_segments(segments, geojson=True):
+def index_segments(segments, geojson=True, segment=False):
     """
     Reads a list of segments in geojson format, and makes
     a spatial index for lookup
@@ -439,7 +439,9 @@ def index_segments(segments, geojson=True):
     """
 
     combined_seg = segments
-    if geojson:
+    if segment:
+        combined_seg = [(x.geometry, x.properties) for x in segments]
+    elif geojson:
         # Read in segments and turn them into shape, propery tuples
         combined_seg = [(shape(x['geometry']), x['properties']) for x in
                         segments]

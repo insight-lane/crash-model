@@ -29,6 +29,7 @@ def read_snapshots(dirname, config):
     min_start = None
     max_end = None
 
+    count = 0
     for jsonfilename in files:
         ext = os.path.splitext(jsonfilename)[1]
         if ext == '.gz':
@@ -42,6 +43,7 @@ def read_snapshots(dirname, config):
         else:
             continue
 
+        count += 1
         end = get_datetime(data['endTime'])
         if max_end is None or max_end < end:
             max_end = end
@@ -63,7 +65,8 @@ def read_snapshots(dirname, config):
                 dict(x, type='irregularity') for x in data['irregularities']
                 if 'city' in x and city in x['city']]
 
-    print("Reading waze data between {} and {}".format(min_start, max_end))
+    print("Reading waze data from {} snapshots between {} and {}".format(
+        count, min_start, max_end))
 
     return all_data
 
