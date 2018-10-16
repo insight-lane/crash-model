@@ -1,0 +1,55 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "001",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.06858488357565,
+            42.35165031556542
+          ],
+          [
+            -71.06876751642436,
+            42.35161688446769
+          ]
+        ]
+      },
+      "properties": {
+        "id": "001",
+        "access": null,
+        "area": null,
+        "bridge": null,
+        "from": "61341696",
+        "highway": "secondary",
+        "junction": null,
+        "key": "0",
+        "lanes": 2,
+        "length": "44.954",
+        "maxspeed": null,
+        "name": "Park Plaza",
+        "oneway": 1,
+        "osmid": "8652528",
+        "ref": null,
+        "to": "61341267",
+        "tunnel": null,
+        "width": 30,
+        "hwy_type": 1,
+        "osm_speed": "0",
+        "signal": 0,
+        "width_per_lane": 15,
+        "segment_id": "8652528-61341696-61341267",
+        "dead_end": null,
+        "streets": null,
+        "intersection": null,
+        "orig_id": 991,
+        "inter": 0,
+        "display_name": "Park Plaza between Columbus Avenue and Hadassah Way",
+        "center_y": 42.35163360001877,
+        "center_x": -71.06867620000001
+      }
+    }
+  ]
+}

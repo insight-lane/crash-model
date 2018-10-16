@@ -23,7 +23,20 @@ crashes_files:
       id: OBJECTID
       latitude: Y
       longitude: X
-      date: REPORTDATE
+      # If date supplied in single column:
+      date_complete: REPORTDATE
+      # If date is separated into year/month/day:
+      date_year: 
+      date_month: 
+      # Leave date_day empty if not available
+      date_day: 
+      # If time is available and separate from date:
+      time: 
+      # If time specified, time_format is one of:
+      # default (HH:MM:SS)
+      # seconds (since midnight)
+      # military (HHMM)
+      time_format: 
     optional:
       summary: MAR_ADDRESS
       vehicles: TOTAL_VEHICLES

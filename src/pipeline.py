@@ -52,6 +52,37 @@ def data_standardization(config, DATA_FP, forceupdate=False):
         elif not forceupdate:
             print("Already standardized concern data, skipping")
 
+    # Handling volume data
+    if (not os.path.exists(os.path.join(
+            DATA_FP, 'standardized', 'volume.json'))) or forceupdate:
+        subprocess.check_call([
+            'python',
+            '-m',
+            'data_standardization.standardize_volume',
+            '-c',
+            config['name'],
+            '-d',
+            DATA_FP
+        ])
+    else:
+        print("Already standardized volume data, skipping")
+
+    if 'data_source' in config and config['data_source'] and \
+       (not os.path.exists(os.path.join(
+           DATA_FP, 'standardized', 'points.json')) or forceupdate):
+        subprocess.check_call([
+            'python',
+            '-m',
+            'data_standardization.standardize_point_data',
+            '-c',
+            os.path.join(BASE_DIR, 'src', 'config',
+                         'config_' + config['name'] + '.yml'),
+            '-d',
+            DATA_FP
+        ])
+    else:
+        print("Already standardized point data, skipping")
+
 
 def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
                     forceupdate=False):
@@ -67,7 +98,7 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
     subprocess.check_call([
         'python',
         '-m',
-        'data.make_dataset_osm',
+        'data.make_dataset',
         '-c',
         config_file,
         '-d',
@@ -98,24 +129,20 @@ def train_model(config_file, DATA_FP):
     ])
 
 
-def visualize(name, end_year):
+def visualize(DATA_FP):
     """
     Creates the visualization data set for a city
     Args:
-        name - e.g. Boston, MA, USA
-        end_year - year we're visualizing, typically the last year for
-                   for which we have data
+        DATA_FP - path to data directory, e.g. ../data/boston/
     """
     print("Generating visualization data")
     subprocess.check_call([
         'python',
         '-m',
-        'visualization.make_viz_data',
-        '-c',
-        name
-    ]
-        + (['-y', str(end_year-1)] if end_year else [])
-    )
+        'data.make_preds_viz',
+        '-d',
+        DATA_FP
+    ])
 
 
 if __name__ == '__main__':
@@ -160,4 +187,4 @@ if __name__ == '__main__':
         train_model(args.config_file, DATA_FP)
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
-        visualize(config['name'], config['end_year'])
+        visualize(DATA_FP)

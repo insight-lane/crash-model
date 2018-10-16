@@ -67,8 +67,7 @@ def test_numeric_and_string_ids():
             "latitude": 42.317987926802246,
             "longitude": -71.06188127008645
         }
-    },
-    {
+    }, {
         "id": "A1B2C3D4E5",
         "dateOccurred": "2016-01-01T02:30:23-05:00",
         "location": {
@@ -78,4 +77,103 @@ def test_numeric_and_string_ids():
     }
     ]
 
-    validate(test_crashes, json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "standards", "crashes-schema.json"))))
+    validate(
+        test_crashes,
+        json.load(open(
+            os.path.join(
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(
+                            os.path.dirname(
+                                os.path.abspath(__file__))))), "standards", "crashes-schema.json"))))
+
+def test_date_formats():
+    """
+    Test various combinations of supplying dates.
+    """
+    
+    fields_date_constructed = {
+        "id": "id",
+        "date_complete": "date_of_crash",
+        "time": "",
+        "time_format": "",
+        "latitude": "lat",
+        "longitude": "lng"
+    }
+    
+    # Confirm crashes without coordinates are skipped
+    crashes_no_coords = [{
+        "id": "A1B2C3D4E5",
+        "date_of_crash": "2016-01-01T02:30:23-05:00",
+        "lat": "",
+        "lng": ""
+    }]
+    
+    assert len(standardize_crashes.read_standardized_fields(crashes_no_coords, fields_date_constructed, {})) == 0
+        
+    # Confirm crashes using date_complete but without a value are skipped
+    crashes_no_date = [{
+        "id": "A1B2C3D4E5",
+        "date_of_crash": "",
+        "lat": 42.317987926802246,
+        "lng": -71.06188127008645
+    }]
+    
+    assert len(standardize_crashes.read_standardized_fields(crashes_no_date, fields_date_constructed, {})) == 0
+    
+    # Confirm crashes using date_complete with a value are standardized
+    crashes_with_date = [{
+        "id": "A1B2C3D4E5",
+        "date_of_crash": "2016-01-01T02:30:23-05:00",
+        "lat": 42.317987926802246,
+        "lng": -71.06188127008645
+    }]
+    
+    assert len(standardize_crashes.read_standardized_fields(crashes_with_date, fields_date_constructed, {})) == 1
+    
+    # Confirm crashes using deconstructed date with all values are standardized
+    fields_date_deconstructed = {
+        "id": "id",
+        "date_complete": "",
+        "date_year": "year_of_crash",
+        "date_month": "month_of_crash",
+        "date_day": "day_of_crash",
+        "time": "",
+        "time_format": "",
+        "latitude": "lat",
+        "longitude": "lng"
+    }
+    
+    crashes_with_date = [{
+        "id": "A1B2C3D4E5",
+        "year_of_crash": "2016",
+        "month_of_crash": "01",
+        "day_of_crash": "01",
+        "lat": 42.317987926802246,
+        "lng": -71.06188127008645
+    }]
+    
+    assert len(standardize_crashes.read_standardized_fields(crashes_with_date, fields_date_deconstructed, {})) == 1
+    
+    # Confirm crashes using deconstructed date but missing a day are standardized with a random day
+    fields_date_no_day = {
+        "id": "id",
+        "date_complete": "",
+        "date_year": "year_of_crash",
+        "date_month": "month_of_crash",
+        "date_day": "",
+        "time": "",
+        "time_format": "",
+        "latitude": "lat",
+        "longitude": "lng"
+    }
+    
+    crashes_with_date = [{
+        "id": "A1B2C3D4E5",
+        "year_of_crash": 2017,
+        "month_of_crash": 1,
+        "lat": 42.317987926802246,
+        "lng": -71.06188127008645
+    }]
+    
+    assert len(standardize_crashes.read_standardized_fields(crashes_with_date, fields_date_no_day, {})) == 1

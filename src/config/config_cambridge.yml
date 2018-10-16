@@ -24,17 +24,30 @@ concern_files:
 
 # crash file configurations
 crashes_files:
-  crash_data_through_2017.csv:
+  Crashes20152017.csv:
     required:
       id: ID
       latitude: Y
       longitude: X
-      date: Date Time
+      # If date supplied in single column:
+      date_complete: DateTime
+      # If date is separated into year/month/day:
+      date_year: 
+      date_month: 
+      # Leave date_day empty if not available
+      date_day: 
+      # If time is available and separate from date:
+      time: 
+      # If time specified, time_format is one of:
+      # default (HH:MM:SS)
+      # seconds (since midnight)
+      # military (HHMM)
+      time_format: 
     optional:
-      summary: V1 First Event
-      vehicles:
-      bikes:
-      address: Location
+      summary:
+      address: Address
+      vehicles: 
+      bikes: 
 
 
 # concern column name
@@ -45,3 +58,15 @@ concern: seeclickfix
 # as is, will end up outputting predictions for all weeks up to this week
 # TODO: Make this more relevant for control
 time_target: [30, 2017]
+
+# Additional data sources
+data_source:
+  - name: parking_tickets
+    filename: Cambridge_Parking_Tickets.csv
+    address: Location
+    date: Ticket Issue Date
+    time: Issue Time
+    category: Violation Description
+    notes: 
+    # Feature can be categorical (f_cat) or continuous (f_cont)
+    feat: f_cont

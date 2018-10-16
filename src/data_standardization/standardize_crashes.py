@@ -2,17 +2,14 @@
 # Author terryf82 https://github.com/terryf82
 
 import argparse
-import dateutil.parser as date_parser
-import json
 import os
 import pandas as pd
-import re
 import yaml
 from collections import OrderedDict
-from datetime import timedelta
-from jsonschema import validate
 import csv
-import datetime
+import calendar
+import random
+from .standardization_util import parse_date, validate_and_write_schema
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -26,35 +23,56 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
-        # skip any crashes that don't have coordinates or date
-        if crash[fields["latitude"]] == "" or crash[fields["longitude"]] == "" \
-           or crash[fields['date']] == "":
+        
+        # skip any crashes that don't have coordinates
+        if crash[fields["latitude"]] == "" or crash[fields["longitude"]] == "":
+            continue
+        
+        # construct crash date based on config settings, skipping any crashes without date
+        if fields["date_complete"]:
+            if not crash[fields["date_complete"]]:
+                continue
+                
+            else:
+                crash_date = crash[fields["date_complete"]]
+            
+        elif fields["date_year"] and fields["date_month"]:
+            if fields["date_day"]:
+                crash_date = str(crash[fields["date_year"]]) + "-" + str(crash[fields["date_month"]]) + "-" + crash[fields["date_day"]]
+            # some cities do not supply a day of month for crashes, randomize if so
+            else:
+                available_dates = calendar.Calendar().itermonthdates(
+                    crash[fields["date_year"]], crash[fields["date_month"]])
+                crash_date = str(random.choice([date for date in available_dates if date.month == crash[fields["date_month"]]]))
+                
+        # skip any crashes that don't have a date
+        else:
             continue
 
-        # Date can either be a date or a date time
-        date = date_parser.parse(crash[fields['date']])
-        # If there's no time in the date given, look at the time field
-        # if available
-        if date.hour == 0 and date.minute == 0 and date.second == 0 \
-           and 'time' in fields and fields['time']:
-
-            # special case of seconds past midnight
-            time = crash[fields['time']]
-            if re.match(r"^\d+$", str(time)) and int(time) >= 0 \
-               and int(time) < 86400:
-                date = date + timedelta(seconds=int(crash[fields['time']]))
-
-            else:
-                date = date_parser.parse(
-                    date.strftime('%Y-%m-%d ') + str(time)
-                )
-
-        # TODO add timezone to config ("Z" is UTC)
-        date_time = date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        crash_time = None
+        if fields["time"]:
+            crash_time = crash[fields["time"]]
+        
+        if fields["time_format"]:
+            crash_date_time = parse_date(
+                crash_date,
+                crash_time,
+                fields["time_format"]
+            )
+            
+        else:
+            crash_date_time = parse_date(
+                crash_date,
+                crash_time
+            )
+            
+        # Skip crashes where date can't be parsed
+        if not crash_date_time:
+            continue
 
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
-            ("dateOccurred", date_time),
+            ("dateOccurred", crash_date_time),
             ("location", OrderedDict([
                 ("latitude", float(crash[fields["latitude"]])),
                 ("longitude", float(crash[fields["longitude"]]))
@@ -182,12 +200,5 @@ if __name__ == '__main__':
 
     schema_path = os.path.join(BASE_FP, "standards", "crashes-schema.json")
     list_city_crashes = list(dict_city_crashes.values())
-    with open(schema_path) as crashes_schema:
-        validate(list_city_crashes, json.load(crashes_schema))
-
     crashes_output = os.path.join(args.folder, "standardized/crashes.json")
-
-    with open(crashes_output, "w") as f:
-        json.dump(list_city_crashes, f)
-
-    print("- output written to {}".format(crashes_output))
+    validate_and_write_schema(schema_path, list_city_crashes, crashes_output)
