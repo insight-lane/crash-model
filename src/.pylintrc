@@ -75,7 +75,8 @@ enable=import-error,
        redundant-unittest-assert,
        boolean-datetime,
        unused-variable,
-       mixed-indentation
+       mixed-indentation,
+       undefined-variable
 
 [REPORTS]
 
