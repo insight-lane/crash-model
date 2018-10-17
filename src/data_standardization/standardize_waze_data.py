@@ -23,7 +23,7 @@ def convert_from_millis(millis):
         millis/1000).strftime('%Y-%m-%d %H:%M:%S')
 
 
-def read_snapshots(dirname, config):
+def read_snapshots(dirname, config, startdate=None, enddate=None):
     """
     Read in files, either .json.gz or .json from a directory
     Create a dictionary of lists of jams, alerts, and irregularities
@@ -36,9 +36,13 @@ def read_snapshots(dirname, config):
     max_end = None
 
     count = 0
-    ids = set()
+    if startdate:
+        startdate = parse(startdate)
+    if enddate:
+        enddate = parse(enddate)
+
     for jsonfilename in files:
-        ext = os.path.splitext(jsonfilename)[1]
+        date, ext = os.path.splitext(jsonfilename)
         if ext == '.gz':
             with gzip.GzipFile(os.path.join(dirname, jsonfilename), 'r') as f:
                 json_bytes = f.read()
@@ -50,7 +54,6 @@ def read_snapshots(dirname, config):
         else:
             continue
 
-        count += 1
         end = get_datetime(data['endTime'])
         if max_end is None or max_end < end:
             max_end = end
@@ -58,15 +61,18 @@ def read_snapshots(dirname, config):
         if min_start is None or min_start > start:
             min_start = start
 
+        if (startdate and start < startdate) \
+           or (enddate and end > enddate):
+            continue
+        count += 1
+
         # We care about jams, alerts, and irregularities
-        ids.update([x['id'] for x in data['jams']])
         if 'jams' in data:
             all_data += [
                 dict(x, type='jam',
                      pubTimeStamp=convert_from_millis(x['pubMillis']))
                 for x in data['jams']
                 if 'city' in x and city in x['city']
-                and x['id'] not in ids
             ]
         if 'alerts' in data:
             all_data += [
@@ -78,7 +84,7 @@ def read_snapshots(dirname, config):
             all_data += [
                 dict(x, type='irregularity') for x in data['irregularities']
                 if 'city' in x and city in x['city']]
-   
+
     print("Reading waze data from {} snapshots between {} and {}".format(
         count, min_start, max_end))
 
@@ -93,7 +99,10 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--datadir", type=str, required=True,
                         help="path to destination's data folder," +
                         "e.g. ../data/boston")
-
+    parser.add_argument("-s", "--startdate",
+                        help="If given, start date in format YY-MM-DD")
+    parser.add_argument("-e", "--enddate",
+                        help="If given, end date in format YY-MM-DD")
     args = parser.parse_args()
 
     # load config for this city
@@ -102,7 +111,11 @@ if __name__ == '__main__':
         config = yaml.safe_load(f)
 
     snapshots = read_snapshots(
-        os.path.join(args.datadir, 'raw', 'waze'), config)
+        os.path.join(args.datadir, 'raw', 'waze'),
+        config,
+        startdate=args.startdate,
+        enddate=args.enddate
+    )
 
     jsonfile = os.path.join(
         args.datadir, 'standardized', 'waze.json')
