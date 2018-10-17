@@ -4,6 +4,7 @@ from dateutil.parser import parse
 import gzip
 import json
 import yaml
+import datetime
 
 
 CURR_FP = os.path.dirname(
@@ -15,6 +16,11 @@ def get_datetime(date):
     # Handles the datetime from Waze format
     # Doesn't currently convert from utc
     return parse(':'.join(date.split(':')[0:-1]))
+
+
+def convert_from_millis(millis):
+    return datetime.datetime.fromtimestamp(
+        millis/1000).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def read_snapshots(dirname, config):
@@ -30,6 +36,7 @@ def read_snapshots(dirname, config):
     max_end = None
 
     count = 0
+    ids = set()
     for jsonfilename in files:
         ext = os.path.splitext(jsonfilename)[1]
         if ext == '.gz':
@@ -52,19 +59,26 @@ def read_snapshots(dirname, config):
             min_start = start
 
         # We care about jams, alerts, and irregularities
+        ids.update([x['id'] for x in data['jams']])
         if 'jams' in data:
             all_data += [
-                dict(x, type='jam') for x in data['jams']
-                if 'city' in x and city in x['city']]
+                dict(x, type='jam',
+                     pubTimeStamp=convert_from_millis(x['pubMillis']))
+                for x in data['jams']
+                if 'city' in x and city in x['city']
+                and x['id'] not in ids
+            ]
         if 'alerts' in data:
             all_data += [
-                dict(x, type='alert') for x in data['jams']
+                dict(x, type='alert',
+                     pubTimeStamp=convert_from_millis(x['pubMillis']))
+                for x in data['jams']
                 if 'city' in x and city in x['city']]
         if 'irregularities' in data:
             all_data += [
                 dict(x, type='irregularity') for x in data['irregularities']
                 if 'city' in x and city in x['city']]
-
+   
     print("Reading waze data from {} snapshots between {} and {}".format(
         count, min_start, max_end))
 
