@@ -21,6 +21,18 @@ def get_linestring(value):
     )
 
 
+def get_features(waze_info, properties, num_snapshots):
+
+    if properties['segment_id'] in waze_info:
+        # only count one jam per snapshot on a road
+        num_jams = len(waze_info[properties['segment_id']])
+
+    else:
+        num_jams = 0
+    properties.update(jam_percent=num_jams/num_snapshots)
+    return properties
+
+
 def map_segments(datadir, filename):
 
     items = json.load(open(filename))
@@ -59,17 +71,15 @@ def map_segments(datadir, filename):
                     # or very short overlaps
                     continue
                 waze_info[segment[1]['segment_id']].append(item)
-
     # Add waze features
     # Also convert into format that util.prepare_geojson is expecting
     updated_roads = []
     for road in road_segments:
-        properties = road.properties
-        if properties['segment_id'] in waze_info:
-            num_jams = len(waze_info[properties['segment_id']])
-        else:
-            num_jams = 0
-        properties.update(jam_percent=num_jams/num_snapshots)
+        properties = get_features(
+            waze_info,
+            road.properties,
+            num_snapshots
+        )
         updated_roads.append(
             {'geometry': road.geometry, 'properties': properties})
 
