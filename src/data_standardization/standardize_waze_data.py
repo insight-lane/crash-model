@@ -100,9 +100,9 @@ if __name__ == '__main__':
                         help="path to destination's data folder," +
                         "e.g. ../data/boston")
     parser.add_argument("-s", "--startdate",
-                        help="If given, start date in format YY-MM-DD")
+                        help="If given, start date in format YYYY-MM-DD")
     parser.add_argument("-e", "--enddate",
-                        help="If given, end date in format YY-MM-DD")
+                        help="If given, end date in format YYYY-MM-DD")
     args = parser.parse_args()
 
     # load config for this city
