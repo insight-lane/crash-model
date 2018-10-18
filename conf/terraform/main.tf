@@ -61,7 +61,7 @@ resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.main.id}"
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = "${element(aws_nat_gateway.gw.*.id, count.index)}"
   }
 }
@@ -85,14 +85,14 @@ resource "aws_security_group" "lb" {
   ingress {
     protocol    = "tcp"
     from_port   = 80
-    to_port     = 80
+    to_port     = 443
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -137,12 +137,30 @@ resource "aws_alb_target_group" "app" {
 # Redirect all traffic from the ALB to the target group
 resource "aws_alb_listener" "front_end" {
   load_balancer_arn = "${aws_alb.main.id}"
-  port              = "80"
-  protocol          = "HTTP"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  certificate_arn   = "arn:aws:acm:ap-northeast-1:122611804854:certificate/e26fa518-1ab3-44f2-95f4-e1dd15a640e3"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.app.id}"
     type             = "forward"
+  }
+}
+
+resource "aws_alb_listener" "front_end_redirect" {
+  load_balancer_arn = "${aws_alb.main.id}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 
@@ -198,5 +216,6 @@ resource "aws_ecs_service" "main" {
 
   depends_on = [
     "aws_alb_listener.front_end",
+    "aws_alb_listener.front_end_redirect",
   ]
 }
