@@ -25,7 +25,8 @@ if __name__ == '__main__':
         os.makedirs(args.dirname)
 
     response = requests.get(args.feed)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
+    # Filename is the current minute, in utc time
+    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H-%M")
     json_str = json.dumps(response.json())
     json_bytes = json_str.encode('utf-8')
 

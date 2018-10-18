@@ -69,20 +69,25 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
         # We care about jams, alerts, and irregularities
         if 'jams' in data:
             all_data += [
-                dict(x, type='jam',
-                     pubTimeStamp=convert_from_millis(x['pubMillis']))
+                dict(x, eventType='jam',
+                     pubTimeStamp=convert_from_millis(x['pubMillis']),
+                     snapshotId=count
+                )
                 for x in data['jams']
                 if 'city' in x and city in x['city']
             ]
         if 'alerts' in data:
             all_data += [
-                dict(x, type='alert',
-                     pubTimeStamp=convert_from_millis(x['pubMillis']))
+                dict(x, eventType='alert',
+                     pubTimeStamp=convert_from_millis(x['pubMillis']),
+                     snapshotId=count
+                )
                 for x in data['jams']
                 if 'city' in x and city in x['city']]
         if 'irregularities' in data:
             all_data += [
-                dict(x, type='irregularity') for x in data['irregularities']
+                dict(x, eventType='irregularity',
+                     snapshotId=count) for x in data['irregularities']
                 if 'city' in x and city in x['city']]
 
     print("Reading waze data from {} snapshots between {} and {}".format(
