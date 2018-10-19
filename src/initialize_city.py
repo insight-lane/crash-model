@@ -84,7 +84,7 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
                 "    feat: \n" + 
                 "    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
                 "    feat_agg: \n"
-                "    # if latest, the desired value \n" +
+                "    # if latest, the column name where the value can be found \n" +
                 "    value: \n"
                 )
         f.write("\n")

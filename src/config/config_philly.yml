@@ -13,20 +13,6 @@ end_year: 2015
 level: 'segment'
 ##############################################################################
 # Configuration for data standardization
-
-# List of concern type information
-# concern_files:
-#   - name: 
-#     filename: 
-#     latitude:
-#     longitude:
-#     time:
-#   - name:
-#     filename: 
-#     latitude:
-#     longitude:
-#     time: 
-
 # crash file configurations
 crashes_files:
     vztest.csv:
@@ -47,13 +33,12 @@ crashes_files:
 
 # Additional city-specific features can be added from maps by setting
 # these variables below
-
 data_source: 
-  - name: DVTTrafficVolume 
+  - name: DVRPCTrafficVolume 
     filename: DVRPC_Traffic_Counts.csv
     latitude: LATITUDE 
     longitude: LONGITUDE
-    date: SETDATE 
+    date: SETDATE
     notes: 
     # Feature is categorical (f_cat) or continuous (f_cont)\n" +
     feat: f_cont
@@ -61,54 +46,3 @@ data_source:
     feat_agg: latest
     # if latest, the desired value 
     value: RECORDNUM 
-
-# If you are adding another map and its features to the open street map,
-# give it here.  Required to be in 3857 projection
-extra_map: 
-
-# Additional features to add from the additional map.
-# This is required if extra_map is given
-additional_features: 
-
-##############################################################################
-
-# configuration for running the model training and prediction
-
-# concern column name
-# leave as '' if not adding concerns
-concern: ''
-
-# atr filepath (should be in processed subfolder)
-# leave as '' if not adding atrs
-atr: ''
-# atr column names as list
-# atr_cols:
-# - speed_coalesced
-# - volume_coalesced
-
-# tmc filepath (should be in processed subfolder)
-# leave as '' if not adding tmcs
-tmc: ''
-# tmc column names as list
-# tmc_cols:
-# - Conflict
-
-# week on which to predict crashes (week, year)
-# as is, will end up outputting predictions for all weeks up to this week
-# TODO: Make this more relevant for control
-time_target: [1, 2015]
-
-# continuous features
-# f_cont:
-#     - 'DVTTrafficVolume'
-
-# # categorical features
-# f_cat:
-# - 'SPEEDLIMIT'
-# - 'Struct_Cnd'
-# - 'Surface_Tp'
-# - 'F_F_Class'
-
-# make categorical into dummies, standardize continuous
-# usually necessary/important if want to use linear models
-process: True

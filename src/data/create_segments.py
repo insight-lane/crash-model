@@ -295,9 +295,7 @@ def add_point_based_features(non_inters, inters, jsonfile,
     # if latest, sorts dates for each near/feat_type and puts latest in proper loc. in matches dict 
     for str_near, feat_type in aggregation_values.keys(): 
         values_all_dates = aggregation_values[(str_near, feat_type)]
-        dates = list(values_all_dates.keys())
-        dates.sort()
-        latest_date = dates[-1]
+        latest_date = max(values_all_dates.keys())
         matches[str_near][feat_type] = values_all_dates[latest_date]
 
     # Add point data to intersections
