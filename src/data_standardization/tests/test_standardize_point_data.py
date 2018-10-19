@@ -3,7 +3,6 @@ import csv
 import json
 from .. import standardize_point_data
 
-
 def create_test_csv(tmpdir, filename):
     tmppath = tmpdir.strpath
     
@@ -31,7 +30,6 @@ def create_test_csv(tmpdir, filename):
         for row in test:
             writer.writerow(row)
     return tmppath
-
 
 def test_read_file_info(tmpdir):
     tmppath = create_test_csv(tmpdir, 'test.csv')
@@ -71,5 +69,70 @@ def test_read_file_info(tmpdir):
             'category': 'HYDRANT WITHIN 10 FT'
         }]
 
+def create_feature_aggr_test_csv(tmpdir, filename):
+    tmppath = tmpdir.strpath
+    
+    test = [{
+        'SETDATE': '2012-03-15T00:00:00.000Z',
+        'LATITUDE': '39.74391',
+        'LONGITUDE': '-75.22693',
+        'RECORDNUM': '87081',
+    }, {
+        'SETDATE': '2012-05-02T00:00:00.000Z',
+        'LATITUDE': '39.90415873',
+        'LONGITUDE': '-75.19348751',
+        'RECORDNUM': '87679',
+    }]
+    os.makedirs(os.path.join(tmpdir, 'raw'))
+    os.makedirs(os.path.join(tmpdir, 'raw', 'supplemental'))
+    os.makedirs(os.path.join(tmpdir, 'standardized'))
 
+    with open(os.path.join(tmppath, 'raw', 'supplemental',
+                           filename), 'w') as f:
+        writer = csv.DictWriter(f, list(test[0].keys()))
+        writer.writeheader()
+        for row in test:
+            writer.writerow(row)
+    return tmppath
 
+def test_read_file_info(tmpdir):
+    tmppath = create_feature_aggr_test_csv(tmpdir, 'test2.csv')
+
+    config = {
+        'data_source': [{
+            'name': 'aggtest',
+            'filename': 'test2.csv',
+            'latitude': 'LATITUDE',
+            'longitude' : 'LONGITUDE',
+            'date': 'SETDATE',
+            'feat': 'f_cont',
+            'feat_agg': 'latest',
+            'value': 'RECORDNUM',
+        }]
+    }
+
+    standardize_point_data.read_file_info(config, tmppath)
+    filename = os.path.join(tmppath, 'standardized', 'points.json')
+    with open(filename) as data_file:
+        result = json.load(data_file)
+
+    assert result == [{
+        'feature': 'aggtest',
+        'date': '2012-03-15T00:00:00Z',
+        'location': {
+            'latitude': 39.74391,
+            'longitude': -75.22693000000001
+        },
+        'feat_agg':'latest',
+        'value': 87081
+        },
+        {
+        'feature': 'aggtest',
+        'date': '2012-05-02T00:00:00Z',
+        'location': {
+            'latitude': 39.90415873,
+            'longitude': -75.19348751
+        },
+        'feat_agg':'latest',
+        'value': 87679
+        }]

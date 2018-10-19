@@ -1,0 +1,12 @@
+[
+  "tests/test_boston_volume.py::test_is_readable_ATR",
+  "tests/test_boston_volume.py::test_clean_ATR_fname",
+  "tests/test_boston_volume.py::test_read_ATR",
+  "tests/test_standardization_util.py::test_parse_date",
+  "tests/test_standardization_util.py::test_parse_address",
+  "tests/test_standardization_util.py::test_validate_and_write_schema",
+  "tests/test_standardize_crashes.py::test_add_id",
+  "tests/test_standardize_crashes.py::test_numeric_and_string_ids",
+  "tests/test_standardize_crashes.py::test_date_formats",
+  "tests/test_standardize_point_data.py::test_read_file_info"
+]
