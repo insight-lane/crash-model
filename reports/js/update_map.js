@@ -37,7 +37,46 @@ d3.json("preds_final.geojson", function(data) {
 	makeBarChart(0, median);
 
 	// populateFeatureImportancesTbl(data);
+	d3.json("crashes.json", function(data) {
+		var crashGeojson = buildGeojson(data);
+
+		map.addLayer({
+			id: 'crashes',
+			type: 'circle',
+			source: {
+				type: 'geojson',
+				data: crashGeojson
+			},
+			paint: {
+				'circle-radius': [
+					'interpolate', ['linear'], ['zoom'],
+					12, 4,
+					15, 8,
+				],
+				'circle-color': '#fff',
+				'circle-stroke-color': '#fff',
+				'circle-opacity': 0.5
+			},
+		}, 'admin-2-boundaries-dispute');
+	})
 })
+
+function buildGeojson(json) {
+	var features = [];
+	json.forEach(function(crash) {
+		var crashObj = {};
+		crashObj.type = "Feature";
+		crashObj.geometry = {"type": "Point", "coordinates": [ crash.location.longitude, crash.location.latitude]};
+		crashObj.properties = {"id": crash.id, "dateOccurred": crash.dateOccurred, "summary": crash.summary, "vehicles": crash.vehicles};
+		features.push(crashObj);
+	});
+
+	var crashGeojson = {}
+	crashGeojson.type = "FeatureCollection";
+	crashGeojson.features = features;
+
+	return(crashGeojson);
+}
 
 function splitSegmentName(segmentName) {
 	var i = segmentName.length;
