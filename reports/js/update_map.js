@@ -128,7 +128,7 @@ function zoomToSegment(segmentX, segmentY) {
 
 function populateSegmentInfo(segmentID) {
 	var segmentData = segmentsHash.get(segmentID);
-	console.log(segmentData);
+	// console.log(segmentData);
 
 	d3.select('#segment_details .segment_name')
 		.html(function() { var nameObj = splitSegmentName(segmentData.segment.display_name);

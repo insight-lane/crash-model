@@ -139,6 +139,10 @@ hr {
     margin: 6% 0;
 }
 
+.historicalCrashes {
+    margin-bottom: 30px;
+}
+
 input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
