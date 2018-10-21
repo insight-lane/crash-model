@@ -40,8 +40,12 @@ d3.json("preds_final.geojson", function(data) {
 
 	// add crash layer to map so user can view if they choose
 	d3.json("crashes.json", function(data) {
-		// load in standardized crash json and convert to geojson so it can be displayed on map
-		var crashGeojson = buildGeojson(data);
+		// load in standardized crash json and gets total number of crashes by location
+		var summedData = totalCrashesByLocation(data);
+		var maxCrashes = d3.max(summedData, function(d) { return d.value;});
+
+		// then convert the aggregated json into a geojson so it can be displayed on map
+		var crashGeojson = buildGeojson(summedData);
 
 		// on intiial load, do not display crashes
 		map.addLayer({
@@ -55,11 +59,14 @@ d3.json("preds_final.geojson", function(data) {
 				visibility: 'none'
 			},
 			paint: {
-				'circle-radius': [
-					'interpolate', ['linear'], ['zoom'],
-					12, 4,
-					15, 8,
-				],
+				'circle-radius': {
+					property: 'total_crashes',
+					type: 'exponential',
+					stops: [
+						[1, 5],
+						[maxCrashes, Math.sqrt(maxCrashes*5)]
+					]
+				},
 				'circle-color': '#fff',
 				'circle-stroke-color': '#fff',
 				'circle-opacity': 0.5
@@ -68,13 +75,27 @@ d3.json("preds_final.geojson", function(data) {
 	})
 })
 
+function totalCrashesByLocation(json) {
+	json.forEach(function(crash) {
+		crash.key = crash.location.longitude + "|" + crash.location.latitude;
+		crash.n = 1;
+	})
+
+	var data = d3.nest()
+		.key(function(d) { return d.key; })
+		.rollup(function(d) { return d3.sum(d, function(g) { return g.n; }); })
+		.entries(json);
+
+	return data;
+}
+
 function buildGeojson(json) {
 	var features = [];
 	json.forEach(function(crash) {
 		var crashObj = {};
 		crashObj.type = "Feature";
-		crashObj.geometry = {"type": "Point", "coordinates": [ crash.location.longitude, crash.location.latitude]};
-		crashObj.properties = {"id": crash.id, "dateOccurred": crash.dateOccurred, "summary": crash.summary, "vehicles": crash.vehicles};
+		crashObj.geometry = {"type": "Point", "coordinates": [ crash.key.split("|")[0], crash.key.split("|")[1]]};
+		crashObj.properties = {"total_crashes": crash.value};
 		features.push(crashObj);
 	});
 
