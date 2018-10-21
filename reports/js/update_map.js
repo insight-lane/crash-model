@@ -37,15 +37,22 @@ d3.json("preds_final.geojson", function(data) {
 	makeBarChart(0, median);
 
 	// populateFeatureImportancesTbl(data);
+
+	// add crash layer to map so user can view if they choose
 	d3.json("crashes.json", function(data) {
+		// load in standardized crash json and convert to geojson so it can be displayed on map
 		var crashGeojson = buildGeojson(data);
 
+		// on intiial load, do not display crashes
 		map.addLayer({
 			id: 'crashes',
 			type: 'circle',
 			source: {
 				type: 'geojson',
 				data: crashGeojson
+			},
+			layout: {
+				visibility: 'none'
 			},
 			paint: {
 				'circle-radius': [
@@ -282,3 +289,13 @@ function update_map(map) {
 
 	map.setFilter('predictions', new_filter);
 }
+
+// event handlers to toggle crashes layer
+d3.select("#checkbox_crashes").on("change", function() {
+	if(this.checked) {
+		map.setLayoutProperty('crashes', 'visibility', 'visible');
+	}
+	else {
+		map.setLayoutProperty('crashes', 'visibility', 'none');
+	}
+});
