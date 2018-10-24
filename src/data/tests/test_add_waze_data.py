@@ -1,5 +1,6 @@
 import os
 import shutil
+import geojson
 from .. import add_waze_data
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
@@ -23,8 +24,14 @@ def test_map_segments(tmpdir):
         os.path.join(orig_path, 'osm_elements.geojson'),
         os.path.join(path, 'osm_elements.geojson')
     )
-
+    
     add_waze_data.map_segments(
         tmpdir.strpath,
-        os.path.join(orig_path, 'test_waze.json')
+        os.path.join(orig_path, 'waze_test_set.json')
     )
+
+    # Read back in the jams information
+    with open(os.path.join(path, 'jams.geojson')) as f:
+        items = geojson.load(f)
+    # Test that the number of jams is consistent
+    assert len(items['features']) == 54
