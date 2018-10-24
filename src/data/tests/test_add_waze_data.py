@@ -41,4 +41,4 @@ def test_map_segments(tmpdir):
     with open(os.path.join(path, 'osm_elements.geojson')) as f:
         osm_items = geojson.load(f)
     assert len([x for x in osm_items['features']
-                if x['properties']['jam_percent']])  == 54
+                if x['properties']['jam_percent']]) == 54
