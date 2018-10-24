@@ -35,3 +35,10 @@ def test_map_segments(tmpdir):
         items = geojson.load(f)
     # Test that the number of jams is consistent
     assert len(items['features']) == 54
+    
+    # Read back in the osm_elements, make sure number of elements
+    # with a jam percentage matches the number of jam segments
+    with open(os.path.join(path, 'osm_elements.geojson')) as f:
+        osm_items = geojson.load(f)
+    assert len([x for x in osm_items['features']
+                if x['properties']['jam_percent']])  == 54

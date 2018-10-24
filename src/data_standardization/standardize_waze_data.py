@@ -42,7 +42,7 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
         enddate = parse(enddate)
 
     for jsonfilename in files:
-        date, ext = os.path.splitext(jsonfilename)
+        _, ext = os.path.splitext(jsonfilename)
         if ext == '.gz':
             with gzip.GzipFile(os.path.join(dirname, jsonfilename), 'r') as f:
                 json_bytes = f.read()
