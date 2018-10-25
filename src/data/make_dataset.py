@@ -71,11 +71,15 @@ if __name__ == '__main__':
     # beyond open street map
     features = [
         'width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
-        'intersection_segments', 'width_per_lane'
+        'width_per_lane'
     ]
     # Features can also be added if additional data sources are given
     if 'data_source' in config and config['data_source']:
         features += [x['name'] for x in config['data_source']]
+    waze = False
+    if os.path.exists(os.path.join(DATA_FP, 'standardized', 'waze.json')):
+        features += ['jam_percent']
+        waze = True
 
     print("Generating maps for " + city + ' in ' + DATA_FP)
     if recreate:
@@ -91,6 +95,19 @@ if __name__ == '__main__':
         DATA_FP,
     ] + (['--forceupdate'] if recreate else []))
 
+    # Add waze data if applicable
+    if waze:
+        print("Adding Waze features")
+        subprocess.check_call([
+            'python',
+            '-m',
+            'data.add_waze_data',
+            '-d',
+            DATA_FP
+        ])
+    else:
+        print("No Waze data found, skipping...")
+    
     # Create segments on the open street map data
     subprocess.check_call([
         'python',

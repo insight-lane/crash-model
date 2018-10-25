@@ -116,11 +116,15 @@ def set_defaults(config={}):
     if 'level' not in list(config.keys()):
         config['level'] = 'week'
 
-
+        
 def get_features(config):
 
     f_cat = config['f_cat']
     f_cont = config['f_cont']
+
+    if os.path.exists(os.path.join(DATA_FP, 'standardized', 'waze.json')):
+        f_cont.append('jam_percent')
+
     # segment chars
     # Dropping continuous features that don't exist
     new_feats = []
@@ -139,6 +143,7 @@ def get_features(config):
         features += config['atr_cols']
     if config['tmc'] != '':
         features += config['tmc_cols']
+
     return f_cat, f_cont, features
 
 
@@ -328,10 +333,11 @@ if __name__ == '__main__':
             config = yaml.safe_load(f)
     set_defaults(config)
 
-    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
-    seg_data = os.path.join(DATA_FP, config['seg_data'])
+    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'])
+    PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
+    seg_data = os.path.join(PROCESSED_DATA_FP, config['seg_data'])
 
-    print(('Outputting to: %s' % DATA_FP))
+    print(('Outputting to: %s' % PROCESSED_DATA_FP))
 
     # Read in data
     data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
@@ -350,7 +356,7 @@ if __name__ == '__main__':
     # grab the highest values from each column
     data_segs = data.groupby('segment_id')[f_cont+f_cat].max()
     data_segs.reset_index(inplace=True)
-    data_segs = add_extra_features(data, data_segs, config, DATA_FP)
+    data_segs = add_extra_features(data, data_segs, config, PROCESSED_DATA_FP)
 
     data_segs, features, lm_features = process_features(
         features, config, f_cat, f_cont, data_segs)
@@ -373,7 +379,7 @@ if __name__ == '__main__':
     print("full features:{}".format(features))
 
     initialize_and_run(data_model, features, lm_features, config['level'],
-                       DATA_FP)
+                       PROCESSED_DATA_FP)
 
 
     

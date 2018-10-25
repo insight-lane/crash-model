@@ -10,6 +10,8 @@ city_radius: 10
 # If given, limit crashes to after start_year and before end_year
 start_year:
 end_year:
+# level of predictions, either 'week' or 'segment'
+level: 'segment'
 
 ##############################################################################
 # Configuration for data standardization

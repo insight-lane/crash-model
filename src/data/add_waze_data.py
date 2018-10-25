@@ -42,7 +42,7 @@ def get_features(waze_info, properties, num_snapshots):
                             for x in waze_info[properties['segment_id']]]))
     else:
         num_jams = 0
-    properties.update(jam_percent=num_jams/num_snapshots)
+    properties.update(jam_percent=100*num_jams/num_snapshots)
 
     # Other potential features
     # Something with speeds in the jams
