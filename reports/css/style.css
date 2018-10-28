@@ -143,6 +143,10 @@ hr {
     margin-bottom: 30px;
 }
 
+.mapboxgl-popup-content {
+    color: #000;
+}
+
 input[type="range"] {
     -webkit-appearance: none;
     width: 100%;

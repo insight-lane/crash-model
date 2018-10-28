@@ -63,8 +63,8 @@ d3.json("preds_final.geojson", function(data) {
 					property: 'total_crashes',
 					type: 'exponential',
 					stops: [
-						[1, 5],
-						[maxCrashes, Math.sqrt(maxCrashes*5)]
+						[1, 3],
+						[maxCrashes, 20]
 					]
 				},
 				'circle-color': '#fff',
@@ -72,6 +72,24 @@ d3.json("preds_final.geojson", function(data) {
 				'circle-opacity': 0.5
 			},
 		}, 'admin-2-boundaries-dispute');
+
+		map.on('click', 'crashes', function(e) {
+			var coordinates = e.features[0].geometry.coordinates.slice();
+			var crashes = e.features[0].properties.total_crashes;
+
+			new mapboxgl.Popup()
+				.setLngLat(coordinates)
+				.setText(crashes > 1 ? crashes + " crashes" : "1 crash")
+				.addTo(map);
+		});
+
+		map.on('mouseenter', 'crashes', function() {
+			map.getCanvas().style.cursor = 'pointer';
+		});
+
+		map.on('mouseleave', 'crashes', function() {
+			map.getCanvas().style.cursor = '';
+		});
 	})
 })
 
