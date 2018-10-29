@@ -110,7 +110,7 @@ def set_defaults(config={}):
         config['level'] = 'week'
 
         
-def get_features(config, datadir):
+def get_features(config, data, datadir):
     """
     Get features from the feature list created during data generation
     """
@@ -131,6 +131,7 @@ def get_features(config, datadir):
 
     # create featureset holder
     features = f_cont + f_cat
+
     print(('Segment features included: {}'.format(features)))
     if config['concern'] != '':
         features.append(config['concern'])
@@ -346,7 +347,7 @@ if __name__ == '__main__':
         data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
         data.reset_index(inplace=True)
 
-    f_cat, f_cont, features = get_features(config, PROCESSED_DATA_FP)
+    f_cat, f_cont, features = get_features(config, data, PROCESSED_DATA_FP)
 
     # grab the highest values from each column
     data_segs = data.groupby('segment_id')[f_cont+f_cat].max()
