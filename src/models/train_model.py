@@ -97,14 +97,7 @@ def set_defaults(config={}):
         config['tmc'] = ''
     if 'f_cont' not in list(config.keys()):
         config['f_cont'] = ['width']
-    if 'f_cat' not in list(config.keys()):
-        config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway',
-                           'signal']
 
-    # Add features for additional data sources
-    if 'data_source' in config and config['data_source']:
-        for source in config['data_source']:
-            config[source['feat']].append(source['name'])
     if 'process' not in list(config.keys()):
         config['process'] = True
     if 'time_target' not in list(config.keys()):
@@ -117,25 +110,27 @@ def set_defaults(config={}):
         config['level'] = 'week'
 
         
-def get_features(config):
+def get_features(config, datadir):
+    """
+    Get features from the feature list created during data generation
+    """
 
-    f_cat = config['f_cat']
-    f_cont = config['f_cont']
-
-    if os.path.exists(os.path.join(DATA_FP, 'standardized', 'waze.json')):
-        f_cont.append('jam_percent')
+    with open(os.path.join(datadir, 'features.yml')) as f:
+        features = yaml.safe_load(f)
 
     # segment chars
     # Dropping continuous features that don't exist
     new_feats = []
-    for f in f_cont:
+    for f in features['f_cont']:
         if f not in data.columns.values:
             print("Feature " + f + " not found, skipping")
         else:
             new_feats.append(f)
     f_cont = new_feats
+    f_cat = features['f_cat']
+
     # create featureset holder
-    features = f_cont+f_cat
+    features = f_cont + f_cat
     print(('Segment features included: {}'.format(features)))
     if config['concern'] != '':
         features.append(config['concern'])
@@ -351,7 +346,7 @@ if __name__ == '__main__':
         data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
         data.reset_index(inplace=True)
 
-    f_cat, f_cont, features = get_features(config)
+    f_cat, f_cont, features = get_features(config, PROCESSED_DATA_FP)
 
     # grab the highest values from each column
     data_segs = data.groupby('segment_id')[f_cont+f_cat].max()
