@@ -38,9 +38,11 @@ def make_feature_list(config, datadir, waze=False):
                                 if 'feat' == 'f_cat']
         feat_types['f_cont'] += [x['name'] for x in config['data_source']
                                 if 'feat' == 'f_cont']
+
     # If we have waze data for the city
     if waze:
         feat_types['f_cont'] += ['jam_percent']
+        feat_types['f_cat'] += ['jam']
 
     # Additional features from additional city-specific maps
     if 'additional_features' in config and config['additional_features']:

@@ -13,6 +13,13 @@ BASE_DIR = os.path.dirname(
 
 
 def get_linestring(value):
+    """
+    Turns a waze linestring into a geojson linestring
+    Args:
+        value - the waze dict for this line
+    Returns:
+        geojson linestring with properties
+    """
     line = value['line']
     coords = [(x['x'], x['y']) for x in line]
     return geojson.Feature(
@@ -42,7 +49,9 @@ def get_features(waze_info, properties, num_snapshots):
                             for x in waze_info[properties['segment_id']]]))
     else:
         num_jams = 0
+    # Turn into number between 0 and 100
     properties.update(jam_percent=100*num_jams/num_snapshots)
+    properties.update(jam=1 if num_jams else 0)
 
     # Other potential features
     # Something with speeds in the jams
@@ -55,7 +64,16 @@ def get_features(waze_info, properties, num_snapshots):
 
 
 def map_segments(datadir, filename):
-
+    """
+    Map a set of waze segment info (jams) onto segments drawn from
+    openstreetmap: the osm_elements.geojson file
+    Args:
+        datadir - directory where the city's data is found
+        filename - the filename of the json aggregated waze file
+    Returns:
+        nothing - just updates osm_elements.geojson and writes
+            a jams.geojson with the segments that have jams
+    """
     items = json.load(open(filename))
 
     items = [get_linestring(x) for x in items]
@@ -154,7 +172,6 @@ def make_map(filename, datadir):
         geojson_items.append(get_linestring(item))
     with open(os.path.join(datadir, 'waze.geojson'), 'w') as outfile:
         geojson.dump(geojson.FeatureCollection(geojson_items), outfile)
-
 
 
 
