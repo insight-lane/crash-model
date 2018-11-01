@@ -27,6 +27,14 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
     """
     Read in files, either .json.gz or .json from a directory
     Create a dictionary of lists of jams, alerts, and irregularities
+    To do: handle time zone
+    Args:
+        dirname - directory the waze data lives in
+        config - configuration dict for city
+        startdate - drop days before this date
+        enddate - drop days after this date
+    returns
+        a list of all jams, alerts and irregularities for this city
     """
     files = os.listdir(dirname)
     city = config['city'].split(',')[0]
@@ -41,15 +49,17 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
     if enddate:
         enddate = parse(enddate)
 
+    files.sort()
     for jsonfilename in files:
         _, ext = os.path.splitext(jsonfilename)
+
         if ext == '.gz':
             with gzip.GzipFile(os.path.join(dirname, jsonfilename), 'r') as f:
                 json_bytes = f.read()
                 json_str = json_bytes.decode('utf-8')
                 data = json.loads(json_str)
         elif ext == '.json':
-            with open(jsonfilename) as f:
+            with open(os.path.join(dirname, jsonfilename)) as f:
                 data = json.load(f)
         else:
             continue
@@ -62,7 +72,7 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
             min_start = start
 
         if (startdate and start < startdate) \
-           or (enddate and end > enddate):
+           or (enddate and end > enddate + datetime.timedelta(1)):
             continue
         count += 1
 
@@ -82,7 +92,7 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
                      pubTimeStamp=convert_from_millis(x['pubMillis']),
                      snapshotId=count
                 )
-                for x in data['jams']
+                for x in data['alerts']
                 if 'city' in x and city in x['city']]
         if 'irregularities' in data:
             all_data += [
@@ -107,7 +117,7 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--startdate",
                         help="If given, start date in format YYYY-MM-DD")
     parser.add_argument("-e", "--enddate",
-                        help="If given, end date in format YYYY-MM-DD")
+                        help="If given, last day included in format YYYY-MM-DD")
     args = parser.parse_args()
 
     # load config for this city
