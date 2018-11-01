@@ -8,6 +8,7 @@ TEST_FP = os.path.dirname(os.path.abspath(__file__))
 def test_read_snapshots():
     results = standardize_waze_data.read_snapshots(os.path.join(
         TEST_FP, 'data', 'waze'), {'city': "Cambridge, Massachusetts, USA"})
+    print(results)
     assert results == [
         {
             'pubMillis': 1539632995870,

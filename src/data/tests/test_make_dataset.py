@@ -31,7 +31,7 @@ def test_make_feature_list(tmpdir):
         config = yaml.safe_load(f)
 
     assert config == {
-        'f_cat': ['width'],
+        'f_cat': ['width', 'jam'],
         'f_cont': [
             'lanes',
             'hwy_type',
