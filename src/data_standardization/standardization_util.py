@@ -2,6 +2,7 @@ import dateutil.parser as date_parser
 from datetime import datetime, timedelta
 import json
 from jsonschema import validate
+from dateutil import tz
 
 
 def parse_date(date, timezone, time=None, time_format=None):
@@ -47,9 +48,12 @@ def parse_date(date, timezone, time=None, time_format=None):
                 date.strftime('%Y-%m-%d ') + str(time)
             )
 
-    # add timezone if it wasn't included in the string formatting originally
+    # Add timezone if it wasn't included in the string formatting originally
     if not date.tzinfo:
         date = timezone.localize(date)
+    # If the timezone was set to utc, reformat into local time with offset
+    elif date.tzinfo == tz.tzutc():
+        date = date.astimezone(timezone)
     date_time = date.isoformat()
     
     return date_time
