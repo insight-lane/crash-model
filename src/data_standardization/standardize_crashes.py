@@ -10,6 +10,8 @@ import csv
 import calendar
 import random
 import dateutil.parser as date_parser
+import datetime
+import pytz
 from .standardization_util import parse_date, validate_and_write_schema
 
 CURR_FP = os.path.dirname(
@@ -17,9 +19,14 @@ CURR_FP = os.path.dirname(
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
-def read_standardized_fields(raw_crashes, fields, opt_fields, start_year=None, end_year=None):
+def read_standardized_fields(raw_crashes, fields, opt_fields,
+                             timezone, startdate=None, enddate=None):
 
     crashes = {}
+    if startdate:
+        startdate = parse_date(startdate, timezone)
+    if enddate:
+        enddate = parse_date(enddate, timezone)
 
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
@@ -59,6 +66,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields, start_year=None, e
         if fields["time_format"]:
             crash_date_time = parse_date(
                 crash_date,
+                timezone,
                 crash_time,
                 fields["time_format"]
             )
@@ -66,6 +74,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields, start_year=None, e
         else:
             crash_date_time = parse_date(
                 crash_date,
+                timezone,
                 crash_time
             )
 
@@ -74,9 +83,8 @@ def read_standardized_fields(raw_crashes, fields, opt_fields, start_year=None, e
             continue
 
         # Drop crashes that occur outside of the range, if specified
-        crash_year = date_parser.parse(crash_date_time).year
-        if ((start_year is not None and crash_year < start_year) or
-                (end_year is not None and crash_year > (end_year - 1))):
+        if ((startdate is not None and crash_date_time < startdate) or
+                (enddate is not None and crash_date_time > enddate)):
             continue
 
         formatted_crash = OrderedDict([
@@ -90,6 +98,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields, start_year=None, e
         formatted_crash = add_city_specific_fields(crash, formatted_crash,
                                                    opt_fields)
         crashes[formatted_crash["id"]] = formatted_crash
+
     return crashes
 
 
@@ -173,14 +182,14 @@ if __name__ == '__main__':
         config = yaml.safe_load(f)
 
     # by default standardize all available crashes
-    start_year = None
-    end_year = None
+    startdate = None
+    enddate = None
 
-    if config['start_year']:
-        start_year = config['start_year']
+    if config['startdate']:
+        startdate = config['startdate']
 
-    if config['end_year']:
-        end_year = config['end_year']
+    if config['enddate']:
+        enddate = config['enddate']
 
     crash_dir = os.path.join(args.datadir, "raw/crashes")
     if not os.path.exists(crash_dir):
@@ -205,8 +214,14 @@ if __name__ == '__main__':
             crash_dir, csv_file), na_filter=False)
         raw_crashes = df_crashes.to_dict("records")
 
-        std_crashes = read_standardized_fields(raw_crashes,
-                                               csv_config['required'], csv_config['optional'], start_year, end_year)
+        std_crashes = read_standardized_fields(
+            raw_crashes,
+            csv_config['required'],
+            csv_config['optional'],
+            pytz.timezone(config['timezone']),
+            startdate,
+            enddate
+        )
 
         print("{} crashes loaded with standardized fields, checking for specific fields".format(
             len(std_crashes)))

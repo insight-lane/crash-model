@@ -10,6 +10,7 @@ import os
 from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
+import datetime
 from .record import Crash, Concern, Record
 import geojson
 from .segment import Segment
@@ -296,7 +297,7 @@ def read_records_from_geojson(filename):
 
 
 def read_records(filename, record_type,
-                 startyear=None, endyear=None):
+                 startdate=None, enddate=None):
     """
     Reads appropriately formatted json file,
     pulls out currently relevant features,
@@ -305,7 +306,7 @@ def read_records(filename, record_type,
     Args:
         filename - json file
         start - optionally give start for date range of crashes
-        end - optionally give end for date range of crashes
+        end - optionally give end date after which to exclude crashes
     Returns:
         A list of Crashes
     """
@@ -325,10 +326,11 @@ def read_records(filename, record_type,
             record = Record(item)
         records.append(record)
 
-    if startyear:
-        records = [x for x in records if x.timestamp >= parse(startyear)]
-    if endyear:
-        records = [x for x in records if x.timestamp < parse(endyear)]
+    if startdate:
+        records = [x for x in records if x.timestamp >= parse(startdate)]
+    if enddate:
+        records = [x for x in records
+                   if x.timestamp < parse(enddate) + datetime.timedelta(1)]
 
     # Keep track of the earliest and latest crash date used
     start = min([x.timestamp for x in records])

@@ -7,10 +7,10 @@ city_longitude: -77.0368707
 city_radius: 25
 # The folder under data where this city's data is stored
 name: dc
-# If given, limit crashes to after start_year and before end_year
+# If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-start_year: 2014
-end_year: 2017
+startdate: 2014-01-01
+end_year: 2016-12-31
 
 
 #################################################################

@@ -88,15 +88,15 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
         print("Already standardized point data, skipping")
 
 
-def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
+def data_generation(config_file, DATA_FP, startdate=None, enddate=None,
                     forceupdate=False):
     """
     Generate the map and feature data for this city
     Args:
         config_file - path to config file
         DATA_FP - path to data directory, e.g. ../data/boston/
-        start_year (optional)
-        end_year (optional)
+        startdate (optional)
+        enddate (optional)
     """
     print("Generating data and features...")
     subprocess.check_call([
@@ -108,8 +108,8 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
         '-d',
         DATA_FP
     ]
-        + (['-s', str(start_year)] if start_year else [])
-        + (['-e', str(end_year)] if end_year else [])
+        + (['-s', str(startdate)] if startdate else [])
+        + (['-e', str(enddate)] if enddate else [])
         + (['--forceupdate'] if forceupdate else [])
     )
 
@@ -175,16 +175,12 @@ if __name__ == '__main__':
     if not args.onlysteps or 'standardization' in args.onlysteps:
         data_standardization(args.config_file, DATA_FP, forceupdate=args.forceupdate)
 
-    start_year = config['start_year']
-    if start_year:
-        start_year = '01/01/{} 00:00:00Z'.format(start_year)
-    end_year = config['end_year']
-    if end_year:
-        end_year = '01/01/{} 00:00:00Z'.format(end_year)
+    startdate = config['startdate']
+    enddate = config['enddate']
     if not args.onlysteps or 'generation' in args.onlysteps:
         data_generation(args.config_file, DATA_FP,
-                        start_year=start_year,
-                        end_year=end_year,
+                        startdate=startdate,
+                        enddate=enddate,
                         forceupdate=args.forceupdate)
 
     if not args.onlysteps or 'model' in args.onlysteps:

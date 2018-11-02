@@ -7,9 +7,9 @@ city_latitude: 42.3600825
 city_longitude: -71.0588801
 # Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
 city_radius: 15
-# If given, limit crashes to after start_year and before end_year
-start_year: 2015
-end_year: 2018
+# If given, limit crashes to after startdate and no later than enddate
+startdate: 2015-01-01
+enddate: 2017-12-31
 # level of predictions, either 'week' or 'segment'
 level: 'segment'
 
