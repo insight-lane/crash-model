@@ -85,7 +85,10 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
             DATA_FP
         ])
     else:
-        print("Already standardized point data, skipping")
+        if 'data_source' not in config or not config['data_source']:
+            print("No point data found, skipping")
+        else:
+            print("Already standardized point data, skipping")
 
 
 def data_generation(config_file, DATA_FP, startdate=None, enddate=None,
