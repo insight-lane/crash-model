@@ -77,7 +77,6 @@ def validate_and_write_schema(schema_path, schema_values, output_file):
     with open(schema_path) as schema:
         validate(schema_values, json.load(schema))
 
-    print(output_file)
     with open(output_file, "w") as f:
         json.dump(schema_values, f)
 
