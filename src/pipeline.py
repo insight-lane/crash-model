@@ -45,9 +45,9 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
             'python',
             '-m',
             'data_standardization.standardize_concerns',
+            '-c',
+            config_file,
             '-d',
-            config['name'],
-            '-f',
             DATA_FP
         ])
     else:

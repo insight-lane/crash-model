@@ -186,10 +186,10 @@ if __name__ == '__main__':
     enddate = None
 
     if config['startdate']:
-        startdate = config['startdate']
+        startdate = str(config['startdate'])
 
     if config['enddate']:
-        enddate = config['enddate']
+        enddate = str(config['enddate'])
 
     crash_dir = os.path.join(args.datadir, "raw/crashes")
     if not os.path.exists(crash_dir):

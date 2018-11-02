@@ -5,6 +5,7 @@ name: boston
 # City centerpoint latitude & longitude
 city_latitude: 42.3600825
 city_longitude: -71.0588801
+timezone: America/New_York
 # Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
 city_radius: 15
 # If given, limit crashes to after startdate and no later than enddate

@@ -17,7 +17,7 @@ CURR_FP = os.path.dirname(
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
-def read_concerns(raw_path, timezone):
+def read_concerns(datadir, folder, timezone):
     """
     Reads concerns from a directory
     todo: need to move away from hardcoded cities here
@@ -30,6 +30,10 @@ def read_concerns(raw_path, timezone):
     concerns = []
     manual_concern_id = 1
 
+    raw_path = os.path.join(datadir, "raw/concerns")
+    if not os.path.exists(raw_path):
+        print(raw_path + " not found, exiting")
+        exit(1)
 
     print("searching "+raw_path+" for raw concerns file(s)")
 
@@ -40,7 +44,7 @@ def read_concerns(raw_path, timezone):
         dict_concerns = df_concerns.to_dict("records")
 
         for key in dict_concerns:
-            if args.destination == "boston":
+            if folder == "boston":
                 # Boston presently has concerns from two sources - VisionZero and SeeClickFix
                 if csv_file == "Vision_Zero_Entry.csv":
                     # skip concerns that don't have a date or request type
@@ -51,7 +55,8 @@ def read_concerns(raw_path, timezone):
                         concerns.append(OrderedDict([
                             ("id", key["OBJECTID"]),
                             ("source", "visionzero"),
-                            ("dateCreated", key["REQUESTDATE"]),
+                            ("dateCreated", parse_date(
+                                key["REQUESTDATE"], timezone)),
                             ("status", key["STATUS"]),
                             ("category", key["REQUESTTYPE"]),
                             ("location", OrderedDict([
@@ -70,7 +75,8 @@ def read_concerns(raw_path, timezone):
                         concerns.append(OrderedDict([
                             ("id", manual_concern_id),
                             ("source", "seeclickfix"),
-                            ("dateCreated", key["created"]),
+                            ("dateCreated", parse_date(
+                                key["created"], timezone)),
                             ("status", "unknown"),
                             ("category", key["summary"]),
                             ("location", OrderedDict([
@@ -82,7 +88,7 @@ def read_concerns(raw_path, timezone):
 
                     manual_concern_id += 1
 
-            if args.destination == "dc":
+            if folder == "dc":
                 # skip concerns that don't have a date or request type
                 if key["REQUESTDATE"] == "" or key["REQUESTTYPE"] == "":
                     continue
@@ -90,7 +96,7 @@ def read_concerns(raw_path, timezone):
                 concerns.append(OrderedDict([
                     ("id", key["OBJECTID"]),
                     ("source", "visionzero"),
-                    ("dateCreated", key["REQUESTDATE"]),
+                    ("dateCreated", parse_date(key["REQUESTDATE"], timezone)),
                     ("status", key["STATUS"]),
                     ("category", key["REQUESTTYPE"]),
                     ("location", OrderedDict([
@@ -100,7 +106,7 @@ def read_concerns(raw_path, timezone):
                     ("summary", key["COMMENTS"])
                 ]))
 
-            elif args.destination == "cambridge":
+            elif folder == "cambridge":
                 # skip concerns that don't have a date or issue type
                 if key["ticket_created_date_time"] == "" or key["issue_type"] == "":
                     continue
@@ -108,7 +114,8 @@ def read_concerns(raw_path, timezone):
                 concerns.append(OrderedDict([
                     ("id", key["ticket_id"]),
                     ("source", "seeclickfix"),
-                    ("dateCreated", datetime.strftime(date_parser.parse(key["ticket_created_date_time"]), "%Y-%m-%dT%H:%M:%S")+"-05:00"),
+                    ("dateCreated", parse_date(
+                        key["ticket_created_date_time"], timezone)),
                     ("status", key["ticket_status"]),
                     ("category", key["issue_type"]),
                     ("location", OrderedDict([
@@ -121,7 +128,7 @@ def read_concerns(raw_path, timezone):
     print("done, {} concerns loaded, validating against schema".format(len(concerns)))
 
     schema_path = os.path.join(BASE_FP, "standards/concerns-schema.json")
-    concerns_output = os.path.join(args.folder, "standardized/concerns.json")
+    concerns_output = os.path.join(datadir, "standardized/concerns.json")
     validate_and_write_schema(schema_path, concerns, concerns_output)
 
 
@@ -132,21 +139,12 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--datadir", type=str, required=True,
                         help="data directory")
 
-#    parser.add_argument("-d", "--destination", type=str,
-#                        help="destination name")
-#    parser.add_argument("-f", "--folder", type=str,
-#                        help="absolute path to destination folder")
-
     args = parser.parse_args()
-
-    raw_path = os.path.join(args.datadir, "raw/concerns")
-    if not os.path.exists(raw_path):
-        print(raw_path + " not found, exiting")
-        exit(1)
 
     # load config
     config_file = args.config
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
-    read_concerns(raw_path, pytz.timezone(config['timezone']))
+    read_concerns(
+        args.datadir, config['name'], pytz.timezone(config['timezone']))
