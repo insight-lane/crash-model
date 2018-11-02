@@ -9,54 +9,121 @@
 
 	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
 
-	<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
+	<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script type='text/javascript', src='config.js'></script>
-	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
 
 	<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-	<div id="header">
-		<h1>Crash Modeling</h1>
+
+	<div id="city_map" class="map"></div>
+
+	<div class="title overlay">
+		<h1 id="city_name"></h1>
+		<!-- <hr> -->
+		<!-- <h4>Predicted Risk</h4> -->
+		<div class="legend">
+			<p class="legend_label low">Low risk</p>
+			<div class="legend_box risk0"></div>
+			<div class="legend_box risk1"></div>
+			<div class="legend_box risk2"></div>
+			<div class="legend_box risk3"></div>
+			<p class="legend_label high">High risk</p>
+		</div>
+		<p class="model_confidence">Model confidence: <span>80%</span></p>
+		<hr>
+		<div class="filters">
+			<div class="filter historicalCrashes">
+				<input type="checkbox" id="checkbox_crashes" name="checkbox_crashes" value="yes" autocomplete="off">
+				<label for="checkbox_crashes">Show crashes</label>
+			</div>
+			<h3>Filter Segments:</h3>
+			<div class="filter risk">
+				<label for="risk_selector">Risk score greater than: </label>
+				<output for="risk_selector" id="selected_risk">0</output>
+				<input type="range" id="risk_slider" autocomplete="off" min="0" max="1" step="0.05" value="0.0">
+			</div>
+			<div class="filter speedlimit">
+				<label for="speed_selector">Speed limit greater than: </label>
+				<output for="speed_selector" id="selected_speed">5mph</output>
+				<input type="range" id="speed_slider" autocomplete="off" min="5" max="50" step="5" value="5">
+			</div>
+		</div>
 	</div>
 
-	<div id="content">
-		<div id="city">
-			<p>Viewing Predictions for: <span id="city_name"></span></p>
-		</div>
-		<div class="wrapper">
-			<div class="box input_overlay">
-				<label for="week_selector">Week: </label>
-				<output for="week_selector" id="week_num">1</output>
-				<input type="range" id="week_selector" autocomplete="off" min="1" max="52" step="1" value="1" />
-			</div>
-			<div id="before" class="map">
-				<div id="legend">
-					<h4>Risk Score:</h4>
-					<div class="row colors"></div>
-					<div class="row labels">
-						<div class="label">0.2</div>
-						<div class="label">0.4</div>
-						<div class="label">0.6</div>
-						<div class="label">0.8</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div id="weekly_barplot" class="plot">
-			<h3>Total Crashes by Week</h3>
-		</div>
+	<div id="highest_risk" class="side overlay visible">
+		<!-- address search here -->
+		<hr>
+		<h2>Highest Risk Segments:</h2>
+		<ol id="highest_risk_list">
+			<!-- <li>Test</li> -->
+		</ol>
 	</div>
 
-	<script src="https://d3js.org/d3.v3.min.js"></script>
-	<script src="js/make_plots.js"></script>
+	<div id="segment_details" class="side overlay">
+		<div id="close_btn" class="btn">×</div>
+		<h2 class="segment_name">Segment Name Here</h2>
+		<h4>Predicted Risk: <span id="prediction"></span></h4>
+			<!-- <svg width="30" height="30"> -->
+				<!-- <circle cx="15" cy="20" r="6" id="risk_circle"> -->
+			<!-- </svg> -->
+		<div id="predChart"></div>
+<!-- 		<hr>
+		<h3>Factors Contributing to Risk</h3>
+		<p>The model identified the following as most important in determining crash risk:</p>
+		<table id="featImportancesTbl">
+			<tr>
+				<th>Attribute</th>
+				<th colspan = "2">This segment:</th>
+			</tr>
+			<tr class="feature first">
+				<td class="feature name">Four lanes</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+			<tr class="feature second">
+				<td class="feature name">One-way</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+			<tr class="feature third">
+				<td class="feature name">Traffic signal</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+			<tr class="feature fourth">
+				<td class="feature name">Primary roadway</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+			<tr class="feature fifth">
+				<td class="feature name">Speed limit of 25mph</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+		</table> -->
+<!-- 		<hr>
+		<h3>Estimated Impact of Interventions</h3>
+ -->	</div>
+
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<!-- // <script src="js/make_plots.js"></script> -->
 	<script src="js/update_map.js"></script>
 
 	<script>
+		$( '#close_btn' ).on('click', function() {
+			$( '#segment_details' ).removeClass('visible');
+			$( '#segment_details' ).addClass('slide_right');
+			$( '#highest_risk' ).addClass('visible');
+		});
+
 		var city = config.cities[0];
+		var country = city.name.split(", ")[2];
 
 		// insert city name
 		$('#city_name').text(city.name);
@@ -64,20 +131,28 @@
 		// create base map
 		mapboxgl.accessToken = config.MAPBOX_TOKEN;
 
-		var beforeMap = new mapboxgl.Map({
-		  container: 'before',
-		  style: 'mapbox://styles/mapbox/light-v9',
+		var map = new mapboxgl.Map({
+		  container: 'city_map',
+		  style: 'mapbox://styles/mapbox/dark-v9',
 		  center: [city.longitude, city.latitude],
-		  zoom: 11
+		  zoom: 12
 		});
 
-		beforeMap.on('load', function() {
-		  	beforeMap.addLayer({
+		var geocoder = new MapboxGeocoder({
+		    accessToken: mapboxgl.accessToken,
+		    country: countryCodeLookup(country),
+		    placeholder: "Search for an address"
+		});
+
+		map.addControl(geocoder);
+
+		map.on('load', function() {
+		  	map.addLayer({
 				id: 'predictions',
 				type: 'line',
 				source: {
 				  type: 'geojson',
-				  data: 'preds.json'
+				  data: 'preds_final.geojson'
 				},
 				paint: {
 				  'line-color': {
@@ -91,54 +166,50 @@
 				  },
 				  'line-width': [
 						'interpolate', ['linear'], ['zoom'],
-						11, 2,
-						15, 3,
+						12, 2,
+						15, 5,
 					],
 				  'line-opacity': 1
 				}
 			}, 'admin-2-boundaries-dispute');
 
-			beforeMap.addLayer({
-				id: 'crashes',
-				type: 'circle',
-				source: {
-					type: 'geojson',
-					data: 'crashes.geojson'
-				},
-				paint: {
-					'circle-radius': [
-						'interpolate', ['linear'], ['zoom'],
-						12, 4,
-						15, 8,
-					],
-					'circle-color': '#d500f9',
-					'circle-stroke-color': '#9e00c5',
-					'circle-opacity': 0.8
-				},
-				filter: ['all', ['==', 'week', 1]]
-			}, 'admin-2-boundaries-dispute');
-
 			// add popup for predictions
-			beforeMap.on('click', 'predictions', function(e) {
-				var popupText = "Risk Score for Week " + e.features[0].properties.week + ": " + e.features[0].properties.prediction.toFixed(2);
-
-				new mapboxgl.Popup()
-					.setLngLat(e.lngLat)
-					.setHTML(popupText)
-					.addTo(beforeMap);
+			map.on('click', 'predictions', function(e) {
+				populateSegmentInfo(e.features[0].properties.segment_id);
 			});
 
-			beforeMap.on('mouseenter', 'predictions', function () {
-				beforeMap.getCanvas().style.cursor = 'pointer';
+			map.on('mouseenter', 'predictions', function () {
+				map.getCanvas().style.cursor = 'pointer';
 			});
 
-			beforeMap.on('mouseleave', 'predictions', function () {
-				beforeMap.getCanvas().style.cursor = '';
+			map.on('mouseleave', 'predictions', function () {
+				map.getCanvas().style.cursor = '';
 			});
+
+			updateGeocoderProximity();
 		});
 
 		// Add zoom controls to map
-		beforeMap.addControl(new mapboxgl.NavigationControl());
+		map.addControl(new mapboxgl.NavigationControl({showCompass: false}), 'bottom-right');
+
+		function updateGeocoderProximity() {
+		    // proximity is designed for local scale, if the user is looking at the whole world,
+		    // it doesn't make sense to factor in the arbitrary centre of the map
+		    if (map.getZoom() > 9) {
+		        var center = map.getCenter().wrap(); // ensures the longitude falls within -180 to 180 as the Geocoding API doesn't accept values outside this range
+		        geocoder.setProximity({ longitude: center.lng, latitude: center.lat });
+		    } else {
+		        geocoder.setProximity(null);
+		    }
+		}
+
+		function countryCodeLookup(country) {
+			switch(country) {
+				case "USA":
+					return "us";
+					break;
+			}
+		}
 	</script>
 
 </body>
