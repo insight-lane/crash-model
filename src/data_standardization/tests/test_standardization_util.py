@@ -47,6 +47,10 @@ def test_parse_date():
     assert standardization_util.parse_date(
         '08/08/2009 08:53:00 PM', timezone) == '2009-08-08T20:53:00-04:00'
 
+    # Test UTC conversion
+    assert standardization_util.parse_date(
+        '2009-01-08T08:53:00.000Z', timezone) == '2009-01-08T03:53:00-05:00'
+
 
 def test_parse_address():
 
