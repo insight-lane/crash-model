@@ -2,11 +2,9 @@
 # Author terryf82 https://github.com/terryf82
 
 import argparse
-import dateutil.parser as date_parser
 import os
 import pandas as pd
 from collections import OrderedDict
-from datetime import datetime
 import yaml
 import pytz
 from .standardization_util import validate_and_write_schema, parse_date

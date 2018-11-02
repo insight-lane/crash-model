@@ -9,8 +9,6 @@ from collections import OrderedDict
 import csv
 import calendar
 import random
-import dateutil.parser as date_parser
-import datetime
 import pytz
 from .standardization_util import parse_date, validate_and_write_schema
 
