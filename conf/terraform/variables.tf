@@ -7,8 +7,9 @@ variable "fixed_availability_zones" {
   default = [
     "ap-northeast-1b",
     "ap-northeast-1c",
-    "ap-northeast-1d"
+    "ap-northeast-1d",
   ]
+
   type = "list"
 }
 
