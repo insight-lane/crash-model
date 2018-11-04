@@ -5,7 +5,6 @@ import rtree
 import geocoder
 from time import sleep
 from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
-import openpyxl
 from matplotlib import pyplot
 import os
 from os.path import exists as path_exists
@@ -13,6 +12,7 @@ import json
 from dateutil.parser import parse
 from .record import Crash, Concern, Record
 import geojson
+from .segment import Segment
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -32,6 +32,9 @@ def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
         Output address
         Latitude
         Longitude
+        Status (whether the geocoding was successful 'S', or the address
+            could not be found 'F', or there was an intermittent error such as
+            a time out, '')
     Args:
         filename
     Results:
@@ -47,7 +50,8 @@ def read_geocode_cache(filename=PROCESSED_DATA_FP+'geocoded_addresses.csv'):
             cached[r['Input Address']] = [
                 r['Output Address'],
                 r['Latitude'],
-                r['Longitude']
+                r['Longitude'],
+                r['Status'],
             ]
     return cached
 
@@ -71,10 +75,33 @@ def write_geocode_cache(results,
             'Input Address',
             'Output Address',
             'Latitude',
-            'Longitude'
+            'Longitude',
+            'Status',
         ])
         for key, value in results.items():
-            writer.writerow([key, value[0], value[1], value[2]])
+            writer.writerow([key, value[0], value[1], value[2], value[3]])
+
+
+def lookup_address(intersection, cached):
+    """
+    Look up an intersection first in the cache, and if it
+    doesn't exist, geocode it
+
+    Args:
+        intersection: string
+        cached: dict
+    Returns:
+        tuple of original address, geocoded address, latitude, longitude
+    """
+
+    # If we've cached this either successfully or were unable to find
+    # the address previously
+    if intersection in list(cached.keys()) and cached[intersection][3]:
+        print(intersection + ' is cached')
+        return cached[intersection]
+    else:
+        print('geocoding ' + intersection)
+        return list(geocode_address(intersection))
 
 
 def geocode_address(address, cached={}):
@@ -88,7 +115,7 @@ def geocode_address(address, cached={}):
         address
         cached (optional)
     Returns:
-        address, latitude, longitude
+        address, latitude, longitude, status
     """
     if address in list(cached.keys()):
         return cached[address]
@@ -98,36 +125,37 @@ def geocode_address(address, cached={}):
         attempts += 1
         sleep(attempts ** 2)
         g = geocoder.google(address)
-    return g.address, g.lat, g.lng
+
+    status = ''
+    if g.status == 'OK':
+        status = 'S'
+    elif g.status == 'ZERO_RESULTS':
+        status = 'F'
+    return g.address, g.lat, g.lng, status
 
 
-def get_hourly_rates(files):
+def get_hourly_rates(volume_file):
     """
-    Function that reads ATRs and generates a sparkline plot
-    of percentages of traffic over time
-    
+    Give the average percentage of traffic that occurs each hour
     Args:
-        files - list of filenames to process
-        outfile - where to write the resulting plot
+        volume_file - path to standarized volume file
+    Returns:
+        counts - the average percentage of traffic that occurs each hour
     """
     all_counts = []
-    for f in files:
-        wb = openpyxl.load_workbook(f, data_only=True)
-        sheet_names = wb.sheetnames
-        if 'Classification-Combined' in sheet_names:
-            sheet = wb['Classification-Combined']
-            # Right now the cell locations are hardcoded,
-            # but if we expand to cover different formats, will need to change
-            counts = []
-            for row_index in range(9, 33):
-                cell = "{}{}".format('O', row_index)
-                val = sheet[cell].value
-                counts.append(float(val))
-            total = sheet['O34'].value
-            for i in range(len(counts)):
-                counts[i] = counts[i]/total
-            all_counts.append(counts)
-    return all_counts
+    with open(volume_file) as data_file:
+        volumes = json.load(data_file)
+    
+        for v in volumes:
+            counts = v['volume']['hourlyVolume']
+            total = sum(counts)
+            counts = [x/total for x in counts]
+            if counts:
+                all_counts.append(counts)
+
+    counts = [sum(i)/len(all_counts) for i in zip(*all_counts)]
+
+    return counts
 
 
 def plot_hourly_rates(all_counts, outfile):
@@ -188,34 +216,6 @@ def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
             c.write(entry)
 
 
-def records_to_shapefile(schema, fp, records, crs={}):
-
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
-
-        for record in records:
-            c.write({
-                'geometry': mapping(record.point),
-                'properties': {
-                    k: str(v) for (k, v) in list(record.properties.items())}
-            })
-
-
-def record_to_csv(filename, records):
-    """
-    Write a csv file from records
-    Args:
-        filename
-        records - list of records (a dict of dicts)
-    """
-
-    with open(filename, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile,
-                                fieldnames=list(records[0]['properties'].keys()))
-        writer.writeheader()
-        for record in records:
-            writer.writerow(record['properties'])
-
-
 def read_record(record, x, y, orig=None, new=PROJ):
     """
     Reads record, outputs dictionary with point and properties
@@ -228,6 +228,28 @@ def read_record(record, x, y, orig=None, new=PROJ):
         'properties': record
     }
     return(r_dict)
+
+
+def get_reproject_point(lat, lon, inproj='epsg:4326',
+                        outproj='epsg:3857',
+                        coords=False):
+    """
+    Turn a point in one projection into another
+    Default is to convert from 4326 to 3857
+    Args:
+        lat
+        long
+    Returns:
+        A point in the specified projection
+    """
+    lon, lat = pyproj.transform(
+        pyproj.Proj(init=inproj), pyproj.Proj(init=outproj),
+        lon, lat
+    )
+    if coords:
+        return float(lon), float(lat)
+    else:
+        return Point(float(lon), float(lat))
 
 
 def raw_to_record_list(raw, orig, x='X', y='Y'):
@@ -246,32 +268,6 @@ def raw_to_record_list(raw, orig, x='X', y='Y'):
                         orig=orig)
         )
     return result
-
-
-def csv_to_projected_records(filename, x='X', y='Y'):
-    """
-    Reads a csv file in and creates a list of records,
-    reprojecting x and y coordinates from projection 4326
-    to projection 3857
-
-    Args:
-        filename (csv file)
-        optional:
-            x coordinate name (defaults to 'X')
-            y coordinate name (defaults to 'Y')
-    """
-    records = []
-    with open(filename) as f:
-        csv_reader = csv.DictReader(f)
-        for r in csv_reader:
-            # Can possibly have 0 / blank coordinates
-            if r[x] != '':
-                records.append(
-                    read_record(r, r[x], r[y],
-                                orig=pyproj.Proj(init='epsg:4326'))
-                )
-
-    return records
 
 
 def read_records_from_geojson(filename):
@@ -430,18 +426,23 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return index_segments(list(inter) + list(non_inter))
 
 
-def index_segments(segments):
+def index_segments(segments, geojson=True):
     """
     Reads a list of segments in geojson format, and makes
     a spatial index for lookup
     Args:
         list of segments
+        geojson - whether or not the list of tuples are in geojson format
+            (the other option is shapely shapes) defaults to True
+    Returns:
+        segments (in shapely format), and segments_index
     """
 
-    # Read in segments and turn them into shape, propery tuples
-    combined_seg = [(shape(x['geometry']), x['properties']) for x in
-                    segments]
-
+    combined_seg = segments
+    if geojson:
+        # Read in segments and turn them into shape, propery tuples
+        combined_seg = [(shape(x['geometry']), x['properties']) for x in
+                        segments]
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
@@ -493,28 +494,6 @@ def track(index, step, tot):
     """
     if index % step == 0:
         print("finished {} of {}".format(index, tot))
-
-
-def write_points(points, schema, filename):
-    """
-    Given a list of shapely points,
-    de-dupe and write shape files
-
-    Args:
-        points: list of points indicating intersections
-        schema: schema of the shapefile
-        filename: filename for the shapefile
-    """
-
-    deduped_points = {}
-    # remove duplicate points
-    for pt, prop in points:
-        if (pt.x, pt.y) not in list(deduped_points.keys()):
-            deduped_points[(pt.x, pt.y)] = pt, prop
-    with fiona.open(filename, 'w', 'ESRI Shapefile', schema) as output:
-        for i, (pt, prop) in enumerate(deduped_points.values()):
-            track(i, 500, len(deduped_points))
-            output.write({'geometry': mapping(pt), 'properties': prop})
 
 
 def reproject(coords, inproj='epsg:4326', outproj='epsg:3857'):
@@ -607,7 +586,124 @@ def make_schema(geometry, properties):
     return(schema)
 
 
-def is_inter(id):
-    if len(str(id)) > 1 and str(id)[0:2] == '00':
+def is_inter(seg_id):
+    if len(str(seg_id)) > 1 and str(seg_id)[0:2] == '00':
         return False
     return True
+
+
+def get_center_point(segment):
+    """
+    Get the centerpoint for a linestring or multiline string
+    Args:
+        segment - Geojson LineString or MultiLineString
+    Returns:
+        Geojson point
+    """
+
+    if segment['geometry']['type'] == 'LineString':
+        point = LineString(
+            segment['geometry']['coordinates']).interpolate(
+            .5, normalized=True)
+        return point.x, point.y
+    elif segment['geometry']['type'] == 'MultiLineString':
+        # Make a rectangle around the multiline
+        coords = [item for coords in segment[
+            'geometry']['coordinates'] for item in coords]
+
+        minx = min([x[0] for x in coords])
+        maxx = max([x[0] for x in coords])
+        miny = min([x[1] for x in coords])
+        maxy = max([x[1] for x in coords])
+
+        point = LineString([[minx, miny], [maxx, maxy]]).interpolate(
+            .5, normalized=True)
+        mlstring = MultiLineString(segment['geometry']['coordinates'])
+        point = mlstring.interpolate(mlstring.project(point))
+
+        return point.x, point.y
+
+    return None, None
+
+
+def get_roads_and_inters(filename):
+    """
+    Pull the roads and the intersections from a geojson file
+    Typically this will read from the standardized osm_elements.geojson.
+    Since that file includes dead ends, these will also be stripped.
+    Everything will also be reprojected into 3857 projection
+    Args:
+        filename - geojson file of linestrings and points
+    Returns:
+        roads, intersections
+    """
+    data = fiona.open(filename)
+    data = reproject_records([x for x in data])
+
+    # All the line strings are roads
+    roads = [Segment(x['geometry'], x['properties']) for x in data
+             if x['geometry'].type == 'LineString']
+
+    # Get the intersection list by excluding anything that's not labeled
+    # as an intersection
+    inters = [x for x in data if x['geometry'].type == 'Point'
+              and 'intersection' in list(x['properties'].keys())
+              and x['properties']['intersection']]
+
+    return roads, inters
+
+
+def output_from_shapes(items, filename):
+    """
+    Write a list of polygons in 3857 projection to file in 4326 projection
+    Used for debugging purposes
+    At the moment, since this has only output intersection buffers,
+    the resulting output won't contain any properties
+
+    Args:
+        polys - list of polygon objects
+        filename - output file
+    Returns:
+        nothing, writes to file
+    """
+    output = []
+    for item, properties in items:
+        if item.type == 'Polygon':
+            coords = [x for x in item.exterior.coords]
+            reprojected_coords = [[get_reproject_point(
+                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                                  for x in coords]]
+        elif item.type == 'MultiLineString':
+            lines = [x for x in item]
+            reprojected_coords = []
+            for line in lines:
+                reprojected_coords.append([get_reproject_point(
+                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                                  for x in line.coords])
+        elif item.type == 'LineString':
+            coords = [x for x in item.coords]
+            reprojected_coords = [get_reproject_point(
+                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                                  for x in coords]
+        elif item.type == 'Point':
+            reprojected_coords = get_reproject_point(
+                item.y, item.x, inproj='epsg:3857', outproj='epsg:4326',
+                coords=True
+            )
+        else:
+            print("{} not supported, skipping".format(item.type))
+            continue
+        output.append({
+            'type': 'Feature',
+            'geometry': {
+                'type': item.type,
+                'coordinates': reprojected_coords
+            },
+            'properties': properties
+        })
+
+    with open(filename, 'w') as outfile:
+        geojson.dump(geojson.FeatureCollection(output), outfile)
+
+
+

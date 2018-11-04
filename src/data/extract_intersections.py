@@ -109,7 +109,14 @@ def write_intersections(inters, roads):
         seen_points[str(x[0].x) + str(x[0].y)] = True
 
     output_inters = prepare_geojson(output_inters)
-    roads = prepare_geojson(roads)
+
+    roads_with_ids = []
+    # Add ids to the non_intersection segments to use in generating the intersections
+    # in the create_segments script
+    for road in roads:
+        road['properties']['id'] = road['id']
+        roads_with_ids.append(road)
+    roads = prepare_geojson(roads_with_ids)
 
     elements = geojson.FeatureCollection(
         output_inters['features'] + roads['features'])

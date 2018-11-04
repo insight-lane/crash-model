@@ -7,9 +7,9 @@ import xgboost as xgb
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import metrics
-from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold, GroupKFold, GroupShuffleSplit
+from sklearn.model_selection import RandomizedSearchCV, KFold, GroupShuffleSplit
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.preprocessing import StandardScaler
+
 
 class Indata():
     scoring = None
@@ -17,9 +17,9 @@ class Indata():
     train_x, train_y, test_x, test_y = None, None, None, None
     is_split = 0
     
-    #init with pandas DF and target column name, specify scoring observations
+    # init with pandas DF and target column name, specify scoring observations
     def __init__(self, data, target, scoring=None):
-        #If scoring observations, store under scoring attribute
+        # If scoring observations, store under scoring attribute
         if scoring is not None:
             self.data = data[~(scoring)]
             self.scoring = data[scoring]
@@ -27,13 +27,13 @@ class Indata():
             self.data = data
         self.target = target
         # check to see that target has more than one value
-        assert self.data[self.target].nunique()>1
+        assert self.data[self.target].nunique() > 1
     
     # Split into train/test
     # pct : percent training observations
     # datesort : specify date column for sorting values
     #   If this is not None, split will be non-random (i.e. split on sorted obs)
-    def tr_te_split(self, pct, datesort=None, group_col=None):
+    def tr_te_split(self, pct, datesort=None, group_col=None, seed=None):
         """
         Split into train/test
         pct : percent training observations
@@ -42,6 +42,8 @@ class Indata():
         group_col : group column name for groupkfold split
             Will also be passed to tuner
         """
+        if seed:
+            np.random.seed(seed)
         if group_col:
             self.group_col = group_col
             grouper = GroupShuffleSplit(n_splits=1, train_size=pct)
@@ -54,7 +56,7 @@ class Indata():
         elif datesort:
             self.data.sort_values(datesort, inplace=True)
             self.data.reset_index(drop=True, inplace=True)
-            inds = np.arange(0.0,len(self.data)) / len(self.data) < pct
+            inds = np.arange(0.0, len(self.data)) / len(self.data) < pct
         else:
             inds = np.random.rand(len(self.data)) < pct
         self.train_x = self.data[inds]
@@ -64,6 +66,7 @@ class Indata():
         print('Test obs:', len(self.test_x))
         self.test_y = self.data[self.target][~inds]
         self.is_split = 1
+
         
 class Tuner():
     """
@@ -275,10 +278,10 @@ class Tester():
         if model_params:
             pass
         elif model not in self.rundict:
-            preds, probs = self.predsprobs(model, self.data.test_x[features])
+            _, probs = self.predsprobs(model, self.data.test_x[features])
         else:
             model_params = self.rundict[model]
-            preds, probs = self.predsprobs(model_params['m_fit'],
+            _, probs = self.predsprobs(model_params['m_fit'],
                 self.data.test_x[model_params['features']])
         risk_df = pd.DataFrame(
             {'probs':probs, 'target':self.data.test_y})
@@ -287,7 +290,7 @@ class Tester():
         if verbose:
             print(risk_df.probs.describe())
             print(risk_mean)
-        fig, axes = plt.subplots(1, 2)
+        _, axes = plt.subplots(1, 2)
         self.lift_chart('categories', 'target', risk_df, 
                    ax=axes[1])
         self.density(risk_df, 'probs', ax=axes[0])

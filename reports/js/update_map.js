@@ -39,6 +39,91 @@ d3.json(city.file, function(data) {
 	// populateFeatureImportancesTbl(data);
 })
 
+// add crash layer to map so user can view if they choose
+d3.json(city.crashes, function(data) {
+	// load in standardized crash json and gets total number of crashes by location
+	var summedData = totalCrashesByLocation(data);
+	var maxCrashes = d3.max(summedData, function(d) { return d.value;});
+
+	// then convert the aggregated json into a geojson so it can be displayed on map
+	var crashGeojson = buildGeojson(summedData);
+
+	// on intiial load, do not display crashes
+	map.addLayer({
+		id: 'crashes',
+		type: 'circle',
+		source: {
+			type: 'geojson',
+			data: crashGeojson
+		},
+		layout: {
+			visibility: 'none'
+		},
+		paint: {
+			'circle-radius': {
+				property: 'total_crashes',
+				type: 'exponential',
+				stops: [
+					[1, 3],
+					[maxCrashes, 20]
+				]
+			},
+			'circle-color': '#fff',
+			'circle-stroke-color': '#fff',
+			'circle-opacity': 0.5
+		},
+	}, 'admin-2-boundaries-dispute');
+
+	map.on('click', 'crashes', function(e) {
+		var coordinates = e.features[0].geometry.coordinates.slice();
+		var crashes = e.features[0].properties.total_crashes;
+
+		new mapboxgl.Popup()
+			.setLngLat(coordinates)
+			.setText(crashes > 1 ? crashes + " crashes" : "1 crash")
+			.addTo(map);
+	});
+
+	map.on('mouseenter', 'crashes', function() {
+		map.getCanvas().style.cursor = 'pointer';
+	});
+
+	map.on('mouseleave', 'crashes', function() {
+		map.getCanvas().style.cursor = '';
+	});
+})
+
+function totalCrashesByLocation(json) {
+	json.forEach(function(crash) {
+		crash.key = crash.location.longitude + "|" + crash.location.latitude;
+		crash.n = 1;
+	})
+
+	var data = d3.nest()
+		.key(function(d) { return d.key; })
+		.rollup(function(d) { return d3.sum(d, function(g) { return g.n; }); })
+		.entries(json);
+
+	return data;
+}
+
+function buildGeojson(json) {
+	var features = [];
+	json.forEach(function(crash) {
+		var crashObj = {};
+		crashObj.type = "Feature";
+		crashObj.geometry = {"type": "Point", "coordinates": [ crash.key.split("|")[0], crash.key.split("|")[1]]};
+		crashObj.properties = {"total_crashes": crash.value};
+		features.push(crashObj);
+	});
+
+	var crashGeojson = {}
+	crashGeojson.type = "FeatureCollection";
+	crashGeojson.features = features;
+
+	return(crashGeojson);
+}
+
 function splitSegmentName(segmentName) {
 	var i = segmentName.length;
 
@@ -61,7 +146,7 @@ function zoomToSegment(segmentX, segmentY) {
 
 function populateSegmentInfo(segmentID) {
 	var segmentData = segmentsHash.get(segmentID);
-	console.log(segmentData);
+	// console.log(segmentData);
 
 	d3.select('#segment_details .segment_name')
 		.html(function() { var nameObj = splitSegmentName(segmentData.segment.display_name);
@@ -75,7 +160,7 @@ function populateSegmentInfo(segmentID) {
 	updateBarChart(segmentData.prediction);
 
 	// update feature importances based on segment's attributes
-	updateFeatureImportances(segmentData);
+	// updateFeatureImportances(segmentData);
 
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
@@ -88,7 +173,7 @@ function populateSegmentInfo(segmentID) {
 
 function makeBarChart(prediction, median) {
 
-	var margin = {top: 0, right: 0, bottom: 48, left: 0},
+	var margin = {top: 0, right: 10, bottom: 48, left: 10},
 		width = 250,
 		height = 10;
 
@@ -138,6 +223,14 @@ function makeBarChart(prediction, median) {
 		.attr("width", xScale(prediction))
 		.attr("height", height)
 		.style("fill", riskColor(prediction));
+
+	// adjust text alignment of City Average label if average is particularly low or high
+	if(median <= 0.1) {
+		d3.selectAll("#predChart .avgLabel").classed("leftAligned", true);
+	}
+	else if(median >= 0.9) {
+		d3.selectAll("#predChart .avgLabel").classed("rightAligned", true);
+	}
 }
 
 function updateBarChart(prediction) {
@@ -235,3 +328,13 @@ function update_map(map) {
 
 	map.setFilter('predictions', new_filter);
 }
+
+// event handlers to toggle crashes layer
+d3.select("#checkbox_crashes").on("change", function() {
+	if(this.checked) {
+		map.setLayoutProperty('crashes', 'visibility', 'visible');
+	}
+	else {
+		map.setLayoutProperty('crashes', 'visibility', 'none');
+	}
+});

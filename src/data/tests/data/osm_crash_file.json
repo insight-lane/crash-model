@@ -1,0 +1,45 @@
+[
+    {
+        "id": 1403832,
+        "dateOccurred": "2016-01-01T00:56:45-05:00",
+        "location": {
+            "latitude": 42.3311855,
+            "longitude": -71.0748389
+        },
+        "vehicles": [
+            {
+                "category": "car"
+            }
+        ],
+        "summary": "REPORTED INJURIES   (P) (E) (F)"
+    },
+    {
+        "id": 1403832,
+        "dateOccurred": "2016-01-01T00:56:45-05:00",
+        "location": {
+            "latitude": 42.3611498,
+            "longitude": -71.0645559
+        },
+        "vehicles": [
+            {
+                "category": "car"
+            }
+        ],
+        "summary": "REPORTED INJURIES   (P) (E) (F)"
+    },
+    {
+        "id": 1403832,
+        "dateOccurred": "2016-01-01T00:56:45-05:00",
+        "location": {
+            "latitude": 42.333375,
+            "longitude": -71.07736
+        },
+        "vehicles": [
+            {
+                "category": "car"
+            }
+        ],
+        "summary": "REPORTED INJURIES   (P) (E) (F)"
+    }
+
+]

@@ -139,6 +139,14 @@ hr {
     margin: 6% 0;
 }
 
+.historicalCrashes {
+    margin-bottom: 30px;
+}
+
+.mapboxgl-popup-content {
+    color: #000;
+}
+
 input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
@@ -262,6 +270,14 @@ h2.segment_name:hover {
     fill: #fff;
     text-anchor: middle;
     font-size: 0.8rem;
+}
+
+.avgLabel.leftAligned {
+    text-anchor: start;
+}
+
+.avgLabel.rightAligned {
+    text-anchor: end;
 }
 
 table {

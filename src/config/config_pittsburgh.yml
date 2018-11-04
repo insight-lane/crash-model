@@ -1,0 +1,49 @@
+# City name
+city: Pittsburgh, PA, USA
+# City centerpoint latitude & longitude (default geocoded values set)
+city_latitude: 40.44062479999999
+city_longitude: -79.9958864
+# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
+city_radius: 20
+# The folder under data where this city's data is stored
+name: pittsburgh
+# If given, limit crashes to after start_year and before end_year
+# Recommended to limit to just a few years for now
+start_year: 
+end_year: 
+
+
+#################################################################
+# Configuration for data standardization
+
+# crash file configurations
+crashes_files:
+  pittsburgh_2017.csv:
+    required:
+      id: _id
+      latitude: DEC_LAT
+      longitude: DEC_LONG
+      # If date supplied in single column:
+      date_complete: 
+      # If date is separated into year/month/day:
+      date_year: CRASH_YEAR
+      date_month: CRASH_MONTH
+      # Leave date_day empty if not available
+      date_day: 
+      # If time is available and separate from date:
+      time: TIME_OF_DAY
+      # If time specified, time_format is one of:
+      # default (HH:MM:SS)
+      # seconds (since midnight)
+      # military (HHMM)
+      time_format: military
+    optional:
+      summary: 
+      address: 
+
+# week on which to predict crashes (week, year)
+# Best practice is to choose a week towards the end of your crash data set
+# in format [month, year]
+time_target: [30, 2017]
+# specify how many weeks back to predict in output of train_model
+weeks_back: 1
