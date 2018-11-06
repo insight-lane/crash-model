@@ -6,9 +6,13 @@ TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_read_snapshots():
+    config = {
+        'city': "Cambridge, Massachusetts, USA",
+        'timezone': "America/New_York"
+    }
     results = standardize_waze_data.read_snapshots(os.path.join(
-        TEST_FP, 'data', 'waze'), {'city': "Cambridge, Massachusetts, USA"})
-    print(results)
+        TEST_FP, 'data', 'waze'), config)
+
     assert results == [
         {
             'pubMillis': 1539632995870,
@@ -59,7 +63,7 @@ def test_read_snapshots():
 
     results = standardize_waze_data.read_snapshots(
         os.path.join(TEST_FP, 'data', 'waze'),
-        {'city': "Cambridge, Massachusetts, USA"},
+        config,
         startdate='2018-10-16',
         enddate='2018-10-16'
     )

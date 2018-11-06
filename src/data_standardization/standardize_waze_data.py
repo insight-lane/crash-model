@@ -5,6 +5,7 @@ import gzip
 import json
 import yaml
 import datetime
+import pytz
 
 
 CURR_FP = os.path.dirname(
@@ -18,9 +19,12 @@ def get_datetime(date):
     return parse(':'.join(date.split(':')[0:-1]))
 
 
-def convert_from_millis(millis):
+def convert_from_millis(millis, timezone):
+
     return datetime.datetime.fromtimestamp(
-        millis/1000).strftime('%Y-%m-%d %H:%M:%S')
+        millis/1000,
+        tz=timezone
+    ).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def read_snapshots(dirname, config, startdate=None, enddate=None):
@@ -43,6 +47,7 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
     min_start = None
     max_end = None
 
+    timezone = pytz.timezone(config['timezone'])
     count = 0
     if startdate:
         startdate = parse(startdate)
@@ -80,7 +85,10 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
         if 'jams' in data:
             all_data += [
                 dict(x, eventType='jam',
-                     pubTimeStamp=convert_from_millis(x['pubMillis']),
+                     pubTimeStamp=convert_from_millis(
+                         x['pubMillis'],
+                         timezone
+                     ),
                      snapshotId=count
                 )
                 for x in data['jams']
@@ -89,7 +97,10 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
         if 'alerts' in data:
             all_data += [
                 dict(x, eventType='alert',
-                     pubTimeStamp=convert_from_millis(x['pubMillis']),
+                     pubTimeStamp=convert_from_millis(
+                         x['pubMillis'],
+                         timezone
+                     ),
                      snapshotId=count
                 )
                 for x in data['alerts']
