@@ -68,22 +68,20 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--datadir", type=str, required=True,
                         help="Data directory")
 
-    parser.add_argument("-s", "--startyear", type=str,
-                        help="Can limit data to crashes this year or later")
-    parser.add_argument("-e", "--endyear", type=str,
-                        help="Can limit data to crashes this year or earlier")
+    parser.add_argument("-s", "--startdate", type=str,
+                        help="Can limit data to crashes this date or later" +
+                        "in form YYYY-MM-DD")
+    parser.add_argument("-e", "--enddate", type=str,
+                        help="Can limit data to crashes this date or earlier" +
+                        "in form YYYY-MM-DD")
     parser.add_argument('--forceupdate', action='store_true',
                         help='Whether to force update the maps')
 
     args = parser.parse_args()
 
     config_file = args.config
-    start_year = None
-    end_year = None
-    if args.startyear:
-        start_year = str(args.startyear)
-    if args.endyear:
-        end_year = str(args.endyear)
+    startdate = None
+    enddate = None
 
     with open(config_file) as f:
         config = yaml.safe_load(f)
@@ -201,8 +199,8 @@ if __name__ == '__main__':
         '-d',
         DATA_FP
     ]
-        + (['-start', start_year] if start_year else [])
-        + (['-end', end_year] if end_year else [])
+        + (['-start', startdate] if startdate else [])
+        + (['-end', enddate] if enddate else [])
     )
 
     subprocess.check_call([

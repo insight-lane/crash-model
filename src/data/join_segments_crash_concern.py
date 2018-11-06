@@ -26,6 +26,7 @@ def snap_records(
         combined_seg, segments_index, infile, record_type,
         startyear=None, endyear=None):
 
+    print("reading {} data...".format(record_type))
     records = util.read_records(infile, record_type, startyear, endyear)
     if record_type == 'concern' and not records:
         print("no concerns found")
