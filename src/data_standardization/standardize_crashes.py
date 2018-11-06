@@ -110,8 +110,15 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
                                                    opt_fields)
         crashes[formatted_crash["id"]] = formatted_crash
 
-    print("Including crashes between {} and {}".format(
-        min_date.isoformat(), max_date.isoformat()))
+    if min_date and max_date:
+        print("Including crashes between {} and {}".format(
+            min_date.isoformat(), max_date.isoformat()))
+    elif min_date:
+        print("Including crashes after {}".format(
+            min_date.isoformat()))
+    elif max_date:
+        print("Including crashes before {}".format(
+            max_date.isoformat()))
     return crashes
 
 
