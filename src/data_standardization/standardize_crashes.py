@@ -10,6 +10,7 @@ import csv
 import calendar
 import random
 import pytz
+import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
 
 CURR_FP = os.path.dirname(
@@ -21,11 +22,17 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
                              timezone, startdate=None, enddate=None):
 
     crashes = {}
+    # Drop times from startdate/enddate in the unlikely event
+    # they're passed in
     if startdate:
         startdate = parse_date(startdate, timezone)
+        startdate = date_parser.parse(startdate).date()
     if enddate:
         enddate = parse_date(enddate, timezone)
+        enddate = date_parser.parse(enddate).date()
 
+    min_date = None
+    max_date = None
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
@@ -80,11 +87,17 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
         if not crash_date_time:
             continue
 
+        crash_day = date_parser.parse(crash_date_time).date()
         # Drop crashes that occur outside of the range, if specified
-        if ((startdate is not None and crash_date_time < startdate) or
-                (enddate is not None and crash_date_time > enddate)):
-            continue
+        if ((startdate is not None and crash_day < startdate) or
+                (enddate is not None and crash_day > enddate)):
 
+            continue
+        if min_date is None or crash_day < min_date:
+            min_date = crash_day
+        if max_date is None or crash_day > max_date:
+            max_date = crash_day
+            
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", crash_date_time),
@@ -97,6 +110,8 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
                                                    opt_fields)
         crashes[formatted_crash["id"]] = formatted_crash
 
+    print("Including crashes between {} and {}".format(
+        min_date.isoformat(), max_date.isoformat()))
     return crashes
 
 

@@ -11,7 +11,7 @@ name: dc
 # If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
 startdate: 2014-01-01
-end_year: 2016-12-31
+enddate: 2016-12-31
 
 
 #################################################################

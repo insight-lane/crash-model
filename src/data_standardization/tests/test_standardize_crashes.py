@@ -168,7 +168,7 @@ def test_date_formats():
     # Confirm crashes outside of specified start & end year ranges are dropped
     crashes_in_different_years = [{
         "id": "1",
-        "date_of_crash": "2016-01-01T02:30:23-05:00",
+        "date_of_crash": "2016-12-31T02:30:23-05:00",
         "lat": 42.317987926802246,
         "lng": -71.06188127008645
     },
@@ -186,18 +186,20 @@ def test_date_formats():
     }]
 
     # filter crashes prior to a start year
-#    assert len(standardize_crashes.read_standardized_fields(
-#        crashes_in_different_years, fields_date_constructed, {}, '2017-01-01T00:00:00-05:00')) == 2
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_in_different_years, fields_date_constructed, {},
+        pytz.timezone("America/New_York"),
+        startdate='2017-01-01T00:00:00-05:00')) == 2
 
     # filter crashes after an end year
     assert len(standardize_crashes.read_standardized_fields(
         crashes_in_different_years, fields_date_constructed, {}, pytz.timezone("America/New_York"),
-        None, '2017-01-01T00:00:00-05:00')) == 1
+        enddate='2016-12-31')) == 1
 
     # filter crashes after an end year
     assert len(standardize_crashes.read_standardized_fields(
         crashes_in_different_years, fields_date_constructed, {}, pytz.timezone("America/New_York"),
-        None, '2017-01-01')) == 1
+        enddate='2017-01-01')) == 2
 
     # filter crashes between a start and end year
 #    assert len(standardize_crashes.read_standardized_fields(
