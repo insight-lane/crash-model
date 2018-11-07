@@ -6,6 +6,7 @@ import json
 import yaml
 import datetime
 import pytz
+from .standardization_util import parse_date
 
 
 CURR_FP = os.path.dirname(
@@ -13,14 +14,33 @@ CURR_FP = os.path.dirname(
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
-def get_datetime(date):
-    # Handles the datetime from Waze format
-    # Doesn't currently convert from utc
-    return parse(':'.join(date.split(':')[0:-1]))
+def get_datetime(date, timezone):
+    """
+    Takes a date string in form 2018-10-15 20:13:00:000
+    (the date string is in UTC but is timezone naive)
+    and turns it into a datetime object in the given timezone
+    Args:
+        date - a date string in form 2018-10-15 20:13:00:000
+        timezone - a pytz object
+    Returns:
+        a datetime object
+    """
+    date = parse(':'.join(date.split(':')[0:-1]))
+    date = date + timezone.utcoffset(date)
+    date = timezone.localize(date)
+    return date
 
 
 def convert_from_millis(millis, timezone):
-
+    """
+    Given a millisecond, convert into a human-readable
+    date string in city's timezone
+    Args:
+        millis
+        timezone - a pytz object
+    Returns:
+        datetime string
+    """
     return datetime.datetime.fromtimestamp(
         millis/1000,
         tz=timezone
@@ -50,9 +70,9 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
     timezone = pytz.timezone(config['timezone'])
     count = 0
     if startdate:
-        startdate = parse(startdate)
+        startdate = timezone.localize(parse(startdate))
     if enddate:
-        enddate = parse(enddate)
+        enddate = timezone.localize(parse(enddate))
 
     files.sort()
     for jsonfilename in files:
@@ -69,10 +89,11 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
         else:
             continue
 
-        end = get_datetime(data['endTime'])
+        end = get_datetime(data['endTime'], timezone)
         if max_end is None or max_end < end:
             max_end = end
-        start = get_datetime(data['startTime'])
+
+        start = get_datetime(data['startTime'], timezone)
         if min_start is None or min_start > start:
             min_start = start
 
