@@ -40,6 +40,9 @@ The demo city data is under version control in */data_zips* using [Git Large Fil
 - If you're running a different city, you need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file>`.
     - City name is the full name of the city, e.g. "Cambridge, MA, USA".
     - Folder name is what you'd like the city's data directory to  be named, e.g. "cambridge".
+    - The latitude and longitude will be auto-populated by the initialize_city script, but you can modify this
+    - The time zone will be auto-populated as your current time zone, but you can modify this if it's for a city outside of your time zone
+    - If you give a startdate and/or an enddate, the system will only look at crashes that fall within that date range
     - The crash file is a csv file of crashes that includes (at minimum) columns for latitude, longitude, and date of crashes.
 		- Windows users should modify their filepath to use forward slashes (/) rather than the default backslash (\\)
     - The concern file is a csv of concerns that includes (at minimum) a latitude, longitude and date of a concern file.
