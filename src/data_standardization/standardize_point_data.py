@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from collections import OrderedDict
 import yaml
+import pytz
 from . import standardization_util
 
 CURR_FP = os.path.dirname(
@@ -41,7 +42,8 @@ def read_file_info(config, datadir):
                     time = row[source_config['time']]
 
                 date_time = standardization_util.parse_date(
-                    row[source_config['date']], time=time)
+                    row[source_config['date']], pytz.timezone(
+                        config['timezone']), time=time)
                 updated_row = OrderedDict([
                     ("feature", source_config["name"]),
                     ("date", date_time),

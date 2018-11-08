@@ -16,6 +16,7 @@ def test_initialize_city_brisbane_no_supplemental(monkeypatch):
     initialize_city.make_config_file(
         tmpdir.join('/test_config_brisbane.yml'),
         'Brisbane, Australia',
+        'Australia/Brisbane',
         'brisbane',
         'test_crashes.csv',
         'test_concerns.csv'
@@ -27,14 +28,16 @@ city: Brisbane, Australia
 # City centerpoint latitude & longitude (default geocoded values set)
 city_latitude: -27.4697707
 city_longitude: 153.0251235
+# City's time zone: defaults to the local time zone of computer initializing the city's config file
+timezone: Australia/Brisbane
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 20
 # The folder under data where this city's data is stored
 name: brisbane
-# If given, limit crashes to after start_year and before end_year
+# If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-start_year: 
-end_year: 
+startdate: 
+enddate: 
 # level of predictions, either 'week' or 'segment'
 level: 'segment'
 
@@ -99,6 +102,7 @@ def test_supplemental_argument_should_change_content_of_config_file(monkeypatch)
     initialize_city.make_config_file(
         tmpdir.join('/test_config_brisbane.yml'),
         'Brisbane, Australia',
+        'Australia/Brisbane',
         'brisbane',
         'test_crashes.csv',
         'test_concerns.csv',
@@ -111,14 +115,16 @@ city: Brisbane, Australia
 # City centerpoint latitude & longitude (default geocoded values set)
 city_latitude: -27.4697707
 city_longitude: 153.0251235
+# City's time zone: defaults to the local time zone of computer initializing the city's config file
+timezone: Australia/Brisbane
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 20
 # The folder under data where this city's data is stored
 name: brisbane
-# If given, limit crashes to after start_year and before end_year
+# If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-start_year: 
-end_year: 
+startdate: 
+enddate: 
 # level of predictions, either 'week' or 'segment'
 level: 'segment'
 
