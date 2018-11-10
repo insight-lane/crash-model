@@ -73,7 +73,7 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
 
     if 'data_source' in config and config['data_source'] and \
        (not os.path.exists(os.path.join(
-           DATA_FP, 'standardized', 'points.json')) or forceupdate):
+           DATA_FP, 'standardized', 'points.json'))):
         subprocess.check_call([
             'python',
             '-m',
@@ -90,7 +90,7 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
         else:
             print("Already standardized point data, skipping")
 
-    if os.path.exists(os.path.join(BASE_DIR, 'raw', 'waze')) and \
+    if os.path.exists(os.path.join(DATA_FP, 'raw', 'waze')) and \
        (not os.path.exists(os.path.join(BASE_DIR, 'standardized', 'waze.json')
                            or forceupdate)):
         subprocess.check_call([
@@ -107,6 +107,8 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
             # Might be better to just only store the waze snapshots force
             # the desired weeks in the raw waze directory
         ])
+    elif not os.path.exists(os.path.join(DATA_FP, 'raw', 'waze')):
+        print("No waze data, skipping")
     else:
         print("Already standardized waze data, skipping")
 
