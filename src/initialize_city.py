@@ -30,7 +30,7 @@ def make_config_file(yml_file, city, timezone, folder, crash, concern, supplemen
         "# Recommended to limit to just a few years for now\n" +
         "startdate: \n" +
         "enddate: \n" +
-        "# level of predictions, either 'week' or 'segment'\n" +
+        "# The type of predictions to generate, 'segment' is default, 'week' is legacy\n" +
         "level: 'segment'\n\n" +
         "#################################################################\n" +
         "# Configuration for data standardization\n\n" +
@@ -70,7 +70,7 @@ def make_config_file(yml_file, city, timezone, folder, crash, concern, supplemen
             "      filename: {}\n".format(concern) +
             "      latitude: \n" +
             "      longitude: \n" +
-            "      time: \n\n\n"
+            "      time: \n\n"
         )
     if supplemental:
         f.write("# Additional data sources\n" +
@@ -89,8 +89,8 @@ def make_config_file(yml_file, city, timezone, folder, crash, concern, supplemen
                 "    feat: \n")
         f.write("\n")
     f.write(
-        "# week on which to predict crashes (week, year)\n" +
-        "# Best practice is to choose a week towards the end of your crash data set\n" +
+        "# If using legacy 'week' predictions:\n"+
+        "# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set\n" +
         "# in format [month, year]\n" +
         "time_target: [30, 2017]\n" +
         "# specify how many weeks back to predict in output of train_model\n" +
