@@ -6,7 +6,6 @@ import json
 import yaml
 import datetime
 import pytz
-from .standardization_util import parse_date
 
 
 CURR_FP = os.path.dirname(
@@ -26,8 +25,8 @@ def get_datetime(date, timezone):
         a datetime object
     """
     date = parse(':'.join(date.split(':')[0:-1]))
-    date = date + timezone.utcoffset(date)
-    date = timezone.localize(date)
+    utc_date = date.replace(tzinfo=datetime.timezone.utc)
+    date = utc_date.astimezone(timezone)
     return date
 
 

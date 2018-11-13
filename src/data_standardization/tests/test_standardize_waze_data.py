@@ -1,8 +1,24 @@
 from .. import standardize_waze_data
 import os
-
+import pytz
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
+
+
+def test_get_datetime():
+    timezone = pytz.timezone("America/New_York")
+
+    result = standardize_waze_data.get_datetime(
+        '2018-10-04 12:13:00:000', timezone)
+    assert result.isoformat() == '2018-10-04T08:13:00-04:00'
+
+    result = standardize_waze_data.get_datetime(
+        '2018-11-04 01:13:00:000', timezone)
+    assert result.isoformat() == '2018-11-03T21:13:00-04:00'
+
+    result = standardize_waze_data.get_datetime(
+        '2018-11-04 06:13:00:000', timezone)
+    assert result.isoformat() == '2018-11-04T01:13:00-05:00'
 
 
 def test_read_snapshots():
