@@ -97,14 +97,7 @@ def set_defaults(config={}):
         config['tmc'] = ''
     if 'f_cont' not in list(config.keys()):
         config['f_cont'] = ['width']
-    if 'f_cat' not in list(config.keys()):
-        config['f_cat'] = ['lanes', 'hwy_type', 'osm_speed', 'oneway',
-                           'signal']
 
-    # Add features for additional data sources
-    if 'data_source' in config and config['data_source']:
-        for source in config['data_source']:
-            config[source['feat']].append(source['name'])
     if 'process' not in list(config.keys()):
         config['process'] = True
     if 'time_target' not in list(config.keys()):
@@ -116,22 +109,29 @@ def set_defaults(config={}):
     if 'level' not in list(config.keys()):
         config['level'] = 'week'
 
+        
+def get_features(config, data, datadir):
+    """
+    Get features from the feature list created during data generation
+    """
 
-def get_features(config):
+    with open(os.path.join(datadir, 'features.yml')) as f:
+        features = yaml.safe_load(f)
 
-    f_cat = config['f_cat']
-    f_cont = config['f_cont']
     # segment chars
     # Dropping continuous features that don't exist
     new_feats = []
-    for f in f_cont:
+    for f in features['f_cont']:
         if f not in data.columns.values:
             print("Feature " + f + " not found, skipping")
         else:
             new_feats.append(f)
     f_cont = new_feats
+    f_cat = features['f_cat']
+
     # create featureset holder
-    features = f_cont+f_cat
+    features = f_cont + f_cat
+
     print(('Segment features included: {}'.format(features)))
     if config['concern'] != '':
         features.append(config['concern'])
@@ -139,6 +139,7 @@ def get_features(config):
         features += config['atr_cols']
     if config['tmc'] != '':
         features += config['tmc_cols']
+
     return f_cat, f_cont, features
 
 
@@ -328,10 +329,11 @@ if __name__ == '__main__':
             config = yaml.safe_load(f)
     set_defaults(config)
 
-    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
-    seg_data = os.path.join(DATA_FP, config['seg_data'])
+    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'])
+    PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data', config['name'], 'processed/')
+    seg_data = os.path.join(PROCESSED_DATA_FP, config['seg_data'])
 
-    print(('Outputting to: %s' % DATA_FP))
+    print(('Outputting to: %s' % PROCESSED_DATA_FP))
 
     # Read in data
     data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
@@ -345,12 +347,12 @@ if __name__ == '__main__':
         data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
         data.reset_index(inplace=True)
 
-    f_cat, f_cont, features = get_features(config)
+    f_cat, f_cont, features = get_features(config, data, PROCESSED_DATA_FP)
 
     # grab the highest values from each column
     data_segs = data.groupby('segment_id')[f_cont+f_cat].max()
     data_segs.reset_index(inplace=True)
-    data_segs = add_extra_features(data, data_segs, config, DATA_FP)
+    data_segs = add_extra_features(data, data_segs, config, PROCESSED_DATA_FP)
 
     data_segs, features, lm_features = process_features(
         features, config, f_cat, f_cont, data_segs)
@@ -373,7 +375,7 @@ if __name__ == '__main__':
     print("full features:{}".format(features))
 
     initialize_and_run(data_model, features, lm_features, config['level'],
-                       DATA_FP)
+                       PROCESSED_DATA_FP)
 
 
     

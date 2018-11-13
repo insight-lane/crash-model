@@ -504,13 +504,11 @@ if __name__ == '__main__':
     STANDARDIZED_FP = os.path.join(args.datadir, 'standardized')
     
     # If maps do not exist, create
-    if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
-       or args.forceupdate:
+    if False:
         print('Generating map from open street map...')
         simple_get_roads(config)
 
-    if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
-       or args.forceupdate:
+    if False:
         print("Cleaning and writing to {}...".format('osm_elements.geojson'))
 
         clean_and_write(
