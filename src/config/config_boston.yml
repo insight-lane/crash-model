@@ -11,7 +11,7 @@ city_radius: 15
 # If given, limit crashes to after startdate and no later than enddate
 startdate: 2015-01-01
 enddate: 2017-12-31
-# level of predictions, either 'week' or 'segment'
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
 level: 'segment'
 
 ##############################################################################

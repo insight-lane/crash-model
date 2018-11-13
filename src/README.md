@@ -33,7 +33,7 @@ We also can map city-specific maps (and features associated with their roads) to
 
 This section walks you through how to generate and visualize data for any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), or for any city that you suitable data for (at a minimum crashes, ideally concerns as well).
 
-The demo city data is under version control in */data_zips* using [Git Large File Storage](https://git-lfs.github.com/). Each city is archived individually using tar & bzip2. To access the archives as part of the repo, you need to have Git LFS installed on your local machine (see link above for instructions). If you don't install LFS the archives will still appear, but are effectively placeholders and cannot be used.
+The demo city data is stored as *data-latest.zip* using data-world. Contact one of the project leads if you don't yet have access.
 
 - If you want to visualize the data, you'll need to create a mapbox account (https://www.mapbox.com/)
 - If you're running one of the demo cities, extract its archive from */data_zips* into */data* to expose the input files (crashes, concerns etc.). For example on linux systems, this can be achieved by running (from the root folder) *tar -C data -xjvf data_zips/boston.tar.bz2*
