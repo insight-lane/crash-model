@@ -4,7 +4,7 @@ import os
 import json
 import geojson
 from collections import defaultdict
-
+from .record import Record
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -64,6 +64,49 @@ def get_features(waze_info, properties, num_snapshots):
     return properties
 
 
+def add_alerts(datadir, filename):
+    # We'll want to consider making these point-based features at some point
+    items = json.load(open(filename))
+
+    # Only look at jams for now
+    items = [Record(x) for x in items if x['eventType'] == 'alert']
+
+    osm_file = os.path.join(
+        datadir,
+        'processed',
+        'maps',
+        'osm_elements.geojson'
+    )
+    road_segments, _ = util.get_roads_and_inters(osm_file)
+    roads, roads_index = util.index_segments(
+        road_segments, geojson=True, segment=True)
+
+    util.find_nearest(
+        items, roads, roads_index, 30, type_record=True)
+
+    # Turn records into a dict
+    items_dict = defaultdict(dict)
+    for item in items:
+        if item.properties['type'] not in items_dict[item.near_id]:
+            items_dict[item.near_id][item.properties['type']] = 0
+        items_dict[item.near_id][item.properties['type']] += 1
+
+    updated_roads = []
+    for road in road_segments:
+        properties = road.properties
+        if properties['id'] in items_dict:
+            for key in items_dict[properties['id']].keys():
+                properties['alert_' + key] = items_dict[properties['id']][key]
+        updated_roads.append({
+                'geometry': {
+                    'coordinates': [x for x in road.geometry.coords],
+                    'type': 'LineString'
+                },
+                'properties': properties
+        })
+    
+
+    
 def map_segments(datadir, filename):
     """
     Map a set of waze segment info (jams) onto segments drawn from
@@ -188,4 +231,5 @@ if __name__ == '__main__':
     infile = os.path.join(args.datadir, 'standardized', 'waze.json')
 #    make_map(infile, os.path.join(args.datadir, 'processed', 'maps'))
     print("Adding waze data to open street map ways")
-    map_segments(args.datadir, infile)
+#    map_segments(args.datadir, infile)
+    add_alerts(args.datadir, infile)
