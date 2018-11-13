@@ -20,6 +20,7 @@ def get_linestring(value):
     Returns:
         geojson linestring with properties
     """
+    
     line = value['line']
     coords = [(x['x'], x['y']) for x in line]
     return geojson.Feature(
@@ -76,7 +77,8 @@ def map_segments(datadir, filename):
     """
     items = json.load(open(filename))
 
-    items = [get_linestring(x) for x in items]
+    # Only look at jams for now
+    items = [get_linestring(x) for x in items if x['eventType'] == 'jam']
     items = util.reproject_records(items)
 
     # Get the total number of snapshots in the waze data
@@ -185,4 +187,5 @@ if __name__ == '__main__':
 
     infile = os.path.join(args.datadir, 'standardized', 'waze.json')
 #    make_map(infile, os.path.join(args.datadir, 'processed', 'maps'))
+    print("Adding waze data to open street map ways")
     map_segments(args.datadir, infile)
