@@ -64,22 +64,13 @@ def get_features(waze_info, properties, num_snapshots):
     return properties
 
 
-def add_alerts(datadir, filename):
-    # We'll want to consider making these point-based features at some point
-    items = json.load(open(filename))
+def add_alerts(items, road_segments):
 
-    # Only look at jams for now
-    items = [Record(x) for x in items if x['eventType'] == 'alert']
-
-    osm_file = os.path.join(
-        datadir,
-        'processed',
-        'maps',
-        'osm_elements.geojson'
-    )
-    road_segments, _ = util.get_roads_and_inters(osm_file)
     roads, roads_index = util.index_segments(
         road_segments, geojson=True, segment=True)
+
+    # We'll want to consider making these point-based features at some point
+    items = [Record(x) for x in items if x['eventType'] == 'alert']
 
     util.find_nearest(
         items, roads, roads_index, 30, type_record=True)
@@ -91,22 +82,16 @@ def add_alerts(datadir, filename):
             items_dict[item.near_id][item.properties['type']] = 0
         items_dict[item.near_id][item.properties['type']] += 1
 
-    updated_roads = []
     for road in road_segments:
         properties = road.properties
         if properties['id'] in items_dict:
             for key in items_dict[properties['id']].keys():
                 properties['alert_' + key] = items_dict[properties['id']][key]
-        updated_roads.append({
-                'geometry': {
-                    'coordinates': [x for x in road.geometry.coords],
-                    'type': 'LineString'
-                },
-                'properties': properties
-        })
-    
 
-    
+        road.properties = properties
+    return road_segments
+
+
 def map_segments(datadir, filename):
     """
     Map a set of waze segment info (jams) onto segments drawn from
@@ -120,12 +105,8 @@ def map_segments(datadir, filename):
     """
     items = json.load(open(filename))
 
-    # Only look at jams for now
-    items = [get_linestring(x) for x in items if x['eventType'] == 'jam']
-    items = util.reproject_records(items)
-
     # Get the total number of snapshots in the waze data
-    num_snapshots = max([x['properties']['snapshotId'] for x in items])
+    num_snapshots = max([x['snapshotId'] for x in items])
 
     osm_file = os.path.join(
         datadir,
@@ -135,8 +116,46 @@ def map_segments(datadir, filename):
     )
 
     road_segments, _ = util.get_roads_and_inters(osm_file)
+
+    # Add jam and alert information
+    road_segments, roads_with_jams = add_jams(
+        items, road_segments, num_snapshots)
+    road_segments = add_alerts(items, road_segments)
+
+    # Convert into format that util.prepare_geojson is expecting
+    geojson_roads = []
+    for road in road_segments:
+        geojson_roads.append({
+            'geometry': {
+                'coordinates': [x for x in road.geometry.coords],
+                'type': 'LineString'
+            },
+            'properties': road.properties
+        })
+    results = util.prepare_geojson(geojson_roads)
+
+    with open(osm_file, 'w') as outfile:
+        geojson.dump(results, outfile)
+
+    jam_results = util.prepare_geojson(roads_with_jams)
+
+    with open(os.path.join(
+            datadir,
+            'processed',
+            'maps',
+            'jams.geojson'), 'w') as outfile:
+        geojson.dump(jam_results, outfile)
+
+
+def add_jams(items, road_segments, num_snapshots):
+
     roads, roads_index = util.index_segments(
         road_segments, geojson=True, segment=True)
+
+    # Only look at jams for now
+    items = [get_linestring(x) for x in items if x['eventType'] == 'jam']
+    items = util.reproject_records(items)
+
     road_buffers = []
     for road in roads:
         road_buffers.append(road[0].buffer(3))
@@ -169,22 +188,15 @@ def map_segments(datadir, filename):
                     continue
                 waze_info[segment[1]['segment_id']].append(item)
     # Add waze features
-    # Also convert into format that util.prepare_geojson is expecting
-    updated_roads = []
     roads_with_jams = []
+
     for road in road_segments:
         properties = get_features(
             waze_info,
             road.properties,
             num_snapshots
         )
-        updated_roads.append({
-                'geometry': {
-                    'coordinates': [x for x in road.geometry.coords],
-                    'type': 'LineString'
-                },
-                'properties': properties
-        })
+        road.properties = properties
         if properties['segment_id'] in waze_info:
             roads_with_jams.append({
                     'geometry': {
@@ -194,19 +206,7 @@ def map_segments(datadir, filename):
                     'properties': properties
             })
 
-    results = util.prepare_geojson(updated_roads)
-
-    with open(osm_file, 'w') as outfile:
-        geojson.dump(results, outfile)
-
-    jam_results = util.prepare_geojson(roads_with_jams)
-
-    with open(os.path.join(
-            datadir,
-            'processed',
-            'maps',
-            'jams.geojson'), 'w') as outfile:
-        geojson.dump(jam_results, outfile)
+    return road_segments, roads_with_jams
 
 
 def make_map(filename, datadir):
@@ -231,5 +231,5 @@ if __name__ == '__main__':
     infile = os.path.join(args.datadir, 'standardized', 'waze.json')
 #    make_map(infile, os.path.join(args.datadir, 'processed', 'maps'))
     print("Adding waze data to open street map ways")
-#    map_segments(args.datadir, infile)
-    add_alerts(args.datadir, infile)
+    map_segments(args.datadir, infile)
+#    add_alerts(args.datadir, infile)
