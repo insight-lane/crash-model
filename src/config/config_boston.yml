@@ -68,7 +68,9 @@ extra_map: ../data/boston/raw/maps/ma_cob_spatially_joined_streets.shp
 
 # Additional features to add from the additional map.
 # This is required if extra_map is given
-additional_features: AADT SPEEDLIMIT Struct_Cnd Surface_Tp F_F_Class
+additional_features:
+    f_cont: AADT
+    f_cat: SPEEDLIMIT Struct_Cnd Surface_Tp F_F_Class
 
 ##############################################################################
 
