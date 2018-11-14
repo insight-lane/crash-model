@@ -12,7 +12,8 @@ name: dc
 # Recommended to limit to just a few years for now
 startdate: 2014-01-01
 enddate: 2016-12-31
-
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
+level: 'segment'
 
 #################################################################
 # Configuration for data standardization
