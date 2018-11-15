@@ -11,7 +11,7 @@ import argparse
 import yaml
 from .model_utils import format_crash_data
 from .model_classes import Indata, Tuner, Tester
-import sklearn.linear_model as skl
+# import sklearn.linear_model as skl
 import pickle
 
 
@@ -259,10 +259,11 @@ def initialize_and_run(data_model, features, lm_features, config_level,
 
     # Initialize data
     df = Indata(data_model, 'target')
-    #Create train/test split
 
-    #create pickle file. Change name as per city for which its being run.
-    pickle.dump(df.data, open("model_df_cambridge.pkl", "wb"))
+    # create pickle file. Change name as per city for which its being run.
+    pickle.dump(df.data, open(os.path.join(
+        datadir,
+        "model_df.pkl"), "wb"))
 
     # Create train/test split
     df.tr_te_split(.7, seed=seed)
