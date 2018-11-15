@@ -219,7 +219,6 @@ def make_map(filename, datadir):
         geojson.dump(geojson.FeatureCollection(geojson_items), outfile)
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
@@ -230,6 +229,4 @@ if __name__ == '__main__':
 
     infile = os.path.join(args.datadir, 'standardized', 'waze.json')
 #    make_map(infile, os.path.join(args.datadir, 'processed', 'maps'))
-    print("Adding waze data to open street map ways")
     map_segments(args.datadir, infile)
-#    add_alerts(args.datadir, infile)

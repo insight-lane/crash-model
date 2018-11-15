@@ -4,6 +4,7 @@ import subprocess
 import argparse
 import yaml
 import sys
+import json
 
 DATA_FP = os.path.dirname(
     os.path.dirname(
@@ -43,6 +44,16 @@ def make_feature_list(config, datadir, waze=False):
     if waze:
         feat_types['f_cont'] += ['jam_percent']
         feat_types['f_cat'] += ['jam']
+
+        # Calculate alert types, since they are also used as features
+        waze_info = json.load(open(os.path.join(
+            datadir,
+            'standardized',
+            'waze.json'
+        )))
+        alert_types = set(['alert_' + x['type'] for x in waze_info
+                           if x['eventType'] == 'alert'])
+        feat_types['f_cont'] += alert_types
 
     # Additional features from additional city-specific maps
     if 'additional_features' in config and config['additional_features']:
@@ -117,6 +128,7 @@ if __name__ == '__main__':
         waze = True
 
     features = make_feature_list(config, args.datadir, waze)
+    print(features)
 
     print("Generating maps for " + city + ' in ' + DATA_FP)
     if recreate:
