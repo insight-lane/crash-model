@@ -6,6 +6,7 @@ import datetime
 import json
 import gzip
 import os
+import yaml
 
 
 if __name__ == '__main__':
@@ -14,8 +15,8 @@ if __name__ == '__main__':
     the resulting json file to the directory
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', "--feed", type=str, required=True,
-                        help="Waze feed URL")
+    parser.add_argument('-f', "--file", type=str, required=True,
+                        help="yml file containing city and waze feed urls")
     parser.add_argument('-d', "--dirname", type=str, required=True,
                         help="directory to write results to")
     
@@ -24,16 +25,20 @@ if __name__ == '__main__':
     if not os.path.exists(args.dirname):
         os.makedirs(args.dirname)
 
-    response = requests.get(args.feed)
-    # Filename is the current minute, in utc time
-    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H-%M")
-    json_str = json.dumps(response.json())
-    json_bytes = json_str.encode('utf-8')
+    with open(args.file) as f:
+        feeds = yaml.safe_load(f)
 
-    outfile = os.path.join(args.dirname,
-                           timestamp + '.json.gz')
+    for city in feeds:
+        response = requests.get(feeds[city])
+        # Filename is the city + current minute, in utc time
+        timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H-%M")
+        json_str = json.dumps(response.json())
+        json_bytes = json_str.encode('utf-8')
 
-    with gzip.open(outfile, 'wb') as f:
-        f.write(json_bytes)
+        outfile = os.path.join(args.dirname,
+                               city + '_' + timestamp + '.json.gz')
+
+        with gzip.open(outfile, 'wb') as f:
+            f.write(json_bytes)
 
 
