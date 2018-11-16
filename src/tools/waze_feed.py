@@ -30,13 +30,17 @@ if __name__ == '__main__':
 
     for city in feeds:
         response = requests.get(feeds[city])
-        # Filename is the city + current minute, in utc time
+        dirname = os.path.join(args.dirname, city)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        # Filename is the current minute, in utc time
         timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H-%M")
         json_str = json.dumps(response.json())
         json_bytes = json_str.encode('utf-8')
 
-        outfile = os.path.join(args.dirname,
-                               city + '_' + timestamp + '.json.gz')
+        outfile = os.path.join(dirname,
+                               timestamp + '.json.gz')
 
         with gzip.open(outfile, 'wb') as f:
             f.write(json_bytes)
