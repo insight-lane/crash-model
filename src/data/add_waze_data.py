@@ -92,7 +92,7 @@ def add_alerts(items, road_segments):
     return road_segments
 
 
-def map_segments(datadir, filename):
+def map_segments(datadir, filename, forceupdate=False):
     """
     Map a set of waze segment info (jams) onto segments drawn from
     openstreetmap: the osm_elements.geojson file
@@ -116,6 +116,9 @@ def map_segments(datadir, filename):
     )
 
     road_segments, _ = util.get_roads_and_inters(osm_file)
+    if 'jam' in road_segments[0].properties and not forceupdate:
+        print("Already processed waze data")
+        return
 
     # Add jam and alert information
     road_segments, roads_with_jams = add_jams(
@@ -224,9 +227,11 @@ if __name__ == '__main__':
 
     parser.add_argument("-d", "--datadir", type=str,
                         help="data directory")
+    parser.add_argument('--forceupdate', action='store_true',
+                        help='Whether to force update of the waze data')
 
     args = parser.parse_args()
 
     infile = os.path.join(args.datadir, 'standardized', 'waze.json')
 #    make_map(infile, os.path.join(args.datadir, 'processed', 'maps'))
-    map_segments(args.datadir, infile)
+    map_segments(args.datadir, infile, args.forceupdate)
