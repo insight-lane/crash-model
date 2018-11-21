@@ -54,7 +54,7 @@ The intended roadmap of development for the project can be found at [https://git
 
 **How can I access the project?**
 
-This repo can be downloaded and run in its entirity using Docker, or you can see a current deployment of the project at [https://boston-crash-model.firebaseapp.com/](https://boston-crash-model.firebaseapp.com/).
+This repo can be downloaded and run in its entirity using Docker, or you can see a current deployment of the project at [https://insightlane.org](https://insightlane.org).
 
 Project Background
 -----------------------
@@ -71,13 +71,9 @@ This is part of the City's long-term [Vision Zero initiative](http://www.visionz
 
 Connect
 -----------------------
-Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-boston-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](http://datafordemocracy.org/contact.html)!
+Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-boston-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](https://www.datafordemocracy.org/join-us)!
 
 Leads:
- - D4D Project Lead: Ben Batorsky [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
- - City of Boston Project Lead: Andrew Therriault [@therriault](https://datafordemocracy.slack.com/messages/@therriault)
-
-**Maintainers**: Maintainers have write access to the repository. They are responsible for reviewing pull requests, providing feedback and ensuring consistency.
  - [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
  - [@j-t-t](https://datafordemocracy.slack.com/messages/@j-t-t)
  - [@alicefeng](https://datafordemocracy.slack.com/messages/@alicefeng)
