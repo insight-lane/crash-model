@@ -38,11 +38,12 @@ def make_feature_list(config, datadir, waze=False):
         feat_types['f_cat'] += [x['name'] for x in config['data_source']
                                 if 'feat' == 'f_cat']
         feat_types['f_cont'] += [x['name'] for x in config['data_source']
-                                if 'feat' == 'f_cont']
+                                 if 'feat' == 'f_cont']
 
     # If we have waze data for the city
     if waze:
-        feat_types['f_cont'] += ['jam_percent']
+        feat_types['f_cont'] += [
+            'jam_percent', 'avg_jam_delay', 'avg_jam_speed', 'avg_jam_level']
         feat_types['f_cat'] += ['jam']
 
         # Calculate alert types, since they are also used as features

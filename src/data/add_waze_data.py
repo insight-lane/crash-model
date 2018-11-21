@@ -45,17 +45,38 @@ def get_features(waze_info, properties, num_snapshots):
     # Waze feature list
     # jam_percent - percentage of snapshots that have a jam on this segment
     if properties['segment_id'] in waze_info:
+
         # only count one jam per snapshot on a road
         num_jams = len(set([x['properties']['snapshotId']
                             for x in waze_info[properties['segment_id']]]))
+        avg_level = round(sum(
+            [x['properties']['level']
+             for x in waze_info[properties['segment_id']]]
+        )/len(waze_info[properties['segment_id']]))
+        avg_speed = round(sum(
+            [x['properties']['speed']
+             for x in waze_info[properties['segment_id']]]
+        )/len(waze_info[properties['segment_id']]))
+        avg_delay = round(sum(
+            [x['properties']['delay']
+             for x in waze_info[properties['segment_id']]]
+        )/len(waze_info[properties['segment_id']]))
+        if avg_delay == -1:
+            avg_delay = 0
     else:
         num_jams = 0
+        avg_level = 0
+        avg_speed = 0
+        avg_delay = 0
     # Turn into number between 0 and 100
+
     properties.update(jam_percent=100*num_jams/num_snapshots)
     properties.update(jam=1 if num_jams else 0)
-
+    properties.update(avg_jam_level=avg_level)
+    properties.update(avg_jam_speed=avg_speed)
+    properties.update(avg_jam_delay=avg_delay)
+    
     # Other potential features
-    # Something with speeds in the jams
     # Alerts, or certain kinds of alerts
     # Look at alerts that are crashes, maybe ignore those jams?
     # Might be interesting to look at crashes on segments as well
@@ -234,4 +255,4 @@ if __name__ == '__main__':
 
     infile = os.path.join(args.datadir, 'standardized', 'waze.json')
 #    make_map(infile, os.path.join(args.datadir, 'processed', 'maps'))
-    map_segments(args.datadir, infile, args.forceupdate)
+    map_segments(args.datadir, infile, forceupdate=args.forceupdate)
