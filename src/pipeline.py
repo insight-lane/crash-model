@@ -73,7 +73,7 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
 
     if 'data_source' in config and config['data_source'] and \
        (not os.path.exists(os.path.join(
-           DATA_FP, 'standardized', 'points.json')) or forceupdate):
+           DATA_FP, 'standardized', 'points.json'))):
         subprocess.check_call([
             'python',
             '-m',
@@ -89,6 +89,28 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
             print("No point data found, skipping")
         else:
             print("Already standardized point data, skipping")
+
+    if os.path.exists(os.path.join(DATA_FP, 'raw', 'waze')) and \
+       (not os.path.exists(os.path.join(BASE_DIR, 'standardized', 'waze.json')
+                           or forceupdate)):
+        subprocess.check_call([
+            'python',
+            '-m',
+            'data_standardization.standardize_waze_data',
+            '-c',
+            os.path.join(BASE_DIR, 'src', 'config',
+                         'config_' + config['name'] + '.yml'),
+            '-d',
+            DATA_FP,
+            # The script can filter by dates, but if this is something
+            # we'd like to add, dates should probably be specified
+            # Might be better to just only store the waze snapshots force
+            # the desired weeks in the raw waze directory
+        ])
+    elif not os.path.exists(os.path.join(DATA_FP, 'raw', 'waze')):
+        print("No waze data, skipping")
+    else:
+        print("Already standardized waze data, skipping")
 
 
 def data_generation(config_file, DATA_FP, startdate=None, enddate=None,

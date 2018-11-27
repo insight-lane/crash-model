@@ -38,7 +38,7 @@ name: brisbane
 # Recommended to limit to just a few years for now
 startdate: 
 enddate: 
-# level of predictions, either 'week' or 'segment'
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
 level: 'segment'
 
 #################################################################
@@ -79,9 +79,8 @@ concern_files:
       longitude: 
       time: 
 
-
-# week on which to predict crashes (week, year)
-# Best practice is to choose a week towards the end of your crash data set
+# If using legacy 'week' predictions:
+# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set
 # in format [month, year]
 time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
@@ -125,7 +124,7 @@ name: brisbane
 # Recommended to limit to just a few years for now
 startdate: 
 enddate: 
-# level of predictions, either 'week' or 'segment'
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
 level: 'segment'
 
 #################################################################
@@ -166,7 +165,6 @@ concern_files:
       longitude: 
       time: 
 
-
 # Additional data sources
 data_source:
   - name: parking_tickets
@@ -179,8 +177,8 @@ data_source:
     # Feature is categorical (f_cat) or continuous (f_cont)
     feat: 
 
-# week on which to predict crashes (week, year)
-# Best practice is to choose a week towards the end of your crash data set
+# If using legacy 'week' predictions:
+# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set
 # in format [month, year]
 time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
