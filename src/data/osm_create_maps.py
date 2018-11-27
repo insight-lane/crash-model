@@ -170,8 +170,6 @@ def simple_get_roads(config):
                   "specified bounds")
             G1 = ox.graph_from_place(config['city'], network_type='drive',
                                      simplify=False, which_result=polygon_pos)
-            G2 = ox.graph_from_place(config['city'], network_type='bike',
-                                     simplify=False, which_result=polygon_pos)
         else:
             print("using buffered city polygon")
             G1 = ox.graph_from_polygon(polygon, network_type='drive',
