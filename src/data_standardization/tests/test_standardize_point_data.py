@@ -41,11 +41,11 @@ def test_read_file_info(tmpdir):
             'address': 'Location',
             'date': 'Ticket Issue Date',
             'time': 'Issue Time',
-            'category': 'Violation Description', 
-            'timezone': 'America/New_York'
-        }]
+            'category': 'Violation Description'
+        }],
+        'timezone': 'America/New_York'
     }
-
+    
     standardize_point_data.read_file_info(config, tmppath)
     filename = os.path.join(tmppath, 'standardized', 'points.json')
     with open(filename) as data_file:
