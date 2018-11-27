@@ -8,31 +8,35 @@ BASE_DIR = os.path.dirname(
         os.path.abspath(__file__)))
 
 
-def data_standardization(config, DATA_FP, forceupdate=False):
+def data_standardization(config_file, DATA_FP, forceupdate=False):
     """
     Standardize data from a csv file into compatible crashes and concerns
     according to a config file
     Args:
-        config
+        config_file
         DATA_FP - data directory for this city
     """
     # standardize data, if the files don't already exist
     # or forceupdate
-    print("Standardizing data...")
     if not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'crashes.json')) or forceupdate:
+        print("Standardizing crash data..")
         subprocess.check_call([
             'python',
             '-m',
             'data_standardization.standardize_crashes',
+            '-c',
+            config_file,
             '-d',
-            config['name'],
-            '-f',
             DATA_FP
         ])
     else:
         print("Already standardized crash data, skipping")
 
+    
+    with open(config_file) as f:
+        config = yaml.safe_load(f)
+    
     # There has to be concern data in the config file to try processing it
     if ('concern_files' in list(config.keys())
         and config['concern_files'] and not os.path.exists(os.path.join(
@@ -41,9 +45,9 @@ def data_standardization(config, DATA_FP, forceupdate=False):
             'python',
             '-m',
             'data_standardization.standardize_concerns',
+            '-c',
+            config_file,
             '-d',
-            config['name'],
-            '-f',
             DATA_FP
         ])
     else:
@@ -69,7 +73,7 @@ def data_standardization(config, DATA_FP, forceupdate=False):
 
     if 'data_source' in config and config['data_source'] and \
        (not os.path.exists(os.path.join(
-           DATA_FP, 'standardized', 'points.json')) or forceupdate):
+           DATA_FP, 'standardized', 'points.json'))):
         subprocess.check_call([
             'python',
             '-m',
@@ -81,18 +85,43 @@ def data_standardization(config, DATA_FP, forceupdate=False):
             DATA_FP
         ])
     else:
-        print("Already standardized point data, skipping")
+        if 'data_source' not in config or not config['data_source']:
+            print("No point data found, skipping")
+        else:
+            print("Already standardized point data, skipping")
+
+    if os.path.exists(os.path.join(DATA_FP, 'raw', 'waze')) and \
+       (not os.path.exists(os.path.join(BASE_DIR, 'standardized', 'waze.json')
+                           or forceupdate)):
+        subprocess.check_call([
+            'python',
+            '-m',
+            'data_standardization.standardize_waze_data',
+            '-c',
+            os.path.join(BASE_DIR, 'src', 'config',
+                         'config_' + config['name'] + '.yml'),
+            '-d',
+            DATA_FP,
+            # The script can filter by dates, but if this is something
+            # we'd like to add, dates should probably be specified
+            # Might be better to just only store the waze snapshots force
+            # the desired weeks in the raw waze directory
+        ])
+    elif not os.path.exists(os.path.join(DATA_FP, 'raw', 'waze')):
+        print("No waze data, skipping")
+    else:
+        print("Already standardized waze data, skipping")
 
 
-def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
+def data_generation(config_file, DATA_FP, startdate=None, enddate=None,
                     forceupdate=False):
     """
     Generate the map and feature data for this city
     Args:
         config_file - path to config file
         DATA_FP - path to data directory, e.g. ../data/boston/
-        start_year (optional)
-        end_year (optional)
+        startdate (optional)
+        enddate (optional)
     """
     print("Generating data and features...")
     subprocess.check_call([
@@ -104,8 +133,8 @@ def data_generation(config_file, DATA_FP, start_year=None, end_year=None,
         '-d',
         DATA_FP
     ]
-        + (['-s', str(start_year)] if start_year else [])
-        + (['-e', str(end_year)] if end_year else [])
+        + (['-s', str(startdate)] if startdate else [])
+        + (['-e', str(enddate)] if enddate else [])
         + (['--forceupdate'] if forceupdate else [])
     )
 
@@ -169,18 +198,14 @@ if __name__ == '__main__':
     DATA_FP = os.path.join(BASE_DIR, 'data', config['name'])
 
     if not args.onlysteps or 'standardization' in args.onlysteps:
-        data_standardization(config, DATA_FP, forceupdate=args.forceupdate)
+        data_standardization(args.config_file, DATA_FP, forceupdate=args.forceupdate)
 
-    start_year = config['start_year']
-    if start_year:
-        start_year = '01/01/{} 00:00:00Z'.format(start_year)
-    end_year = config['end_year']
-    if end_year:
-        end_year = '01/01/{} 00:00:00Z'.format(end_year)
+    startdate = config['startdate']
+    enddate = config['enddate']
     if not args.onlysteps or 'generation' in args.onlysteps:
         data_generation(args.config_file, DATA_FP,
-                        start_year=start_year,
-                        end_year=end_year,
+                        startdate=startdate,
+                        enddate=enddate,
                         forceupdate=args.forceupdate)
 
     if not args.onlysteps or 'model' in args.onlysteps:

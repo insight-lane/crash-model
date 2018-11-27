@@ -3,6 +3,7 @@ from jsonschema import validate
 import json
 import os
 import csv
+import pytz
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -87,11 +88,12 @@ def test_numeric_and_string_ids():
                             os.path.dirname(
                                 os.path.abspath(__file__))))), "standards", "crashes-schema.json"))))
 
+
 def test_date_formats():
     """
     Test various combinations of supplying dates.
     """
-    
+
     fields_date_constructed = {
         "id": "id",
         "date_complete": "date_of_crash",
@@ -100,7 +102,7 @@ def test_date_formats():
         "latitude": "lat",
         "longitude": "lng"
     }
-    
+
     # Confirm crashes without coordinates are skipped
     crashes_no_coords = [{
         "id": "A1B2C3D4E5",
@@ -108,9 +110,11 @@ def test_date_formats():
         "lat": "",
         "lng": ""
     }]
-    
-    assert len(standardize_crashes.read_standardized_fields(crashes_no_coords, fields_date_constructed, {})) == 0
-        
+
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_no_coords, fields_date_constructed, {},
+               pytz.timezone("America/New_York"))) == 0
+
     # Confirm crashes using date_complete but without a value are skipped
     crashes_no_date = [{
         "id": "A1B2C3D4E5",
@@ -118,9 +122,11 @@ def test_date_formats():
         "lat": 42.317987926802246,
         "lng": -71.06188127008645
     }]
-    
-    assert len(standardize_crashes.read_standardized_fields(crashes_no_date, fields_date_constructed, {})) == 0
-    
+
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_no_date, fields_date_constructed, {},
+        pytz.timezone("America/New_York"))) == 0
+
     # Confirm crashes using date_complete with a value are standardized
     crashes_with_date = [{
         "id": "A1B2C3D4E5",
@@ -128,9 +134,11 @@ def test_date_formats():
         "lat": 42.317987926802246,
         "lng": -71.06188127008645
     }]
-    
-    assert len(standardize_crashes.read_standardized_fields(crashes_with_date, fields_date_constructed, {})) == 1
-    
+
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_with_date, fields_date_constructed, {},
+        pytz.timezone("America/New_York"))) == 1
+
     # Confirm crashes using deconstructed date with all values are standardized
     fields_date_deconstructed = {
         "id": "id",
@@ -143,7 +151,7 @@ def test_date_formats():
         "latitude": "lat",
         "longitude": "lng"
     }
-    
+
     crashes_with_date = [{
         "id": "A1B2C3D4E5",
         "year_of_crash": "2016",
@@ -152,9 +160,51 @@ def test_date_formats():
         "lat": 42.317987926802246,
         "lng": -71.06188127008645
     }]
-    
-    assert len(standardize_crashes.read_standardized_fields(crashes_with_date, fields_date_deconstructed, {})) == 1
-    
+
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_with_date, fields_date_deconstructed, {},
+        pytz.timezone("America/New_York"))) == 1
+
+    # Confirm crashes outside of specified start & end year ranges are dropped
+    crashes_in_different_years = [{
+        "id": "1",
+        "date_of_crash": "2016-12-31T02:30:23-05:00",
+        "lat": 42.317987926802246,
+        "lng": -71.06188127008645
+    },
+        {
+        "id": "2",
+        "date_of_crash": "2017-01-01T02:30:23-05:00",
+        "lat": 42.317987926802246,
+        "lng": -71.06188127008645
+    },
+        {
+        "id": "3",
+        "date_of_crash": "2018-01-01T02:30:23-05:00",
+        "lat": 42.317987926802246,
+        "lng": -71.06188127008645
+    }]
+
+    # filter crashes prior to a start year
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_in_different_years, fields_date_constructed, {},
+        pytz.timezone("America/New_York"),
+        startdate='2017-01-01T00:00:00-05:00')) == 2
+
+    # filter crashes after an end year
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_in_different_years, fields_date_constructed, {}, pytz.timezone("America/New_York"),
+        enddate='2016-12-31')) == 1
+
+    # filter crashes after an end year
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_in_different_years, fields_date_constructed, {}, pytz.timezone("America/New_York"),
+        enddate='2017-01-01')) == 2
+
+    # filter crashes between a start and end year
+#    assert len(standardize_crashes.read_standardized_fields(
+#        crashes_in_different_years, fields_date_constructed, {}, 2016, '2017-01-01T00:00:00-05:00')) == 1
+
     # Confirm crashes using deconstructed date but missing a day are standardized with a random day
     fields_date_no_day = {
         "id": "id",
@@ -167,7 +217,7 @@ def test_date_formats():
         "latitude": "lat",
         "longitude": "lng"
     }
-    
+
     crashes_with_date = [{
         "id": "A1B2C3D4E5",
         "year_of_crash": 2017,
@@ -175,5 +225,7 @@ def test_date_formats():
         "lat": 42.317987926802246,
         "lng": -71.06188127008645
     }]
-    
-    assert len(standardize_crashes.read_standardized_fields(crashes_with_date, fields_date_no_day, {})) == 1
+
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_with_date, fields_date_no_day, {},
+        pytz.timezone("America/New_York"))) == 1

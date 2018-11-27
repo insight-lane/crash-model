@@ -1,80 +1,157 @@
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #ededed;
+    font-weight: 300;
+    color: #fff;
     margin: 0px;
-}
-
-#header {
-    width: 100%;
-    height: 60px;
-    top: 0px;
-    background-color: #7f7f7f;
+    overflow: hidden;
 }
 
 h1 {
     font-weight: normal;
-    padding-left: 40px;
-    color: #fff;
     margin: 0px;
     line-height: 60px;
+    font-size: 2.44rem;
 }
 
-#content {
-    padding-left: 40px;
+h2 {
+    font-size: 1.42rem;
+    font-weight: 500;
+    text-transform: uppercase;
 }
 
 h3 {
-    margin-top: 20px;
-    margin-bottom: 5px;
-    margin-left: 30px;
-    font-size: 1em;
-    font-weight: normal;
+    font-size: 1.26rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: 8%;
 }
 
 h4 {
-    margin-top: 5px;
-    margin-bottom: 5px;
-    font-size: 1em;
+    font-size: 1.125rem;
+    /*text-transform: uppercase;*/
     font-weight: normal;
+    margin-bottom: 10px;
+    margin-top: 35px;
 }
 
-#city_selection {
-    padding: 20px 0px 0px 2px;
-}
-
-.wrapper {
-    background-color: #fff;
-    height: 650px;
-    width: 960px;
-    margin: 20px 10px 10px 10px;
-    padding: 20px;
-}
-
-.plot {
-    box-sizing: border-box;
-    position: relative;
-    width: 900px;
-    float: left;
-    background-color: #fff;
-    margin: 10px;
-    padding-left: 10px;
+hr {
+    /*width: 95%;*/
+    margin: 7% 0 10% 0;
 }
 
 .map {
-	position: absolute;
-    margin-top: 10px;
-	width: 960px;
-	height: 600px;
+	/*position: absolute;*/
+    /*margin-top: 10px;*/
+	width: 100vw;
+	height: 100vh;
 }
 
-.input_overlay {
-	width: 80%;
+.overlay {
+    position: absolute;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 1vw;
+}
+
+.title {
+    left: 0;
+    width: 20vw;
+}
+
+.side {
+    right: -25vw;
+    width: 20vw;
+    padding-top: 60px;
+    visibility: hidden;
+}
+
+/*#segment_details {
+    width: 25vw;
+}
+*/
+.visible {
+    visibility: visible;
+    transition: 0.5s;
+    right: 0;
+}
+
+.slide_right {
+    transition: 0.5s;
+    right: -25vw;
+}
+
+.btn {
+    cursor: pointer;
+    position: absolute;
+    top: 51px;
+    right: 15px;
+    font-size: 24px;
+}
+
+.legend {
+    margin: 5% 0 2% 0;
+    overflow: hidden;
+}
+
+.legend_box {
+    width: 12%;
+    height: 15px;
+    margin: 1px;
+    float: left;
+}
+
+.risk0 {
+    background-color: #ffe0b2;
+}
+
+.risk1 {
+    background-color: #ffb74d;
+}
+
+.risk2 {
+    background-color: #ff9800;
+}
+
+.risk3 {
+    background-color: #f57c00;
+}
+
+.legend_label {
+    font-size: 0.8rem;
+    float: left;
+    margin: 0;
+}
+
+.legend_label.low {
+    margin-right: 8px;
+}
+
+.legend_label.high {
+    margin-left: 8px;
+}
+
+.model_confidence {
+    font-size: 0.8rem;
+}
+
+.filter {
+	width: 90%;
+    margin: 6% 0;
+}
+
+.historicalCrashes {
+    margin-bottom: 30px;
+}
+
+.mapboxgl-popup-content {
+    color: #000;
 }
 
 input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
     background: transparent;
+    padding: 15px 0;
 }
 
 input[type="range"]:focus {
@@ -82,36 +159,37 @@ input[type="range"]:focus {
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-    height: 3px;
+    height: 2px;
     background: #ccc;
     border: none;
-    border-radius: 3px;
+    border-radius: 2px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
    -webkit-appearance: none;
     margin-top: -6px;
     border: 1px solid #ccc;
-    height: 14px;
-    width: 14px;
+    height: 12px;
+    width: 12px;
     border-radius: 50%;
     background: #eee;
 }
 
 input[type="range"]::-moz-range-track {
-    height: 3px;
+    height: 2px;
     background: #ccc;
     border: none;
-    border-radius: 3px;
+    border-radius: 2px;
 }
 input[type="range"]::-moz-range-thumb {
     height: 12px;
     width: 12px;
-    border-radius: 50%;
+    /*border-radius: 50%;*/
+    border: none;
 }
 
 input[type="range"]::-ms-track {
-    height: 3px;
+    height: 2px;
     background: transparent;
     border-color: transparent;
     border-width: 6px 0;
@@ -143,29 +221,104 @@ input[type="range"]::-ms-thumb {
     background: linear-gradient(to right, #ffe0b2, #ffb74d, #ff9800, #f57c00);
 }
 
-.label {
-    width: 23%;
-    display: inline-block;
+li.highRiskSegment {
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+li.highRiskSegment:hover {
+    text-decoration: underline;
+}
+
+.secondary {
+    font-size: 0.8rem;
+}
+
+h2 span.secondary {
+    text-transform: none;
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+h2.segment_name {
+    cursor: pointer;
+}
+
+h2.segment_name:hover {
+    text-decoration: underline;
+}
+
+/*#prediction {
+    font-size: 1.6rem;
+    margin: 0 12px 0 0;
+    float: left;
+}
+*/
+#predChart {
+    /*float: left;*/
+}
+
+.backgroundBar {
+    fill: #666;
+}
+
+.avgLine {
+    stroke: #ccc;
+}
+
+.avgLabel {
+    fill: #fff;
+    text-anchor: middle;
+    font-size: 0.8rem;
+}
+
+.avgLabel.leftAligned {
+    text-anchor: start;
+}
+
+.avgLabel.rightAligned {
+    text-anchor: end;
+}
+
+table {
+    /*border-collapse: collapse;*/
+    margin-bottom: 20px;
+}
+
+td, th {
+    padding: 5px 0;
+}
+
+th {
+    text-align: left;
+    font-weight: 500;
+}
+
+.name {
+    padding-right: 10px;
+}
+
+.yes, .no {
     text-align: center;
-    font: 10px sans-serif;
+    padding: 5px 15px;
 }
 
-.axis {
-    font: 10px sans-serif;
+.selected {
+    background-color: #666;
+    /*color: #1a1a1a;*/
+}
+/***** Styles for Mapbox geocoder input *****/
+.mapboxgl-ctrl-geocoder {
+  border: 0;
+  border-radius: 5px;
+  position: relative;
+  top: 0;
+  width: 20vw;
+  margin-top: 5%;
 }
 
-.axis path {
-    visibility: hidden;
+.mapboxgl-ctrl-geocoder > div {
+  min-width: 100%;
+  margin-left: 0;
 }
 
-.y.axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-}
-
-#daytype-controls {
-    position: absolute;
-    right: 30px;
-    font-size: 0.8em;
-}

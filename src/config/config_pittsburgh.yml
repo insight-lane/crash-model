@@ -7,10 +7,10 @@ city_longitude: -79.9958864
 city_radius: 20
 # The folder under data where this city's data is stored
 name: pittsburgh
-# If given, limit crashes to after start_year and before end_year
+# If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-start_year: 
-end_year: 
+startdate: 
+enddate: 
 
 
 #################################################################

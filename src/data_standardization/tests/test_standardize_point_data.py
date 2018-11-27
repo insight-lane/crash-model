@@ -53,7 +53,7 @@ def test_read_file_info(tmpdir):
 
     assert result == [{
         'feature': 'test',
-        'date': '2014-09-02T09:10:00Z',
+        'date': '2014-09-02T09:10:00-04:00',
         'location': {
             'latitude': 42.37304187600046,
             'longitude': -71.09569369699966
@@ -62,7 +62,7 @@ def test_read_file_info(tmpdir):
         },
         {
             'feature': 'test',
-            'date': '2014-01-09T09:33:00Z',
+            'date': '2014-01-09T09:33:00-05:00',
             'location': {
                 'latitude': 42.374105433000466,
                 'longitude': -71.12219272199962

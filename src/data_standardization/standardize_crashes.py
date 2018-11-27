@@ -9,41 +9,56 @@ from collections import OrderedDict
 import csv
 import calendar
 import random
+import pytz
+import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
+def read_standardized_fields(raw_crashes, fields, opt_fields,
+                             timezone, startdate=None, enddate=None):
 
-def read_standardized_fields(raw_crashes, fields, opt_fields):
     crashes = {}
+    # Drop times from startdate/enddate in the unlikely event
+    # they're passed in
+    if startdate:
+        startdate = parse_date(startdate, timezone)
+        startdate = date_parser.parse(startdate).date()
+    if enddate:
+        enddate = parse_date(enddate, timezone)
+        enddate = date_parser.parse(enddate).date()
 
+    min_date = None
+    max_date = None
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
-        
+
         # skip any crashes that don't have coordinates
         if crash[fields["latitude"]] == "" or crash[fields["longitude"]] == "":
             continue
-        
+
         # construct crash date based on config settings, skipping any crashes without date
         if fields["date_complete"]:
             if not crash[fields["date_complete"]]:
                 continue
-                
+
             else:
                 crash_date = crash[fields["date_complete"]]
-            
+
         elif fields["date_year"] and fields["date_month"]:
             if fields["date_day"]:
-                crash_date = str(crash[fields["date_year"]]) + "-" + str(crash[fields["date_month"]]) + "-" + crash[fields["date_day"]]
+                crash_date = str(crash[fields["date_year"]]) + "-" + str(
+                    crash[fields["date_month"]]) + "-" + crash[fields["date_day"]]
             # some cities do not supply a day of month for crashes, randomize if so
             else:
                 available_dates = calendar.Calendar().itermonthdates(
                     crash[fields["date_year"]], crash[fields["date_month"]])
-                crash_date = str(random.choice([date for date in available_dates if date.month == crash[fields["date_month"]]]))
-                
+                crash_date = str(random.choice(
+                    [date for date in available_dates if date.month == crash[fields["date_month"]]]))
+
         # skip any crashes that don't have a date
         else:
             continue
@@ -51,24 +66,37 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
         crash_time = None
         if fields["time"]:
             crash_time = crash[fields["time"]]
-        
+
         if fields["time_format"]:
             crash_date_time = parse_date(
                 crash_date,
+                timezone,
                 crash_time,
                 fields["time_format"]
             )
-            
+
         else:
             crash_date_time = parse_date(
                 crash_date,
+                timezone,
                 crash_time
             )
-            
+
         # Skip crashes where date can't be parsed
         if not crash_date_time:
             continue
 
+        crash_day = date_parser.parse(crash_date_time).date()
+        # Drop crashes that occur outside of the range, if specified
+        if ((startdate is not None and crash_day < startdate) or
+                (enddate is not None and crash_day > enddate)):
+
+            continue
+        if min_date is None or crash_day < min_date:
+            min_date = crash_day
+        if max_date is None or crash_day > max_date:
+            max_date = crash_day
+            
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", crash_date_time),
@@ -80,6 +108,16 @@ def read_standardized_fields(raw_crashes, fields, opt_fields):
         formatted_crash = add_city_specific_fields(crash, formatted_crash,
                                                    opt_fields)
         crashes[formatted_crash["id"]] = formatted_crash
+
+    if min_date and max_date:
+        print("Including crashes between {} and {}".format(
+            min_date.isoformat(), max_date.isoformat()))
+    elif min_date:
+        print("Including crashes after {}".format(
+            min_date.isoformat()))
+    elif max_date:
+        print("Including crashes before {}".format(
+            max_date.isoformat()))
 
     return crashes
 
@@ -151,54 +189,67 @@ def add_id(csv_file, id_field):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--destination", type=str,
-                        help="destination name, e.g. boston")
-    parser.add_argument("-f", "--folder", type=str,
-                        help="path to destination's data folder")
+    parser.add_argument("-c", "--config", type=str, required=True,
+                        help="config file")
+    parser.add_argument("-d", "--datadir", type=str, required=True,
+                        help="data directory")
 
     args = parser.parse_args()
 
-    raw_path = os.path.join(args.folder, "raw/crashes")
-    if not os.path.exists(raw_path):
-        print(raw_path+" not found, exiting")
-        exit(1)
-
-    # load config for this city
-    config_file = os.path.join(BASE_FP, 'src/config',
-                               "config_"+args.destination+".yml")
+    # load config
+    config_file = args.config
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
-    dict_city_crashes = {}
-    print("searching "+raw_path+" for raw files:\n")
+    # by default standardize all available crashes
+    startdate = None
+    enddate = None
+
+    if config['startdate']:
+        startdate = str(config['startdate'])
+
+    if config['enddate']:
+        enddate = str(config['enddate'])
+
+    crash_dir = os.path.join(args.datadir, "raw/crashes")
+    if not os.path.exists(crash_dir):
+        raise SystemExit(crash_dir + " not found, exiting")
+
+    print("searching "+crash_dir+" for raw files:")
+    dict_crashes = {}
 
     for csv_file in list(config['crashes_files'].keys()):
+        csv_config = config['crashes_files'][csv_file]
 
-        if not os.path.exists(os.path.join(raw_path, csv_file)):
-            raise SystemExit(csv_file + " not found, exiting")
-        # find the config for this crash file
-        crash_config = config['crashes_files'][csv_file]
-        if crash_config is None:
-            print("- could not find config for crash file "+csv_file+", skipping")
-            continue
+        if not os.path.exists(os.path.join(crash_dir, csv_file)):
+            raise SystemExit(os.path.join(
+                crash_dir, csv_file) + " not found, exiting")
 
         add_id(
-            os.path.join(raw_path, csv_file), crash_config['required']['id'])
+            os.path.join(crash_dir, csv_file), csv_config['required']['id'])
 
-        print("processing "+csv_file)
+        print("processing {}".format(csv_file))
 
-        df_crashes = pd.read_csv(os.path.join(raw_path, csv_file), na_filter=False)
+        df_crashes = pd.read_csv(os.path.join(
+            crash_dir, csv_file), na_filter=False)
         raw_crashes = df_crashes.to_dict("records")
 
-        std_crashes = read_standardized_fields(raw_crashes,
-                            crash_config['required'], crash_config['optional'])
-        print("- {} crashes loaded with standardized fields, checking for specific fields\n".format(len(std_crashes)))
-        dict_city_crashes.update(std_crashes)
+        std_crashes = read_standardized_fields(
+            raw_crashes,
+            csv_config['required'],
+            csv_config['optional'],
+            pytz.timezone(config['timezone']),
+            startdate,
+            enddate
+        )
 
-    print("all crash files processed")
-    print("- {} {} crashes loaded, validating against schema".format(len(dict_city_crashes), args.destination))
+        print("{} crashes loaded with standardized fields, checking for specific fields".format(
+            len(std_crashes)))
+        dict_crashes.update(std_crashes)
+
+    print("{} crashes loaded, validating against schema".format(len(dict_crashes)))
 
     schema_path = os.path.join(BASE_FP, "standards", "crashes-schema.json")
-    list_city_crashes = list(dict_city_crashes.values())
-    crashes_output = os.path.join(args.folder, "standardized/crashes.json")
-    validate_and_write_schema(schema_path, list_city_crashes, crashes_output)
+    list_crashes = list(dict_crashes.values())
+    crashes_output = os.path.join(args.datadir, "standardized/crashes.json")
+    validate_and_write_schema(schema_path, list_crashes, crashes_output)
