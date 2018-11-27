@@ -176,6 +176,10 @@ data_source:
     notes: 
     # Feature is categorical (f_cat) or continuous (f_cont)
     feat: 
+    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' 
+    feat_agg: 
+    # if latest, the column name where the value can be found
+    value:
 
 # If using legacy 'week' predictions:
 # specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set
