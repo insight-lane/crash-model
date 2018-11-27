@@ -161,7 +161,7 @@ concern_files:
 
 # Additional data sources
 data_source:
-  - name: parking_tickets
+  - name: 
     filename: parking_tickets_dummy_file_1.csv
     address: 
     date: 
