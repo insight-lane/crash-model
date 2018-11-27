@@ -411,7 +411,8 @@ def clean_ways(orig_file, DOC_FP):
         # Write these to file for lookup
         if way_line['properties']['highway'] not in list(highway_keys.keys()):
             highway_keys[way_line['properties']['highway']] = len(highway_keys)
-        if way_line['properties']['cycleway'] and \
+        if 'cycleway' in way_line['properties'] and \
+           way_line['properties']['cycleway'] and \
            way_line['properties']['cycleway'] not in list(cycleway_keys.keys()):
             cycleway_keys[way_line['properties']['cycleway']] = len(cycleway_keys)
 
@@ -430,7 +431,8 @@ def clean_ways(orig_file, DOC_FP):
             'lanes': int(lanes),
             'hwy_type': highway_keys[way_line['properties']['highway']],
             'cycleway_type': cycleway_keys[way_line['properties']['cycleway']]
-                if way_line['properties']['cycleway']
+                if 'cycleway' in way_line['properties'] and \
+                    way_line['properties']['cycleway']
                 else 0,
             'osm_speed': speed,
             'signal': 0,
