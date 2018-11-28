@@ -26,10 +26,8 @@ def make_feature_list(config, datadir, waze=False):
     # Additional features can be added if you're using an extra map
     # beyond open street map
     feat_types = {
-        'f_cat': ['width'],
-        'f_cont': ['lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
-                   'width_per_lane'
-        ]
+        'f_cat': ['width', 'cycleway_type', 'signal', 'oneway'],
+        'f_cont': ['lanes', 'hwy_type', 'osm_speed', 'width_per_lane']
     }
 
     # Features can also be added if additional data sources are given

@@ -158,6 +158,8 @@ def simple_get_roads(config):
     print("searching nominatim for " + str(config['city']) + " polygon")
     polygon_pos, polygon = find_osm_polygon(config['city'])
 
+    ox.settings.useful_tags_path.append('cycleway')
+
     if (polygon_pos is not None):
         # Check to see if polygon needs to be expanded to include other points
         polygon = expand_polygon(polygon, os.path.join(
@@ -243,8 +245,10 @@ def clean_and_write(ways_file, nodes_file,
         None, writes a geojson file
     """
     cleaned_ways = clean_ways(ways_file, DOC_FP)
+
     nodes = fiona.open(nodes_file)
     nodes, cleaned_ways = get_connections(cleaned_ways, nodes)
+
     write_geojson(cleaned_ways, nodes,
                   result_file)
 
@@ -301,22 +305,22 @@ def get_connections(ways, nodes):
     return nodes_with_streets, ways
 
 
-def write_highway_keys(DOC_FP, highway_keys):
+def write_keys(DOC_FP, name, keys):
     """
-    Since we're creating a numeric highway key, we'd like to know what
+    Since we're creating numeric keys, we'd like to know what
     the numbers correspond to, so write to file the mapping from key
-    to open street map highway type
+    to open street map features that are strings
     Args:
         DOC_FP - the directory to write the file
-        highway_keys - a dict associating key with string type
+        keys - a dict associating key with string type
     """
     # Write highway keys to docs if needed for reference
     if not os.path.exists(DOC_FP):
         os.makedirs(DOC_FP)
-    with open(os.path.join(DOC_FP, 'highway_keys.csv'), 'w') as f:
+    with open(os.path.join(DOC_FP, name + '_keys.csv'), 'w') as f:
         w = csv.writer(f)
         w.writerow(['type', 'value'])
-        for item in highway_keys.items():
+        for item in keys.items():
             w.writerow(item)
 
 
@@ -383,8 +387,10 @@ def clean_ways(orig_file, DOC_FP):
 
     way_lines = fiona.open(orig_file)
 
-    highway_keys = {}
+    highway_keys = {None: 0}
+    cycleway_keys = {}
     results = []
+
     for way_line in way_lines:
 
         speed = get_speed(way_line['properties']['maxspeed']) \
@@ -398,9 +404,15 @@ def clean_ways(orig_file, DOC_FP):
         else:
             lanes = 0
 
-        # Need to have an int highway field
+        # All fields need to be int
+        # Make dicts for the fields that aren't to track the value
+        # Write these to file for lookup
         if way_line['properties']['highway'] not in list(highway_keys.keys()):
             highway_keys[way_line['properties']['highway']] = len(highway_keys)
+        if 'cycleway' in way_line['properties'] and \
+           way_line['properties']['cycleway'] and \
+           way_line['properties']['cycleway'] not in list(cycleway_keys.keys()):
+            cycleway_keys[way_line['properties']['cycleway']] = len(cycleway_keys)
 
         # Width per lane
         width_per_lane = 0
@@ -416,6 +428,10 @@ def clean_ways(orig_file, DOC_FP):
             'width': width,
             'lanes': int(lanes),
             'hwy_type': highway_keys[way_line['properties']['highway']],
+            'cycleway_type': cycleway_keys[way_line['properties']['cycleway']]
+                if 'cycleway' in way_line['properties'] and \
+                    way_line['properties']['cycleway']
+                else 0,
             'osm_speed': speed,
             'signal': 0,
             'oneway': oneway,
@@ -423,7 +439,8 @@ def clean_ways(orig_file, DOC_FP):
         })
         results.append(way_line)
 
-    write_highway_keys(DOC_FP, highway_keys)
+    write_keys(DOC_FP, 'highway', highway_keys)
+    write_keys(DOC_FP, 'cycleway', cycleway_keys)
     return results
 
 

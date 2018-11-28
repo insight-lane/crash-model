@@ -16,13 +16,11 @@ def test_make_feature_list(tmpdir):
         config = yaml.safe_load(f)
 
     assert config == {
-        'f_cat': ['width'],
+        'f_cat': ['width', 'cycleway_type', 'signal', 'oneway'],
         'f_cont': [
             'lanes',
             'hwy_type',
             'osm_speed',
-            'signal',
-            'oneway',
             'width_per_lane'
         ]
     }
@@ -31,13 +29,11 @@ def test_make_feature_list(tmpdir):
         config = yaml.safe_load(f)
 
     assert config == {
-        'f_cat': ['width', 'jam'],
+        'f_cat': ['width', 'cycleway_type', 'signal', 'oneway', 'jam'],
         'f_cont': [
             'lanes',
             'hwy_type',
             'osm_speed',
-            'signal',
-            'oneway',
             'width_per_lane',
             'jam_percent'
         ]
@@ -56,6 +52,9 @@ def test_make_feature_list(tmpdir):
     assert config == {
         'f_cat': [
             'width',
+            'cycleway_type',
+            'signal',
+            'oneway',
             'SPEEDLIMIT',
             'Struct_Cnd',
             'Surface_Tp',
@@ -65,8 +64,6 @@ def test_make_feature_list(tmpdir):
             'lanes',
             'hwy_type',
             'osm_speed',
-            'signal',
-            'oneway',
             'width_per_lane',
             'AADT'
         ]
