@@ -120,7 +120,7 @@ def test_read_file_info(tmpdir):
 
     assert result == [{
         'feature': 'aggtest',
-        'date': '2012-03-15T00:00:00Z',
+        'date': '2012-03-14T20:00:00-04:00',
         'location': {
             'latitude': 39.74391,
             'longitude': -75.22693000000001
