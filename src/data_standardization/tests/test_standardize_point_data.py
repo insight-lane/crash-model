@@ -130,7 +130,7 @@ def test_read_file_info(tmpdir):
         },
         {
         'feature': 'aggtest',
-        'date': '2012-05-02T00:00:00Z',
+        'date': '2012-05-01T20:00:00-04:00',
         'location': {
             'latitude': 39.90415873,
             'longitude': -75.19348751
