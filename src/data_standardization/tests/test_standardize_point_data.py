@@ -35,6 +35,7 @@ def test_read_file_info(tmpdir):
     tmppath = create_test_csv(tmpdir, 'test.csv')
 
     config = {
+        'timezone': 'America/New_York',
         'data_source': [{
             'name': 'test',
             'filename': 'test.csv',
@@ -42,8 +43,7 @@ def test_read_file_info(tmpdir):
             'date': 'Ticket Issue Date',
             'time': 'Issue Time',
             'category': 'Violation Description'
-        }],
-        'timezone': 'America/New_York'
+        }]
     }
     
     standardize_point_data.read_file_info(config, tmppath)
@@ -100,6 +100,7 @@ def test_read_file_info(tmpdir):
     tmppath = create_feature_aggr_test_csv(tmpdir, 'test2.csv')
 
     config = {
+        'timezone': 'America/New_York',
         'data_source': [{
             'name': 'aggtest',
             'filename': 'test2.csv',
