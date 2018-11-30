@@ -191,7 +191,8 @@ def test_add_point_based_features(tmpdir):
         non_inters, inters, outputfile, featsfile,
         additional_feats_filename=additional_feats_file, forceupdate=True)
     assert non_inters[4]['properties']['parking_tickets'] == 2
-    
+    assert non_inters[4]['properties']['traffic_volume'] == 1
+
     expected = expected + [{
         "feature": "parking_tickets",
         "date": "2016-05-17T00:00:00Z",
