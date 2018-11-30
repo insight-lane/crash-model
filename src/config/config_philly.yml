@@ -7,12 +7,15 @@ city_latitude: 39.9526
 city_longitude: -75.1652
 # Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
 city_radius: 15
-# If given, limit crashes to after start_year and before end_year
-start_year: 2011
-end_year: 2015
 
-time_target: [51, 2014]
-level: segment
+# If given, limit crashes to after startdate and no later than enddate
+startdate: 2011-01-01
+enddate: 2015-01-01
+
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
+level: 'segment'
+
+timezone: America/New_York
 ##############################################################################
 # Configuration for data standardization
 # crash file configurations
@@ -49,7 +52,7 @@ data_source:
     # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
     feat_agg: latest
     # if latest, the desired value 
-    value: RECORDNUM 
+    value: AADT 
   - name: DVRPCWalkVolume
     filename: DVRPC_Pedestrian_Counts.csv
     latitude: LATITUDE 
@@ -61,7 +64,7 @@ data_source:
     # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
     feat_agg: latest
     # if latest, the desired value 
-    value: RECORDNUM 
+    value: AADP 
   - name: DVRPCBikeVolume
     filename: DVRPC_Bicycle_Counts.csv
     latitude: LATITUDE 
@@ -73,9 +76,14 @@ data_source:
     # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
     feat_agg: latest
     # if latest, the desired value 
-    value: RECORDNUM 
+    value: AADB 
 
-# f_cont:
-# - DVRPCTrafficVolume
-# - DVRPCWalkVolume
-# - DVRPCBikeVolume
+additional_features:
+    f_cont: DVRPCTrafficVolume DVRPCWalkVolume DVRPCBikeVolume
+
+f_cont:
+- DVRPCTrafficVolume
+- DVRPCWalkVolume
+- DVRPCBikeVolume
+
+process: True

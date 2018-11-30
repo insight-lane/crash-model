@@ -85,7 +85,7 @@ def make_config_file(yml_file, city, timezone, folder, crash, concern, supplemen
                 "    time: \n" +
                 "    category: \n" +
                 "    notes: \n" +
-                "    # Feature is categorical (f_cat) or continuous (f_cont)\n" +
+                "    # Feature is categorical (f_cat) or continuous (f_cont) \n" +
                 "    feat: \n" + 
                 "    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
                 "    feat_agg: \n"
