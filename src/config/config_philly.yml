@@ -1,0 +1,89 @@
+# City name
+city: Philadelphia, Pennslyvania, USA
+# The folder under data where this city's data is stored
+name: philly
+# City centerpoint latitude & longitude
+city_latitude: 39.9526
+city_longitude: -75.1652
+# Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
+city_radius: 15
+
+# If given, limit crashes to after startdate and no later than enddate
+startdate: 2011-01-01
+enddate: 2015-01-01
+
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
+level: 'segment'
+
+timezone: America/New_York
+##############################################################################
+# Configuration for data standardization
+# crash file configurations
+crashes_files:
+    vztest.csv:
+        required:
+            id: OBJECTID
+            latitude: LATITUDE
+            longitude: LONGITUDE
+            date_complete: 
+            date_year: CRASH_YEAR
+            date_month: CRASH_MONTH
+            date_day:
+            time: 
+            time_format: 
+        optional:
+            intersection: INTERSECT_TYPE
+
+##############################################################################
+
+# Additional city-specific features can be added from maps by setting
+# these variables below
+# additional_features: DVRPCTrafficVolume DVRPCWalkVolume DVRPCBikeVolume
+
+data_source: 
+  - name: DVRPCTrafficVolume 
+    filename: DVRPC_Traffic_Counts.csv
+    latitude: LATITUDE 
+    longitude: LONGITUDE
+    date: SETDATE
+    notes: 
+    # Feature is categorical (f_cat) or continuous (f_cont)\n" +
+    feat: f_cont
+    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
+    feat_agg: latest
+    # if latest, the desired value 
+    value: AADT 
+  - name: DVRPCWalkVolume
+    filename: DVRPC_Pedestrian_Counts.csv
+    latitude: LATITUDE 
+    longitude: LONGITUDE
+    date: SETDATE
+    notes: 
+    # Feature is categorical (f_cat) or continuous (f_cont)\n" +
+    feat: f_cont
+    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
+    feat_agg: latest
+    # if latest, the desired value 
+    value: AADP 
+  - name: DVRPCBikeVolume
+    filename: DVRPC_Bicycle_Counts.csv
+    latitude: LATITUDE 
+    longitude: LONGITUDE
+    date: SETDATE
+    notes: 
+    # Feature is categorical (f_cat) or continuous (f_cont)\n" +
+    feat: f_cont
+    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
+    feat_agg: latest
+    # if latest, the desired value 
+    value: AADB 
+
+additional_features:
+    f_cont: DVRPCTrafficVolume DVRPCWalkVolume DVRPCBikeVolume
+
+f_cont:
+- DVRPCTrafficVolume
+- DVRPCWalkVolume
+- DVRPCBikeVolume
+
+process: True

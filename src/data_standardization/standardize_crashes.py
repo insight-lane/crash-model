@@ -17,7 +17,6 @@ CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
-
 def read_standardized_fields(raw_crashes, fields, opt_fields,
                              timezone, startdate=None, enddate=None):
 
@@ -119,6 +118,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
     elif max_date:
         print("Including crashes before {}".format(
             max_date.isoformat()))
+
     return crashes
 
 
