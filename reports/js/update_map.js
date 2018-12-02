@@ -59,14 +59,11 @@ d3.json("preds_final.geojson", function(data) {
 				visibility: 'none'
 			},
 			paint: {
-				'circle-radius': {
-					property: 'total_crashes',
-					type: 'exponential',
-					stops: [
-						[1, 3],
-						[maxCrashes, 20]
-					]
-				},
+				'circle-radius': [
+					'interpolate', ['linear'], ['zoom'],
+					12, ['interpolate', ['linear'], ['get', 'total_crashes'], 1, 3, maxCrashes, 40],
+					18, ['interpolate', ['linear'], ['get', 'total_crashes'], 1, 10, maxCrashes, 120],
+					],
 				'circle-color': '#d500f9',
 				'circle-stroke-color': '#9e00c5',
 				'circle-opacity': 0.8
@@ -241,49 +238,49 @@ function updateBarChart(prediction) {
 		.style("fill", riskColor(prediction));
 }
 
-function updateFeatureImportances(segmentData) {
-	d3.selectAll("#featImportancesTbl td").classed("selected", false);
+// function updateFeatureImportances(segmentData) {
+// 	d3.selectAll("#featImportancesTbl td").classed("selected", false);
 
-	if(segmentData.AADT >= 10000) {
-		d3.select("#featImportancesTbl .feature.first td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.first td.no").classed("selected", true);
-	}
+// 	if(segmentData.AADT >= 10000) {
+// 		d3.select("#featImportancesTbl .feature.first td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.first td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.AADT <= 1000) {
-		d3.select("#featImportancesTbl .feature.second td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.second td.no").classed("selected", true);
-	}
+// 	if(segmentData.AADT <= 1000) {
+// 		d3.select("#featImportancesTbl .feature.second td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.second td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.intersection === 1) {
-		d3.select("#featImportancesTbl .feature.third td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.third td.no").classed("selected", true);
-	}
+// 	if(segmentData.intersection === 1) {
+// 		d3.select("#featImportancesTbl .feature.third td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.third td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.F_F_CLASS <= 3) {
-		d3.select("#featImportancesTbl .feature.fourth td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.fourth td.no").classed("selected", true);
-	}
+// 	if(segmentData.F_F_CLASS <= 3) {
+// 		d3.select("#featImportancesTbl .feature.fourth td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.fourth td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.SPEEDLIMIT25 === 1) {
-		d3.select("#featImportancesTbl .feature.fifth td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.fifth td.no").classed("selected", true);
-	}
-}
+// 	if(segmentData.SPEEDLIMIT25 === 1) {
+// 		d3.select("#featImportancesTbl .feature.fifth td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.fifth td.no").classed("selected", true);
+// 	}
+// }
 
 
-function populateFeatureImportancesTbl(data) {
+// function populateFeatureImportancesTbl(data) {
 
-}
+// }
 
 
 
