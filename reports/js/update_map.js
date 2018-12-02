@@ -67,9 +67,9 @@ d3.json("preds_final.geojson", function(data) {
 						[maxCrashes, 20]
 					]
 				},
-				'circle-color': '#fff',
-				'circle-stroke-color': '#fff',
-				'circle-opacity': 0.5
+				'circle-color': '#d500f9',
+				'circle-stroke-color': '#9e00c5',
+				'circle-opacity': 0.8
 			},
 		}, 'admin-2-boundaries-dispute');
 
