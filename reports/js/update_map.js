@@ -42,6 +42,7 @@ d3.json("preds_final.geojson", function(data) {
 	d3.json("crashes.json", function(data) {
 		// load in standardized crash json and gets total number of crashes by location
 		var summedData = totalCrashesByLocation(data);
+		console.log(summedData);
 		var maxCrashes = d3.max(summedData, function(d) { return d.value;});
 
 		// then convert the aggregated json into a geojson so it can be displayed on map
@@ -93,12 +94,11 @@ d3.json("preds_final.geojson", function(data) {
 function totalCrashesByLocation(json) {
 	json.forEach(function(crash) {
 		crash.key = crash.location.longitude + "|" + crash.location.latitude;
-		crash.n = 1;
 	})
 
 	var data = d3.nest()
 		.key(function(d) { return d.key; })
-		.rollup(function(d) { return d3.sum(d, function(g) { return g.n; }); })
+		.rollup(function(leaves) { return leaves.length; })
 		.entries(json);
 
 	return data;
