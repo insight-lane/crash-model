@@ -92,15 +92,13 @@ d3.json("preds_final.geojson", function(data) {
 })
 
 function totalCrashesByLocation(json) {
-	json.forEach(function(crash) {
-		crash.key = crash.location.longitude + "|" + crash.location.latitude;
-	})
 
 	var data = d3.nest()
-		.key(function(d) { return d.key; })
+		.key(function(crash) { return crash.location.longitude + "|" + crash.location.latitude; })
+		// .map(json, function(d) { return d.dateOccurred;})
 		.rollup(function(leaves) { return leaves.length; })
 		.entries(json);
-
+console.log(data);
 	return data;
 }
 
