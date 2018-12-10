@@ -91,7 +91,17 @@ def map_segments(datadir, filename):
         'osm_elements.geojson'
     )
 
-    road_segments, _ = util.get_roads_and_inters(osm_file)
+    road_segments, inters = util.get_roads_and_inters(osm_file)
+
+    # Get roads_and_inters returns elements that have shapely geometry
+    # In order to output the unchanged points back out at the end,
+    # Need to convert to geojson
+    # This is something that should be addressed
+    inters = [{'properties': x['properties'], 'geometry': {
+        'type': 'Point',
+        'coordinates': [x['geometry'].x, x['geometry'].y]
+    }} for x in inters]
+    
     roads, roads_index = util.index_segments(
         road_segments, geojson=True, segment=True)
     road_buffers = []
@@ -151,7 +161,7 @@ def map_segments(datadir, filename):
                     'properties': properties
             })
 
-    results = util.prepare_geojson(updated_roads)
+    results = util.prepare_geojson(updated_roads + inters)
 
     with open(osm_file, 'w') as outfile:
         geojson.dump(results, outfile)
