@@ -79,6 +79,7 @@ def map_segments(datadir, filename):
 
     # Only look at jams for now
     items = [get_linestring(x) for x in items if x['eventType'] == 'jam']
+
     items = util.reproject_records(items)
 
     # Get the total number of snapshots in the waze data
@@ -177,7 +178,16 @@ def map_segments(datadir, filename):
 
 
 def make_map(filename, datadir):
-
+    """
+    Turns a json file into a geojson file of linestrings
+    Used mainly for visualization/debugging
+    It is not a simplified set of linestrings, but rather a
+    linestring for each jam instance (even if multiple jam
+    instances are on the same segment)
+    Args:
+        filename - input json file
+        datadir - directory to write the waze.geojson file out
+    """
     items = json.load(open(filename))
     geojson_items = []
     for item in items:
