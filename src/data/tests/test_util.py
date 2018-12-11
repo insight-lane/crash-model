@@ -185,7 +185,6 @@ def test_prepare_geojson():
         }],
         "type": "FeatureCollection"
     }
-    assert results == expected
 
     expected_coords = [
         [
@@ -202,8 +201,6 @@ def test_prepare_geojson():
             [-71.095034, 42.30580199999999]
         ]
     ]
-    print(actual_coords[0])
-    print(expected_coords[0])
 
     # assert almost equals in case of small precision differences
     np.testing.assert_almost_equal(actual_coords[0][0], expected_coords[0][0])
