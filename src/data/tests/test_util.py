@@ -203,7 +203,7 @@ def test_prepare_geojson():
     ]
 
     # assert almost equals in case of small precision differences
-    np.testing.assert_almost_equal(actual_coords[0][0], expected_coords[0][0])
+    print(actual_coords)
     for i in range(actual_coords):
         for j in range(actual_coords[i]):
             np.testing.assert_almost_equal(
