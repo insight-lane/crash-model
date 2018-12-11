@@ -203,8 +203,8 @@ def test_prepare_geojson():
     ]
 
     # assert almost equals in case of small precision differences
-    for i in range(actual_coords):
-        for j in range(actual_coords[i]):
+    for i in range(len(actual_coords)):
+        for j in range(len(actual_coords[i])):
             np.testing.assert_almost_equal(
                 actual_coords[i][j], expected_coords[i][j])
 
@@ -263,7 +263,6 @@ def test_output_from_shapes(tmpdir):
     # Read in the output, and just validate a couple of coordinates
     with open(path) as f:
         items = geojson.load(f)
-        print(len(items))
 
         assert items['features'][0]['geometry']['type'] == 'Polygon'
         np.testing.assert_almost_equal(
