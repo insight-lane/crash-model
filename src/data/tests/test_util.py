@@ -1,10 +1,10 @@
 from .. import util
 import os
 from shapely.geometry import Point
-from shapely.ops import unary_union
 import pyproj
 import fiona
 import geojson
+import numpy as np
 
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
@@ -131,6 +131,7 @@ def test_make_schema():
     assert result_schema == {'geometry': 'Point', 'properties':
                              {'X': 'str', 'NAME': 'str'}}
 
+
 def test_prepare_geojson():
     records = [{
         'geometry': {
@@ -154,8 +155,11 @@ def test_prepare_geojson():
         'properties': {'id': 2}
     }]
     results = util.prepare_geojson(records)
+    actual_coords = results['features'][0]['geometry']['coordinates']
+    actual_properties = results['features'][0]['properties']
+    assert actual_properties == {"id": 2}
 
-    assert results == {
+    expected = {
         "features": [{
             "geometry": {
                 "coordinates": [
@@ -181,6 +185,32 @@ def test_prepare_geojson():
         }],
         "type": "FeatureCollection"
     }
+    assert results == expected
+
+    expected_coords = [
+        [
+            [-71.09501393541515, 42.30567003680977],
+            [-71.095034, 42.30580199999999]
+        ],
+        [
+            [-71.095034, 42.30580199999999],
+            [-71.09489394615605, 42.30571887587566]
+        ],
+        [
+            [-71.09507331122536, 42.30593152960553],
+            [-71.09507, 42.30591099999999],
+            [-71.095034, 42.30580199999999]
+        ]
+    ]
+    print(actual_coords[0])
+    print(expected_coords[0])
+
+    # assert almost equals in case of small precision differences
+    np.testing.assert_almost_equal(actual_coords[0][0], expected_coords[0][0])
+    for i in range(actual_coords):
+        for j in range(actual_coords[i]):
+            np.testing.assert_almost_equal(
+                actual_coords[i][j], expected_coords[i][j])
 
 
 def test_get_center_point():
