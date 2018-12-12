@@ -24,7 +24,6 @@ def write_default_features(f, waze=False, supplemental=[],
     args:
         f - file handle
     """
-    import ipdb; ipdb.set_trace()
 
     # To change the default features, modify this data structure
     osm = {
