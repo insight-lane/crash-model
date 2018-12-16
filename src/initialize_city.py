@@ -111,8 +111,8 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "city: {}\n".format(city) +
         "# City centerpoint latitude & longitude (default geocoded values set)\n" +
         "city_latitude: {}\n".format(address[1]) +
-        "city_longitude: {}\n".format(address[2]) +
-        "# City's time zone: defaults to the local time zone of computer initializing the city's config file\n\n" +
+        "city_longitude: {}\n\n".format(address[2]) +
+        "# City's time zone: defaults to the local time zone of computer initializing the city's config file\n" +
         "timezone: {}\n".format(timezone) +
         "# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)\n" +
         "city_radius: 20\n\n" +
