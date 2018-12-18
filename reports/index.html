@@ -186,6 +186,49 @@
 				map.getCanvas().style.cursor = '';
 			});
 
+
+			map.addLayer({
+				id: 'crashes',
+				type: 'circle',
+				source: {
+					type: 'geojson',
+					data: 'crashes_rollup.geojson'
+				},
+				layout: {
+					visibility: 'none'
+				},
+				paint: {
+					'circle-radius': [
+						'interpolate', ['linear'], ['zoom'],
+						12, ['interpolate', ['linear'], ['get', 'total_crashes'], 1, 3, 100, 40],
+						18, ['interpolate', ['linear'], ['get', 'total_crashes'], 1, 10, 100, 120],
+						],
+
+					// 'circle-radius': 5,
+					'circle-color': '#d500f9',
+					'circle-stroke-color': '#9e00c5',
+					'circle-opacity': 0.8
+				},
+			}, 'admin-2-boundaries-dispute');
+
+			map.on('click', 'crashes', function(e) {
+				var coordinates = e.features[0].geometry.coordinates.slice();
+				var crashes = e.features[0].properties.total_crashes;
+				// console.log(e.features[0].properties);
+				new mapboxgl.Popup()
+					.setLngLat(coordinates)
+					.setHTML(buildCrashPopupString(e.features[0].properties))
+					.addTo(map);
+			});
+
+			map.on('mouseenter', 'crashes', function() {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'crashes', function() {
+				map.getCanvas().style.cursor = '';
+			});
+
 			updateGeocoderProximity();
 		});
 
@@ -211,6 +254,16 @@
 				case "Australia":
 					return "au";
 					break;
+			}
+		}
+
+		function buildCrashPopupString(crashObj) {
+			console.log(crashObj.crash_dates);
+			if(crashObj.total_crashes === 1) {
+				return "1 crash";
+			}
+			else {
+				return crashObj.total_crashes + " crashes";
 			}
 		}
 	</script>
