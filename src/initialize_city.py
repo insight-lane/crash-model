@@ -149,6 +149,8 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "      time_format: \n"+
         "    optional:\n" +
         "      summary: \n" +
+        "      # If the crash file doesn't have a lat/lon, you must give the address field\n" +
+        "      # and you will need to run the geocode_batch script - see the README\n" +
         "      address: \n" +
         "      vehicles: \n" +
         "      bikes: \n\n"
