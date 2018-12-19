@@ -258,12 +258,14 @@
 		}
 
 		function buildCrashPopupString(crashObj) {
-			console.log(crashObj.crash_dates);
+			console.log(crashObj.crash_dates.split(','));
 			if(crashObj.total_crashes === 1) {
-				return "1 crash";
+				return "1 crash:<ul><li>" + crashObj.crash_dates + "</li></ul>";
 			}
 			else {
-				return crashObj.total_crashes + " crashes";
+				var crash_string = "<ul><li>" + crashObj.crash_dates.split(',').join('</li><li>') + "</li></ul>";
+				// console.log(crash_string);
+				return crashObj.total_crashes + " crashes:" + crash_string;
 			}
 		}
 	</script>
