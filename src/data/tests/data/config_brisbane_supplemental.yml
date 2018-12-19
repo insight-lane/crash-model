@@ -42,6 +42,8 @@ crashes_files:
       time_format: 
     optional:
       summary: 
+      # If the crash file doesn't have a lat/lon, you must give the address field
+      # and you will need to run the geocode_batch script - see the README
       address: 
       vehicles: 
       bikes: 
