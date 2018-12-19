@@ -11,6 +11,7 @@ import argparse
 import yaml
 from .model_utils import format_crash_data
 from .model_classes import Indata, Tuner, Tester
+from data.util import get_feature_list
 # import sklearn.linear_model as skl
 
 # all model outputs must be stored in the "data/processed/" directory
@@ -115,8 +116,7 @@ def get_features(config, data, datadir):
     Get features from the feature list created during data generation
     """
 
-    with open(os.path.join(datadir, 'features.yml')) as f:
-        features = yaml.safe_load(f)
+    features = get_feature_list(config)
 
     # segment chars
     # Dropping continuous features that don't exist
