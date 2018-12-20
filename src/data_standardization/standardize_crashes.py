@@ -21,7 +21,8 @@ BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
 
 def read_standardized_fields(raw_crashes, fields, opt_fields,
-                             timezone, datadir, startdate=None, enddate=None):
+                             timezone, datadir, city,
+                             startdate=None, enddate=None):
 
     crashes = {}
     # Drop times from startdate/enddate in the unlikely event
@@ -36,6 +37,8 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
     min_date = None
     max_date = None
 
+    cached_addresses = {}
+
     if (not fields['latitude'] or not fields['longitude']):
         if 'address' in opt_fields and opt_fields['address']:
             # load cache for geocode lookup
@@ -46,6 +49,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
                     filename=os.path.join(
                         datadir, 'processed', 'geocoded_addresses.csv'))
             else:
+
                 raise SystemExit(
                     "Need to geocode addresses before standardizing crashes")
         else:
@@ -62,8 +66,12 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
         lon = crash[fields['longitude']] if fields['longitude'] else None
 
         if not lat or not lon:
+
             # skip any crashes that don't have coordinates
-            address = crash[opt_fields['address']] + ' ' + config['city']
+            if 'address' not in opt_fields or opt_fields['address'] not in crash:
+                continue
+
+            address = crash[opt_fields['address']] + ' ' + city
 
             # If we have an address, look it up in the geocoded cache
             if address in cached_addresses:
@@ -155,7 +163,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             max_date.isoformat()))
 
     # Making sure we have enough entries with lat/lon to continue
-    if no_geocoded_count/i > .9:
+    if i > 0 and no_geocoded_count/i > .9:
         raise SystemExit("Not enough geocoded addresses found, exiting")
     return crashes
 
@@ -278,6 +286,7 @@ if __name__ == '__main__':
             csv_config['optional'],
             pytz.timezone(config['timezone']),
             args.datadir,
+            config['city'],
             startdate,
             enddate
         )
