@@ -758,4 +758,9 @@ def get_feature_list(config):
         if 'continuous' in additional and additional['continuous']:
             feat_types['f_cont'] += additional['continuous'].split()
 
+    # Add point-based features
+    if 'data_source' in config and config['data_source']:
+        for additional in config['data_source']:
+            feat_types[additional['feat']].append(additional['name'])
+
     return feat_types

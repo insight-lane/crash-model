@@ -14,11 +14,11 @@ name: somerville
 
 # If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-startdate: 
-enddate: 
+startdate:
+enddate:
 
 # The type of predictions to generate, 'segment' is default, 'week' is legacy
-level: 'segment'
+level: segment
 
 #################################################################
 # Configuration for data standardization
@@ -28,29 +28,29 @@ crashes_files:
   Motor_Vehicle_Crash_Reports.csv:
     required:
       id: ID
-      latitude: 
-      longitude: 
+      latitude:
+      longitude:
       # If date supplied in single column:
       date_complete: Date
       # If date is separated into year/month/day:
-      date_year: 
-      date_month: 
+      date_year:
+      date_month:
       # Leave date_day empty if not available
-      date_day: 
+      date_day:
       # If time is available and separate from date:
-      time: 
+      time:
       # If time specified, time_format is one of:
       # default (HH:MM:SS)
       # seconds (since midnight)
       # military (HHMM)
-      time_format: 
+      time_format:
     optional:
-      summary: 
+      summary:
       # If the crash file doesn't have a lat/lon, you must give the address field
       # and you will need to run the geocode_batch script - see the README
       address: Location
-      vehicles: 
-      bikes: 
+      vehicles:
+      bikes:
 
 # If using legacy 'week' predictions:
 # specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set

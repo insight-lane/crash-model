@@ -37,10 +37,12 @@ def add_feature(filename, feat_info):
 
     # If the feature set doesn't exist, add it
     if feat_set not in config:
-        config[feat_set] = {}
+        config.insert(
+            len(config), feat_set, ruamel.yaml.comments.CommentedMap())
+
     # if the feat_type doesn't exist, add it
     if feat_type not in config[feat_set]:
-        config[feat_set][feat_type] = feat_type
+        config[feat_set][feat_type] = {}
     # if the feature does not exist, add it
     if feat not in config[feat_set][feat_type]:
         config[feat_set][feat_type][feat] = feat_name
