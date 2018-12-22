@@ -53,14 +53,8 @@ if __name__ == '__main__':
     recreate = False
     outputdir = city.split(',')[0]
     additional_features = None
-    if 'extra_map' in list(config.keys()) and config['extra_map']:
-        # Require additional features and additional shapefile in 3857 proj
-        if 'additional_features' not in list(config.keys()) \
-           or config['additional_features'] is None:
-            sys.exit("If extra_map is given, additional_features " +
-                     "are required.")
-
-        extra_map = config['extra_map']
+    if 'additional_map_features' in config and config['additional_map_features']:
+        extra_map = config['additional_map_features']['extra_map']
 
     # Whether to regenerate maps from open street map
     if args.forceupdate:

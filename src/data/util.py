@@ -722,43 +722,22 @@ def get_feature_list(config):
     is here
     Args:
         Config - the city's config file
-        waze - whether or not we're including waze data
     """
 
     # Features drawn from open street maps
     feat_types = {'f_cat': [], 'f_cont': []}
 
-    if 'openstreetmap_features' in config:
-        if 'categorical' in config['openstreetmap_features']:
-            feat_types['f_cat'] += [x for x in config[
-                'openstreetmap_features']['categorical'].keys()]
-            feat_types['f_cont'] += [x for x in config[
-                'openstreetmap_features']['continuous'].keys()]
+    # Run through the possible feature types
+    for feat_type in ['openstreetmap_features',
+                      'waze_features', 'additional_map_features']:
+        if feat_type in config:
+            if 'categorical' in config[feat_type]:
+                feat_types['f_cat'] += [x for x in config[
+                    feat_type]['categorical'].keys()]
+                feat_types['f_cont'] += [x for x in config[
+                    feat_type]['continuous'].keys()]
 
-    # Features can also be added if additional data sources are given
-    if 'data_source' in config and config['data_source']:
-        feat_types['f_cat'] += [x['name'] for x in config['data_source']
-                                if 'feat' == 'cateegorical']
-        feat_types['f_cont'] += [x['name'] for x in config['data_source']
-                                 if 'feat' == 'continuous']
-
-    # If we have waze data for the city
-    if 'waze_features' in config and config['waze_features']:
-        feat_types['f_cont'] += [x for x in config[
-            'waze_features']['continuous'].keys()]
-        feat_types['f_cat'] += [x for x in config[
-            'waze_features']['categorical'].keys()]
-
-    # Additional features from additional city-specific maps
-    
-    if 'additional_features' in config and config['additional_features']:
-        additional = config['additional_features']
-        if 'categorical' in additional and additional['categorical']:
-            feat_types['f_cat'] += additional['categorical'].split()
-        if 'continuous' in additional and additional['continuous']:
-            feat_types['f_cont'] += additional['continuous'].split()
-
-    # Add point-based features
+    # Add point-based features, still in a slightly different format
     if 'data_source' in config and config['data_source']:
         for additional in config['data_source']:
             feat_types[additional['feat']].append(additional['name'])

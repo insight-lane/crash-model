@@ -313,11 +313,18 @@ def test_get_feature_list():
     }
     
     additional_features = {
-        'continuous': 'AADT',
-        'categorical': 'SPEEDLIMIT Struct_Cnd Surface_Tp F_F_Class'
+        'extra_map': 'test',
+        'continuous': {'AADT': 'test name'},
+        'categorical': {
+            'SPEEDLIMIT': 'test name2',
+            'Struct_Cnd': 'test name3',
+            'Surface_Tp': 'test name4',
+            'F_F_Class': 'test name5'
+            }
     }
+
     results = util.get_feature_list({
-        'additional_features': additional_features})
+        'additional_map_features': additional_features})
     assert results == {
         'f_cat': [
             'SPEEDLIMIT',
