@@ -35,10 +35,20 @@ crashes_files:
             intersection: INTERSECT_TYPE
 
 ##############################################################################
+# Configuration for default features
 
-# Additional city-specific features can be added from maps by setting
-# these variables below
-# additional_features: DVRPCTrafficVolume DVRPCWalkVolume DVRPCBikeVolume
+# Default features from open street map. You can remove features you don't want
+# Note: we don't support adding features in the config file.
+# If there is an additional feature you want from open street map, contact the development team
+openstreetmap_features:
+  categorical:
+    width: Width
+    cycleway_type: Bike lane
+    oneway: One Way
+    lanes: Number of lanes
+  continuous:
+    width_per_lane: Average width per lane
+
 
 data_source: 
   - name: DVRPCTrafficVolume 
@@ -78,12 +88,5 @@ data_source:
     # if latest, the desired value 
     value: AADB 
 
-additional_features:
-    f_cont: DVRPCTrafficVolume DVRPCWalkVolume DVRPCBikeVolume
-
-f_cont:
-- DVRPCTrafficVolume
-- DVRPCWalkVolume
-- DVRPCBikeVolume
 
 process: True

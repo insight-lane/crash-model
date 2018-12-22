@@ -51,3 +51,19 @@ crashes_files:
 time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
 weeks_back: 1
+
+#################################################################
+# Configuration for default features
+
+# Default features from open street map. You can remove features you don't want
+# Note: we don't support adding features in the config file.
+# If there is an additional feature you want from open street map, contact the development team
+openstreetmap_features:
+  categorical:
+    width: Width
+    cycleway_type: Bike lane
+    oneway: One Way
+    lanes: Number of lanes
+  continuous:
+    width_per_lane: Average width per lane
+
