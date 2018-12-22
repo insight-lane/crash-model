@@ -62,15 +62,10 @@ def write_default_features(f, waze=False, supplemental=[],
         f.write("\n\n")
     if additional_map:
         f.write(
-            "# Additional city-specific features can be added from maps by\n" +
-            "# setting these variables below\n\n"
-            "# If you are adding another map and its features to the \n" +
-            "# open street map, give it here.\n" +
-            "# Required to be in 3857 projection\n" +
-            "extra_map: {}\n\n".format(additional_map) +
-            "# Additional features to add from the additional map.\n" +
-            "# This is required if extra_map is given\n" +
-            "additional_features:\n" +
+            "# Additional city-specific features can be added from alternate map\n" +
+            "additional_map_features:\n" +
+            "  # The path to the extra map, must be in 3857 projection\n" +
+            "  extra_map: {}\n\n".format(additional_map) +
             "  continuous: \n" +
             "  categorical: \n\n\n")
 
