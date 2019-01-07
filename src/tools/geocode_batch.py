@@ -6,7 +6,7 @@ from data.util import lookup_address, read_geocode_cache
 
 
 def parse_addresses(directory, filename, city, addressfield,
-                    mapboxtoken, latitude, longitude):
+                    mapboxtoken=None):
 
     cached = read_geocode_cache(filename=os.path.join(
         directory, 'processed', 'geocoded_addresses.csv'))
@@ -21,7 +21,6 @@ def parse_addresses(directory, filename, city, addressfield,
             address = r[addressfield] + ' ' + city
             geocoded_add, lat, lng, status = lookup_address(
                 address, cached, mapboxtoken=mapboxtoken)
-
             cached[address] = [geocoded_add, lat, lng, status]
 
             if status == 'S':
@@ -60,14 +59,9 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--city", type=str, required=True)
     parser.add_argument("-a", "--address", type=str, required=True,
                         help="Address column name")
-    parser.add_argument('-lat', '--latitude', type=str,
-                        help="latitude column name")
-    parser.add_argument('-lon', '--longitude', type=str,
-                        help="longitude column name")
     parser.add_argument('-m', '--mapboxtoken', type=str,
                         help="mapbox token")
     args = parser.parse_args()
     parse_addresses(args.directory, args.filename, args.city,
-                    args.address, args.mapboxtoken,
-                    args.latitude, args.longitude)
+                    args.address, args.mapboxtoken)
 
