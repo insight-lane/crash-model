@@ -83,7 +83,7 @@ def write_geocode_cache(results,
             writer.writerow([key, value[0], value[1], value[2], value[3]])
 
 
-def lookup_address(intersection, cached):
+def lookup_address(intersection, cached, mapboxtoken=None):
     """
     Look up an intersection first in the cache, and if it
     doesn't exist, geocode it
@@ -102,10 +102,10 @@ def lookup_address(intersection, cached):
         return cached[intersection]
     else:
         print('geocoding ' + intersection)
-        return list(geocode_address(intersection))
+        return list(geocode_address(intersection, {}, mapboxtoken))
 
 
-def geocode_address(address, cached={}):
+def geocode_address(address, cached={}, mapboxtoken=None):
     """
     Check an optional cache to see if we already have the geocoded address
     Otherwise, use google's API to look up the address
@@ -120,7 +120,10 @@ def geocode_address(address, cached={}):
     """
     if address in list(cached.keys()):
         return cached[address]
-    g = geocoder.google(address)
+    if mapboxtoken:
+        g = geocoder.mapbox(address, key=mapboxtoken)
+    else:
+        g = geocoder.google(address)
     attempts = 0
     while g.address is None and attempts < 3:
         attempts += 1
@@ -128,6 +131,7 @@ def geocode_address(address, cached={}):
         g = geocoder.google(address)
 
     status = ''
+
     if g.status == 'OK':
         status = 'S'
     elif g.status == 'ZERO_RESULTS':
@@ -710,4 +714,32 @@ def output_from_shapes(items, filename):
         geojson.dump(geojson.FeatureCollection(output), outfile)
 
 
+def get_feature_list(config):
+    """
+    Make the list of features, and write it to the city's data folder
+    That way, we can avoid hardcoding the feature list in multiple places.
+    If you add extra features, the only place you should need to add them
+    is here
+    Args:
+        Config - the city's config file
+    """
 
+    # Features drawn from open street maps
+    feat_types = {'f_cat': [], 'f_cont': []}
+
+    # Run through the possible feature types
+    for feat_type in ['openstreetmap_features',
+                      'waze_features', 'additional_map_features']:
+        if feat_type in config:
+            if 'categorical' in config[feat_type]:
+                feat_types['f_cat'] += [x for x in config[
+                    feat_type]['categorical'].keys()]
+                feat_types['f_cont'] += [x for x in config[
+                    feat_type]['continuous'].keys()]
+
+    # Add point-based features, still in a slightly different format
+    if 'data_source' in config and config['data_source']:
+        for additional in config['data_source']:
+            feat_types[additional['feat']].append(additional['name'])
+
+    return feat_types

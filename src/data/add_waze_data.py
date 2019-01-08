@@ -126,6 +126,11 @@ def map_segments(datadir, filename, forceupdate=False):
     """
     items = json.load(open(filename))
 
+    # Only look at jams for now
+    items = [get_linestring(x) for x in items if x['eventType'] == 'jam']
+
+    items = util.reproject_records(items)
+
     # Get the total number of snapshots in the waze data
     num_snapshots = max([x['snapshotId'] for x in items])
 
@@ -173,6 +178,17 @@ def map_segments(datadir, filename, forceupdate=False):
 
 def add_jams(items, road_segments, num_snapshots):
 
+    road_segments, inters = util.get_roads_and_inters(osm_file)
+
+    # Get roads_and_inters returns elements that have shapely geometry
+    # In order to output the unchanged points back out at the end,
+    # Need to convert to geojson
+    # This is something that should be addressed
+    inters = [{'properties': x['properties'], 'geometry': {
+        'type': 'Point',
+        'coordinates': [x['geometry'].x, x['geometry'].y]
+    }} for x in inters]
+    
     roads, roads_index = util.index_segments(
         road_segments, geojson=True, segment=True)
 
@@ -232,9 +248,17 @@ def add_jams(items, road_segments, num_snapshots):
 
     return road_segments, roads_with_jams
 
-
 def make_map(filename, datadir):
-
+    """
+    Turns a json file into a geojson file of linestrings
+    Used mainly for visualization/debugging
+    It is not a simplified set of linestrings, but rather a
+    linestring for each jam instance (even if multiple jam
+    instances are on the same segment)
+    Args:
+        filename - input json file
+        datadir - directory to write the waze.geojson file out
+    """
     items = json.load(open(filename))
     geojson_items = []
     for item in items:

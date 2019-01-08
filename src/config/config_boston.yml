@@ -59,21 +59,6 @@ crashes_files:
 
 ##############################################################################
 
-# Additional city-specific features can be added from maps by setting
-# these variables below
-
-# If you are adding another map and its features to the open street map,
-# give it here.  Required to be in 3857 projection
-extra_map: ../data/boston/raw/maps/ma_cob_spatially_joined_streets.shp
-
-# Additional features to add from the additional map.
-# This is required if extra_map is given
-additional_features:
-    f_cont: AADT
-    f_cat: SPEEDLIMIT Struct_Cnd Surface_Tp F_F_Class
-
-##############################################################################
-
 # configuration for running the model training and prediction
 
 # concern column name
@@ -100,17 +85,39 @@ tmc_cols:
 # TODO: Make this more relevant for control
 time_target: [51, 2017]
 
-# continuous features
-f_cont:
-- AADT
+#################################################################
+# Configuration for default features
 
-# categorical features
-f_cat:
-- 'SPEEDLIMIT'
-- 'Struct_Cnd'
-- 'Surface_Tp'
-- 'F_F_Class'
+# Default features from open street map. You can remove features you don't want
+# Note: we don't support adding features in the config file.
+# If there is an additional feature you want from open street map, contact the development team
+openstreetmap_features:
+  categorical:
+    width: Width
+    cycleway_type: Bike lane
+    oneway: One Way
+    lanes: Number of lanes
+  continuous:
+    width_per_lane: Average width per lane
 
-# make categorical into dummies, standardize continuous
-# usually necessary/important if want to use linear models
-process: True
+# Configuration for default waze features
+waze_features:
+  categorical:
+    jam: Existence of a jam
+  continuous:
+    jam_percent: Percent of time there was a jam
+
+
+# Additional city-specific features can be added from alternate map
+additional_map_features:
+  # The path to the extra map, must be in 3857 projection
+  extra_map: ../data/boston/raw/maps/ma_cob_spatially_joined_streets.shp
+  continuous:
+    AADT: Average annual daily traffic
+  categorical:
+    SPEEDLIMIT: Speed limit
+    Struct_Cnd: Condition
+    Surface_Tp: Road type
+    F_F_Class: Functional class
+
+

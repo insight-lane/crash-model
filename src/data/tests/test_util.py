@@ -1,10 +1,10 @@
 from .. import util
 import os
 from shapely.geometry import Point
-from shapely.ops import unary_union
 import pyproj
 import fiona
 import geojson
+import numpy as np
 
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
@@ -131,6 +131,7 @@ def test_make_schema():
     assert result_schema == {'geometry': 'Point', 'properties':
                              {'X': 'str', 'NAME': 'str'}}
 
+
 def test_prepare_geojson():
     records = [{
         'geometry': {
@@ -154,8 +155,11 @@ def test_prepare_geojson():
         'properties': {'id': 2}
     }]
     results = util.prepare_geojson(records)
+    actual_coords = results['features'][0]['geometry']['coordinates']
+    actual_properties = results['features'][0]['properties']
+    assert actual_properties == {"id": 2}
 
-    assert results == {
+    expected = {
         "features": [{
             "geometry": {
                 "coordinates": [
@@ -181,6 +185,28 @@ def test_prepare_geojson():
         }],
         "type": "FeatureCollection"
     }
+
+    expected_coords = [
+        [
+            [-71.09501393541515, 42.30567003680977],
+            [-71.095034, 42.30580199999999]
+        ],
+        [
+            [-71.095034, 42.30580199999999],
+            [-71.09489394615605, 42.30571887587566]
+        ],
+        [
+            [-71.09507331122536, 42.30593152960553],
+            [-71.09507, 42.30591099999999],
+            [-71.095034, 42.30580199999999]
+        ]
+    ]
+
+    # assert almost equals in case of small precision differences
+    for i in range(len(actual_coords)):
+        for j in range(len(actual_coords[i])):
+            np.testing.assert_almost_equal(
+                actual_coords[i][j], expected_coords[i][j])
 
 
 def test_get_center_point():
@@ -237,12 +263,76 @@ def test_output_from_shapes(tmpdir):
     # Read in the output, and just validate a couple of coordinates
     with open(path) as f:
         items = geojson.load(f)
-        print(len(items))
 
         assert items['features'][0]['geometry']['type'] == 'Polygon'
-        assert items['features'][0]['geometry']['coordinates'][0][0] \
-            == [-71.11291305054148, 42.370109999999976]
+        np.testing.assert_almost_equal(
+            items['features'][0]['geometry']['coordinates'][0][0],
+            [-71.11291305054148, 42.370109999999976])
 
         assert items['features'][1]['geometry']['type'] == 'Polygon'
-        assert items['features'][1]['geometry']['coordinates'][0][0] \
-            == [-71.11198305054148, 42.37143999999999]
+        np.testing.assert_almost_equal(
+            items['features'][1]['geometry']['coordinates'][0][0],
+            [-71.11198305054148, 42.37143999999999])
+
+
+def test_get_feature_list():
+
+    config = {
+        'openstreetmap_features': {
+            'categorical': {
+                'width': 'Width',
+                'cycleway_type': 'Bike lane',
+                'signal': 'Signal',
+                'oneway': 'One Way',
+                'lanes': 'Number of lanes'
+            },
+            'continuous': {
+                'width_per_lane': 'Average width per lane'
+            }
+        },
+    }
+    results = util.get_feature_list(config)
+
+    assert results == {
+        'f_cat': ['width', 'cycleway_type', 'signal', 'oneway', 'lanes'],
+        'f_cont': [
+            'width_per_lane'
+        ]
+    }
+
+    config['waze_features'] = {
+        'categorical': {'jam': 'Existence of a jam'},
+        'continuous': {'jam_percent': 'Percent of time there was a jam'}
+    }
+    results = util.get_feature_list(config)
+    assert results == {
+        'f_cat': [
+            'width', 'cycleway_type', 'signal', 'oneway', 'lanes', 'jam'],
+        'f_cont': [
+            'width_per_lane', 'jam_percent']
+    }
+    
+    additional_features = {
+        'extra_map': 'test',
+        'continuous': {'AADT': 'test name'},
+        'categorical': {
+            'SPEEDLIMIT': 'test name2',
+            'Struct_Cnd': 'test name3',
+            'Surface_Tp': 'test name4',
+            'F_F_Class': 'test name5'
+            }
+    }
+
+    results = util.get_feature_list({
+        'additional_map_features': additional_features})
+    assert results == {
+        'f_cat': [
+            'SPEEDLIMIT',
+            'Struct_Cnd',
+            'Surface_Tp',
+            'F_F_Class'
+        ],
+        'f_cont': [
+            'AADT'
+        ]
+    }

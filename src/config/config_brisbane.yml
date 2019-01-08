@@ -1,17 +1,17 @@
 # City name
-city: brisbane
+city: Brisbane, Australia
 # City centerpoint latitude & longitude (default geocoded values set)
 city_latitude: -27.4697707
 city_longitude: 153.0251235
 timezone: Australia/Brisbane
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
-city_radius: 20
+city_radius: 10
 # The folder under data where this city's data is stored
 name: brisbane
 # If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-startdate: 
-enddate: 
+startdate: 2015-01-01
+enddate: 2017-12-31
 # The type of predictions to generate, 'segment' is default, 'week' is legacy
 level: 'segment'
 
@@ -51,3 +51,19 @@ crashes_files:
 time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
 weeks_back: 1
+
+#################################################################
+# Configuration for default features
+
+# Default features from open street map. You can remove features you don't want
+# Note: we don't support adding features in the config file.
+# If there is an additional feature you want from open street map, contact the development team
+openstreetmap_features:
+  categorical:
+    width: Width
+    cycleway_type: Bike lane
+    oneway: One Way
+    lanes: Number of lanes
+  continuous:
+    width_per_lane: Average width per lane
+
