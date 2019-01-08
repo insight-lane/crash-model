@@ -91,7 +91,8 @@ def add_alerts(items, road_segments):
         road_segments, geojson=True, segment=True)
 
     # We'll want to consider making these point-based features at some point
-    items = [Record(x) for x in items if x['eventType'] == 'alert']
+    items = [Record(x) for x in items
+             if x['properties']['eventType'] == 'alert']
 
     util.find_nearest(
         items, roads, roads_index, 30, type_record=True)
@@ -132,7 +133,7 @@ def map_segments(datadir, filename, forceupdate=False):
     items = util.reproject_records(items)
 
     # Get the total number of snapshots in the waze data
-    num_snapshots = max([x['snapshotId'] for x in items])
+    num_snapshots = max([x['properties']['snapshotId'] for x in items])
 
     osm_file = os.path.join(
         datadir,
@@ -140,15 +141,14 @@ def map_segments(datadir, filename, forceupdate=False):
         'maps',
         'osm_elements.geojson'
     )
-
-    road_segments, _ = util.get_roads_and_inters(osm_file)
+    road_segments, inters = util.get_roads_and_inters(osm_file)
     if 'jam' in road_segments[0].properties and not forceupdate:
         print("Already processed waze data")
         return
 
     # Add jam and alert information
     road_segments, roads_with_jams = add_jams(
-        items, road_segments, num_snapshots)
+        items, road_segments, inters, num_snapshots)
     road_segments = add_alerts(items, road_segments)
 
     # Convert into format that util.prepare_geojson is expecting
@@ -162,6 +162,7 @@ def map_segments(datadir, filename, forceupdate=False):
             'properties': road.properties
         })
     results = util.prepare_geojson(geojson_roads)
+    import pdb; pdb.set_trace()
 
     with open(osm_file, 'w') as outfile:
         geojson.dump(results, outfile)
@@ -176,9 +177,7 @@ def map_segments(datadir, filename, forceupdate=False):
         geojson.dump(jam_results, outfile)
 
 
-def add_jams(items, road_segments, num_snapshots):
-
-    road_segments, inters = util.get_roads_and_inters(osm_file)
+def add_jams(items, road_segments, inters, num_snapshots):
 
     # Get roads_and_inters returns elements that have shapely geometry
     # In order to output the unchanged points back out at the end,
@@ -191,10 +190,6 @@ def add_jams(items, road_segments, num_snapshots):
     
     roads, roads_index = util.index_segments(
         road_segments, geojson=True, segment=True)
-
-    # Only look at jams for now
-    items = [get_linestring(x) for x in items if x['eventType'] == 'jam']
-    items = util.reproject_records(items)
 
     road_buffers = []
     for road in roads:
@@ -247,6 +242,7 @@ def add_jams(items, road_segments, num_snapshots):
             })
 
     return road_segments, roads_with_jams
+
 
 def make_map(filename, datadir):
     """
