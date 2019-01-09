@@ -161,8 +161,16 @@ def map_segments(datadir, filename, forceupdate=False):
             },
             'properties': road.properties
         })
-    results = util.prepare_geojson(geojson_roads)
-    import pdb; pdb.set_trace()
+    # Convert this back to geojson from shapely point
+    inters = [{
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [x['geometry'].x, x['geometry'].y],
+        },
+        'properties': x['properties']
+    } for x in inters]
+
+    results = util.prepare_geojson(geojson_roads + inters)
 
     with open(osm_file, 'w') as outfile:
         geojson.dump(results, outfile)
