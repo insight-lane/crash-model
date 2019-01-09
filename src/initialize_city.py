@@ -1,6 +1,7 @@
 import argparse
 import os
 import shutil
+import tzlocal
 from data.util import geocode_address
 
 BASE_DIR = os.path.dirname(
@@ -8,7 +9,7 @@ BASE_DIR = os.path.dirname(
         os.path.abspath(__file__)))
 
 
-def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
+def make_config_file(yml_file, city, timezone, folder, crash, concern, supplemental=[]):
     address = geocode_address(city)
 
     f = open(yml_file, 'w')
@@ -19,15 +20,17 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
         "# City centerpoint latitude & longitude (default geocoded values set)\n" +
         "city_latitude: {}\n".format(address[1]) +
         "city_longitude: {}\n".format(address[2]) +
+        "# City's time zone: defaults to the local time zone of computer initializing the city's config file\n" +
+        "timezone: {}\n".format(timezone) +
         "# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)\n" +
         "city_radius: 20\n" +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n".format(folder) +
-        "# If given, limit crashes to after start_year and before end_year\n" +
+        "# If given, limit crashes to after startdate and no later than enddate\n" +
         "# Recommended to limit to just a few years for now\n" +
-        "start_year: \n" +
-        "end_year: \n" +
-        "# level of predictions, either 'week' or 'segment'\n" +
+        "startdate: \n" +
+        "enddate: \n" +
+        "# The type of predictions to generate, 'segment' is default, 'week' is legacy\n" +
         "level: 'segment'\n\n" +
         "#################################################################\n" +
         "# Configuration for data standardization\n\n" +
@@ -67,7 +70,7 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
             "      filename: {}\n".format(concern) +
             "      latitude: \n" +
             "      longitude: \n" +
-            "      time: \n\n\n"
+            "      time: \n\n"
         )
     if supplemental:
         f.write("# Additional data sources\n" +
@@ -75,19 +78,24 @@ def make_config_file(yml_file, city, folder, crash, concern, supplemental=[]):
 
         for filename in supplemental:
             f.write(
-                "  - name: parking_tickets\n" +
+                "  - name: \n" +
                 "    filename: {}\n".format(filename) +
                 "    address: \n" +
                 "    date: \n" +
                 "    time: \n" +
                 "    category: \n" +
                 "    notes: \n" +
-                "    # Feature is categorical (f_cat) or continuous (f_cont)\n" +
-                "    feat: \n")
+                "    # Feature is categorical (f_cat) or continuous (f_cont) \n" +
+                "    feat: \n" + 
+                "    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
+                "    feat_agg: \n"
+                "    # if latest, the column name where the value can be found \n" +
+                "    value: \n"
+                )
         f.write("\n")
     f.write(
-        "# week on which to predict crashes (week, year)\n" +
-        "# Best practice is to choose a week towards the end of your crash data set\n" +
+        "# If using legacy 'week' predictions:\n"+
+        "# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set\n" +
         "# in format [month, year]\n" +
         "time_target: [30, 2017]\n" +
         "# specify how many weeks back to predict in output of train_model\n" +
@@ -175,8 +183,8 @@ if __name__ == '__main__':
     yml_file = os.path.join(
         BASE_DIR, 'src/config/config_' + args.folder + '.yml')
     if not os.path.exists(yml_file):
-        make_config_file(yml_file, args.city, args.folder, crash, concern,
-                         supplemental_files)
+        make_config_file(yml_file, args.city, tzlocal.get_localzone().zone,
+                         args.folder, crash, concern, supplemental_files)
 
     js_file = os.path.join(
         BASE_DIR, 'reports/config.js')

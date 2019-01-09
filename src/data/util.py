@@ -10,6 +10,7 @@ import os
 from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
+import datetime
 from .record import Crash, Concern, Record
 import geojson
 from .segment import Segment
@@ -296,7 +297,7 @@ def read_records_from_geojson(filename):
 
 
 def read_records(filename, record_type,
-                 startyear=None, endyear=None):
+                 startdate=None, enddate=None):
     """
     Reads appropriately formatted json file,
     pulls out currently relevant features,
@@ -305,7 +306,7 @@ def read_records(filename, record_type,
     Args:
         filename - json file
         start - optionally give start for date range of crashes
-        end - optionally give end for date range of crashes
+        end - optionally give end date after which to exclude crashes
     Returns:
         A list of Crashes
     """
@@ -325,10 +326,11 @@ def read_records(filename, record_type,
             record = Record(item)
         records.append(record)
 
-    if startyear:
-        records = [x for x in records if x.timestamp >= parse(startyear)]
-    if endyear:
-        records = [x for x in records if x.timestamp < parse(endyear)]
+    if startdate:
+        records = [x for x in records if x.timestamp >= parse(startdate)]
+    if enddate:
+        records = [x for x in records
+                   if x.timestamp < parse(enddate) + datetime.timedelta(1)]
 
     # Keep track of the earliest and latest crash date used
     start = min([x.timestamp for x in records])
@@ -426,7 +428,7 @@ def read_segments(dirname=MAP_FP, get_inter=True, get_non_inter=True):
     return index_segments(list(inter) + list(non_inter))
 
 
-def index_segments(segments, geojson=True):
+def index_segments(segments, geojson=True, segment=False):
     """
     Reads a list of segments in geojson format, and makes
     a spatial index for lookup
@@ -439,7 +441,9 @@ def index_segments(segments, geojson=True):
     """
 
     combined_seg = segments
-    if geojson:
+    if segment:
+        combined_seg = [(x.geometry, x.properties) for x in segments]
+    elif geojson:
         # Read in segments and turn them into shape, propery tuples
         combined_seg = [(shape(x['geometry']), x['properties']) for x in
                         segments]
