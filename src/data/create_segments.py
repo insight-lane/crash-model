@@ -269,21 +269,40 @@ def add_point_based_features(non_inters, inters, jsonfile,
         print("Read {} point-based features from file".format(len(features)))
     matches = {}
 
+
+    aggregation_values = defaultdict(dict)
+
     for feature in features:
         near = feature.near_id
         feat_type = feature.properties['feature']
+        feat_agg_type = ""
+
+        if 'feat_agg' in feature.properties and 'value' in feature.properties:
+            feat_agg_type = feature.properties['feat_agg']
+            date = feature.properties['date']
 
         if near:
             if str(near) not in matches:
                 matches[str(near)] = {}
-            if feat_type not in matches[str(near)]:
-                matches[str(near)][feat_type] = 0
-            matches[str(near)][feat_type] += 1
+
+            if feat_agg_type == 'latest':  
+                aggregation_values[(str(near), feat_type)][date] = feature.properties['value']
+            else:
+                if feat_type not in matches[str(near)]:
+                    matches[str(near)][feat_type] = 0
+                matches[str(near)][feat_type] += 1
+
+    # if latest, sorts dates for each near/feat_type and puts latest in proper loc. in matches dict 
+    for str_near, feat_type in aggregation_values.keys(): 
+        values_all_dates = aggregation_values[(str_near, feat_type)]
+        latest_date = max(values_all_dates.keys())
+        matches[str_near][feat_type] = values_all_dates[latest_date]
 
     # Add point data to intersections
     for i, inter in enumerate(inters):
         if str(inter['properties']['id']) in list(matches.keys()):
             matched_features = matches[str(inter['properties']['id'])]
+            
             # Since intersections consist of multiple segments, add the
             # point-based properties to each of them
 

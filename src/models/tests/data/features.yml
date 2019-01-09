@@ -1,0 +1,10 @@
+f_cat:
+- width
+f_cont:
+- lanes
+- hwy_type
+- osm_speed
+- signal
+- oneway
+- width_per_lane
+- jam_percent

@@ -28,5 +28,6 @@ dependencies:
 - seaborn
 - scikit-learn
 - shapely
+- tzlocal
 - xgboost
 - xlrd

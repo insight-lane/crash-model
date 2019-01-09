@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from collections import OrderedDict
 import yaml
+import pytz
 from . import standardization_util
 
 CURR_FP = os.path.dirname(
@@ -27,7 +28,11 @@ def read_file_info(config, datadir):
         for row in rows:
             lat = None
             lon = None
-            if 'address' in source_config:
+            
+            if 'latitude' in source_config and 'longitude' in source_config:
+                lat = row[source_config['latitude']]
+                lon = row[source_config['longitude']]
+            elif 'address' in source_config:
                 lat, lon = standardization_util.parse_address(
                     row[source_config['address']])
             if lat and lon:
@@ -37,7 +42,8 @@ def read_file_info(config, datadir):
                     time = row[source_config['time']]
 
                 date_time = standardization_util.parse_date(
-                    row[source_config['date']], time=time)
+                    row[source_config['date']], pytz.timezone(
+                        config['timezone']), time=time)
                 updated_row = OrderedDict([
                     ("feature", source_config["name"]),
                     ("date", date_time),
@@ -51,6 +57,10 @@ def read_file_info(config, datadir):
                     updated_row['category'] = row[source_config['category']]
                 if "notes" in source_config and source_config['notes']:
                     updated_row['notes'] = row[source_config['notes']]
+                if "feat_agg" in source_config and source_config['feat_agg']:
+                    updated_row['feat_agg'] = source_config['feat_agg']
+                if "value" in source_config and source_config['value']:
+                    updated_row['value'] = row[source_config['value']]
 
                 points.append(updated_row)
             else:

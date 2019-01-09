@@ -16,6 +16,7 @@ def test_initialize_city_brisbane_no_supplemental(monkeypatch):
     initialize_city.make_config_file(
         tmpdir.join('/test_config_brisbane.yml'),
         'Brisbane, Australia',
+        'Australia/Brisbane',
         'brisbane',
         'test_crashes.csv',
         'test_concerns.csv'
@@ -27,15 +28,17 @@ city: Brisbane, Australia
 # City centerpoint latitude & longitude (default geocoded values set)
 city_latitude: -27.4697707
 city_longitude: 153.0251235
+# City's time zone: defaults to the local time zone of computer initializing the city's config file
+timezone: Australia/Brisbane
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 20
 # The folder under data where this city's data is stored
 name: brisbane
-# If given, limit crashes to after start_year and before end_year
+# If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-start_year: 
-end_year: 
-# level of predictions, either 'week' or 'segment'
+startdate: 
+enddate: 
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
 level: 'segment'
 
 #################################################################
@@ -76,9 +79,8 @@ concern_files:
       longitude: 
       time: 
 
-
-# week on which to predict crashes (week, year)
-# Best practice is to choose a week towards the end of your crash data set
+# If using legacy 'week' predictions:
+# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set
 # in format [month, year]
 time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
@@ -99,6 +101,7 @@ def test_supplemental_argument_should_change_content_of_config_file(monkeypatch)
     initialize_city.make_config_file(
         tmpdir.join('/test_config_brisbane.yml'),
         'Brisbane, Australia',
+        'Australia/Brisbane',
         'brisbane',
         'test_crashes.csv',
         'test_concerns.csv',
@@ -111,15 +114,17 @@ city: Brisbane, Australia
 # City centerpoint latitude & longitude (default geocoded values set)
 city_latitude: -27.4697707
 city_longitude: 153.0251235
+# City's time zone: defaults to the local time zone of computer initializing the city's config file
+timezone: Australia/Brisbane
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 20
 # The folder under data where this city's data is stored
 name: brisbane
-# If given, limit crashes to after start_year and before end_year
+# If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-start_year: 
-end_year: 
-# level of predictions, either 'week' or 'segment'
+startdate: 
+enddate: 
+# The type of predictions to generate, 'segment' is default, 'week' is legacy
 level: 'segment'
 
 #################################################################
@@ -160,21 +165,24 @@ concern_files:
       longitude: 
       time: 
 
-
 # Additional data sources
 data_source:
-  - name: parking_tickets
+  - name: 
     filename: parking_tickets_dummy_file_1.csv
     address: 
     date: 
     time: 
     category: 
     notes: 
-    # Feature is categorical (f_cat) or continuous (f_cont)
+    # Feature is categorical (f_cat) or continuous (f_cont) 
     feat: 
+    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' 
+    feat_agg: 
+    # if latest, the column name where the value can be found 
+    value: 
 
-# week on which to predict crashes (week, year)
-# Best practice is to choose a week towards the end of your crash data set
+# If using legacy 'week' predictions:
+# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set
 # in format [month, year]
 time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model

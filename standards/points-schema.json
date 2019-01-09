@@ -38,6 +38,14 @@
                         "type": "number"
                     }
                 }
+            }, 
+            "feat_agg": {
+                "description": "Type of Feature Aggregation",
+                "type": "string"
+            },
+            "value": {
+                "description": "Value of entry",
+                "type": "number"
             }
         },
         "required": ["feature", "location"]
