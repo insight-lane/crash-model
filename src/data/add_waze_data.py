@@ -267,7 +267,8 @@ def make_map(filename, datadir):
     items = json.load(open(filename))
     geojson_items = []
     for item in items:
-        geojson_items.append(get_linestring(item))
+        if item['eventType'] == 'jam':
+            geojson_items.append(get_linestring(item))
     with open(os.path.join(datadir, 'waze.geojson'), 'w') as outfile:
         geojson.dump(geojson.FeatureCollection(geojson_items), outfile)
 

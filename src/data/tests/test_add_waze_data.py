@@ -12,7 +12,7 @@ def test_make_map(tmpdir):
             TEST_FP, 'data', 'test_waze', 'test_waze.json')
     with open(original_filename) as f:
         original = geojson.load(f)
-
+        original = [x for x in original if x['eventType'] == 'jam']
     add_waze_data.make_map(original_filename, tmpdir.strpath)
 
     # Read back in the resulting map
