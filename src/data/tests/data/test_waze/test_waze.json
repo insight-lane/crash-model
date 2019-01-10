@@ -20,7 +20,7 @@
     "level": 3,
     "speed": 18,
     "delay": -1,
-    "eventType": "alert",
+    "eventType": "jam",
     "pubTimeStamp": "2018-10-01 00:00:00",
     "snapshotId": 5
 }, {
@@ -42,11 +42,12 @@
     "line": [{"x": -71.120679, "y": 42.390047}, {"x": -71.120479, "y": 42.389884}, {"x": -71.120024, "y": 42.389423}, {"x": -71.119853, "y": 42.389228}, {"x": -71.119688, "y": 42.389029}, {"x": -71.119599, "y": 42.388851}, {"x": -71.119558, "y": 42.388736}, {"x": -71.119401, "y": 42.388181}],
     "street": "Massachusetts Ave",
     "city": "Cambridge, MA",
-    "type": "NONE", "country": "US",
+    "type": "NONE",
+    "country": "US",
     "level": 4,
     "speed": 22,
     "delay": 45,
-    "eventType": "alert",
+    "eventType": "jam",
     "pubTimeStamp": "2018-10-01 00:00:00","snapshotId": 143
 }, {
     "line": [{"y": 42.384068, "x": -71.122373}, {"y": 42.385183, "x": -71.123033}, {"y": 42.385524, "x": -71.123238}, {"y": 42.385913, "x": -71.123472}, {"y": 42.387191, "x": -71.124223}],
@@ -70,7 +71,7 @@
     "level": 1,
     "speed": 5.01,
     "delay": -1,
-    "eventType": "alert",
+    "eventType": "jam",
     "pubTimeStamp": "2018-10-01 00:00:00",
     "snapshotId": 287
 }, {
@@ -95,7 +96,7 @@
     "level": 1,
     "speed": 12,
     "delay": 97,
-    "eventType": "alert",
+    "eventType": "jam",
     "pubTimeStamp": "2018-10-01 00:00:00",
     "snapshotId": 297
 }]

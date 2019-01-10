@@ -20,7 +20,7 @@ def get_linestring(value):
     Returns:
         geojson linestring with properties
     """
-    
+
     line = value['line']
     coords = [(x['x'], x['y']) for x in line]
     return geojson.Feature(
@@ -92,7 +92,7 @@ def add_alerts(items, road_segments):
 
     # We'll want to consider making these point-based features at some point
     items = [Record(x) for x in items
-             if x['properties']['eventType'] == 'alert']
+             if x['eventType'] == 'alert']
 
     util.find_nearest(
         items, roads, roads_index, 30, type_record=True)
@@ -111,6 +111,7 @@ def add_alerts(items, road_segments):
                 properties['alert_' + key] = items_dict[properties['id']][key]
 
         road.properties = properties
+
     return road_segments
 
 
@@ -127,13 +128,8 @@ def map_segments(datadir, filename, forceupdate=False):
     """
     items = json.load(open(filename))
 
-    # Only look at jams for now
-    items = [get_linestring(x) for x in items if x['eventType'] == 'jam']
-
-    items = util.reproject_records(items)
-
     # Get the total number of snapshots in the waze data
-    num_snapshots = max([x['properties']['snapshotId'] for x in items])
+    num_snapshots = max([x['snapshotId'] for x in items])
 
     osm_file = os.path.join(
         datadir,
@@ -186,6 +182,11 @@ def map_segments(datadir, filename, forceupdate=False):
 
 
 def add_jams(items, road_segments, inters, num_snapshots):
+
+    # Only look at jams for now
+    items = [get_linestring(x) for x in items
+             if x['eventType'] == 'jam']
+    items = util.reproject_records(items)
 
     # Get roads_and_inters returns elements that have shapely geometry
     # In order to output the unchanged points back out at the end,
