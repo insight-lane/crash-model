@@ -18,6 +18,9 @@ ENV TERM xterm-256color
 RUN mkdir -p /var/www/html
 COPY ./reports /var/www/html
 
+# Use an S3-hosted config for the showcase cities, rather than the single-city local file
+RUN sed -i "s|config.js|https://s3-ap-southeast-2.amazonaws.com/insight-lane-showcase/config.js|" /var/www/html/index.html
+
 # Install packges
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
 	# apache for serving the visualisation
