@@ -66,3 +66,8 @@ def test_map_segments(tmpdir):
                     if x['properties']['segment_id']
                     == '426492374-61330572-5720026211'][0]
     assert test_segment['properties']['avg_jam_level'] == 2
+
+    # Test that alerts get added
+    test_segment = [x for x in osm_items['features']
+                    if 'alert_JAM' in x['properties']][0]
+    assert test_segment['properties']['alert_JAM'] == 1
