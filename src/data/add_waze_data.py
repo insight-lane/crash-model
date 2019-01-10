@@ -60,7 +60,6 @@ def get_features(waze_info, properties, num_snapshots):
         )/len(waze_info[properties['segment_id']]))
     else:
         num_jams = 0
-        avg_level = 0
         avg_speed = 0
         avg_level_when_jammed = 0
 
