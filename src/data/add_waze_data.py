@@ -49,7 +49,8 @@ def get_features(waze_info, properties, num_snapshots):
         # only count one jam per snapshot on a road
         num_jams = len(set([x['properties']['snapshotId']
                             for x in waze_info[properties['segment_id']]]))
-        avg_level = round(sum(
+        # The average jam level across all jam instances
+        avg_level_when_jammed = round(sum(
             [x['properties']['level']
              for x in waze_info[properties['segment_id']]]
         )/len(waze_info[properties['segment_id']]))
@@ -57,31 +58,18 @@ def get_features(waze_info, properties, num_snapshots):
             [x['properties']['speed']
              for x in waze_info[properties['segment_id']]]
         )/len(waze_info[properties['segment_id']]))
-        avg_delay = round(sum(
-            [x['properties']['delay']
-             for x in waze_info[properties['segment_id']]]
-        )/len(waze_info[properties['segment_id']]))
-        if avg_delay == -1:
-            avg_delay = 0
     else:
         num_jams = 0
         avg_level = 0
         avg_speed = 0
-        avg_delay = 0
-    # Turn into number between 0 and 100
+        avg_level_when_jammed = 0
 
+    # Turn into number between 0 and 100
     properties.update(jam_percent=100*num_jams/num_snapshots)
     properties.update(jam=1 if num_jams else 0)
-    properties.update(avg_jam_level=avg_level)
     properties.update(avg_jam_speed=avg_speed)
-    properties.update(avg_jam_delay=avg_delay)
+    properties.update(avg_jam_level=avg_level_when_jammed)
     
-    # Other potential features
-    # Alerts, or certain kinds of alerts
-    # Look at alerts that are crashes, maybe ignore those jams?
-    # Might be interesting to look at crashes on segments as well
-    #   but not as a feature for the model
-
     return properties
 
 
@@ -249,7 +237,6 @@ def add_jams(items, road_segments, inters, num_snapshots):
                     },
                     'properties': properties
             })
-
     return road_segments, roads_with_jams
 
 
