@@ -217,6 +217,8 @@ def test_make_js_config_brisbane(monkeypatch):
             id: "brisbane",
             latitude: -27.4697707,
             longitude: 153.0251235,
+            file: "preds_final.geojson",
+            crashes: "crashes.json"
         }
     ]
 }

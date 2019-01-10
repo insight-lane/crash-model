@@ -115,21 +115,21 @@
  -->	</div>
 
 	<script>
-		// If no valid cityId specified swap to the first in the showcase
+		// If no valid cityId specified swap to the first in the list
 		if (RegExp("\/(.+)").test(window.location.pathname) == false)
 		{
-			window.location.href = "/"+config.showcase[0].id;
+			window.location.href = "/"+config.cities[0].id;
 		}
 		// Load the requested city
 		else
 		{
 			cityId = window.location.pathname.match(/\/(.+)/)[1];
 			
-			for (c = 0; c < config.showcase.length; c++)
+			for (c = 0; c < config.cities.length; c++)
 			{
-				if (config.showcase[c].id == cityId)
+				if (config.cities[c].id == cityId)
 				{
-					var city = config.showcase[c];
+					var city = config.cities[c];
 					var country = city.name.split(", ")[2];
 					break;
 				}
@@ -138,7 +138,7 @@
 		
 		// Populate the city selector with all other cities
 		var citySelector = $('#city_selector');
-		$.each(config.showcase, function(key, scCity) {
+		$.each(config.cities, function(key, scCity) {
 			if (scCity.id != cityId)
 			{
     			citySelector.append($('<option />').val(scCity.id).text(scCity.name));
