@@ -87,3 +87,8 @@ waze_features:
     jam: Existence of a jam
   continuous:
     jam_percent: Percent of time there was a jam
+    avg_jam_level: Jam level
+#    alert_WEATHERHAZARD: Waze weather hazard alert
+#    alert_JAM: Waze jam alert
+#    alert_ROAD_CLOSED: Waze road closed alert
+#    alert_ACCIDENT: Waze crash alert
