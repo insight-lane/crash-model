@@ -4,57 +4,13 @@ import subprocess
 import argparse
 import yaml
 import sys
+from . import util
+
 
 DATA_FP = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/data/'
-
-
-def make_feature_list(config, datadir, waze=False):
-    """
-    Make the list of features, and write it to the city's data folder
-    That way, we can avoid hardcoding the feature list in multiple places.
-    If you add extra features, the only place you should need to add them
-    is here
-    Args:
-        Config - the city's config file
-        waze - whether or not we're including waze data
-    """
-
-    # Features drawn from open street maps
-    # Additional features can be added if you're using an extra map
-    # beyond open street map
-    feat_types = {
-        'f_cat': ['width', 'cycleway_type', 'signal', 'oneway'],
-        'f_cont': ['lanes', 'hwy_type', 'osm_speed', 'width_per_lane']
-    }
-
-    # Features can also be added if additional data sources are given
-    if 'data_source' in config and config['data_source']:
-        feat_types['f_cat'] += [x['name'] for x in config['data_source']
-                                if 'feat' == 'f_cat']
-        feat_types['f_cont'] += [x['name'] for x in config['data_source']
-                                if 'feat' == 'f_cont']
-
-    # If we have waze data for the city
-    if waze:
-        feat_types['f_cont'] += ['jam_percent']
-        feat_types['f_cat'] += ['jam']
-
-    # Additional features from additional city-specific maps
-    if 'additional_features' in config and config['additional_features']:
-        additional = config['additional_features']
-        if 'f_cat' in additional and additional['f_cat']:
-            feat_types['f_cat'] += additional['f_cat'].split()
-        if 'f_cont' in additional and additional['f_cont']:
-            feat_types['f_cont'] += additional['f_cont'].split()
-
-    features = feat_types['f_cat'] + feat_types['f_cont']
-    # Write features to file
-    with open(os.path.join(datadir, 'processed', 'features.yml'), 'w') as f:
-        yaml.dump(feat_types, f, default_flow_style=False)
-    return features
 
     
 if __name__ == '__main__':
@@ -97,14 +53,8 @@ if __name__ == '__main__':
     recreate = False
     outputdir = city.split(',')[0]
     additional_features = None
-    if 'extra_map' in list(config.keys()) and config['extra_map']:
-        # Require additional features and additional shapefile in 3857 proj
-        if 'additional_features' not in list(config.keys()) \
-           or config['additional_features'] is None:
-            sys.exit("If extra_map is given, additional_features " +
-                     "are required.")
-
-        extra_map = config['extra_map']
+    if 'additional_map_features' in config and config['additional_map_features']:
+        extra_map = config['additional_map_features']['extra_map']
 
     # Whether to regenerate maps from open street map
     if args.forceupdate:
@@ -114,7 +64,8 @@ if __name__ == '__main__':
     if os.path.exists(os.path.join(DATA_FP, 'standardized', 'waze.json')):
         waze = True
 
-    features = make_feature_list(config, args.datadir, waze)
+    feat_types = util.get_feature_list(config)
+    features = feat_types['f_cat'] + feat_types['f_cont']
 
     print("Generating maps for " + city + ' in ' + DATA_FP)
     if recreate:

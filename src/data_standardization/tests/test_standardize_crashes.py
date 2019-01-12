@@ -1,9 +1,11 @@
 from .. import standardize_crashes
+from data.util import write_geocode_cache
 from jsonschema import validate
 import json
 import os
 import csv
 import pytz
+import pytest
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -89,7 +91,42 @@ def test_numeric_and_string_ids():
                                 os.path.abspath(__file__))))), "standards", "crashes-schema.json"))))
 
 
-def test_date_formats():
+def test_standardize_with_cache(tmpdir):
+
+    fields = {
+        "id": "id",
+        "date_complete": "date_of_crash",
+        "time": "",
+        "time_format": "",
+        "latitude": "lat",
+        "longitude": "lng",
+        "address": 'location'
+    }
+    # Confirm crashes without coordinates or a geocoded address file are skipped
+    crashes_no_coords = [{
+        "id": "A1B2C3D4E5",
+        "date_of_crash": "2016-01-01T02:30:23-05:00",
+        "lat": "",
+        "lng": "",
+        'location': 'test',
+    }]
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_no_coords, fields, {'address': 'location'},
+        pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 0
+
+    fields['latitude'] = ''
+    fields['longitude'] = ''
+
+    # Confirm crashes with a geocoded address are included
+    os.mkdir(os.path.join(tmpdir, 'processed'))
+    write_geocode_cache({'test test_city': ['test st', 42, -71, 'S']},
+                        filename=tmpdir + '/processed/geocoded_addresses.csv')
+    assert len(standardize_crashes.read_standardized_fields(
+        crashes_no_coords, fields, {'address': 'location'},
+               pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 1
+    
+
+def test_date_formats(tmpdir):
     """
     Test various combinations of supplying dates.
     """
@@ -103,7 +140,7 @@ def test_date_formats():
         "longitude": "lng"
     }
 
-    # Confirm crashes without coordinates are skipped
+    # Confirm crashes without coordinates and no address are skipped
     crashes_no_coords = [{
         "id": "A1B2C3D4E5",
         "date_of_crash": "2016-01-01T02:30:23-05:00",
@@ -112,8 +149,8 @@ def test_date_formats():
     }]
 
     assert len(standardize_crashes.read_standardized_fields(
-        crashes_no_coords, fields_date_constructed, {},
-               pytz.timezone("America/New_York"))) == 0
+            crashes_no_coords, fields_date_constructed, {},
+            pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 0
 
     # Confirm crashes using date_complete but without a value are skipped
     crashes_no_date = [{
@@ -125,7 +162,7 @@ def test_date_formats():
 
     assert len(standardize_crashes.read_standardized_fields(
         crashes_no_date, fields_date_constructed, {},
-        pytz.timezone("America/New_York"))) == 0
+        pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 0
 
     # Confirm crashes using date_complete with a value are standardized
     crashes_with_date = [{
@@ -137,7 +174,7 @@ def test_date_formats():
 
     assert len(standardize_crashes.read_standardized_fields(
         crashes_with_date, fields_date_constructed, {},
-        pytz.timezone("America/New_York"))) == 1
+        pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 1
 
     # Confirm crashes using deconstructed date with all values are standardized
     fields_date_deconstructed = {
@@ -163,7 +200,7 @@ def test_date_formats():
 
     assert len(standardize_crashes.read_standardized_fields(
         crashes_with_date, fields_date_deconstructed, {},
-        pytz.timezone("America/New_York"))) == 1
+        pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 1
 
     # Confirm crashes outside of specified start & end year ranges are dropped
     crashes_in_different_years = [{
@@ -188,17 +225,21 @@ def test_date_formats():
     # filter crashes prior to a start year
     assert len(standardize_crashes.read_standardized_fields(
         crashes_in_different_years, fields_date_constructed, {},
-        pytz.timezone("America/New_York"),
+        pytz.timezone("America/New_York"), tmpdir, 'test_city',
         startdate='2017-01-01T00:00:00-05:00')) == 2
 
     # filter crashes after an end year
     assert len(standardize_crashes.read_standardized_fields(
-        crashes_in_different_years, fields_date_constructed, {}, pytz.timezone("America/New_York"),
+        crashes_in_different_years, fields_date_constructed, {},
+        pytz.timezone("America/New_York"),
+        tmpdir, 'test_city',
         enddate='2016-12-31')) == 1
 
     # filter crashes after an end year
     assert len(standardize_crashes.read_standardized_fields(
-        crashes_in_different_years, fields_date_constructed, {}, pytz.timezone("America/New_York"),
+        crashes_in_different_years, fields_date_constructed, {},
+        pytz.timezone("America/New_York"),
+        tmpdir, 'test_city',
         enddate='2017-01-01')) == 2
 
     # filter crashes between a start and end year
@@ -228,4 +269,4 @@ def test_date_formats():
 
     assert len(standardize_crashes.read_standardized_fields(
         crashes_with_date, fields_date_no_day, {},
-        pytz.timezone("America/New_York"))) == 1
+        pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 1

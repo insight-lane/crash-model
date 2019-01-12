@@ -273,3 +273,66 @@ def test_output_from_shapes(tmpdir):
         np.testing.assert_almost_equal(
             items['features'][1]['geometry']['coordinates'][0][0],
             [-71.11198305054148, 42.37143999999999])
+
+
+def test_get_feature_list():
+
+    config = {
+        'openstreetmap_features': {
+            'categorical': {
+                'width': 'Width',
+                'cycleway_type': 'Bike lane',
+                'signal': 'Signal',
+                'oneway': 'One Way',
+                'lanes': 'Number of lanes'
+            },
+            'continuous': {
+                'width_per_lane': 'Average width per lane'
+            }
+        },
+    }
+    results = util.get_feature_list(config)
+
+    assert results == {
+        'f_cat': ['width', 'cycleway_type', 'signal', 'oneway', 'lanes'],
+        'f_cont': [
+            'width_per_lane'
+        ]
+    }
+
+    config['waze_features'] = {
+        'categorical': {'jam': 'Existence of a jam'},
+        'continuous': {'jam_percent': 'Percent of time there was a jam'}
+    }
+    results = util.get_feature_list(config)
+    assert results == {
+        'f_cat': [
+            'width', 'cycleway_type', 'signal', 'oneway', 'lanes', 'jam'],
+        'f_cont': [
+            'width_per_lane', 'jam_percent']
+    }
+    
+    additional_features = {
+        'extra_map': 'test',
+        'continuous': {'AADT': 'test name'},
+        'categorical': {
+            'SPEEDLIMIT': 'test name2',
+            'Struct_Cnd': 'test name3',
+            'Surface_Tp': 'test name4',
+            'F_F_Class': 'test name5'
+            }
+    }
+
+    results = util.get_feature_list({
+        'additional_map_features': additional_features})
+    assert results == {
+        'f_cat': [
+            'SPEEDLIMIT',
+            'Struct_Cnd',
+            'Surface_Tp',
+            'F_F_Class'
+        ],
+        'f_cont': [
+            'AADT'
+        ]
+    }
