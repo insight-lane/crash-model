@@ -4,6 +4,7 @@
 import argparse
 import os
 import pandas as pd
+from pandas.io.json import json_normalize
 import yaml
 from collections import OrderedDict
 import csv
@@ -12,17 +13,16 @@ import random
 import pytz
 import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
-from data.util import read_geocode_cache
-
+from pandas.io.json import json_normalize
+from shapely.geometry import Point
+import geopandas
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
-
 def read_standardized_fields(raw_crashes, fields, opt_fields,
-                             timezone, datadir, city,
-                             startdate=None, enddate=None):
+                             timezone, startdate=None, enddate=None):
 
     crashes = {}
     # Drop times from startdate/enddate in the unlikely event
@@ -36,52 +36,13 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
 
     min_date = None
     max_date = None
-
-    cached_addresses = {}
-
-    if (not fields['latitude'] or not fields['longitude']):
-        if 'address' in opt_fields and opt_fields['address']:
-            # load cache for geocode lookup
-            geocoded_file = os.path.join(
-                    datadir, 'processed', 'geocoded_addresses.csv')
-            if os.path.exists(geocoded_file):
-                cached_addresses = read_geocode_cache(
-                    filename=os.path.join(
-                        datadir, 'processed', 'geocoded_addresses.csv'))
-            else:
-
-                raise SystemExit(
-                    "Need to geocode addresses before standardizing crashes")
-        else:
-            raise SystemExit(
-                "Can't standardize crash data, no lat/lon or address found"
-            )
-
-    no_geocoded_count = 0
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
 
-        lat = crash[fields['latitude']] if fields['latitude'] else None
-        lon = crash[fields['longitude']] if fields['longitude'] else None
-
-        if not lat or not lon:
-
-            # skip any crashes that don't have coordinates
-            if 'address' not in opt_fields or opt_fields['address'] not in crash:
-                continue
-
-            address = crash[opt_fields['address']] + ' ' + city
-
-            # If we have an address, look it up in the geocoded cache
-            if address in cached_addresses:
-                address, lat, lon, _ = cached_addresses[address]
-                if not address:
-                    no_geocoded_count += 1
-                    continue
-            else:
-                no_geocoded_count += 1
-                continue
+        # skip any crashes that don't have coordinates
+        if crash[fields["latitude"]] == "" or crash[fields["longitude"]] == "":
+            continue
 
         # construct crash date based on config settings, skipping any crashes without date
         if fields["date_complete"]:
@@ -139,13 +100,13 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             min_date = crash_day
         if max_date is None or crash_day > max_date:
             max_date = crash_day
-
+            
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", crash_date_time),
             ("location", OrderedDict([
-                ("latitude", float(lat)),
-                ("longitude", float(lon))
+                ("latitude", float(crash[fields["latitude"]])),
+                ("longitude", float(crash[fields["longitude"]]))
             ]))
         ])
         formatted_crash = add_city_specific_fields(crash, formatted_crash,
@@ -162,9 +123,6 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
         print("Including crashes before {}".format(
             max_date.isoformat()))
 
-    # Making sure we have enough entries with lat/lon to continue
-    if len(crashes) > 0 and no_geocoded_count/len(crashes) > .9:
-        raise SystemExit("Not enough geocoded addresses found, exiting")
     return crashes
 
 
@@ -231,7 +189,15 @@ def add_id(csv_file, id_field):
             for row in rows:
                 writer.writerow(row)
 
-
+def calculate_crashes_by_location(df):
+    crashes_agg = df.groupby(['latitude', 'longitude']).agg(['count', 'unique'])
+    crashes_agg.columns = crashes_agg.columns.get_level_values(1)
+    crashes_agg.rename(columns={'count': 'total_crashes', 'unique': 'crash_dates'}, inplace=True)
+    crashes_agg.reset_index(inplace=True)
+    
+    crashes_agg['crash_dates'] = crashes_agg['crash_dates'].str.join(',')
+    return crashes_agg
+    
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -285,8 +251,6 @@ if __name__ == '__main__':
             csv_config['required'],
             csv_config['optional'],
             pytz.timezone(config['timezone']),
-            args.datadir,
-            config['city'],
             startdate,
             enddate
         )
@@ -301,3 +265,19 @@ if __name__ == '__main__':
     list_crashes = list(dict_crashes.values())
     crashes_output = os.path.join(args.datadir, "standardized/crashes.json")
     validate_and_write_schema(schema_path, list_crashes, crashes_output)
+
+    # begin steps to turn standardized crash data into dataset needed to display crash info in
+    # the visualization
+    df_std_crashes = json_normalize(list_crashes)
+    df_std_crashes = df_std_crashes[["dateOccurred", "location.latitude", "location.longitude"]]
+    df_std_crashes.rename(columns={"location.latitude": "latitude", "location.longitude": "longitude"}, inplace=True)
+
+    crashes_agg = calculate_crashes_by_location(df_std_crashes)
+    crashes_agg["coordinates"] = list(zip(crashes_agg.longitude, crashes_agg.latitude))
+    crashes_agg["coordinates"] = crashes_agg["coordinates"].apply(Point)
+    crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
+
+    crashes_agg_gdf = geopandas.GeoDataFrame(crashes_agg, geometry="coordinates")
+    #print(crashes_agg_gdf.head())
+    #gdf.to_file(os.path.join(args.datadir, "crashes_rollup.geojson"), driver="GeoJSON") - check where this file should be written to
+
