@@ -21,6 +21,12 @@ class Intersection(object):
         self.lines = lines
         coords = []
         for line in lines:
+            # Skip empty geometry collections
+            if line.type == 'GeometryCollection':
+                items = [x for x in line]
+                if not items:
+                    continue
+
             coords += [[x for x in line.coords]]
 
         self.geometry = MultiLineString(coords)
