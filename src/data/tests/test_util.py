@@ -1,6 +1,7 @@
 from .. import util
+from ..segment import Segment
 import os
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString, MultiLineString
 import pyproj
 import fiona
 import geojson
@@ -211,14 +212,18 @@ def test_prepare_geojson():
 
 def test_get_center_point():
     assert util.get_center_point(
-        geojson.Feature(
-            geometry=geojson.LineString([[1, 0], [3, 0]]))) == (2.0, 0.0)
+        Segment(
+            LineString([[1, 0], [3, 0]]),
+            {}
+        )) == (2.0, 0.0)
 
-    assert util.get_center_point(geojson.Feature(
-        geometry=geojson.MultiLineString(
-            [[[2, 0], [2, 4]], [[0, 2], [4, 2]]]))) == (2.0, 2.0)
+    assert util.get_center_point(Segment(
+        MultiLineString(
+            [[[2, 0], [2, 4]], [[0, 2], [4, 2]]]),
+        {}
+    )) == (2.0, 2.0)
     assert util.get_center_point(
-        geojson.Feature(geometry=geojson.Point([0, 0]))) == (None, None)
+        Segment(Point([0, 0]), {})) == (None, None)
 
 
 def test_get_roads_and_inters():

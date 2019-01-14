@@ -1,9 +1,11 @@
 from .. import create_segments
+from ..segment import Segment, Intersection
 import fiona
 import os
 from .. import util
 import shutil
 import json
+from shapely.geometry import LineString
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -103,12 +105,12 @@ def test_get_intersection_name():
 
 
 def test_get_non_intersection_name():
-    non_inter_segment = {'properties': {
+    non_inter_segment = Segment(None, {
         'osmid': 1,
         'name': 'Main Street',
         'from': '100',
         'to': '200'
-    }}
+    })
     inters_by_id = {
     }
     name = create_segments.get_non_intersection_name(
@@ -139,13 +141,19 @@ def test_add_point_based_features(tmpdir):
             os.path.abspath(__file__)),
         'data',
         'test_create_segments')
-    test_file = os.path.join(test_path, 'points_test.json')
 
-    # The points test file contains non_inters and one inter,
-    # in the same format as add_point_based_features requires
-    with open(test_file, 'r') as f:
-        non_inters = json.load(f)
-    inters = [non_inters.pop()]
+    with open(os.path.join(test_path, 'points_test.json'), 'r') as f:
+        data = json.load(f)
+
+    # All the line strings are roads
+    print(data[0]['geometry'])
+    non_inters = [Segment(LineString(
+        x['geometry']['coordinates']), x['properties']
+    ) for x in data if x['geometry']['type'] == 'LineString']
+    # There's only one test intersection
+    inter = [x for x in data if x['geometry']['type'] == 'MultiLineString'][0]
+    lines = [LineString(x) for x in inter['geometry']['coordinates']]
+    inters = [Intersection(0, lines, inter['properties'])]
 
     featsfile = os.path.join(test_path, 'points.geojson')
     outputfile = os.path.join(tmpdir.strpath, 'result.json')
@@ -153,19 +161,19 @@ def test_add_point_based_features(tmpdir):
         non_inters, inters, outputfile, featsfile)
 
     # Check whether the segments we expected got the properties
-    assert inters[0]['properties']['data'][0]['crosswalk'] == 1
-    signalized = [x for x in non_inters if x['properties']['signal']]
+    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
-    assert signalized[0]['properties']['id'] == '001556'
+    assert signalized[0].properties['id'] == '001556'
 
     # Run again (to read from file) and make sure everything looks the same
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile)
 
-    assert inters[0]['properties']['data'][0]['crosswalk'] == 1
-    signalized = [x for x in non_inters if x['properties']['signal']]
+    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
-    assert signalized[0]['properties']['id'] == '001556'
+    assert signalized[0].properties['id'] == '001556'
 
     # Test writing to the file is as expected
     expected = [{
@@ -190,8 +198,8 @@ def test_add_point_based_features(tmpdir):
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile,
         additional_feats_filename=additional_feats_file, forceupdate=True)
-    assert non_inters[4]['properties']['parking_tickets'] == 2
-    assert non_inters[4]['properties']['traffic_volume'] == 200
+    assert non_inters[4].properties['parking_tickets'] == 2
+    assert non_inters[4].properties['traffic_volume'] == 200
 
     expected = expected + [{
         "feature": "parking_tickets",

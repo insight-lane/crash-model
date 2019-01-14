@@ -15,9 +15,8 @@ import argparse
 import os
 import geojson
 import re
-from shapely.geometry import MultiLineString, LineString
-from .segment import Segment
-
+from shapely.geometry import MultiLineString, LineString, mapping
+from .segment import Segment, Intersection
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -154,7 +153,7 @@ def find_non_ints(roads, int_buffers):
         buffered_lines.append((b, road))
         road_lines_index.insert(idx, b.bounds)
 
-    inter_segments = {'lines': defaultdict(list), 'data': defaultdict(list)}
+    inter_segments = []
     roads_with_int_segments = {}
     count = 0
     print("Generating intersection segments")
@@ -179,10 +178,14 @@ def find_non_ints(roads, int_buffers):
             roads_with_int_segments[r.properties['id']] += int_segments
 
         for int_segment in int_segments:
-            inter_segments['lines'][count] = [
-                x.geometry for x in int_segment[0]]
-            inter_segments['data'][count] = [
-                x.properties for x in int_segment[0]]
+            inter_segments.append(Intersection(
+                count,
+                [x.geometry for x in int_segment[0]],
+                {
+                    'data': [x.properties for x in int_segment[0]],
+                    'id': count
+                }
+            ))
             count += 1
     non_int_lines = []
     print("Generating non-intersection segments")
@@ -190,10 +193,7 @@ def find_non_ints(roads, int_buffers):
         util.track(i, 1000, len(roads))
         # If there's no overlap between the road segment and any intersections
         if road.properties['id'] not in roads_with_int_segments:
-            non_int_lines.append(geojson.Feature(
-                geometry=geojson.LineString([x for x in road.geometry.coords]),
-                properties=road.properties
-            ))
+            non_int_lines.append(road)
         else:
 
             # Check against each separate intersection
@@ -203,19 +203,11 @@ def find_non_ints(roads, int_buffers):
             for inter in road_info:
                 buffered_int = inter[1]
                 diff = diff.difference(buffered_int)
-            if 'LineString' == diff.type:
-                non_int_lines.append(geojson.Feature(
-                    geometry=geojson.LineString([x for x in diff.coords]),
-                    properties=road.properties)
-                )
-            elif 'MultiLineString' == diff.type:
-                coords = []
-                for l in diff:
-                    for coord in l.coords:
-                        coords.append(coord)
-                non_int_lines.append(geojson.Feature(
-                    geometry=geojson.LineString(coords),
-                    properties=road.properties)
+
+            if diff.type in ('LineString', 'MultiLineString'):
+                non_int_lines.append(Segment(
+                    diff,
+                    road.properties)
                 )
             else:
                 # There may be no sections of the segment that fall outside
@@ -253,7 +245,7 @@ def add_point_based_features(non_inters, inters, jsonfile,
                 additional_feats_filename, 'record')
         print('Snapping {} point-based features'.format(len(features)))
         seg, segments_index = util.index_segments(
-            inters + non_inters
+            inters + non_inters, geojson=False, segment=True
         )
 
         util.find_nearest(features, seg, segments_index, 20, type_record=True)
@@ -268,7 +260,6 @@ def add_point_based_features(non_inters, inters, jsonfile,
         features = util.read_records(jsonfile, None)
         print("Read {} point-based features from file".format(len(features)))
     matches = {}
-
 
     aggregation_values = defaultdict(dict)
 
@@ -300,25 +291,25 @@ def add_point_based_features(non_inters, inters, jsonfile,
 
     # Add point data to intersections
     for i, inter in enumerate(inters):
-        if str(inter['properties']['id']) in list(matches.keys()):
-            matched_features = matches[str(inter['properties']['id'])]
+
+        if str(inter.properties['id']) in list(matches.keys()):
+            matched_features = matches[str(inter.properties['id'])]
             
             # Since intersections consist of multiple segments, add the
             # point-based properties to each of them
-
-            for prop in inter['properties']['data']:
+            for prop in inter.properties['data']:
                 for feat in matched_features:
+                    print(prop)
                     prop[feat] = matched_features[feat]
 
     # Add point data to non-intersections
     for i, non_inter in enumerate(non_inters):
-        if str(non_inter['properties']['id']) in list(matches.keys()):
-            matched_features = matches[non_inter['properties']['id']]
+        if str(non_inter.properties['id']) in list(matches.keys()):
+            matched_features = matches[non_inter.properties['id']]
 
             n = copy.deepcopy(non_inter)
-
             for feat in matched_features:
-                n['properties'][feat] = matched_features[feat]
+                n.properties[feat] = matched_features[feat]
 
             non_inters[i] = n
 
@@ -371,7 +362,7 @@ def get_non_intersection_name(non_inter_segment, inters_by_id):
         The display name string
     """
 
-    properties = non_inter_segment['properties']
+    properties = non_inter_segment.properties
 
     if 'name' not in properties or not properties['name']:
         return ''
@@ -415,7 +406,7 @@ def get_non_intersection_name(non_inter_segment, inters_by_id):
 
 
 def create_segments_from_json(roads_shp_path, mapfp):
-    roads, inters = util.get_roads_and_inters(roads_shp_path)
+    roads, inter_nodes = util.get_roads_and_inters(roads_shp_path)
     print("read in {} road segments".format(len(roads)))
 
     # unique id did not get included in shapefile, need to add it for adjacency
@@ -423,7 +414,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
         road.properties['orig_id'] = int(str(99) + str(i))
 
     # Initial buffer = 20 meters
-    int_buffers = get_intersection_buffers(inters, 20)
+    int_buffers = get_intersection_buffers(inter_nodes, 20)
     print("Found {} intersection buffers".format(len(int_buffers)))
     non_int_lines, inter_segments = find_non_ints(
         roads, int_buffers)
@@ -438,33 +429,34 @@ def create_segments_from_json(roads_shp_path, mapfp):
         x['properties']['osmid'] if 'osmid' in x['properties'] else '0':
         x['properties']['streets']
         if 'streets' in x['properties'] else None
-        for x in inters
+        for x in inter_nodes
     }
 
-    for i, l in enumerate(non_int_lines):
-        value = copy.deepcopy(l)
-        value['type'] = 'Feature'
-        value['properties']['id'] = '00' + str(i)
-        value['properties']['inter'] = 0
-        value['properties']['display_name'] = get_non_intersection_name(
-            l, inters_by_id)
-        non_int_w_ids.append(value)
+    for i, segment in enumerate(non_int_lines):
+        segment.properties['id'] = '00' + str(i)
+        segment.properties['inter'] = 0
+        segment.properties['display_name'] = get_non_intersection_name(
+            segment, inters_by_id)
+        non_int_w_ids.append(segment)
 
-        x, y = util.get_center_point(value)
+        x, y = util.get_center_point(segment)
         x, y = util.reproject([[x, y]], inproj='epsg:3857',
                               outproj='epsg:4326')[0]['coordinates']
-        value['properties']['center_y'] = y
-        value['properties']['center_x'] = x
+        segment.properties['center_y'] = y
+        segment.properties['center_x'] = x
 
     print("extracted {} non-intersection segments".format(len(non_int_w_ids)))
 
     # Planarize intersection segments
     # Turns the list of LineStrings into a MultiLineString
     union_inter = []
-    for idx, lines in list(inter_segments['lines'].items()):
 
+    for intersection in inter_segments:
+
+        lines = intersection.lines
         lines = unary_union(lines)
         coords = []
+
         # Fixing issue where we had previously thought a dead-end node
         # was an intersection. Once this is fixed in osmnx
         # (or we have a better work around), this should be able to
@@ -474,31 +466,24 @@ def create_segments_from_json(roads_shp_path, mapfp):
         for line in lines:
             coords += [[x for x in line.coords]]
 
-        name = get_intersection_name(inter_segments['data'][idx])
+        intersection.geometry = MultiLineString(coords)
+        intersection.display_name = get_intersection_name(
+            intersection.properties['data'])
+
         # Add the number of segments coming into this intersection
         segment_data = []
-        for segment in list(inter_segments['data'][idx]):
+        for segment in list(intersection.properties['data']):
             segment['intersection_segments'] = len(
-                inter_segments['data'][idx])
+                intersection.properties['data'])
             segment_data.append(segment)
 
-        properties = {
-            'id': idx,
-            'data': segment_data,
-            'display_name': name
-        }
-        value = geojson.Feature(
-            geometry=geojson.MultiLineString(coords),
-            id=idx,
-            properties=properties,
-        )
-        x, y = util.get_center_point(value)
+        x, y = util.get_center_point(intersection)
         x, y = util.reproject([[x, y]], inproj='epsg:3857',
                               outproj='epsg:4326')[0]['coordinates']
-
-        value['properties']['center_x'] = x
-        value['properties']['center_y'] = y
-        union_inter.append(value)
+        intersection.properties['center_x'] = x
+        intersection.properties['center_y'] = y
+        intersection.properties['data'] = segment_data
+        union_inter.append(intersection)
 
     return non_int_w_ids, union_inter
 
@@ -508,6 +493,10 @@ def write_segments(non_inters, inters, mapfp, datafp):
     # Store non-intersection segments
 
     # Project back into 4326 for storage
+    non_inters = [{
+        'geometry': mapping(record.geometry),
+        'properties': record.properties
+        } for record in non_inters]
 
     non_inters = util.prepare_geojson(non_inters)
 
@@ -517,7 +506,7 @@ def write_segments(non_inters, inters, mapfp, datafp):
 
     # Get just the properties for the intersections
     inter_data = {
-        str(x['properties']['id']): x['properties']['data'] for x in inters}
+        str(x.properties['id']): x.properties['data'] for x in inters}
 
     with open(os.path.join(datafp, 'inters_data.json'), 'w') as f:
         json.dump(inter_data, f)
@@ -525,18 +514,18 @@ def write_segments(non_inters, inters, mapfp, datafp):
     # Store the individual intersections without properties, since QGIS appears
     # to have trouble with dicts of dicts, and viewing maps can be helpful
     int_w_ids = [{
-        'geometry': x['geometry'],
+        'geometry': mapping(x.geometry),
         'properties': {
-            'id': x['properties']['id'],
-            'display_name': x['properties']['display_name']
-                if 'display_name' in x['properties'] else '',
-            'center_x': x['properties']['center_x']
-                if 'center_x' in x['properties'] else '',
-            'center_y': x['properties']['center_y']
-                if 'center_y' in x['properties'] else ''
+            'id': x.properties['id'],
+            'display_name': x.properties['display_name']
+                if 'display_name' in x.properties else '',
+            'center_x': x.properties['center_x']
+                if 'center_x' in x.properties else '',
+            'center_y': x.properties['center_y']
+                if 'center_y' in x.properties else ''
         }
     } for x in inters]
-    
+
     int_w_ids = util.prepare_geojson(int_w_ids)
 
     with open(os.path.join(mapfp, 'inters_segments.geojson'), 'w') as outfile:

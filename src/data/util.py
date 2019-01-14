@@ -600,30 +600,28 @@ def get_center_point(segment):
     """
     Get the centerpoint for a linestring or multiline string
     Args:
-        segment - Geojson LineString or MultiLineString
+        segment object - LineString or MultiLineString
     Returns:
-        Geojson point
+        x, y tuple for the centerpoint
     """
 
-    if segment['geometry']['type'] == 'LineString':
-        point = LineString(
-            segment['geometry']['coordinates']).interpolate(
+    if segment.geometry.type == 'LineString':
+        point = segment.geometry.interpolate(
             .5, normalized=True)
         return point.x, point.y
-    elif segment['geometry']['type'] == 'MultiLineString':
-        # Make a rectangle around the multiline
-        coords = [item for coords in segment[
-            'geometry']['coordinates'] for item in coords]
+    elif segment.geometry.type == 'MultiLineString':
+        lines = [x for x in [line for line in segment.geometry]]
+        coords = []
+        for line in lines:
+            coords.extend([x for x in line.coords])
 
         minx = min([x[0] for x in coords])
         maxx = max([x[0] for x in coords])
         miny = min([x[1] for x in coords])
         maxy = max([x[1] for x in coords])
-
         point = LineString([[minx, miny], [maxx, maxy]]).interpolate(
             .5, normalized=True)
-        mlstring = MultiLineString(segment['geometry']['coordinates'])
-        point = mlstring.interpolate(mlstring.project(point))
+        point = segment.geometry.interpolate(segment.geometry.project(point))
 
         return point.x, point.y
 
