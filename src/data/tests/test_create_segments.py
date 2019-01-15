@@ -5,7 +5,7 @@ import os
 from .. import util
 import shutil
 import json
-from shapely.geometry import LineString
+from shapely.geometry import LineString, MultiLineString
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -154,6 +154,11 @@ def test_add_point_based_features(tmpdir):
     inter = [x for x in data if x['geometry']['type'] == 'MultiLineString'][0]
     lines = [LineString(x) for x in inter['geometry']['coordinates']]
     inters = [Intersection(0, lines, inter['properties'])]
+    coords = []
+    for line in inters[0].lines:
+        coords.append(line.coords)
+    inters[0].geometry = MultiLineString(
+        coords)
 
     featsfile = os.path.join(test_path, 'points.geojson')
     outputfile = os.path.join(tmpdir.strpath, 'result.json')

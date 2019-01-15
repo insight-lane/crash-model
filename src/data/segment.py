@@ -1,5 +1,3 @@
-from shapely.geometry import MultiLineString
-
 
 class Segment(object):
     "A segment contains a dict of properties and a shapely shape"
@@ -19,21 +17,10 @@ class Intersection(object):
     def __init__(self, segment_id, lines, properties):
         self.id = segment_id
         self.lines = lines
-        coords = []
-        for line in lines:
-            # Skip empty geometry collections
-            if line.type == 'GeometryCollection':
-                items = [x for x in line]
-                if not items:
-                    continue
-
-            coords += [[x for x in line.coords]]
-
-        self.geometry = MultiLineString(coords)
 
         self.properties = properties
         self.display_name = ''
         self.center_x = None
         self.center_y = None
-
+        self.geometry = None
         
