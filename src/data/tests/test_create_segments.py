@@ -1,4 +1,5 @@
 from .. import create_segments
+from ..record import Record
 from ..segment import Segment, Intersection
 import fiona
 import os
@@ -248,7 +249,7 @@ def test_get_connections():
     # Test the segment on the other side of the median
     # getting dropped from the intersection
     connections = create_segments.get_connections(
-        [inters[0]['geometry']], roads)
+        [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
 
     # One intersection is found
     assert len(connections) == 1
@@ -266,7 +267,7 @@ def test_get_connections():
     assert len(roads) == 7
     assert len(inters) == 2
     connections = create_segments.get_connections(
-        [x['geometry'] for x in inters], roads)
+        [Record(x['properties'], point=x['geometry']) for x in inters], roads)
 
     assert len(connections) == 1
     assert len(connections[0][0]) == 7
@@ -275,7 +276,7 @@ def test_get_connections():
     test_file = os.path.join(test_path, 'unconnected.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
-        [x['geometry'] for x in inters], roads)
+        [Record(x['properties'], point=x['geometry']) for x in inters], roads)
     assert len(connections) == 2
     assert connections[0][0]
     assert connections[1][0]
@@ -283,7 +284,7 @@ def test_get_connections():
     test_file = os.path.join(test_path, 'missing_int_segments.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
-        [x['geometry'] for x in inters], roads)
+        [Record(x['properties'], point=x['geometry']) for x in inters], roads)
     assert len(connections) == 1
     assert len(connections[0][0]) == 7
 
@@ -297,6 +298,6 @@ def test_get_connections():
     # Test the segment on the other side of the median
     # getting dropped from the intersection
     connections = create_segments.get_connections(
-        [inters[0]['geometry']], roads)
+        [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
     assert connections[0][0]
     

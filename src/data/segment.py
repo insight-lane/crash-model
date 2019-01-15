@@ -23,4 +23,13 @@ class Intersection(object):
         self.center_x = None
         self.center_y = None
         self.geometry = None
-        
+
+
+class IntersectionBuffer(object):
+    """
+    An intersection buffer consists of a polygon, and a list of
+    records associated with the intersection points
+    """
+    def __init__(self, buffer, points):
+        self.buffer = buffer
+        self.points = points

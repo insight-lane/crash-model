@@ -16,7 +16,8 @@ import os
 import geojson
 import re
 from shapely.geometry import MultiLineString, LineString, mapping
-from .segment import Segment, Intersection
+from .segment import Segment, Intersection, IntersectionBuffer
+from .record import Record
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -63,8 +64,13 @@ def get_intersection_buffers(intersections, intersection_buffer_units,
         matches = []
         for idx in inter_index.intersection(buff.bounds):
             if intersections[idx]['geometry'].within(buff):
-                matches.append(intersections[idx]['geometry'])
-        results.append([buff, matches])
+                matches.append(Record(
+                    intersections[idx]['properties'],
+                    point=intersections[idx]['geometry']
+                    
+                ))
+
+        results.append(IntersectionBuffer(buff, matches))
 
     return results
 
@@ -87,8 +93,9 @@ def get_connections(points, segments):
     # The values are the point itself and an empty list that will
     # store all the linestrings with a connection to the point
     inters = []
+
     for p in points:
-        inters.append([p, []])
+        inters.append([p.point, []])
 
     # Get a starting list of all lines that touch any of the
     # intersection points
@@ -130,7 +137,7 @@ def find_non_ints(roads, int_buffers):
     Find the segments that aren't intersections
     Args:
         roads - a list of tuples of shapely shape and dict of segment info
-        int_buffers - a list of polygons that buffer intersections
+        int_buffers - a list of IntersectionBuffer objects
     Returns:
         tuple consisting of:
             non_int_lines - list in same format as input roads, just a subset
@@ -161,13 +168,14 @@ def find_non_ints(roads, int_buffers):
         util.track(i, 1000, len(int_buffers))
         match_segments = []
         matched_roads = []
-        for idx in road_lines_index.intersection(int_buffer[0].bounds):
+        for idx in road_lines_index.intersection(int_buffer.buffer.bounds):
             road = roads[idx]
+
             match_segments.append(Segment(road.geometry.intersection(
-                int_buffer[0]), road.properties))
+                int_buffer.buffer), road.properties))
             matched_roads.append(road)
 
-        int_segments = get_connections(int_buffer[1], match_segments)
+        int_segments = get_connections(int_buffer.points, match_segments)
 
         # Each road_with_int is a road segment and a list of lists of segments
         # representing the intersections
@@ -178,6 +186,7 @@ def find_non_ints(roads, int_buffers):
             roads_with_int_segments[r.properties['id']] += int_segments
 
         for int_segment in int_segments:
+
             inter_segments.append(Intersection(
                 count,
                 [x.geometry for x in int_segment[0]],
@@ -299,7 +308,6 @@ def add_point_based_features(non_inters, inters, jsonfile,
             # point-based properties to each of them
             for prop in inter.properties['data']:
                 for feat in matched_features:
-                    print(prop)
                     prop[feat] = matched_features[feat]
 
     # Add point data to non-intersections
