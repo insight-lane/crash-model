@@ -1,17 +1,22 @@
 # City name
-city: Washington, DC, USA
-# City centerpoint latitude & longitude
-city_latitude: 38.9071923
-city_longitude: -77.0368707
-timezone: America/New_York
-# Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
-city_radius: 25
+city: Brisbane, Australia
+# City centerpoint latitude & longitude (default geocoded values set)
+city_latitude: -27.4697707
+city_longitude: 153.0251235
+
+# City's time zone: defaults to the local time zone of computer initializing the city's config file
+timezone: Australia/Brisbane
+# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
+city_radius: 20
+
 # The folder under data where this city's data is stored
-name: dc
+name: brisbane
+
 # If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-startdate: 2014-01-01
-enddate: 2016-12-31
+startdate: 
+enddate: 
+
 # The type of predictions to generate, 'segment' is default, 'week' is legacy
 level: 'segment'
 
@@ -20,13 +25,13 @@ level: 'segment'
 
 # crash file configurations
 crashes_files:
-  Crashes_in_DC.csv:
+  test_crashes.csv:
     required:
-      id: OBJECTID
-      latitude: Y
-      longitude: X
+      id: 
+      latitude: 
+      longitude: 
       # If date supplied in single column:
-      date_complete: REPORTDATE
+      date_complete: 
       # If date is separated into year/month/day:
       date_year: 
       date_month: 
@@ -40,26 +45,27 @@ crashes_files:
       # military (HHMM)
       time_format: 
     optional:
-      summary: MAR_ADDRESS
-      vehicles: TOTAL_VEHICLES
-      bikes: TOTAL_BICYCLES
+      summary: 
+      # If the crash file doesn't have a lat/lon, you must give the address field
+      # and you will need to run the geocode_batch script - see the README
+      address: 
+      vehicles: 
+      bikes: 
 
 # List of concern type information
 concern_files:
   - name: concern
-    filename: Vision_Zero_Safety.csv
-    latitude: Y
-    longitude: X
-    time: REQUESTDATE
+      filename: test_concerns.csv
+      latitude: 
+      longitude: 
+      time: 
 
-
-# week on which to predict crashes (week, year)
-# Best practice is to choose a week towards the end of your crash data set
+# If using legacy 'week' predictions:
+# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set
 # in format [month, year]
-time_target: [51, 2016]
+time_target: [30, 2017]
 # specify how many weeks back to predict in output of train_model
 weeks_back: 1
-
 
 #################################################################
 # Configuration for default features
@@ -71,7 +77,10 @@ openstreetmap_features:
   categorical:
     width: Width
     cycleway_type: Bike lane
+    signal: Signal
     oneway: One Way
     lanes: Number of lanes
   continuous:
     width_per_lane: Average width per lane
+
+

@@ -44,9 +44,13 @@ def parse_date(date, timezone, time=None, time_format=None):
             date = date + timedelta(seconds=int(time))
         
         else:
-            date = date_parser.parse(
-                date.strftime('%Y-%m-%d ') + str(time)
-            )
+            try:
+                date = date_parser.parse(
+                    date.strftime('%Y-%m-%d ') + str(time)
+                )
+            # if time can't be parsed, just use bare date
+            except ValueError as _:
+                pass
 
     # Add timezone if it wasn't included in the string formatting originally
     if not date.tzinfo:
