@@ -186,14 +186,14 @@ def find_non_ints(roads, int_buffers):
             roads_with_int_segments[r.properties['id']] += int_segments
 
         for int_segment in int_segments:
-
             inter_segments.append(Intersection(
                 count,
                 [x.geometry for x in int_segment[0]],
                 {
                     'data': [x.properties for x in int_segment[0]],
                     'id': count
-                }
+                },
+                nodes=[x for x in int_buffer.points]
             ))
             count += 1
     non_int_lines = []
@@ -475,7 +475,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
             coords += [[x for x in line.coords]]
 
         intersection.geometry = MultiLineString(coords)
-        intersection.display_name = get_intersection_name(
+        intersection.properties['display_name'] = get_intersection_name(
             intersection.properties['data'])
 
         # Add the number of segments coming into this intersection
