@@ -164,6 +164,8 @@ def find_non_ints(roads, int_buffers):
     roads_with_int_segments = {}
     count = 0
     print("Generating intersection segments")
+    connected_segment_ids = defaultdict(list)
+    
     for i, int_buffer in enumerate(int_buffers):
         util.track(i, 1000, len(int_buffers))
         match_segments = []
@@ -186,6 +188,8 @@ def find_non_ints(roads, int_buffers):
             roads_with_int_segments[r.properties['id']] += int_segments
 
         for int_segment in int_segments:
+            # Get the ids of the adjacent non-intersection segments
+            connected = [x.properties['id'] for x in int_segment[0]]
             inter_segments.append(Intersection(
                 count,
                 [x.geometry for x in int_segment[0]],
@@ -193,9 +197,14 @@ def find_non_ints(roads, int_buffers):
                     'data': [x.properties for x in int_segment[0]],
                     'id': count
                 },
-                nodes=[x for x in int_buffer.points]
+                nodes=[x for x in int_buffer.points],
+                connected_segments=connected
             ))
+            for idx in connected:
+                connected_segment_ids[idx].append(count)
+
             count += 1
+
     non_int_lines = []
     print("Generating non-intersection segments")
     for i, road in enumerate(roads):
@@ -313,6 +322,7 @@ def add_point_based_features(non_inters, inters, jsonfile,
     # Add point data to non-intersections
     for i, non_inter in enumerate(non_inters):
         if str(non_inter.properties['id']) in list(matches.keys()):
+
             matched_features = matches[non_inter.properties['id']]
 
             n = copy.deepcopy(non_inter)
