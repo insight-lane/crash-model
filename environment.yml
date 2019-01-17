@@ -5,7 +5,7 @@ channels:
 dependencies:
 - codecov
 # Conda packacking issue, will want to revisit later
-- fiona=1.7.13
+- fiona
 - folium
 - geopandas
 - geocoder
@@ -24,6 +24,7 @@ dependencies:
 - python=3.6
 - pyyaml
 - pytest-cov
+- pytest-faulthandler
 - rtree
 - seaborn
 - scikit-learn

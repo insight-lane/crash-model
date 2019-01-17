@@ -1,2 +1,0 @@
-import faulthandler
-faulthandler.enable()

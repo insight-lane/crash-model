@@ -15,7 +15,7 @@ install:
 script:
 - cd src
 - pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-- catchsegv py.test --cov=./
+- py.test --cov=./
 
 after_success:
 - codecov
