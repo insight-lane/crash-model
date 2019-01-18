@@ -301,3 +301,9 @@ def test_get_connections():
         [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
     assert connections[0][0]
     
+
+def test_connected_segments():
+    """
+    Test of the connected components for intersections and non intersections
+    """
+    pass
