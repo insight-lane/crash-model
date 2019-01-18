@@ -13,13 +13,20 @@ def test_get_features():
         'lanes': [2, 1]
     })
     f_cat, f_cont, feats = train_model.get_features(
-        {'atr': '', 'tmc': '', 'concern': ''},
-        data,
-        os.path.join(TEST_FP, 'data')
-    )
-    assert f_cat == ['width']
-    assert f_cont == ['lanes', 'signal', 'jam_percent']
-    assert feats == ['lanes', 'signal', 'jam_percent', 'width']
+        {
+            'openstreetmap_features': {
+                'categorical': {
+                    'signal': 'Signal'
+                },
+                'continuous': {'missing': 'Missing Field'}
+            },
+            'atr': '',
+            'tmc': '',
+            'concern': ''
+        }, data)
+    assert f_cat == ['signal']
+    assert f_cont == []
+    assert feats == ['signal']
     
 
 def test_initialize_and_run(tmpdir):

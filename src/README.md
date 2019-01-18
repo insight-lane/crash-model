@@ -31,28 +31,39 @@ We also can map city-specific maps (and features associated with their roads) to
 
 ## Running the pipeline: data generation through visualization
 
-This section walks you through how to generate and visualize data for any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), or for any city that you suitable data for (at a minimum crashes, ideally concerns as well).
+This section walks you through how to generate and visualize data for any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), or for any city that you have suitable data for (at a minimum crashes, ideally concerns as well).
 
 The demo city data is stored as *data-latest.zip* using data-world. Contact one of the project leads if you don't yet have access.
 
+### Visualization
 - If you want to visualize the data, you'll need to create a mapbox account (https://www.mapbox.com/)
-- If you're running one of the demo cities, extract its archive from */data_zips* into */data* to expose the input files (crashes, concerns etc.). For example on linux systems, this can be achieved by running (from the root folder) *tar -C data -xjvf data_zips/boston.tar.bz2*
-- If you're running a different city, you need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file>`.
+
+### Initializing a city
+- If you're running on a new city (that does not have a configuration file in src/data/config), you will need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file> --supplemental <supplemental file1>,<supplemental file2>`.
     - City name is the full name of the city, e.g. "Cambridge, MA, USA".
-    - Folder name is what you'd like the city's data directory to  be named, e.g. "cambridge".
+    - Folder name is what you'd like the city's data directory to be named, e.g. "cambridge".
     - The latitude and longitude will be auto-populated by the initialize_city script, but you can modify this
-    - The time zone will be auto-populated as your current time zone, but you can modify this if it's for a city outside of your time zone
+    - The time zone will be auto-populated as your current time zone, but you can modify this if it's for a city outside of the time zone on your computer (we use tz database time zones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
     - If you give a startdate and/or an enddate, the system will only look at crashes that fall within that date range
     - The crash file is a csv file of crashes that includes (at minimum) columns for latitude, longitude, and date of crashes.
 		- Windows users should modify their filepath to use forward slashes (/) rather than the default backslash (\\)
-    - The concern file is a csv of concerns that includes (at minimum) a latitude, longitude and date of a concern file.
+    - The concern file is optional: a csv of concerns that includes (at minimum) a latitude, longitude and date of a concern file.
 		- Windows users should modify their filepath to use forward slashes (/) rather than the default backslash (\\)
-    - Manually edit the configuration file found in e.g. src/config/config_cambridge:
+    - Supplemental files are optional: any number of csv files that contain a lat/lon point and some type of feature you'd like to extract
+
+- Once you have run the initialize_city script, you need to manually edit the configuration file found in e.g. src/config/config_cambridge:
         - If OpenStreetMaps does not have polygon data for your city, the road network will need to be constructed manually. Set the city_latitude and city_longitude values to the centerpoint of the city, and the city_radius to an appropriate distance (in km) that you would like the road network to be built for, e.g 15 for 15km radius from the specified lat / lng.
-        - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well.
+        - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well. If your csv file does not contain an id field, just put ID here, and the csv will be modified to add an ID
         - If you have a csv concern file, enter the column headers for latitude, longitude, and date.
-        - Modify time_target to be the last month and year of your crash data
+        - Modify time_target to be the last month and year of your crash data (this is legacy and you won't need to do this unless you want to do week-by-week modeling)
 - Manually edit config.js in /reports/ to add your mapbox api key (from when you made a mapbox account) as MAPBOX_TOKEN
+
+### Geocoding
+
+- If your crash file provides addresses but not latitude/longitude, you'll need to geocode your crash file before running the pipeline. This can be done from the src directory by running `python -m tools.geocode_batch -d <data directory created from the initalize_city script> -f <crash filename> -a <address field in the crash csv file> -c <city name, e.g. "Boston, Massachusetts, USA"`. If you have a very large number of entries to geocode, you may choose to use mapbox's geocoder instead of google's (the default for this script). In that case, you can also pass in your mapbox token to the script with the -m flag.
+
+### Running on existing cities
+- Cities we have already set up will already have a config file.
 
 - Run the pipeline: `python pipeline.py -c <config file>`
 

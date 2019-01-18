@@ -25,6 +25,7 @@ dependencies:
 - pyyaml
 - pytest-cov
 - rtree
+- ruamel.yaml
 - seaborn
 - scikit-learn
 - shapely

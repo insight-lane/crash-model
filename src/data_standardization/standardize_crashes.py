@@ -12,13 +12,17 @@ import random
 import pytz
 import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
+from data.util import read_geocode_cache
+
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
+
 def read_standardized_fields(raw_crashes, fields, opt_fields,
-                             timezone, startdate=None, enddate=None):
+                             timezone, datadir, city,
+                             startdate=None, enddate=None):
 
     crashes = {}
     # Drop times from startdate/enddate in the unlikely event
@@ -32,13 +36,52 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
 
     min_date = None
     max_date = None
+
+    cached_addresses = {}
+
+    if (not fields['latitude'] or not fields['longitude']):
+        if 'address' in opt_fields and opt_fields['address']:
+            # load cache for geocode lookup
+            geocoded_file = os.path.join(
+                    datadir, 'processed', 'geocoded_addresses.csv')
+            if os.path.exists(geocoded_file):
+                cached_addresses = read_geocode_cache(
+                    filename=os.path.join(
+                        datadir, 'processed', 'geocoded_addresses.csv'))
+            else:
+
+                raise SystemExit(
+                    "Need to geocode addresses before standardizing crashes")
+        else:
+            raise SystemExit(
+                "Can't standardize crash data, no lat/lon or address found"
+            )
+
+    no_geocoded_count = 0
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
 
-        # skip any crashes that don't have coordinates
-        if crash[fields["latitude"]] == "" or crash[fields["longitude"]] == "":
-            continue
+        lat = crash[fields['latitude']] if fields['latitude'] else None
+        lon = crash[fields['longitude']] if fields['longitude'] else None
+
+        if not lat or not lon:
+
+            # skip any crashes that don't have coordinates
+            if 'address' not in opt_fields or opt_fields['address'] not in crash:
+                continue
+
+            address = crash[opt_fields['address']] + ' ' + city
+
+            # If we have an address, look it up in the geocoded cache
+            if address in cached_addresses:
+                address, lat, lon, _ = cached_addresses[address]
+                if not address:
+                    no_geocoded_count += 1
+                    continue
+            else:
+                no_geocoded_count += 1
+                continue
 
         # construct crash date based on config settings, skipping any crashes without date
         if fields["date_complete"]:
@@ -96,13 +139,13 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             min_date = crash_day
         if max_date is None or crash_day > max_date:
             max_date = crash_day
-            
+
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", crash_date_time),
             ("location", OrderedDict([
-                ("latitude", float(crash[fields["latitude"]])),
-                ("longitude", float(crash[fields["longitude"]]))
+                ("latitude", float(lat)),
+                ("longitude", float(lon))
             ]))
         ])
         formatted_crash = add_city_specific_fields(crash, formatted_crash,
@@ -119,6 +162,9 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
         print("Including crashes before {}".format(
             max_date.isoformat()))
 
+    # Making sure we have enough entries with lat/lon to continue
+    if len(crashes) > 0 and no_geocoded_count/len(crashes) > .9:
+        raise SystemExit("Not enough geocoded addresses found, exiting")
     return crashes
 
 
@@ -239,6 +285,8 @@ if __name__ == '__main__':
             csv_config['required'],
             csv_config['optional'],
             pytz.timezone(config['timezone']),
+            args.datadir,
+            config['city'],
             startdate,
             enddate
         )
