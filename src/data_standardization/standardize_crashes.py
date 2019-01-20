@@ -15,7 +15,7 @@ import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
 from pandas.io.json import json_normalize
 from shapely.geometry import Point
-import geopandas
+import geopandas as gpd
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -277,7 +277,11 @@ if __name__ == '__main__':
     crashes_agg["coordinates"] = crashes_agg["coordinates"].apply(Point)
     crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
 
-    crashes_agg_gdf = geopandas.GeoDataFrame(crashes_agg, geometry="coordinates")
+    crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
     #print(crashes_agg_gdf.head())
-    #gdf.to_file(os.path.join(args.datadir, "crashes_rollup.geojson"), driver="GeoJSON") - check where this file should be written to
+
+    crashes_agg_path = os.path.join(args.datadir, "standardized/crashes_rollup.geojson")
+    if os.path.exists(crashes_agg_path):
+        os.remove(crashes_agg_path)
+    crashes_agg_gdf.to_file(os.path.join(args.datadir, "standardized/crashes_rollup.geojson"), driver="GeoJSON")
 
