@@ -35,94 +35,7 @@ d3.json("preds_final.geojson", function(data) {
 		.on("click", function(d) { populateSegmentInfo(d.segment_id); });
 
 	makeBarChart(0, median);
-
-	// populateFeatureImportancesTbl(data);
-
-	// add crash layer to map so user can view if they choose
-	d3.json("crashes.json", function(data) {
-		// load in standardized crash json and gets total number of crashes by location
-		var summedData = totalCrashesByLocation(data);
-		var maxCrashes = d3.max(summedData, function(d) { return d.value;});
-
-		// then convert the aggregated json into a geojson so it can be displayed on map
-		var crashGeojson = buildGeojson(summedData);
-
-		// on intiial load, do not display crashes
-		map.addLayer({
-			id: 'crashes',
-			type: 'circle',
-			source: {
-				type: 'geojson',
-				data: crashGeojson
-			},
-			layout: {
-				visibility: 'none'
-			},
-			paint: {
-				'circle-radius': {
-					property: 'total_crashes',
-					type: 'exponential',
-					stops: [
-						[1, 3],
-						[maxCrashes, 20]
-					]
-				},
-				'circle-color': '#fff',
-				'circle-stroke-color': '#fff',
-				'circle-opacity': 0.5
-			},
-		}, 'admin-2-boundaries-dispute');
-
-		map.on('click', 'crashes', function(e) {
-			var coordinates = e.features[0].geometry.coordinates.slice();
-			var crashes = e.features[0].properties.total_crashes;
-
-			new mapboxgl.Popup()
-				.setLngLat(coordinates)
-				.setText(crashes > 1 ? crashes + " crashes" : "1 crash")
-				.addTo(map);
-		});
-
-		map.on('mouseenter', 'crashes', function() {
-			map.getCanvas().style.cursor = 'pointer';
-		});
-
-		map.on('mouseleave', 'crashes', function() {
-			map.getCanvas().style.cursor = '';
-		});
-	})
 })
-
-function totalCrashesByLocation(json) {
-	json.forEach(function(crash) {
-		crash.key = crash.location.longitude + "|" + crash.location.latitude;
-		crash.n = 1;
-	})
-
-	var data = d3.nest()
-		.key(function(d) { return d.key; })
-		.rollup(function(d) { return d3.sum(d, function(g) { return g.n; }); })
-		.entries(json);
-
-	return data;
-}
-
-function buildGeojson(json) {
-	var features = [];
-	json.forEach(function(crash) {
-		var crashObj = {};
-		crashObj.type = "Feature";
-		crashObj.geometry = {"type": "Point", "coordinates": [ crash.key.split("|")[0], crash.key.split("|")[1]]};
-		crashObj.properties = {"total_crashes": crash.value};
-		features.push(crashObj);
-	});
-
-	var crashGeojson = {}
-	crashGeojson.type = "FeatureCollection";
-	crashGeojson.features = features;
-
-	return(crashGeojson);
-}
 
 function splitSegmentName(segmentName) {
 	var i = segmentName.length;
@@ -241,49 +154,49 @@ function updateBarChart(prediction) {
 		.style("fill", riskColor(prediction));
 }
 
-function updateFeatureImportances(segmentData) {
-	d3.selectAll("#featImportancesTbl td").classed("selected", false);
+// function updateFeatureImportances(segmentData) {
+// 	d3.selectAll("#featImportancesTbl td").classed("selected", false);
 
-	if(segmentData.AADT >= 10000) {
-		d3.select("#featImportancesTbl .feature.first td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.first td.no").classed("selected", true);
-	}
+// 	if(segmentData.AADT >= 10000) {
+// 		d3.select("#featImportancesTbl .feature.first td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.first td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.AADT <= 1000) {
-		d3.select("#featImportancesTbl .feature.second td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.second td.no").classed("selected", true);
-	}
+// 	if(segmentData.AADT <= 1000) {
+// 		d3.select("#featImportancesTbl .feature.second td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.second td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.intersection === 1) {
-		d3.select("#featImportancesTbl .feature.third td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.third td.no").classed("selected", true);
-	}
+// 	if(segmentData.intersection === 1) {
+// 		d3.select("#featImportancesTbl .feature.third td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.third td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.F_F_CLASS <= 3) {
-		d3.select("#featImportancesTbl .feature.fourth td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.fourth td.no").classed("selected", true);
-	}
+// 	if(segmentData.F_F_CLASS <= 3) {
+// 		d3.select("#featImportancesTbl .feature.fourth td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.fourth td.no").classed("selected", true);
+// 	}
 
-	if(segmentData.SPEEDLIMIT25 === 1) {
-		d3.select("#featImportancesTbl .feature.fifth td.yes").classed("selected", true);
-	}
-	else {
-		d3.select("#featImportancesTbl .feature.fifth td.no").classed("selected", true);
-	}
-}
+// 	if(segmentData.SPEEDLIMIT25 === 1) {
+// 		d3.select("#featImportancesTbl .feature.fifth td.yes").classed("selected", true);
+// 	}
+// 	else {
+// 		d3.select("#featImportancesTbl .feature.fifth td.no").classed("selected", true);
+// 	}
+// }
 
 
-function populateFeatureImportancesTbl(data) {
+// function populateFeatureImportancesTbl(data) {
 
-}
+// }
 
 
 
