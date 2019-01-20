@@ -278,8 +278,6 @@ if __name__ == '__main__':
     crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
 
     crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
-    #print(crashes_agg_gdf.head())
-
     crashes_agg_path = os.path.join(args.datadir, "standardized/crashes_rollup.geojson")
     if os.path.exists(crashes_agg_path):
         os.remove(crashes_agg_path)
