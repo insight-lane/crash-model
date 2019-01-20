@@ -35,22 +35,6 @@ d3.json("preds_final.geojson", function(data) {
 		.on("click", function(d) { populateSegmentInfo(d.segment_id); });
 
 	makeBarChart(0, median);
-
-	// populateFeatureImportancesTbl(data);
-
-	// add crash layer to map so user can view if they choose
-	// d3.json("crashes2.json", function(data) {
-	// 	// load in standardized crash json and gets total number of crashes by location
-	// 	var summedData = totalCrashesByLocation(data);
-	// 	// console.log(summedData);
-	// 	var maxCrashes = d3.max(summedData, function(d) { return d.value;});
-
-	// 	// then convert the aggregated json into a geojson so it can be displayed on map
-	// 	var crashGeojson = buildGeojson(summedData);
-
-	// 	// on intiial load, do not display crashes
-
-	// })
 })
 
 function splitSegmentName(segmentName) {
