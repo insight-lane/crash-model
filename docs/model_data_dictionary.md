@@ -18,12 +18,3 @@
 | parking_tickets | Number of parking tickets for that segment | 10 |Currently in use for Cambridge only  |   |
 | intersection | Is this segment part of an intersection | 0/1 |All|   |
 | log_width_per_lane |  | |All|   |
-
-Unused features? (Need to confirm)
-
-| Feature Name | Description | Example Values|Comments (Optional) |
-| ---: | ---: | ---: | ---: |
-| osm\_speed | Speed limit as given by open street maps | 25 | Not filled in as often as we&#39;d like |
-| signal | Whether there is a traffic signal at this segment | 1 | Boolean |
-| Crash | Number of crashes in that [week, year combination] | 10 |   |
-| hwy\_type |0 - residential<br/>1 - secondary<br/>2 - primary | 0 | List of hwy\_types keys and corresponding type can be found in data/\&lt;city\&gt;/docs/highway\_keys.csvOnly stored as ints because that&#39;s what the model takes; might want to revisit |
