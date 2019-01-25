@@ -56,7 +56,6 @@ def test_find_non_ints():
     assert len(non_int_lines) == 8
     assert len(inter_segments) == 2
 
-
 def test_create_segments_from_json(tmpdir):
     """
     Just test that this runs, for now
@@ -222,12 +221,12 @@ def test_add_point_based_features(tmpdir):
         "feature": "traffic_volume",
         "date": "2014-01-04T15:50:00Z",
         "location": {"latitude": 42.38404209999999, "longitude": -71.1370766},
-        "feat_agg": "latest", "value":100, "near_id": "001557"
+        "feat_agg": "latest", "value": 100, "near_id": "001557"
     }, {
         "feature": "traffic_volume",
         "date": "2015-01-04T15:50:00Z",
         "location": {"latitude": 42.38404209999999, "longitude": -71.1370766},
-        "feat_agg": "latest", "value":200, "near_id": "001557"
+        "feat_agg": "latest", "value": 200, "near_id": "001557"
     }]
 
     with open(outputfile, 'r') as f:
@@ -306,4 +305,16 @@ def test_connected_segments():
     """
     Test of the connected components for intersections and non intersections
     """
-    pass
+
+    roads, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/test_create_segments/test_adjacency.geojson'
+    ))
+
+    int_buffers = create_segments.get_intersection_buffers(inters, 20)
+    non_int_lines, inter_segments = create_segments.find_non_ints(
+        roads, int_buffers)
+
+    # This tests a bugfix where lines that almost but not quite intersect
+    # are correctly left out of set of intersection lines
+    assert len(inter_segments[1].lines) == 3
