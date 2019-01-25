@@ -165,22 +165,31 @@ def find_non_ints(roads, int_buffers):
     count = 0
     print("Generating intersection segments")
     connected_segment_ids = defaultdict(list)
-    
+
+    # Go through each intersection buffer object
     for i, int_buffer in enumerate(int_buffers):
         util.track(i, 1000, len(int_buffers))
         match_segments = []
         matched_roads = []
+
+        # Add the portion of each road that intersects intersection buffer
+        # to match_segments. These are possible connections
+        # If the road intersects, add that to matched_roads
         for idx in road_lines_index.intersection(int_buffer.buffer.bounds):
             road = roads[idx]
+            if road.geometry.intersects(int_buffer.buffer):
+                match_segments.append(Segment(road.geometry.intersection(
+                    int_buffer.buffer), road.properties))
+                matched_roads.append(road)
 
-            match_segments.append(Segment(road.geometry.intersection(
-                int_buffer.buffer), road.properties))
-            matched_roads.append(road)
-
+        # Get the connections that touch a point in the intersection buffer
         int_segments = get_connections(int_buffer.points, match_segments)
 
         # Each road_with_int is a road segment and a list of lists of segments
-        # representing the intersections
+        # representing the intersections associated with that road
+        # We store these, because the roads that do not have any intersections
+        # associated with them don't need to be split into separate
+        # intersection and non intersection segments
         # to-do: turn these into intersection objects
         for r in matched_roads:
             if r.properties['id'] not in roads_with_int_segments:
@@ -188,8 +197,9 @@ def find_non_ints(roads, int_buffers):
             roads_with_int_segments[r.properties['id']] += int_segments
 
         for int_segment in int_segments:
+
             # Get the ids of the adjacent non-intersection segments
-            connected = [x.properties['id'] for x in int_segment[0]]
+            connected = [x.properties['orig_id'] for x in int_segment[0]]
             inter_segments.append(Intersection(
                 count,
                 [x.geometry for x in int_segment[0]],
@@ -204,14 +214,23 @@ def find_non_ints(roads, int_buffers):
                 connected_segment_ids[idx].append(count)
 
             count += 1
-
+    
     non_int_lines = []
+    # Store the mappings of non intersection orig_id to id
+    # We'll need this to give intersections the appropriate mapping
+    orig_to_id = defaultdict()
     print("Generating non-intersection segments")
+
+    non_int_count = 0
+
     for i, road in enumerate(roads):
         util.track(i, 1000, len(roads))
+
         # If there's no overlap between the road segment and any intersections
         if road.properties['id'] not in roads_with_int_segments:
             non_int_lines.append(road)
+            road.properties['id'] = '00' + str(non_int_count)
+            orig_to_id[road.properties['orig_id']] = road.properties['id']
         else:
 
             # Check against each separate intersection
@@ -221,14 +240,17 @@ def find_non_ints(roads, int_buffers):
             for inter in road_info:
                 buffered_int = inter[1]
                 diff = diff.difference(buffered_int)
-
             if diff.type in ('LineString', 'MultiLineString'):
+                road.properties['id'] = '00' + str(non_int_count)
+                orig_to_id[road.properties['orig_id']] = road.properties['id']
+                non_int_count += 1
                 road.properties['connected_segments'] = connected_segment_ids[
-                    road.properties['id']]
+                    road.properties['orig_id']]
                 non_int_lines.append(Segment(
                     diff,
                     road.properties)
                 )
+
             else:
                 # There may be no sections of the segment that fall outside
                 # of an intersection, in which case it's skipped
@@ -236,6 +258,13 @@ def find_non_ints(roads, int_buffers):
                     continue
                 print("{} found, skipping".format(diff.type))
 
+    # Update intersections' connected segments with id instead of original id
+    for inter_segment in inter_segments:
+
+        inter_segment.connected_segments = [
+            orig_to_id[x] for x in inter_segment.connected_segments
+            if x in orig_to_id]
+        
     return non_int_lines, inter_segments
 
 
@@ -598,7 +627,7 @@ if __name__ == '__main__':
     if not os.path.exists(additional_feats_file):
         additional_feats_file = None
 
-    if feats_file or additional_feats_file:
+    if False:
         jsonfile = os.path.join(DATA_FP, 'processed', 'points_joined.json')
         non_inters, inters = add_point_based_features(
             non_inters,
