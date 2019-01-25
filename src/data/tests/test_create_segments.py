@@ -318,3 +318,9 @@ def test_connected_segments():
     # This tests a bugfix where lines that almost but not quite intersect
     # are correctly left out of set of intersection lines
     assert len(inter_segments[1].lines) == 3
+
+    # Test connected segments
+    assert set(inter_segments[0].connected_segments) == set([
+        '0011', '007', '005', '000'])
+    assert set(non_int_lines[8].properties['connected_segments']) == set([
+        3, 4])

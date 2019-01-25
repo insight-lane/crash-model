@@ -264,7 +264,7 @@ def find_non_ints(roads, int_buffers):
         inter_segment.connected_segments = [
             orig_to_id[x] for x in inter_segment.connected_segments
             if x in orig_to_id]
-        
+
     return non_int_lines, inter_segments
 
 
@@ -571,7 +571,8 @@ def write_segments(non_inters, inters, mapfp, datafp):
             'center_x': x.properties['center_x']
                 if 'center_x' in x.properties else '',
             'center_y': x.properties['center_y']
-                if 'center_y' in x.properties else ''
+                if 'center_y' in x.properties else '',
+            'connected_segments': x.connected_segments
         }
     } for x in inters]
 
