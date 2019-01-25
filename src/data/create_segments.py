@@ -628,7 +628,7 @@ if __name__ == '__main__':
     if not os.path.exists(additional_feats_file):
         additional_feats_file = None
 
-    if False:
+    if feats_file or additional_feats_file:
         jsonfile = os.path.join(DATA_FP, 'processed', 'points_joined.json')
         non_inters, inters = add_point_based_features(
             non_inters,
