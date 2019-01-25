@@ -14,7 +14,7 @@ dependencies:
 - ipython
 - jupyter
 - matplotlib
-- numpy<1.16
+- numpy
 - openpyxl
 - osmnx
 - pandas
