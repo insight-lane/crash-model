@@ -120,15 +120,21 @@ def get_features(config, data):
 
     # segment chars
     # Dropping continuous features that don't exist
-    new_feats = []
+    new_feats_cont = []
+    new_feats_cat = []
     for f in features['f_cont']:
         if f not in data.columns.values:
             print("Feature " + f + " not found, skipping")
         else:
-            new_feats.append(f)
+            new_feats_cont.append(f)
+    f_cont = new_feats_cont
 
-    f_cont = new_feats
-    f_cat = features['f_cat']
+    for f in features['f_cat']:
+        if f not in data.columns.values:
+            print("Feature " + f + " not found, skipping")
+        else:
+            new_feats_cat.append(f)
+    f_cat = new_feats_cat
 
     # create featureset holder
     features = f_cont + f_cat
