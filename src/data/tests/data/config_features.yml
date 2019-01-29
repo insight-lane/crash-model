@@ -5,6 +5,8 @@ openstreetmap_features:
     cycleway_type: Bike lane
     oneway: One Way
     lanes: Number of lanes
+    signal: Traffic signal
+    crosswalk: Crosswalk
   continuous:
     width_per_lane: Average width per lane
 waze_features:
