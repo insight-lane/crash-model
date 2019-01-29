@@ -1,0 +1,14 @@
+
+openstreetmap_features:
+  categorical:
+    width: Width
+    cycleway_type: Bike lane
+    oneway: One Way
+    lanes: Number of lanes
+  continuous:
+    width_per_lane: Average width per lane
+waze_features:
+  categorical:
+    jam: Existence of a jam
+  continuous:
+    jam_percent: Percent of time there was a jam

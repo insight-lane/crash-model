@@ -6,13 +6,15 @@ import shutil
 def test_add_map(tmpdir):
 
     # Copy test data into temp directory in appropriate place
-    orig_path = os.path.dirname(
-        os.path.abspath(__file__)) + '/data/test_add_map'
+    base_path = os.path.dirname(
+        os.path.abspath(__file__)) + '/data/'
+    orig_path = base_path + 'test_add_map'
     path = tmpdir.strpath + '/data'
 
     data_path = os.path.join(path, "processed/maps")
     shutil.copytree(orig_path, data_path)
-
+    print("path path")
+    print(orig_path)
     # To test the mapping, use much smaller versions of the osm
     # and osm3857 files, as well as much smaller versions of boston data
 
@@ -37,7 +39,9 @@ def test_add_map(tmpdir):
         '-d',
         path,
         '-r',
-        os.path.join(data_path, 'elements.geojson')
+        os.path.join(data_path, 'elements.geojson'),
+        '-c',
+        os.path.join(base_path, 'config_features.yml')
     ])
 
     # Extract and create on supplemental map
@@ -61,7 +65,10 @@ def test_add_map(tmpdir):
         '-r',
         os.path.join(data_path, 'boston/elements.geojson'),
         '-n',
-        'boston'
+        'boston',
+        '-c',
+        os.path.join(base_path, 'config_features.yml')
+
     ])
 
     # Above was all set up, now the testing part

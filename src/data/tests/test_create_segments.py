@@ -153,7 +153,13 @@ def test_add_point_based_features(tmpdir):
     # There's only one test intersection
     inter = [x for x in data if x['geometry']['type'] == 'MultiLineString'][0]
     lines = [LineString(x) for x in inter['geometry']['coordinates']]
-    inters = [Intersection(0, lines, inter['properties'])]
+    print(inter['properties'])
+    inters = [Intersection(
+        975,
+        lines,
+        inter['properties']['data'],
+        {'id': inter['properties']['id']}
+    )]
     coords = []
     for line in inters[0].lines:
         coords.append(line.coords)
@@ -166,7 +172,7 @@ def test_add_point_based_features(tmpdir):
         non_inters, inters, outputfile, featsfile)
 
     # Check whether the segments we expected got the properties
-    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    assert inters[0].data[0]['crosswalk'] == 1
     signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
     assert signalized[0].properties['id'] == '001556'
@@ -175,7 +181,7 @@ def test_add_point_based_features(tmpdir):
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile)
 
-    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    assert inters[0].data[0]['crosswalk'] == 1
     signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
     assert signalized[0].properties['id'] == '001556'

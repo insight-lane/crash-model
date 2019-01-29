@@ -100,7 +100,9 @@ if __name__ == '__main__':
         '-m',
         'data.create_segments',
         '-d',
-        DATA_FP
+        DATA_FP,
+        '-c',
+        config_file
     ])
 
     if extra_map:
@@ -124,6 +126,8 @@ if __name__ == '__main__':
             'data.create_segments',
             '-d',
             DATA_FP,
+            '-c',
+            config_file,
             '-n',
             outputdir,
             '-r',
