@@ -240,14 +240,23 @@ def find_non_ints(roads, int_buffers):
             for inter in road_info:
                 buffered_int = inter[1]
                 diff = diff.difference(buffered_int)
+
             if diff.type in ('LineString', 'MultiLineString'):
+                if 'LineString' == diff.type:
+                    coords = [x for x in diff.coords]
+                elif 'MultiLineString' == diff.type:
+                    coords = []
+                    for l in diff:
+                        for coord in l.coords:
+                            coords.append(coord)
+
                 road.properties['id'] = '00' + str(non_int_count)
                 orig_to_id[road.properties['orig_id']] = road.properties['id']
                 non_int_count += 1
                 road.properties['connected_segments'] = connected_segment_ids[
                     road.properties['orig_id']]
                 non_int_lines.append(Segment(
-                    diff,
+                    LineString(coords),
                     road.properties)
                 )
 
