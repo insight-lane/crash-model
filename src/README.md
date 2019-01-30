@@ -39,7 +39,7 @@ The demo city data is stored as *data-latest.zip* using data-world. Contact one 
 - If you want to visualize the data, you'll need to create a mapbox account (https://www.mapbox.com/)
 
 ### Initializing a city
-- If you're running on a new city (that does not have a configuration file in src/data/config), you will need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file> --supplemental <supplemental file1>,<supplemental file2>`.
+- If you're running on a new city (that does not have a configuration file in src/data/config), you will need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --concern <concern file> --supplemental <supplemental file1>,<supplemental file2>`. You should give the full path to the crash and concern files, and they will be copied into the city's data directory as part of initialization.
     - City name is the full name of the city, e.g. "Cambridge, MA, USA".
     - Folder name is what you'd like the city's data directory to be named, e.g. "cambridge".
     - The latitude and longitude will be auto-populated by the initialize_city script, but you can modify this

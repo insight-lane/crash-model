@@ -7,7 +7,7 @@ import pandas as pd
 from data.util import read_geojson, group_json_by_location, group_json_by_field
 import os
 import argparse
-
+import warnings
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -52,6 +52,7 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     IMPORTANT: if the aggregation type changes, need to also update
         how aggregation is calculated in src/data/add_map.py
     """
+
     # Read in inters data (json), turn into df with inter index
     df_index = []
     df_records = []
@@ -74,8 +75,14 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     non_inters_df.set_index('id', inplace=True)
 
     # Combine inter + non_inter
-    combined = pd.concat([inters_df, non_inters_df])
-
+    combined = pd.concat([inters_df, non_inters_df], sort=True)
+    missing_feats = [x for x in feats if x not in combined.columns]
+    feats = [x for x in feats if x in combined.columns]
+    warnings.warn(
+        str(len(missing_feats))
+        + " feature(s) missing, skipping (" +
+        ', '.join(missing_feats)
+        + ")")
     # Since there are multiple segments per intersection,
     # aggregating inters data = apply aggregation (default is max)
     aggregated = getattr(combined[feats].groupby(combined.index), agg)
