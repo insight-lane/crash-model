@@ -8,7 +8,7 @@
 | Lanes | Number of lanes in the segment | 3 | All  |   |
 | width | Width of the road segment, as given by open street map | 15 | All  | Used as a log value in our model  |
 | Struct\_Cnd |  Structural Condition | &#39;pre\_month&#39; |  Boston | Categorical, a column is made for each unique value of this in the dataset |
-| cycleway_type | |  | All |   |
+| cycleway_type |0 = None<br/> 1 = Lane<br/> 2 = Shared Labe<br/> 3 = Track<br/>4 = Shared busway<br/> 5 = Buffered Lane<br/> | 0 | All |   |
 | F\_F\_Class| Federal Functional class for that segment. Codes includes:<br/>1 = Interstate<br/> 2 = Other<br/> Freeways and Expressways<br/> 3 = Other Principal Arterial<br/> 4 = Minor Arterial<br/> 5 = Major Collector<br/> 6 = Minor Collector<br/> 7 = Local<br/> | 5 | Boston|Functional classification is the grouping of highways, roads and streets by the character of service they provide and was developed for transportation planning purposes. Categorical, a column is made for each unique value of this in the dataset |
 | Conflict | | | |   |
 | oneway | Is the segment one way or not | 0 | All |Boolean |
