@@ -17,4 +17,4 @@
 | Seeclickfix | Number of concerns from seeclickfix for that [week, year] | 10 |Currently in use for Cambridge only  |   |
 | parking_tickets | Number of parking tickets for that segment | 10 |Currently in use for Cambridge only  |   |
 | intersection | Is this segment part of an intersection | 0/1 |All|   |
-| log_width_per_lane |  | |All|   |
+| log_width_per_lane | Log value of width | |All|   |
