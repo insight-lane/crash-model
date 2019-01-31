@@ -242,7 +242,20 @@ def calculate_crashes_by_location(df):
     
     crashes_agg['crash_dates'] = crashes_agg['crash_dates'].str.join(',')
     return crashes_agg
-    
+
+def make_crash_rollup(crashes_json):
+    df_std_crashes = json_normalize(crashes_json)
+    df_std_crashes = df_std_crashes[["dateOccurred", "location.latitude", "location.longitude"]]
+    df_std_crashes.rename(columns={"location.latitude": "latitude", "location.longitude": "longitude"}, inplace=True)
+
+    crashes_agg = calculate_crashes_by_location(df_std_crashes)
+    crashes_agg["coordinates"] = list(zip(crashes_agg.longitude, crashes_agg.latitude))
+    crashes_agg["coordinates"] = crashes_agg["coordinates"].apply(Point)
+    crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
+
+    crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
+    return crashes_agg_gdf
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -313,19 +326,7 @@ if __name__ == '__main__':
     crashes_output = os.path.join(args.datadir, "standardized/crashes.json")
     validate_and_write_schema(schema_path, list_crashes, crashes_output)
 
-    # begin steps to turn standardized crash data into dataset needed to display crash info in
-    # the visualization
-    df_std_crashes = json_normalize(list_crashes)
-    df_std_crashes = df_std_crashes[["dateOccurred", "location.latitude", "location.longitude"]]
-    df_std_crashes.rename(columns={"location.latitude": "latitude", "location.longitude": "longitude"}, inplace=True)
-
-    crashes_agg = calculate_crashes_by_location(df_std_crashes)
-    crashes_agg["coordinates"] = list(zip(crashes_agg.longitude, crashes_agg.latitude))
-    crashes_agg["coordinates"] = crashes_agg["coordinates"].apply(Point)
-    crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
-
-    crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
-    #print(crashes_agg_gdf.head())
+    crashes_agg_gdf = make_crash_rollup(list_crashes)
 
     crashes_agg_path = os.path.join(args.datadir, "standardized/crashes_rollup.geojson")
     if os.path.exists(crashes_agg_path):
