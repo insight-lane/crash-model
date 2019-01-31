@@ -235,6 +235,12 @@ def add_id(csv_file, id_field):
                 writer.writerow(row)
 
 def calculate_crashes_by_location(df):
+    """
+    Calculates total number of crashes that occurred at each unique lat/lng pair
+
+    Inputs:
+        - a dataframe where each row represents one unique crash incident
+    """
     crashes_agg = df.groupby(['latitude', 'longitude']).agg(['count', 'unique'])
     crashes_agg.columns = crashes_agg.columns.get_level_values(1)
     crashes_agg.rename(columns={'count': 'total_crashes', 'unique': 'crash_dates'}, inplace=True)
@@ -244,6 +250,13 @@ def calculate_crashes_by_location(df):
     return crashes_agg
 
 def make_crash_rollup(crashes_json):
+    """
+    Generates a dataframe with the total number of crashes and a list of crash dates
+    per unique lat/lng pair
+
+    Inputs:
+        - a json of standardized crash data
+    """
     df_std_crashes = json_normalize(crashes_json)
     df_std_crashes = df_std_crashes[["dateOccurred", "location.latitude", "location.longitude"]]
     df_std_crashes.rename(columns={"location.latitude": "latitude", "location.longitude": "longitude"}, inplace=True)
