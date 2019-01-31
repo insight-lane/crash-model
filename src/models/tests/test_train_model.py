@@ -16,7 +16,8 @@ def test_get_features():
         {
             'openstreetmap_features': {
                 'categorical': {
-                    'signal': 'Signal'
+                    'signal': 'Signal',
+                    'test_missing': 'Missing Field'
                 },
                 'continuous': {'missing': 'Missing Field'}
             },
