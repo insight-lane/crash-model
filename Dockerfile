@@ -22,9 +22,9 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
 	vim
 
 # Setup apache & supervisor
-RUN rm -rf /var/www/html && ln -s /app /var/www/html
-ADD conf/bcm.conf /etc/apache2/sites-available/bcm.conf
-RUN ln -s /etc/apache2/sites-available/bcm.conf /etc/apache2/sites-enabled/bcm.conf
+RUN rm -rf /var/www/html && ln -s /app/reports /var/www/html
+ADD conf/insight-lane.conf /etc/apache2/sites-available/insight-lane.conf
+RUN ln -s /etc/apache2/sites-available/insight-lane.conf /etc/apache2/sites-enabled/insight-lane.conf
 RUN a2enmod rewrite
 ADD conf/supervisord.conf /etc/supervisord.conf
 

@@ -115,27 +115,38 @@
  -->	</div>
 
 	<script>
-		// If no valid cityId specified swap to the first in the list
-		if (RegExp("\/(.+)").test(window.location.pathname) == false)
+		// If only one city exists in config, url is irrelevant
+		if (config.cities.length == 1)
 		{
-			window.location.href = "/"+config.cities[0].id;
+			var city = config.cities[0];
+			var cityId = city.id;
+			var country = city.name.split(", ")[2];
 		}
-		// Load the requested city
+		// Multiple cities exist in config
 		else
 		{
-			cityId = window.location.pathname.match(/\/(.+)/)[1];
-			
-			for (c = 0; c < config.cities.length; c++)
+			// If no valid cityId specified swap to the first in the list
+			if (RegExp("\/(.+)").test(window.location.pathname) == false)
 			{
-				if (config.cities[c].id == cityId)
+				window.location.href = "/"+config.cities[0].id;
+			}
+			// Load the requested city
+			else
+			{
+				cityId = window.location.pathname.match(/\/(.+)/)[1];
+				
+				for (c = 0; c < config.cities.length; c++)
 				{
-					var city = config.cities[c];
-					var country = city.name.split(", ")[2];
-					break;
+					if (config.cities[c].id == cityId)
+					{
+						var city = config.cities[c];
+						var country = city.name.split(", ")[2];
+						break;
+					}
 				}
 			}
 		}
-		
+				
 		// Populate the city selector with all other cities
 		var citySelector = $('#city_selector');
 		$.each(config.cities, function(key, scCity) {
