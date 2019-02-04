@@ -87,3 +87,4 @@ waze_features:
     jam: Existence of a jam
   continuous:
     jam_percent: Percent of time there was a jam
+
