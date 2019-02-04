@@ -163,7 +163,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             max_date.isoformat()))
 
     # Making sure we have enough entries with lat/lon to continue
-    if len(crashes) > 0 and no_geocoded_count/len(crashes) > .9:
+    if len(crashes) > 0 and no_geocoded_count/len(raw_crashes) > .9:
         raise SystemExit("Not enough geocoded addresses found, exiting")
     return crashes
 
