@@ -13,7 +13,6 @@ import random
 import pytz
 import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
-from pandas.io.json import json_normalize
 from shapely.geometry import Point
 import geopandas as gpd
 from data.util import read_geocode_cache
@@ -236,10 +235,15 @@ def add_id(csv_file, id_field):
 
 def calculate_crashes_by_location(df):
     """
-    Calculates total number of crashes that occurred at each unique lat/lng pair
+    Calculates total number of crashes that occurred at each unique lat/lng pair and
+    generates a list of the dates that crashes occurred at that location
 
     Inputs:
         - a dataframe where each row represents one unique crash incident
+
+    Output:
+        - a dataframe with the total number of crashes at each unique crash location
+          and list of unique crash dates
     """
     crashes_agg = df.groupby(['latitude', 'longitude']).agg(['count', 'unique'])
     crashes_agg.columns = crashes_agg.columns.get_level_values(1)
@@ -251,11 +255,17 @@ def calculate_crashes_by_location(df):
 
 def make_crash_rollup(crashes_json):
     """
-    Generates a dataframe with the total number of crashes and a list of crash dates
+    Generates a GeoDataframe with the total number of crashes and a list of crash dates
     per unique lat/lng pair
 
     Inputs:
         - a json of standardized crash data
+
+    Output:
+        - a GeoDataframe with the following columns:
+            - total number of crashes
+            - list of unique dates that crashes occurred
+            - GeoJSON point features created from the latitude and longitude
     """
     df_std_crashes = json_normalize(crashes_json)
     df_std_crashes = df_std_crashes[["dateOccurred", "location.latitude", "location.longitude"]]
@@ -267,6 +277,7 @@ def make_crash_rollup(crashes_json):
     crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
 
     crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
+    print(crashes_agg_gdf.columns)
     return crashes_agg_gdf
 
 if __name__ == '__main__':
