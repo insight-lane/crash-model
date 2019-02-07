@@ -107,9 +107,35 @@
 				<td class="no">No</td>
 			</tr>
 		</table> -->
-<!-- 		<hr>
+		<hr>
 		<h3>Estimated Impact of Interventions</h3>
- -->	</div>
+		<table id="interventionsTbl">
+			<tr class="intervention">
+				<td class="name">Change speed limit to 20mph:</td>
+				<td class="interventionEffect">-0.1</td>
+<!-- 			</tr>
+			<tr class="feature second">
+				<td class="feature name">One-way</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+			<tr class="feature third">
+				<td class="feature name">Traffic signal</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+			<tr class="feature fourth">
+				<td class="feature name">Primary roadway</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr>
+			<tr class="feature fifth">
+				<td class="feature name">Speed limit of 25mph</td>
+				<td class="yes">Yes</td>
+				<td class="no">No</td>
+			</tr> -->
+		</table>
+	</div>
 
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<!-- // <script src="js/make_plots.js"></script> -->
@@ -186,6 +212,49 @@
 				map.getCanvas().style.cursor = '';
 			});
 
+
+			map.addLayer({
+				id: 'crashes',
+				type: 'circle',
+				source: {
+					type: 'geojson',
+					data: 'crashes_rollup.geojson'
+				},
+				layout: {
+					visibility: 'none'
+				},
+				paint: {
+					'circle-radius': [
+						'interpolate', ['linear'], ['zoom'],
+						12, ['interpolate', ['linear'], ['get', 'total_crashes'], 1, 3, 100, 40],
+						18, ['interpolate', ['linear'], ['get', 'total_crashes'], 1, 10, 100, 120],
+						],
+
+					// 'circle-radius': 5,
+					'circle-color': '#d500f9',
+					'circle-stroke-color': '#9e00c5',
+					'circle-opacity': 0.8
+				},
+			}, 'admin-2-boundaries-dispute');
+
+			map.on('click', 'crashes', function(e) {
+				var coordinates = e.features[0].geometry.coordinates.slice();
+				var crashes = e.features[0].properties.total_crashes;
+				// console.log(e.features[0].properties);
+				new mapboxgl.Popup()
+					.setLngLat(coordinates)
+					.setHTML(buildCrashPopupString(e.features[0].properties))
+					.addTo(map);
+			});
+
+			map.on('mouseenter', 'crashes', function() {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'crashes', function() {
+				map.getCanvas().style.cursor = '';
+			});
+
 			updateGeocoderProximity();
 		});
 
@@ -208,6 +277,21 @@
 				case "USA":
 					return "us";
 					break;
+				case "Australia":
+					return "au";
+					break;
+			}
+		}
+
+		function buildCrashPopupString(crashObj) {
+			console.log(crashObj.crash_dates.split(','));
+			if(crashObj.total_crashes === 1) {
+				return "1 crash:<ul><li>" + crashObj.crash_dates + "</li></ul>";
+			}
+			else {
+				var crash_string = "<ul><li>" + crashObj.crash_dates.split(',').join('</li><li>') + "</li></ul>";
+				// console.log(crash_string);
+				return crashObj.total_crashes + " crashes:" + crash_string;
 			}
 		}
 	</script>
