@@ -236,7 +236,7 @@ def add_id(csv_file, id_field):
 def calculate_crashes_by_location(df):
     """
     Calculates total number of crashes that occurred at each unique lat/lng pair and
-    generates a list of the dates that crashes occurred at that location
+    generates a comma-separated string of the dates that crashes occurred at that location
 
     Inputs:
         - a dataframe where each row represents one unique crash incident
@@ -255,8 +255,8 @@ def calculate_crashes_by_location(df):
 
 def make_crash_rollup(crashes_json):
     """
-    Generates a GeoDataframe with the total number of crashes and a list of crash dates
-    per unique lat/lng pair
+    Generates a GeoDataframe with the total number of crashes and a comma-separated string
+    of crash dates per unique lat/lng pair
 
     Inputs:
         - a json of standardized crash data
