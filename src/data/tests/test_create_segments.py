@@ -361,3 +361,22 @@ def test_connected_segments():
         '0011', '007', '005', '000'])
     assert set(non_int_lines[8].properties['connected_segments']) == set([
         3, 4])
+
+
+def test_multilinestring():
+    """
+    Test that MultiLineStrings get converted into LineStrings
+    """
+    roads, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/test_create_segments/test_linestring.geojson'
+    ))
+
+    for i, road in enumerate(roads):
+        road.properties['orig_id'] = int(str(99) + str(i))
+
+    int_buffers = create_segments.get_intersection_buffers(inters, 20)
+    non_int_lines, inter_segments = create_segments.find_non_ints(
+        roads, int_buffers)
+    assert all([x.geometry.type == 'LineString' for x in non_int_lines])
+
