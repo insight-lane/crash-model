@@ -106,8 +106,9 @@ def map_segments(datadir, filename):
     roads, roads_index = util.index_segments(
         road_segments, geojson=True, segment=True)
     road_buffers = []
+
     for road in roads:
-        road_buffers.append(road[0].buffer(3))
+        road_buffers.append(road.geometry.buffer(3))
 
     print("read in {} road segments".format(len(roads)))
 
@@ -125,17 +126,17 @@ def map_segments(datadir, filename):
                 # But if the roads share a name,
                 # increase buffer size, in case of a median segment
                 # Waze does not appear to specify which direction
-                if 'street' in item['properties'] and segment[1]['name'] and \
-                   item['properties']['street'].split()[0] == segment[1]['name'].split()[0]:
-                    buff = segment[0].buffer(10)
+                if 'street' in item['properties'] and segment.properties['name'] and \
+                   item['properties']['street'].split()[0] == segment.properties['name'].split()[0]:
+                    buff = segment.geometry.buffer(10)
                 overlap = buff.intersection(item['geometry'])
 
                 if not overlap.length or \
-                   (overlap.length < 20 and segment[0].length > 20):
+                   (overlap.length < 20 and segment.geometry.length > 20):
                     # Skip segments with no overlap
                     # or very short overlaps
                     continue
-                waze_info[segment[1]['segment_id']].append(item)
+                waze_info[segment.properties['segment_id']].append(item)
     # Add waze features
     # Also convert into format that util.prepare_geojson is expecting
     updated_roads = []

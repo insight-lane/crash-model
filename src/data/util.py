@@ -186,7 +186,7 @@ def read_geojson(fp):
 
     data = fiona.open(fp)
     data = reproject_records([x for x in data])
-    return [(x['geometry'], x['properties']) for x in data]
+    return [Segment(x['geometry'], x['properties']) for x in data]
 
 
 def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
@@ -372,8 +372,8 @@ def find_nearest(records, segments, segments_index, tolerance,
         segment_id_with_distance = [
             # Get db index and distance to point
             (
-                segments[segment_id][1]['id'],
-                segments[segment_id][0].distance(record_point)
+                segments[segment_id].properties['id'],
+                segments[segment_id].geometry.distance(record_point)
             )
             for segment_id in nearby_segments
         ]
@@ -446,15 +446,15 @@ def index_segments(segments, geojson=True, segment=False):
 
     combined_seg = segments
     if segment:
-        combined_seg = [(x.geometry, x.properties) for x in segments]
+        combined_seg = segments
     elif geojson:
         # Read in segments and turn them into shape, propery tuples
-        combined_seg = [(shape(x['geometry']), x['properties']) for x in
+        combined_seg = [Segment(shape(x['geometry']), x['properties']) for x in
                         segments]
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
-        segments_index.insert(idx, element[0].bounds)
+        segments_index.insert(idx, element.geometry.bounds)
 
     return combined_seg, segments_index
 

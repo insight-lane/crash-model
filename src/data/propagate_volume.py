@@ -73,7 +73,7 @@ def propagate_volume():
     # # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
-        segments_index.insert(idx, element[0].bounds)
+        segments_index.insert(idx, element.geometry.bounds)
 
     print('Created spatial index')
 
@@ -129,7 +129,7 @@ def propagate_volume():
         after - len(volume_df))))
 
     # create dataframe of all segments
-    seg_df = pd.DataFrame(combined_seg)
+    seg_df = pd.DataFrame([(x.geometry, x.properties) for x in combined_seg])
     seg_df.columns = ['geometry', 'seg_id']
     
     # seg_id column is read in as a dictionary
@@ -191,6 +191,7 @@ def propagate_volume():
     output_fp = os.path.join(PROCESSED_DATA_FP, 'atrs_predicted.csv')
     # force id into string
     merged_df['id'] = merged_df['id'].astype(str)
+
     merged_df.to_csv(output_fp, index=False)
 
 

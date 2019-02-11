@@ -4,7 +4,7 @@ import pandas as pd
 from data.util import read_geojson
 
 
-def get_correlation(datadir, features):
+def get_correlation(datadir, outputfile, features):
 
     # Read in segments
     inter = read_geojson(os.path.join(
@@ -19,7 +19,11 @@ def get_correlation(datadir, features):
     df = pd.DataFrame.from_dict([x[1] for x in combined_seg])
     df = df.fillna(0)
     df = df[features]
-    print(df.corr())
+
+    pd.set_option('display.max_colwidth', -1)
+    corr = df.corr()
+    print(corr)
+    corr.to_csv(outputfile, index=False)
 
 
 if __name__ == '__main__':
@@ -27,9 +31,12 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--datadir", type=str,
                         help="city's data directory",
                         required=True)
+    parser.add_argument("-o", "--outputfile", type=str,
+                        help="csv output file",
+                        required=True)
 
     parser.add_argument("-features", "--featlist", nargs="+",
                         help="List of segment features to compare")
     args = parser.parse_args()
 
-    get_correlation(args.datadir, args.featlist)
+    get_correlation(args.datadir, args.outputfile, args.featlist)
