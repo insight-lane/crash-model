@@ -4,6 +4,7 @@
 import argparse
 import os
 import pandas as pd
+from pandas.io.json import json_normalize
 import yaml
 from collections import OrderedDict
 import csv
@@ -12,13 +13,13 @@ import random
 import pytz
 import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
+from shapely.geometry import Point
+import geopandas as gpd
 from data.util import read_geocode_cache
-
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
-
 
 def read_standardized_fields(raw_crashes, fields, opt_fields,
                              timezone, datadir, city,
@@ -36,7 +37,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
 
     min_date = None
     max_date = None
-
+    
     cached_addresses = {}
 
     if (not fields['latitude'] or not fields['longitude']):
@@ -61,7 +62,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
-
+            
         lat = crash[fields['latitude']] if fields['latitude'] else None
         lon = crash[fields['longitude']] if fields['longitude'] else None
 
@@ -139,7 +140,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             min_date = crash_day
         if max_date is None or crash_day > max_date:
             max_date = crash_day
-
+        
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", crash_date_time),
@@ -165,6 +166,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
     # Making sure we have enough entries with lat/lon to continue
     if len(crashes) > 0 and no_geocoded_count/len(crashes) > .9:
         raise SystemExit("Not enough geocoded addresses found, exiting")
+    
     return crashes
 
 
@@ -231,6 +233,52 @@ def add_id(csv_file, id_field):
             for row in rows:
                 writer.writerow(row)
 
+def calculate_crashes_by_location(df):
+    """
+    Calculates total number of crashes that occurred at each unique lat/lng pair and
+    generates a comma-separated string of the dates that crashes occurred at that location
+
+    Inputs:
+        - a dataframe where each row represents one unique crash incident
+
+    Output:
+        - a dataframe with the total number of crashes at each unique crash location
+          and list of unique crash dates
+    """
+    crashes_agg = df.groupby(['latitude', 'longitude']).agg(['count', 'unique'])
+    crashes_agg.columns = crashes_agg.columns.get_level_values(1)
+    crashes_agg.rename(columns={'count': 'total_crashes', 'unique': 'crash_dates'}, inplace=True)
+    crashes_agg.reset_index(inplace=True)
+    
+    crashes_agg['crash_dates'] = crashes_agg['crash_dates'].str.join(',')
+    return crashes_agg
+
+def make_crash_rollup(crashes_json):
+    """
+    Generates a GeoDataframe with the total number of crashes and a comma-separated string
+    of crash dates per unique lat/lng pair
+
+    Inputs:
+        - a json of standardized crash data
+
+    Output:
+        - a GeoDataframe with the following columns:
+            - total number of crashes
+            - list of unique dates that crashes occurred
+            - GeoJSON point features created from the latitude and longitude
+    """
+    df_std_crashes = json_normalize(crashes_json)
+    df_std_crashes = df_std_crashes[["dateOccurred", "location.latitude", "location.longitude"]]
+    df_std_crashes.rename(columns={"location.latitude": "latitude", "location.longitude": "longitude"}, inplace=True)
+
+    crashes_agg = calculate_crashes_by_location(df_std_crashes)
+    crashes_agg["coordinates"] = list(zip(crashes_agg.longitude, crashes_agg.latitude))
+    crashes_agg["coordinates"] = crashes_agg["coordinates"].apply(Point)
+    crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
+
+    crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
+    print(crashes_agg_gdf.columns)
+    return crashes_agg_gdf
 
 if __name__ == '__main__':
 
@@ -301,3 +349,11 @@ if __name__ == '__main__':
     list_crashes = list(dict_crashes.values())
     crashes_output = os.path.join(args.datadir, "standardized/crashes.json")
     validate_and_write_schema(schema_path, list_crashes, crashes_output)
+
+    crashes_agg_gdf = make_crash_rollup(list_crashes)
+
+    crashes_agg_path = os.path.join(args.datadir, "standardized/crashes_rollup.geojson")
+    if os.path.exists(crashes_agg_path):
+        os.remove(crashes_agg_path)
+    crashes_agg_gdf.to_file(os.path.join(args.datadir, "standardized/crashes_rollup.geojson"), driver="GeoJSON")
+
