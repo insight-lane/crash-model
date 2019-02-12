@@ -579,18 +579,9 @@ def update_intersection_properties(inters, config_file):
 def write_segments(non_inters, inters, mapfp, datafp):
 
     # Store non-intersection segments
-
-    # Project back into 4326 for storage
-    non_inters = [{
-        'geometry': mapping(record.geometry),
-        'properties': record.properties
-        } for record in non_inters]
-
-    non_inters = util.prepare_geojson(non_inters)
-
-    with open(os.path.join(
-            mapfp, 'non_inters_segments.geojson'), 'w') as outfile:
-        geojson.dump(non_inters, outfile)
+    non_inters = util.write_records_to_geojson(
+        non_inters, os.path.join(
+            mapfp, 'non_inters_segments.geojson'))
 
     # Also output the data for all the segments that make up the intersection
     inter_data = {
@@ -600,15 +591,9 @@ def write_segments(non_inters, inters, mapfp, datafp):
         json.dump(inter_data, f)
 
     # Store the individual intersections
-    int_w_ids = [{
-        'geometry': mapping(x.geometry),
-        'properties': x.properties
-    } for x in inters]
-
-    int_w_ids = util.prepare_geojson(int_w_ids)
-
-    with open(os.path.join(mapfp, 'inters_segments.geojson'), 'w') as outfile:
-        geojson.dump(int_w_ids, outfile)
+    int_w_ids = util.write_records_to_geojson(
+        inters, os.path.join(
+            mapfp, 'inters_segments.geojson'))
 
     # Store the combined segments with all properties
     segments = non_inters['features'] + int_w_ids['features']

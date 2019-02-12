@@ -10,6 +10,8 @@ from pandas.io.json import json_normalize
 import geopandas as gpd
 from sklearn.neighbors import KNeighborsRegressor
 import sys
+from shapely.geometry import mapping
+
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -18,6 +20,36 @@ BASE_DIR = os.path.dirname(
 
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 STANDARDIZED_DATA_FP = os.path.join(BASE_DIR, 'data', 'standardized')
+
+
+def update_properties(segments, df, feature):
+    """
+    Takes a segment list and a dataframe, and writes out updated
+    intersection and non-intersection segments
+    Args:
+        segments - a list of intersection and non-intersection segments
+        df - a dataframe of features
+    Returns:
+        nothing - writes to inter_segments.geojson and non_inter_segments.geojson
+    """
+
+    df = df[['id', feature]]
+    # a dict where the id is the key and the value is the feature
+    values = {x[0]: x[1] for x in df.values.tolist()}
+    
+    for i, segment in enumerate(segments):
+        if str(segment.properties['id']) in values:
+            segment.properties[feature] = values[str(segment.properties['id'])]
+
+    inters = [x for x in segments if util.is_inter(x.properties['id'])]
+    inters = util.write_records_to_geojson(
+        inters, os.path.join(
+            PROCESSED_DATA_FP, 'maps', 'inters_segments.geojson'))
+
+    non_inters = [x for x in segments if not util.is_inter(x.properties['id'])]
+    non_inters = util.write_records_to_geojson(
+        non_inters, os.path.join(
+            PROCESSED_DATA_FP, 'maps', 'non_inters_segments.geojson'))
 
 
 def read_volume():
@@ -193,7 +225,7 @@ def propagate_volume():
     merged_df['id'] = merged_df['id'].astype(str)
 
     merged_df.to_csv(output_fp, index=False)
-
+    update_properties(combined_seg, merged_df, 'volume_coalesced')
 
 if __name__ == '__main__':
 

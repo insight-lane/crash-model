@@ -562,22 +562,43 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     return results
 
 
-def prepare_geojson(records):
+def write_records_to_geojson(records, outfilename):
     """
-    Prepares a set of records to be written as geojson, reprojecting
+    Given a list of record objects, write them to geojson file
+    Args:
+        records - a list of objects that contain geometry and properties
+        outfilename - geojson file to write to
+    Returns:
+        records as a geojson list
+    """
+
+    records = [{
+        'geometry': mapping(record.geometry),
+        'properties': record.properties
+        } for record in records]
+
+    records = prepare_geojson(records)
+    with open(outfilename, 'w') as outfile:
+        geojson.dump(records, outfile)
+    return records
+
+
+def prepare_geojson(elements):
+    """
+    Prepares a list of elements to be written as geojson, reprojecting
     from 3857 to 4326
     Args:
-        records - a list of dicts with geometry and properties
+        elements - a list of dicts with geometry and properties
     Results:
         A geojson feature collection
     """
 
-    records = reproject_records(records, inproj='epsg:3857',
-                                outproj='epsg:4326')
+    elements = reproject_records(elements, inproj='epsg:3857',
+                                 outproj='epsg:4326')
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
-        properties=x['properties']) for x in records]
+        properties=x['properties']) for x in elements]
 
     return geojson.FeatureCollection(results)
 
