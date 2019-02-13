@@ -68,6 +68,8 @@ def set_params():
     mp['LogisticRegression']['penalty'] = ['l1','l2']
     mp['LogisticRegression']['C'] = ss.beta(a=5,b=2) #beta distribution for selecting reg strength
     mp['LogisticRegression']['class_weight'] = ['balanced']
+    mp['LogisticRegression']['solver'] = ['liblinear']
+    mp['LogisticRegression']['max_iter'] = [110]
 
     #xgBoost model parameters
     mp['XGBClassifier'] = dict()

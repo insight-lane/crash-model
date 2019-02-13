@@ -102,7 +102,7 @@ class Tuner():
                     model(),scoring=cvparams['pmetric'], 
                     cv = KFold(cvparams['folds'], cvparams['shuffle']),
                     refit=False, n_iter=cvparams['iter'],
-                    param_distributions=mparams, verbose=1)
+                    param_distributions=mparams, verbose=1, return_train_score=True)
         return(grid)
     
     def run_grid(self, grid, train_x, train_y):
