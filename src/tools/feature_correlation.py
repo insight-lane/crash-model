@@ -4,7 +4,7 @@ import pandas as pd
 from data.util import read_geojson
 
 
-def get_correlation(datadir, outputfile, features):
+def get_correlation(datadir, outputfile, features, dropna=False):
 
     # Read in segments
     inter = read_geojson(os.path.join(
@@ -16,9 +16,15 @@ def get_correlation(datadir, outputfile, features):
 
     # Combine inter + non_inter
     combined_seg = inter + non_inter
-    df = pd.DataFrame.from_dict([x[1] for x in combined_seg])
-    df = df.fillna(0)
+ 
+    df = pd.DataFrame.from_dict([x.properties for x in combined_seg])
     df = df[features]
+    import ipdb; ipdb.set_trace()
+    if dropna:
+        df = df.dropna()
+    else:
+        df = df.fillna(0)
+
 
     pd.set_option('display.max_colwidth', -1)
     corr = df.corr()
@@ -34,9 +40,11 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--outputfile", type=str,
                         help="csv output file",
                         required=True)
+    parser.add_argument('--dropna', action='store_true',
+                        help='only look at rows with defined values')
 
     parser.add_argument("-features", "--featlist", nargs="+",
                         help="List of segment features to compare")
     args = parser.parse_args()
 
-    get_correlation(args.datadir, args.outputfile, args.featlist)
+    get_correlation(args.datadir, args.outputfile, args.featlist, args.dropna)

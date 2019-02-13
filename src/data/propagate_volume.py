@@ -34,6 +34,7 @@ def update_properties(segments, df, features):
     """
 
     df = df[['id'] + features]
+    df = df.fillna('')
     # a dict where the id is the key and the value is the feature
 
     values = df.to_dict()
@@ -43,7 +44,10 @@ def update_properties(segments, df, features):
 
         if seg_id in id_mapping:
             for feature in features:
-                segment.properties[feature] = values[feature][id_mapping[seg_id]]
+                if values[feature][id_mapping[seg_id]] == '':
+                    segment.properties[feature] = None
+                else:
+                    segment.properties[feature] = values[feature][id_mapping[seg_id]]
 
     inters = [x for x in segments if util.is_inter(x.properties['id'])]
     inters = util.write_records_to_geojson(
@@ -84,6 +88,7 @@ def read_volume():
                     float(record['location']['longitude']),
                     float(record['location']['latitude']),
                     orig=pyproj.Proj(init='epsg:4326')))
+
     return volume
 
 
@@ -232,7 +237,7 @@ def propagate_volume():
     update_properties(
         combined_seg,
         merged_df,
-        ['volume_coalesced', 'speed_coalesced']
+        ['volume', 'speed', 'volume_coalesced', 'speed_coalesced']
     )
 
 
