@@ -16,7 +16,7 @@ import argparse
 import os
 import geojson
 import re
-from shapely.geometry import MultiLineString, LineString, mapping
+from shapely.geometry import MultiLineString, LineString
 from .segment import Segment, Intersection, IntersectionBuffer
 from .record import Record
 
