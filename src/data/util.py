@@ -761,4 +761,9 @@ def get_feature_list(config):
         for additional in config['data_source']:
             feat_types[additional['feat']].append(additional['name'])
 
+    # May eventually want to rename this feature to be more general
+    # For now, all atr features are continuous
+    if 'atr_cols' in config and config['atr_cols']:
+        feat_types['f_cont'] += config['atr_cols']
+
     return feat_types
