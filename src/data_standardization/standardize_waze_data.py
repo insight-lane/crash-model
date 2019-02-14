@@ -121,10 +121,15 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
                          x['pubMillis'],
                          timezone
                      ),
+                     location={
+                         'latitude': x['location']['y'],
+                         'longitude': x['location']['x']
+                     },
                      snapshotId=count
                 )
                 for x in data['alerts']
                 if 'city' in x and city in x['city']]
+            
         if 'irregularities' in data:
             all_data += [
                 dict(x, eventType='irregularity',
