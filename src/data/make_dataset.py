@@ -6,12 +6,10 @@ import yaml
 import sys
 from . import util
 
-
 DATA_FP = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__)))) + '/data/'
-
     
 if __name__ == '__main__':
 
@@ -90,7 +88,7 @@ if __name__ == '__main__':
             'data.add_waze_data',
             '-d',
             DATA_FP
-        ])
+        ] + (['--forceupdate'] if recreate else []))
     else:
         print("No Waze data found, skipping...")
     
