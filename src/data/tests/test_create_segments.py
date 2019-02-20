@@ -1,9 +1,12 @@
 from .. import create_segments
+from ..record import Record
+from ..segment import Segment, Intersection
 import fiona
 import os
 from .. import util
 import shutil
 import json
+from shapely.geometry import LineString, MultiLineString
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -52,7 +55,6 @@ def test_find_non_ints():
         roads, int_buffers)
     assert len(non_int_lines) == 8
     assert len(inter_segments) == 2
-
 
 def test_create_segments_from_json(tmpdir):
     """
@@ -103,12 +105,12 @@ def test_get_intersection_name():
 
 
 def test_get_non_intersection_name():
-    non_inter_segment = {'properties': {
+    non_inter_segment = Segment(None, {
         'osmid': 1,
         'name': 'Main Street',
         'from': '100',
         'to': '200'
-    }}
+    })
     inters_by_id = {
     }
     name = create_segments.get_non_intersection_name(
@@ -139,13 +141,24 @@ def test_add_point_based_features(tmpdir):
             os.path.abspath(__file__)),
         'data',
         'test_create_segments')
-    test_file = os.path.join(test_path, 'points_test.json')
 
-    # The points test file contains non_inters and one inter,
-    # in the same format as add_point_based_features requires
-    with open(test_file, 'r') as f:
-        non_inters = json.load(f)
-    inters = [non_inters.pop()]
+    with open(os.path.join(test_path, 'points_test.json'), 'r') as f:
+        data = json.load(f)
+
+    # All the line strings are roads
+    print(data[0]['geometry'])
+    non_inters = [Segment(LineString(
+        x['geometry']['coordinates']), x['properties']
+    ) for x in data if x['geometry']['type'] == 'LineString']
+    # There's only one test intersection
+    inter = [x for x in data if x['geometry']['type'] == 'MultiLineString'][0]
+    lines = [LineString(x) for x in inter['geometry']['coordinates']]
+    inters = [Intersection(0, lines, inter['properties'])]
+    coords = []
+    for line in inters[0].lines:
+        coords.append(line.coords)
+    inters[0].geometry = MultiLineString(
+        coords)
 
     featsfile = os.path.join(test_path, 'points.geojson')
     outputfile = os.path.join(tmpdir.strpath, 'result.json')
@@ -153,19 +166,19 @@ def test_add_point_based_features(tmpdir):
         non_inters, inters, outputfile, featsfile)
 
     # Check whether the segments we expected got the properties
-    assert inters[0]['properties']['data'][0]['crosswalk'] == 1
-    signalized = [x for x in non_inters if x['properties']['signal']]
+    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
-    assert signalized[0]['properties']['id'] == '001556'
+    assert signalized[0].properties['id'] == '001556'
 
     # Run again (to read from file) and make sure everything looks the same
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile)
 
-    assert inters[0]['properties']['data'][0]['crosswalk'] == 1
-    signalized = [x for x in non_inters if x['properties']['signal']]
+    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
-    assert signalized[0]['properties']['id'] == '001556'
+    assert signalized[0].properties['id'] == '001556'
 
     # Test writing to the file is as expected
     expected = [{
@@ -190,8 +203,8 @@ def test_add_point_based_features(tmpdir):
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile,
         additional_feats_filename=additional_feats_file, forceupdate=True)
-    assert non_inters[4]['properties']['parking_tickets'] == 2
-    assert non_inters[4]['properties']['traffic_volume'] == 200
+    assert non_inters[4].properties['parking_tickets'] == 2
+    assert non_inters[4].properties['traffic_volume'] == 200
 
     expected = expected + [{
         "feature": "parking_tickets",
@@ -208,12 +221,12 @@ def test_add_point_based_features(tmpdir):
         "feature": "traffic_volume",
         "date": "2014-01-04T15:50:00Z",
         "location": {"latitude": 42.38404209999999, "longitude": -71.1370766},
-        "feat_agg": "latest", "value":100, "near_id": "001557"
+        "feat_agg": "latest", "value": 100, "near_id": "001557"
     }, {
         "feature": "traffic_volume",
         "date": "2015-01-04T15:50:00Z",
         "location": {"latitude": 42.38404209999999, "longitude": -71.1370766},
-        "feat_agg": "latest", "value":200, "near_id": "001557"
+        "feat_agg": "latest", "value": 200, "near_id": "001557"
     }]
 
     with open(outputfile, 'r') as f:
@@ -235,7 +248,7 @@ def test_get_connections():
     # Test the segment on the other side of the median
     # getting dropped from the intersection
     connections = create_segments.get_connections(
-        [inters[0]['geometry']], roads)
+        [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
 
     # One intersection is found
     assert len(connections) == 1
@@ -253,7 +266,7 @@ def test_get_connections():
     assert len(roads) == 7
     assert len(inters) == 2
     connections = create_segments.get_connections(
-        [x['geometry'] for x in inters], roads)
+        [Record(x['properties'], point=x['geometry']) for x in inters], roads)
 
     assert len(connections) == 1
     assert len(connections[0][0]) == 7
@@ -262,7 +275,7 @@ def test_get_connections():
     test_file = os.path.join(test_path, 'unconnected.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
-        [x['geometry'] for x in inters], roads)
+        [Record(x['properties'], point=x['geometry']) for x in inters], roads)
     assert len(connections) == 2
     assert connections[0][0]
     assert connections[1][0]
@@ -270,7 +283,7 @@ def test_get_connections():
     test_file = os.path.join(test_path, 'missing_int_segments.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
-        [x['geometry'] for x in inters], roads)
+        [Record(x['properties'], point=x['geometry']) for x in inters], roads)
     assert len(connections) == 1
     assert len(connections[0][0]) == 7
 
@@ -284,6 +297,49 @@ def test_get_connections():
     # Test the segment on the other side of the median
     # getting dropped from the intersection
     connections = create_segments.get_connections(
-        [inters[0]['geometry']], roads)
+        [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
     assert connections[0][0]
     
+
+def test_connected_segments():
+    """
+    Test of the connected components for intersections and non intersections
+    """
+
+    roads, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/test_create_segments/test_adjacency.geojson'
+    ))
+
+    int_buffers = create_segments.get_intersection_buffers(inters, 20)
+    non_int_lines, inter_segments = create_segments.find_non_ints(
+        roads, int_buffers)
+
+    # This tests a bugfix where lines that almost but not quite intersect
+    # are correctly left out of set of intersection lines
+    assert len(inter_segments[1].lines) == 3
+
+    # Test connected segments
+    assert set(inter_segments[0].connected_segments) == set([
+        '0011', '007', '005', '000'])
+    assert set(non_int_lines[8].properties['connected_segments']) == set([
+        3, 4])
+
+
+def test_multilinestring():
+    """
+    Test that MultiLineStrings get converted into LineStrings
+    """
+    roads, inters = util.get_roads_and_inters(os.path.join(
+        TEST_FP,
+        'data/test_create_segments/test_linestring.geojson'
+    ))
+
+    for i, road in enumerate(roads):
+        road.properties['orig_id'] = int(str(99) + str(i))
+
+    int_buffers = create_segments.get_intersection_buffers(inters, 20)
+    non_int_lines, inter_segments = create_segments.find_non_ints(
+        roads, int_buffers)
+    assert all([x.geometry.type == 'LineString' for x in non_int_lines])
+
