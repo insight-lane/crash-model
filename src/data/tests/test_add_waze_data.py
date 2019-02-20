@@ -12,7 +12,7 @@ def test_make_map(tmpdir):
             TEST_FP, 'data', 'test_waze', 'test_waze.json')
     with open(original_filename) as f:
         original = geojson.load(f)
-
+        original = [x for x in original if x['eventType'] == 'jam']
     add_waze_data.make_map(original_filename, tmpdir.strpath)
 
     # Read back in the resulting map
@@ -60,3 +60,14 @@ def test_map_segments(tmpdir):
     # Test that the points in the file still exist
     # after modifying the linestrings
     assert len(osm_items['features']) == 90
+
+    # Test the average level of delay is accurate on a segment
+    test_segment = [x for x in osm_items['features']
+                    if x['properties']['segment_id']
+                    == '426492374-61330572-5720026211'][0]
+    assert test_segment['properties']['avg_jam_level'] == 2
+
+    # Test that alerts get added
+    test_segment = [x for x in osm_items['features']
+                    if 'alert_JAM' in x['properties']][0]
+    assert test_segment['properties']['alert_JAM'] == 1
