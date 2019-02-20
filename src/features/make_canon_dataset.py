@@ -78,11 +78,12 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     combined = pd.concat([inters_df, non_inters_df], sort=True)
     missing_feats = [x for x in feats if x not in combined.columns]
     feats = [x for x in feats if x in combined.columns]
-    warnings.warn(
-        str(len(missing_feats))
-        + " feature(s) missing, skipping (" +
-        ', '.join(missing_feats)
-        + ")")
+    if missing_feats:
+        warnings.warn(
+            str(len(missing_feats))
+            + " feature(s) missing, skipping (" +
+            ', '.join(missing_feats)
+            + ")")
     # Since there are multiple segments per intersection,
     # aggregating inters data = apply aggregation (default is max)
     aggregated = getattr(combined[feats].groupby(combined.index), agg)
