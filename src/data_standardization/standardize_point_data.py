@@ -33,7 +33,7 @@ def read_file_info(config, datadir):
                 lat = row[source_config['latitude']]
                 lon = row[source_config['longitude']]
             elif 'address' in source_config:
-                lat, lon = standardization_util.parse_address(
+                street, lat, lon = standardization_util.parse_address(
                     row[source_config['address']])
             if lat and lon:
                 time = None
@@ -52,7 +52,8 @@ def read_file_info(config, datadir):
                         ("longitude", lon)
                     ]))
                 ])
-
+                if street:
+                    updated_row['street'] = street
                 if "category" in source_config and source_config['category']:
                     updated_row['category'] = row[source_config['category']]
                 if "notes" in source_config and source_config['notes']:

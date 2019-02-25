@@ -69,10 +69,12 @@ def parse_address(address):
     If that's the format, parse out these values
     """
     lines = address.split('\n')
+
     if len(lines) == 3 and lines[2]:
+        street = ' '.join(lines[0].split()[1:])
         lat, lon = lines[2][1:-1].split(', ')
-        return float(lat), float(lon)
-    return None, None
+        return street, float(lat), float(lon)
+    return None, None, None
 
 
 def validate_and_write_schema(schema_path, schema_values, output_file):
