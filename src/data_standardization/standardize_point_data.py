@@ -28,7 +28,7 @@ def read_file_info(config, datadir):
         for row in rows:
             lat = None
             lon = None
-            
+            street = None
             if 'latitude' in source_config and 'longitude' in source_config:
                 lat = row[source_config['latitude']]
                 lon = row[source_config['longitude']]
