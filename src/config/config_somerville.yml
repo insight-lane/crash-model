@@ -17,9 +17,6 @@ name: somerville
 startdate:
 enddate:
 
-# The type of predictions to generate, 'segment' is default, 'week' is legacy
-level: segment
-
 #################################################################
 # Configuration for data standardization
 

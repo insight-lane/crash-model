@@ -11,8 +11,6 @@ city_radius: 10
 # If given, limit crashes to after startdate and no later than enddate
 startdate:
 enddate:
-# The type of predictions to generate, 'segment' is default, 'week' is legacy
-level: segment
 
 ##############################################################################
 # Configuration for data standardization

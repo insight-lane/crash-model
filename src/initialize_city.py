@@ -117,8 +117,6 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "# Recommended to limit to just a few years for now\n" +
         "startdate: \n" +
         "enddate: \n\n" +
-        "# The type of predictions to generate, 'segment' is default, 'week' is legacy\n" +
-        "level: 'segment'\n\n" +
         "#################################################################\n" +
         "# Configuration for data standardization\n\n" +
         "# crash file configurations\n" +

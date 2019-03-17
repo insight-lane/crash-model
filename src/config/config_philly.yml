@@ -12,9 +12,6 @@ city_radius: 15
 startdate: 2011-01-01
 enddate: 2015-01-01
 
-# The type of predictions to generate, 'segment' is default, 'week' is legacy
-level: 'segment'
-
 timezone: America/New_York
 ##############################################################################
 # Configuration for data standardization
