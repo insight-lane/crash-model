@@ -208,15 +208,6 @@ def add_extra_features(data, data_segs, config, datadir):
         data_segs = data_segs.merge(
             concern_observed.reset_index(), on='segment_id')
 
-    # add in atrs if filepath present
-    if config['atr'] != '':
-        print('Adding atrs')
-        atrs = pd.read_csv(datadir+config['atr'], dtype={'id': 'str'})
-        # for some reason pandas reads the id as float before str conversions
-        atrs['id'] = atrs.id.apply(lambda x: x.split('.')[0])
-        data_segs = data_segs.merge(atrs[['id']+config['atr_cols']],
-                                    left_on='segment_id', right_on='id')
-
     # add in tmcs if filepath present
     if config['tmc'] != '':
         print('Adding tmcs')

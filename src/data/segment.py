@@ -14,11 +14,11 @@ class Intersection(object):
     properties is a list of dicts of component properties rather than a dict
     """
 
-    def __init__(self, segment_id, lines, properties,
+    def __init__(self, segment_id, lines, all_data, properties,
                  nodes=[], connected_segments=[]):
         self.id = segment_id
         self.lines = lines
-
+        self.data = all_data
         self.properties = properties
         self.geometry = None
         # Nodes are the points (with openstreetmap node id) in the intersection

@@ -14,7 +14,7 @@ TEST_FP = os.path.dirname(os.path.abspath(__file__))
 def test_read_geojson():
     res = util.read_geojson(TEST_FP + '/data/processed/maps/inters.geojson')
     assert len(res) == 6
-    assert type(res[0][0]) == Point
+    assert type(res[0].geometry) == Point
 
 
 def test_write_shp(tmpdir):

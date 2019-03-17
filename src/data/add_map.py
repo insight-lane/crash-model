@@ -161,7 +161,7 @@ def get_int_mapping(lines, buffered, buffered_index):
     # Go through each line from the osm map
     for i, line in enumerate(lines):
         util.track(i, 1000, len(lines))
-        line_buffer = line[0].buffer(10)
+        line_buffer = line.geometry.buffer(10)
 
         best_match = {}
         best_overlap = 0
@@ -169,7 +169,7 @@ def get_int_mapping(lines, buffered, buffered_index):
             buffer = buffered[idx][0]
             # If the new buffered intersection intersects the old one
             # figure out how much overlap, and take the best one
-            if buffer.intersects(line[0]):
+            if buffer.intersects(line.geometry):
                 total_area = unary_union([line_buffer, buffer]).area
                 overlap = max(
                     line_buffer.area/total_area, buffer.area/total_area)
@@ -178,7 +178,7 @@ def get_int_mapping(lines, buffered, buffered_index):
                     best_overlap = overlap
                     best_match = buffered[idx][2]
 
-        line_results.append([line[0], line[1], best_match])
+        line_results.append([line.geometry, line.properties, best_match])
 
     total = len(line_results)
     percent_matched = 100 - 100 * float(
@@ -212,19 +212,19 @@ def get_candidates(buffered, buffered_index, lines):
 
         # First, get candidates from new map that overlap the buffer
         # from the original map
-        for idx in buffered_index.intersection(line[0].bounds):
+        for idx in buffered_index.intersection(line.geometry.bounds):
             buffer = buffered[idx][0]
 
             # If the new line overlaps the old line
             # then check whether it is entirely within the old buffer
-            if buffer.intersects(line[0]):
+            if buffer.intersects(line.geometry):
 
                 # Add the linestring and the features to the overlap list
                 overlapping.append((buffered[idx][1], buffered[idx][2]))
 
         results.append({
-            'line': line[0],
-            'properties': line[1],
+            'line': line.geometry,
+            'properties': line.properties,
             'candidates': overlapping,
         })
 
@@ -316,8 +316,8 @@ if __name__ == '__main__':
 
     # Buffer all the new lines
     for idx, new_line in enumerate(new_map_non_inter):
-        b = new_line[0].buffer(20)
-        new_buffered.append((b, new_line[0], new_line[1]))
+        b = new_line.geometry.buffer(20)
+        new_buffered.append((b, new_line.geometry, new_line.properties))
         new_index.insert(idx, b.bounds)
 
     non_ints_with_candidates = get_candidates(
@@ -348,8 +348,8 @@ if __name__ == '__main__':
     new_buffered_inter = []
     new_index_inter = rtree.index.Index()
     for idx, new_line in enumerate(new_map_inter):
-        b = new_line[0].buffer(10)
-        new_buffered_inter.append((b, new_line[0], new_line[1]))
+        b = new_line.geometry.buffer(10)
+        new_buffered_inter.append((b, new_line.geometry, new_line.properties))
         new_index_inter.insert(idx, b.bounds)
 
     int_results = get_int_mapping(
