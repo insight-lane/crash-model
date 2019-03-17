@@ -1,11 +1,11 @@
-name: crash-model
+ename: crash-model
 channels:
 - conda-forge
 - defaults
 dependencies:
 - codecov
 # Conda packacking issue, will want to revisit later
-- fiona=1.8.3
+- fiona
 - folium
 - geopandas
 - geocoder
@@ -17,7 +17,7 @@ dependencies:
 - numpy
 - openpyxl
 - osmnx
-- pandas
+- pandas=0.24.0
 - pylint
 - pyproj
 - pytest
