@@ -13,8 +13,7 @@ def test_add_map(tmpdir):
 
     data_path = os.path.join(path, "processed/maps")
     shutil.copytree(orig_path, data_path)
-    print("path path")
-    print(orig_path)
+
     # To test the mapping, use much smaller versions of the osm
     # and osm3857 files, as well as much smaller versions of boston data
 
