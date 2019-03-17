@@ -1,4 +1,4 @@
-ename: crash-model
+name: crash-model
 channels:
 - conda-forge
 - defaults
@@ -17,7 +17,7 @@ dependencies:
 - numpy
 - openpyxl
 - osmnx
-- pandas=0.24.0
+- pandas
 - pylint
 - pyproj
 - pytest
