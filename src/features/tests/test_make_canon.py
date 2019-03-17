@@ -12,7 +12,8 @@ def test_aggregate_roads():
         ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway'],
         datadir=DATA_FP)
 
-    cr_con_roads = make_canon_dataset.group_by_date(cr_con, aggregated)
+    cr_con_roads = make_canon_dataset.combine_crash_with_segments(
+        cr_con, aggregated)
 
     assert len(cr_con_roads.year.unique()) == 2
     
