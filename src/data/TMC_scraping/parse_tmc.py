@@ -110,7 +110,7 @@ def snap_inter_and_non_inter(summary):
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(inter):
-        segments_index.insert(idx, element[0].bounds)
+        segments_index.insert(idx, element.geometry.bounds)
     print("Snapping tmcs to intersections")
 
     address_records = util.raw_to_record_list(
