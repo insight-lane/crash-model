@@ -186,7 +186,7 @@ def read_geojson(fp):
 
     data = fiona.open(fp)
     data = reproject_records([x for x in data])
-    return [(x['geometry'], x['properties']) for x in data]
+    return [Segment(x['geometry'], x['properties']) for x in data]
 
 
 def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
@@ -372,8 +372,8 @@ def find_nearest(records, segments, segments_index, tolerance,
         segment_id_with_distance = [
             # Get db index and distance to point
             (
-                segments[segment_id][1]['id'],
-                segments[segment_id][0].distance(record_point)
+                segments[segment_id].properties['id'],
+                segments[segment_id].geometry.distance(record_point)
             )
             for segment_id in nearby_segments
         ]
@@ -446,15 +446,15 @@ def index_segments(segments, geojson=True, segment=False):
 
     combined_seg = segments
     if segment:
-        combined_seg = [(x.geometry, x.properties) for x in segments]
+        combined_seg = segments
     elif geojson:
         # Read in segments and turn them into shape, propery tuples
-        combined_seg = [(shape(x['geometry']), x['properties']) for x in
+        combined_seg = [Segment(shape(x['geometry']), x['properties']) for x in
                         segments]
     # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
-        segments_index.insert(idx, element[0].bounds)
+        segments_index.insert(idx, element.geometry.bounds)
 
     return combined_seg, segments_index
 
@@ -562,22 +562,43 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
     return results
 
 
-def prepare_geojson(records):
+def write_records_to_geojson(records, outfilename):
     """
-    Prepares a set of records to be written as geojson, reprojecting
+    Given a list of record objects, write them to geojson file
+    Args:
+        records - a list of objects that contain geometry and properties
+        outfilename - geojson file to write to
+    Returns:
+        records as a geojson list
+    """
+
+    records = [{
+        'geometry': mapping(record.geometry),
+        'properties': record.properties
+        } for record in records]
+
+    records = prepare_geojson(records)
+    with open(outfilename, 'w') as outfile:
+        geojson.dump(records, outfile)
+    return records
+
+
+def prepare_geojson(elements):
+    """
+    Prepares a list of elements to be written as geojson, reprojecting
     from 3857 to 4326
     Args:
-        records - a list of dicts with geometry and properties
+        elements - a list of dicts with geometry and properties
     Results:
         A geojson feature collection
     """
 
-    records = reproject_records(records, inproj='epsg:3857',
-                                outproj='epsg:4326')
+    elements = reproject_records(elements, inproj='epsg:3857',
+                                 outproj='epsg:4326')
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
-        properties=x['properties']) for x in records]
+        properties=x['properties']) for x in elements]
 
     return geojson.FeatureCollection(results)
 
@@ -739,5 +760,10 @@ def get_feature_list(config):
     if 'data_source' in config and config['data_source']:
         for additional in config['data_source']:
             feat_types[additional['feat']].append(additional['name'])
+
+    # May eventually want to rename this feature to be more general
+    # For now, all atr features are continuous
+    if 'atr_cols' in config and config['atr_cols']:
+        feat_types['f_cont'] += config['atr_cols']
 
     return feat_types
