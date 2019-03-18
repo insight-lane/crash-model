@@ -11,6 +11,7 @@ import geopandas as gpd
 from sklearn.neighbors import KNeighborsRegressor
 import sys
 
+
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
@@ -18,6 +19,45 @@ BASE_DIR = os.path.dirname(
 
 PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 STANDARDIZED_DATA_FP = os.path.join(BASE_DIR, 'data', 'standardized')
+
+
+def update_properties(segments, df, features):
+    """
+    Takes a segment list and a dataframe, and writes out updated
+    intersection and non-intersection segments
+    Args:
+        segments - a list of intersection and non-intersection segments
+        df - a dataframe of features
+        features - a list of features to extract from the dataframe
+    Returns:
+        nothing - writes to inter_segments.geojson and non_inter_segments.geojson
+    """
+
+    df = df[['id'] + features]
+    df = df.fillna('')
+    # a dict where the id is the key and the value is the feature
+
+    values = df.to_dict()
+    id_mapping = {value: key for key, value in values['id'].items()}
+    for segment in segments:
+        seg_id = str(segment.properties['id'])
+
+        if seg_id in id_mapping:
+            for feature in features:
+                if values[feature][id_mapping[seg_id]] == '':
+                    segment.properties[feature] = None
+                else:
+                    segment.properties[feature] = values[feature][id_mapping[seg_id]]
+
+    inters = [x for x in segments if util.is_inter(x.properties['id'])]
+    inters = util.write_records_to_geojson(
+        inters, os.path.join(
+            PROCESSED_DATA_FP, 'maps', 'inters_segments.geojson'))
+
+    non_inters = [x for x in segments if not util.is_inter(x.properties['id'])]
+    non_inters = util.write_records_to_geojson(
+        non_inters, os.path.join(
+            PROCESSED_DATA_FP, 'maps', 'non_inters_segments.geojson'))
 
 
 def read_volume():
@@ -48,6 +88,7 @@ def read_volume():
                     float(record['location']['longitude']),
                     float(record['location']['latitude']),
                     orig=pyproj.Proj(init='epsg:4326')))
+
     return volume
 
 
@@ -73,7 +114,7 @@ def propagate_volume():
     # # Create spatial index for quick lookup
     segments_index = rtree.index.Index()
     for idx, element in enumerate(combined_seg):
-        segments_index.insert(idx, element[0].bounds)
+        segments_index.insert(idx, element.geometry.bounds)
 
     print('Created spatial index')
 
@@ -129,7 +170,7 @@ def propagate_volume():
         after - len(volume_df))))
 
     # create dataframe of all segments
-    seg_df = pd.DataFrame(combined_seg)
+    seg_df = pd.DataFrame([(x.geometry, x.properties) for x in combined_seg])
     seg_df.columns = ['geometry', 'seg_id']
     
     # seg_id column is read in as a dictionary
@@ -191,7 +232,13 @@ def propagate_volume():
     output_fp = os.path.join(PROCESSED_DATA_FP, 'atrs_predicted.csv')
     # force id into string
     merged_df['id'] = merged_df['id'].astype(str)
+
     merged_df.to_csv(output_fp, index=False)
+    update_properties(
+        combined_seg,
+        merged_df,
+        ['volume', 'speed', 'volume_coalesced', 'speed_coalesced']
+    )
 
 
 if __name__ == '__main__':

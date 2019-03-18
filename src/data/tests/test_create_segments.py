@@ -134,26 +134,32 @@ def test_get_non_intersection_name():
     assert name == 'Main Street between From Street and To Street/Another Street'
 
 
-def test_add_point_based_features(tmpdir):
-
-    test_path = os.path.join(
+def _create_point_test(tmpdir):
+    base_path = os.path.join(
         os.path.dirname(
             os.path.abspath(__file__)),
-        'data',
-        'test_create_segments')
+        'data')
+    test_path = os.path.join(
+        base_path,
+        'test_create_segments'
+    )
 
     with open(os.path.join(test_path, 'points_test.json'), 'r') as f:
         data = json.load(f)
 
     # All the line strings are roads
-    print(data[0]['geometry'])
     non_inters = [Segment(LineString(
         x['geometry']['coordinates']), x['properties']
     ) for x in data if x['geometry']['type'] == 'LineString']
     # There's only one test intersection
     inter = [x for x in data if x['geometry']['type'] == 'MultiLineString'][0]
     lines = [LineString(x) for x in inter['geometry']['coordinates']]
-    inters = [Intersection(0, lines, inter['properties'])]
+    inters = [Intersection(
+        975,
+        lines,
+        inter['properties']['data'],
+        {'id': inter['properties']['id']}
+    )]
     coords = []
     for line in inters[0].lines:
         coords.append(line.coords)
@@ -162,11 +168,41 @@ def test_add_point_based_features(tmpdir):
 
     featsfile = os.path.join(test_path, 'points.geojson')
     outputfile = os.path.join(tmpdir.strpath, 'result.json')
+    return base_path, non_inters, inters, outputfile, featsfile
+
+
+def test_update_intersection_properties(tmpdir):
+    base_path, non_inters, inters, outputfile, featsfile = _create_point_test(
+        tmpdir)
+    non_inters, inters = create_segments.add_point_based_features(
+        non_inters, inters, outputfile, featsfile)
+    
+    results = create_segments.update_intersection_properties(
+        inters, os.path.join(base_path, 'config_features.yml'))
+    assert results[0].properties == {
+        'id': 975,
+        'width': 13,
+        'cycleway_type': None,
+        'oneway': 1,
+        'lanes': 2,
+        'signal': 0,
+        'crosswalk': 1,
+        'jam': None,
+        'width_per_lane': 6,
+        'jam_percent': None,
+        'connected_segments': []
+    }
+                                             
+
+def test_add_point_based_features(tmpdir):
+
+    base_path, non_inters, inters, outputfile, featsfile = _create_point_test(
+        tmpdir)
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile)
 
     # Check whether the segments we expected got the properties
-    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    assert inters[0].data[0]['crosswalk'] == 1
     signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
     assert signalized[0].properties['id'] == '001556'
@@ -175,7 +211,7 @@ def test_add_point_based_features(tmpdir):
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile)
 
-    assert inters[0].properties['data'][0]['crosswalk'] == 1
+    assert inters[0].data[0]['crosswalk'] == 1
     signalized = [x for x in non_inters if x.properties['signal']]
     assert len(signalized) == 1
     assert signalized[0].properties['id'] == '001556'
@@ -199,7 +235,8 @@ def test_add_point_based_features(tmpdir):
         assert output == expected
 
     # Now test with adding additional_features, and use forceupdate
-    additional_feats_file = os.path.join(test_path, 'additional_points.json')
+    additional_feats_file = os.path.join(
+        base_path, 'test_create_segments', 'additional_points.json')
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile,
         additional_feats_filename=additional_feats_file, forceupdate=True)

@@ -5,7 +5,7 @@ channels:
 dependencies:
 - codecov
 # Conda packacking issue, will want to revisit later
-- fiona=1.8.3
+- fiona
 - folium
 - geopandas
 - geocoder
