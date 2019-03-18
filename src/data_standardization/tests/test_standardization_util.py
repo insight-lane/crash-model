@@ -58,7 +58,8 @@ def test_parse_address():
         "Cambridge, MA\n" + \
         "(42.37857940800046, -71.11657724799966)"
 
-    lat, lon = standardization_util.parse_address(address)
+    street, lat, lon = standardization_util.parse_address(address)
+    assert street == 'OXFORD ST'
     assert lat == 42.37857940800046
     assert lon == -71.11657724799966
 

@@ -29,7 +29,9 @@ def test_all(tmpdir):
         '-d',
         path,
         '-r',
-        path + '/processed/maps/elements.geojson'
+        path + '/processed/maps/elements.geojson',
+        '-c',
+        path + '/config_features.yml'
     ])
 
     subprocess.check_call([

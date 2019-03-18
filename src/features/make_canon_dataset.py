@@ -71,7 +71,7 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     # Read in non_inters data:
     print("reading ", non_inters_fp)
     non_inters = read_geojson(non_inters_fp)
-    non_inters_df = pd.DataFrame([x[1] for x in non_inters])
+    non_inters_df = pd.DataFrame([x.properties for x in non_inters])
     non_inters_df.set_index('id', inplace=True)
 
     # Combine inter + non_inter

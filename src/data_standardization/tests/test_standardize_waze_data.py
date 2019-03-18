@@ -29,7 +29,7 @@ def test_read_snapshots():
     results = standardize_waze_data.read_snapshots(os.path.join(
         TEST_FP, 'data', 'waze'), config)
 
-    assert results == [
+    expected_results = [
         {
             'pubMillis': 1539632995870,
             'city': 'Cambridge, MA',
@@ -44,6 +44,10 @@ def test_read_snapshots():
             'city': 'Cambridge, MA',
             'type': 'JAM',
             'reportRating': 2,
+            'location': {
+                'latitude': 42.373807,
+                'longitude': -71.112465
+            },
             'eventType': 'alert',
             'pubTimeStamp': '2018-10-15 15:40:47',
             'snapshotId': 1
@@ -61,6 +65,10 @@ def test_read_snapshots():
             'subtype': 'HAZARD_ON_ROAD_CONSTRUCTION',
             'city': 'Cambridge, MA',
             'pubMillis': 1539607721062,
+            'location': {
+                'latitude': 42.371072,
+                'longitude': -71.1143
+            },
             'eventType': 'alert',
             'pubTimeStamp': '2018-10-15 08:48:41',
             'snapshotId': 2
@@ -76,6 +84,7 @@ def test_read_snapshots():
             'snapshotId': 3
         }
     ]
+    assert results == expected_results
 
     results = standardize_waze_data.read_snapshots(
         os.path.join(TEST_FP, 'data', 'waze'),
@@ -97,6 +106,10 @@ def test_read_snapshots():
             'subtype': 'HAZARD_ON_ROAD_CONSTRUCTION',
             'city': 'Cambridge, MA',
             'pubMillis': 1539607721062,
+            'location': {
+                'latitude': 42.371072,
+                'longitude': -71.1143
+            },
             'eventType': 'alert',
             'pubTimeStamp': '2018-10-15 08:48:41',
             'snapshotId': 1
