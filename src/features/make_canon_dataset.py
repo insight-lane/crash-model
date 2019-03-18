@@ -39,7 +39,7 @@ def read_records(fp, date_col, id_col, agg='week'):
 
     # aggregate
     print("aggregating by ", agg)
-    df[agg] = df[date_col].apply(lambda x: getattr(x, agg))
+#    df[agg] = df[date_col].apply(lambda x: getattr(x, agg))
     df_g = df.groupby([id_col, 'year', agg]).size()
 
     return(df_g)
