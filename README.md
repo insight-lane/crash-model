@@ -71,7 +71,7 @@ This is part of the City's long-term [Vision Zero initiative](http://www.visionz
 
 Connect
 -----------------------
-Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-boston-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](https://www.datafordemocracy.org/join-us)!
+Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](https://www.datafordemocracy.org/join-us)!
 
 Leads:
  - [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
