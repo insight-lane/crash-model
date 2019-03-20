@@ -2,7 +2,7 @@
 # Can be used for making test datasets, or for debugging
 import argparse
 import json
-from shapely.geometry import LineString, Point
+from shapely.geometry import LineString, Point, MultiLineString
 import geojson
 from data.util import read_geojson, get_reproject_point
 from data.util import prepare_geojson, reproject_records
@@ -47,9 +47,18 @@ def get_buffer(filename, lat, lon, radius):
                     },
                     'properties': segment.properties
                 })
-            elif type(segment.geometry) == 'MultiLineString':
-                print("MultiLineString not implented yet, skipping...")
+            elif type(segment.geometry) == MultiLineString:
+                overlapping.append({
+                    'geometry': {
+                        'coordinates': [[y for y in x.coords] for x in segment.geometry],
+                        'type': 'MultiLineString'
+                    },
+                    'properties': segment.properties
 
+                })
+            else:
+                print("{} not implemented yet, skipping...".format(
+                    type(segment.geometry)))
     if overlapping:
         overlapping = prepare_geojson(overlapping)
     return overlapping
