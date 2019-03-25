@@ -4,8 +4,7 @@ from shapely.ops import unary_union
 from shapely.geometry import Point
 import rtree
 import os
-import json
-import geojson
+from .segment import Segment
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -231,7 +230,7 @@ def get_candidates(buffered, buffered_index, lines):
     return results
 
 
-def add_int_features(int_lines, dir1, dir2, featlist):
+def add_int_features(inters, int_lines, featlist):
     """
     Adds the features to the intersections. Since intersection segments
     are made up of the lines coming into an intersection, intersection
@@ -241,41 +240,25 @@ def add_int_features(int_lines, dir1, dir2, featlist):
     (sometimes impossible, since the maps are often a little different)
     we'll just take the max value here
     Args:
+        inters - inter segments
         int_lines - contains the ids for the original intersection lines,
             and the new mapped intersection lines
-        dir1 - the directory the original inters data is in
-        dir2 - the directory the additional inters data is in
         featlist - the features to add
+    Returns:
+        The updated inters list
     """
-    with open(os.path.join(dir2, 'inters_data.json'), 'r') as f:
-        inters_new = json.load(f)
-    
-    inters_data_fp = os.path.join(dir1, 'inters_data.json')
-    with open(inters_data_fp, 'r') as f:
-        inters_orig = json.load(f)
+
+    indexed_inters = {str(x.properties['id']): x for x in inters}
 
     for line in int_lines:
 
-        orig_feats = inters_orig[str(line[1]['id'])]
-
+        idx = str(line[1]['id'])
         if line[2]:
-            new_feats = inters_new[str(line[2]['id'])]
-
-            # Since at the moment, the canonical dataset is created by only
-            # looking at the max value of each feature, we can just append
-            # the same max value of the new features to the each segment of
-            # the original feature list
             for feat in featlist:
-                for orig_feat in orig_feats:
-                    orig_feat[feat] = max([x[feat] for x in new_feats])
-        else:
-            for feat in featlist:
-                for orig_feat in orig_feats:
-                    orig_feat[feat] = 0
+                indexed_inters[idx].properties[feat] = line[2][feat]
 
-    with open(os.path.join(dir1, 'inters_data.json'), 'w') as f:
-        json.dump(inters_orig, f)
-            
+    return indexed_inters.values()
+
 
 if __name__ == '__main__':
     # Read osm map file
@@ -326,15 +309,8 @@ if __name__ == '__main__':
     print("Adding features: " + ','.join(feats))
     get_mapping(non_ints_with_candidates, feats)
 
-    output = [{
-        'geometry': geojson.LineString([y for y in x['line'].coords]),
-        'properties': x['properties']} for x in non_ints_with_candidates]
-    output = util.prepare_geojson(output)
-
-    # Write the non-intersections segments back out with the new features
-    with open(os.path.join(
-            MAP_FP, 'non_inters_segments.geojson'), 'w') as outfile:
-        geojson.dump(output, outfile)
+    non_inters = [Segment(x['line'], x['properties'])
+                  for x in non_ints_with_candidates]
 
     # Now do intersections
     osm_map_inter = util.read_geojson(
@@ -355,11 +331,12 @@ if __name__ == '__main__':
     int_results = get_int_mapping(
         osm_map_inter, new_buffered_inter, new_index_inter)
 
-    add_int_features(
+    inters = add_int_features(
+        osm_map_inter,
         int_results,
-        PROCESSED_DATA_FP,
-        os.path.join(MAP_FP, args.map2dir), feats)
-
+        feats
+    )
+    util.write_segments(non_inters, inters, MAP_FP)
 
 
     

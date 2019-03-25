@@ -767,3 +767,31 @@ def get_feature_list(config):
         feat_types['f_cont'] += config['atr_cols']
 
     return feat_types
+
+
+def write_segments(non_inters, inters, mapfp):
+    """
+    Writes non_inters, inters and combined inter_and_non_int.geojson
+    Args:
+        non_inters - list of non_inters segment objects
+        inters - list of inters segment objects
+        mapfp - maps directory to write to
+    """
+    # Store non-intersection segments
+
+    non_inters = write_records_to_geojson(
+        non_inters, os.path.join(
+            mapfp, 'non_inters_segments.geojson'))
+
+    # Store the individual intersections
+    int_w_ids = write_records_to_geojson(
+        inters, os.path.join(
+            mapfp, 'inters_segments.geojson'))
+
+    # Store the combined segments with all properties
+    segments = non_inters['features'] + int_w_ids['features']
+
+    with open(os.path.join(mapfp, 'inter_and_non_int.geojson'), 'w') as outfile:
+        geojson.dump(geojson.FeatureCollection(segments), outfile)
+
+
