@@ -15,7 +15,6 @@ dependencies:
 - jupyter
 - matplotlib
 - numpy
-- openmp
 - openpyxl
 - osmnx
 - pandas
@@ -31,5 +30,6 @@ dependencies:
 - scikit-learn
 - shapely
 - tzlocal
-- xgboost
 - xlrd
+- pip:
+  - xgboost
