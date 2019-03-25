@@ -14,7 +14,6 @@ import yaml
 from . import util
 import argparse
 import os
-import geojson
 import re
 from shapely.geometry import MultiLineString, LineString
 from .segment import Segment, Intersection, IntersectionBuffer
