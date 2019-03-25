@@ -24,11 +24,12 @@ dependencies:
 - python=3.6
 - pyyaml
 - pytest-cov
+- pytorch
 - rtree
 - ruamel.yaml
 - seaborn
 - scikit-learn
 - shapely
 - tzlocal
-- xgboost=0.81
+- xgboost
 - xlrd
