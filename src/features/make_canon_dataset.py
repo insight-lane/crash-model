@@ -38,51 +38,29 @@ def read_records(fp, id_col):
     return(df_g)
 
 
-def road_make(feats, inters_fp, non_inters_fp, agg='max'):
+def road_make(feats, fp):
     """ Makes road feature df, intersections + non-intersections
 
-    agg : aggregation type (default is max)
     IMPORTANT: if the aggregation type changes, need to also update
         how aggregation is calculated in src/data/add_map.py
     """
 
-    # Read in inters data (json), turn into df with inter index
-    df_index = []
-    df_records = []
-    print("reading ", inters_fp)
-    with open(inters_fp, 'r') as f:
-        inters = json.load(f)
-        # Append each index to dataframe
-        for idx, lines in inters.items():
+    # Read in segments data (geojson)
+    print("reading ", fp)
+    segments = read_geojson(fp)
+    df = pd.DataFrame([x.properties for x in segments])
+    df.set_index('id', inplace=True)
 
-            # Each intersection has more than one segment
-            # Add each segment's properties to df_records
-            df_records.extend(lines)
-            df_index.extend([idx] * len(lines))
-    inters_df = pd.DataFrame(df_records, index=df_index)
-
-    # Read in non_inters data:
-    print("reading ", non_inters_fp)
-    non_inters = read_geojson(non_inters_fp)
-    non_inters_df = pd.DataFrame([x.properties for x in non_inters])
-    non_inters_df.set_index('id', inplace=True)
-
-    # Combine inter + non_inter
-    combined = pd.concat([inters_df, non_inters_df], sort=True)
-    missing_feats = [x for x in feats if x not in combined.columns]
-    feats = [x for x in feats if x in combined.columns]
+    # Check for missing features
+    missing_feats = [x for x in feats if x not in df.columns]
+    feats = [x for x in feats if x in df.columns]
     if missing_feats:
         warnings.warn(
             str(len(missing_feats))
             + " feature(s) missing, skipping (" +
             ', '.join(missing_feats)
             + ")")
-    # Since there are multiple segments per intersection,
-    # aggregating inters data = apply aggregation (default is max)
-    aggregated = getattr(combined[feats].groupby(combined.index), agg)
-
-    # return aggregation and adjacency info (orig_id)
-    return(aggregated(), combined['orig_id'])
+    return df[feats]
 
 
 def read_concerns(fp, id_col):
@@ -119,11 +97,9 @@ def aggregate_roads(feats, datadir, concerns=[]):
     crash_concern['near_id'] = crash_concern['near_id'].astype('str')
 
     # combined road feature dataset parameters
-    inters_fp = os.path.join(datadir, 'inters_data.json')
-    non_inters_fp = os.path.join(datadir, 'maps', 'non_inters_segments.geojson')
-
+    fp = os.path.join(datadir, 'maps', 'inter_and_non_int.geojson')
     # create combined road feature dataset
-    aggregated, adjacent = road_make(feats, inters_fp, non_inters_fp)
+    aggregated = road_make(feats, fp)
     print("road features being included: ", ', '.join(feats))
 
     # Add any concern types if applicable
@@ -144,7 +120,7 @@ def aggregate_roads(feats, datadir, concerns=[]):
     # All features as int
     aggregated = aggregated.apply(lambda x: x.astype('int'))
 
-    return aggregated, adjacent, crash_concern
+    return aggregated, crash_concern
 
 
 def combine_crash_with_segments(crash_concern, aggregated):
@@ -191,7 +167,7 @@ if __name__ == '__main__':
 
     print("Data directory: " + DATA_FP)
 
-    aggregated, adjacent, crash_concern = aggregate_roads(
+    aggregated, crash_concern = aggregate_roads(
         feats,
         DATA_FP,
         concerns=args.concern_info

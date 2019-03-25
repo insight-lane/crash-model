@@ -255,7 +255,8 @@ def add_int_features(inters, int_lines, featlist):
         idx = str(line[1]['id'])
         if line[2]:
             for feat in featlist:
-                indexed_inters[idx].properties[feat] = line[2][feat]
+                if feat in line[2]:
+                    indexed_inters[idx].properties[feat] = line[2][feat]
 
     return indexed_inters.values()
 
