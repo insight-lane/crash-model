@@ -30,6 +30,5 @@ dependencies:
 - scikit-learn
 - shapely
 - tzlocal
+- xgboost=0.81
 - xlrd
-- pip:
-  - xgboost
