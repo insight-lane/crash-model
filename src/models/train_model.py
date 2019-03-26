@@ -4,40 +4,18 @@
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
-from sklearn.metrics import roc_auc_score
 import os
 import json
 import argparse
 import yaml
-from .model_utils import format_crash_data
 from .model_classes import Indata, Tuner, Tester
 from data.util import get_feature_list
-# import sklearn.linear_model as skl
 
 # all model outputs must be stored in the "data/processed/" directory
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
-
-
-def predict_forward(trained_model, best_model_features, perf_cutoff,
-                    split_week, split_year, seg_data, crash_data):
-    """simple function to predict crashes for specific week/year"""
-    test_crash = format_crash_data(crash_data, 'crash', split_week, split_year)
-    test_crash_segs = test_crash.merge(
-        seg_data, left_on='segment_id', right_on='segment_id')
-    preds = trained_model.predict_proba(
-        test_crash_segs[best_model_features])[::, 1]
-    try: 
-        perf = roc_auc_score(test_crash_segs['target'], preds)
-    except ValueError:
-        print('Only one class present, likely no crashes in the week')
-        perf = 0
-    print(('Week {0}, year {1}, perf {2}'.format(split_week, split_year, perf)))
-    if perf <= perf_cutoff:
-        print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
-    return(preds)
 
 
 def output_importance(trained_model, features, datadir):
@@ -108,8 +86,6 @@ def set_defaults(config={}):
         config['weeks_back'] = 1
     if 'name' not in list(config.keys()):
         config['name'] = 'boston'
-    if 'level' not in list(config.keys()):
-        config['level'] = 'week'
 
         
 def get_features(config, data):
@@ -152,41 +128,20 @@ def get_features(config, data):
 
 
 def predict(trained_model, data_model, best_model_features,
-            features, perf_cutoff, config_level, datadir):
+            features, perf_cutoff, datadir):
     """
 
     Args:
-        config_level - either week or segment
+
     Returns
         nothing, writes prediction segments to file
     """
-    if config_level == 'week':
-        # predict back number of weeks according to config
-        all_weeks = data[['year','week']].drop_duplicates().sort_values(['year','week']).values
-        back_weeks = all_weeks[-config['weeks_back']:]
-        pred_weeks = np.zeros([back_weeks.shape[0], data_segs.shape[0]])
-        for i, yw in enumerate(back_weeks):
-            preds = predict_forward(trained_model, best_model_features, perf_cutoff,
-                yw[1], yw[0], data_segs, data)
-            pred_weeks[i] = preds
 
-        # create dataframe with segment-year-week index
-        df_pred = pd.DataFrame(pred_weeks.T,
-                index=data_segs.segment_id.values,
-                columns=pd.MultiIndex.from_tuples([tuple(w) for w in back_weeks]))
-        # has year-week column index, need to stack for year-week index
-        df_pred = df_pred.stack(level=[0,1])
-        df_pred = df_pred.reset_index()
-        df_pred.columns = ['segment_id', 'year', 'week', 'prediction']
-        df_pred.to_csv(os.path.join(datadir, 'seg_with_predicted.csv'), index=False)
-        data_plus_pred = df_pred.merge(data_model, on=['segment_id'])
-        data_plus_pred.to_json(os.path.join(datadir, 'seg_with_predicted.json'), orient='index')
-    else:
-        preds = trained_model.predict_proba(data_model[features])[::, 1]
-        df_pred = data_model.copy(deep=True)
-        df_pred['prediction'] = preds
-        df_pred.to_csv(os.path.join(datadir, 'seg_with_predicted.csv'), index=False)
-        df_pred.to_json(os.path.join(datadir, 'seg_with_predicted.json'), orient='index')
+    preds = trained_model.predict_proba(data_model[features])[::, 1]
+    df_pred = data_model.copy(deep=True)
+    df_pred['prediction'] = preds
+    df_pred.to_csv(os.path.join(datadir, 'seg_with_predicted.csv'), index=False)
+    df_pred.to_json(os.path.join(datadir, 'seg_with_predicted.json'), orient='index')
 
 
 def add_extra_features(data, data_segs, config, datadir):
@@ -203,8 +158,8 @@ def add_extra_features(data, data_segs, config, datadir):
     # add concern
     if config['concern'] != '':
         print('Adding concerns')
-        concern_observed = data[data.year == 2016].groupby(
-            'segment_id')[config['concern']].max()
+        concern_observed = data[[config['concern'], 'segment_id']]
+
         data_segs = data_segs.merge(
             concern_observed.reset_index(), on='segment_id')
 
@@ -216,6 +171,7 @@ def add_extra_features(data, data_segs, config, datadir):
         data_segs = data_segs.merge(
             tmcs, left_on='segment_id', right_on='near_id', how='left')
         data_segs[config['tmc_cols']] = data_segs[config['tmc_cols']].fillna(0)
+
     return data_segs
 
 
@@ -250,7 +206,7 @@ def process_features(features, config, f_cat, f_cont, data_segs):
     return data_segs, features, lm_features
 
 
-def initialize_and_run(data_model, features, lm_features, config_level,
+def initialize_and_run(data_model, features, lm_features,
                        datadir, seed=None):
 
     cvp, mp, perf_cutoff = set_params()
@@ -269,14 +225,11 @@ def initialize_and_run(data_model, features, lm_features, config_level,
 
     # Initialize tuner
     tune = Tuner(df)
-    try: 
-        # Base XG model
-        tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
-        # Base LR model
-        tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
-    except ValueError:
-        print('CV fails, likely very few of target available, try rerunning at segment-level')
-        raise
+    # Base XG model
+    tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
+    # Base LR model
+    tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
+
     # Run test
     test = Tester(df)
     test.init_tuned(tune)
@@ -302,7 +255,7 @@ def initialize_and_run(data_model, features, lm_features, config_level,
 #    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
 
     predict(trained_model, data_model, best_model_features,
-            features, perf_cutoff, config_level, datadir)
+            features, perf_cutoff, datadir)
 
     # output feature importances or coefficients
     output_importance(trained_model, features, datadir)
@@ -335,16 +288,7 @@ if __name__ == '__main__':
     print(('Outputting to: %s' % PROCESSED_DATA_FP))
 
     # Read in data
-    data = pd.read_csv(seg_data, dtype={'segment_id':'str'})
-    data.sort_values(['segment_id', 'year', 'week'], inplace=True)
-    if config['level'] == 'week':
-        week = int(config['time_target'][0])
-        year = int(config['time_target'][1])
-
-        # get segments with non-zero crashes
-        # this is necessary to constrain the problem for weekly predictions
-        data = data.set_index('segment_id').loc[data.groupby('segment_id').crash.sum()>0]
-        data.reset_index(inplace=True)
+    data = pd.read_csv(seg_data, dtype={'segment_id': 'str'})
 
     f_cat, f_cont, features = get_features(config, data)
 
@@ -356,24 +300,14 @@ if __name__ == '__main__':
     data_segs, features, lm_features = process_features(
         features, config, f_cat, f_cont, data_segs)
     
-    if config['level'] == 'week':
-        # create lagged crash values
-        crash_lags = format_crash_data(data, 'crash', week, year)
-
-        # add to features
-        crash_cols = ['pre_week','pre_month','pre_quarter','avg_week']
-        features += crash_cols
-        # create model data
-        data_model = crash_lags.merge(data_segs, left_on='segment_id', right_on='segment_id')
-    else:
-        # if not week, get any crash 0/1
-        any_crash = data.groupby('segment_id')['crash'].max()
-        any_crash = (any_crash>0).astype(int)
-        any_crash.name = 'target'
-        data_model = data_segs.set_index('segment_id').join(any_crash).reset_index()
+    # if not week, get any crash 0/1
+    any_crash = data.groupby('segment_id')['crash'].max()
+    any_crash = (any_crash>0).astype(int)
+    any_crash.name = 'target'
+    data_model = data_segs.set_index('segment_id').join(any_crash).reset_index()
     print("full features:{}".format(features))
 
-    initialize_and_run(data_model, features, lm_features, config['level'],
+    initialize_and_run(data_model, features, lm_features,
                        PROCESSED_DATA_FP)
 
 

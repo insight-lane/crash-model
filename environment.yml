@@ -24,7 +24,6 @@ dependencies:
 - python=3.6
 - pyyaml
 - pytest-cov
-- pytorch
 - rtree
 - ruamel.yaml
 - seaborn
