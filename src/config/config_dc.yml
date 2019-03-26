@@ -50,15 +50,6 @@ concern_files:
     longitude: X
     time: REQUESTDATE
 
-
-# week on which to predict crashes (week, year)
-# Best practice is to choose a week towards the end of your crash data set
-# in format [month, year]
-time_target: [51, 2016]
-# specify how many weeks back to predict in output of train_model
-weeks_back: 1
-
-
 #################################################################
 # Configuration for default features
 
