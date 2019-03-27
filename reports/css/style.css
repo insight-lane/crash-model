@@ -307,6 +307,22 @@ th {
     background-color: #666;
     /*color: #1a1a1a;*/
 }
+
+/***** Styles for crash popups *****/
+.mapboxgl-popup-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.mapboxgl-popup-content ul {
+    margin-top: 5px;
+    padding: 0 15px 0 20px;
+}
+
+.mapboxgl-popup-content li {
+    padding: 1px 0;
+}
+
 /***** Styles for Mapbox geocoder input *****/
 .mapboxgl-ctrl-geocoder {
   border: 0;

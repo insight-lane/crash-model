@@ -39,7 +39,7 @@ def read_records(fp, date_col, id_col, agg='week'):
 
     # aggregate
     print("aggregating by ", agg)
-    df[agg] = df[date_col].apply(lambda x: getattr(x, agg))
+#    df[agg] = df[date_col].apply(lambda x: getattr(x, agg))
     df_g = df.groupby([id_col, 'year', agg]).size()
 
     return(df_g)
@@ -71,18 +71,19 @@ def road_make(feats, inters_fp, non_inters_fp, agg='max'):
     # Read in non_inters data:
     print("reading ", non_inters_fp)
     non_inters = read_geojson(non_inters_fp)
-    non_inters_df = pd.DataFrame([x[1] for x in non_inters])
+    non_inters_df = pd.DataFrame([x.properties for x in non_inters])
     non_inters_df.set_index('id', inplace=True)
 
     # Combine inter + non_inter
     combined = pd.concat([inters_df, non_inters_df], sort=True)
     missing_feats = [x for x in feats if x not in combined.columns]
     feats = [x for x in feats if x in combined.columns]
-    warnings.warn(
-        str(len(missing_feats))
-        + " feature(s) missing, skipping (" +
-        ', '.join(missing_feats)
-        + ")")
+    if missing_feats:
+        warnings.warn(
+            str(len(missing_feats))
+            + " feature(s) missing, skipping (" +
+            ', '.join(missing_feats)
+            + ")")
     # Since there are multiple segments per intersection,
     # aggregating inters data = apply aggregation (default is max)
     aggregated = getattr(combined[feats].groupby(combined.index), agg)

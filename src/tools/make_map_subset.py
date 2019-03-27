@@ -30,24 +30,24 @@ def get_buffer(filename, lat, lon, radius):
     point = get_reproject_point(lat, lon)
     buffered_poly = point.buffer(radius)
     for segment in segments:
-        if segment[0].intersects(buffered_poly):
+        if segment.geometry.intersects(buffered_poly):
             
-            if type(segment[0]) == LineString:
-                coords = [x for x in segment[0].coords]
+            if type(segment.geometry) == LineString:
+                coords = [x for x in segment.geometry.coords]
                 overlapping.append({
                     'geometry': {'coordinates': coords, 'type': 'LineString'},
                     'type': 'Feature',
-                    'properties': segment[1]
+                    'properties': segment.properties
                 })
-            elif type(segment[0]) == Point:
+            elif type(segment.geometry) == Point:
                 overlapping.append({
                     'geometry': {
-                        'coordinates': [segment[0].x, segment[0].y],
+                        'coordinates': [segment.geometry.x, segment.geometry.y],
                         'type': 'Point'
                     },
-                    'properties': segment[1]
+                    'properties': segment.properties
                 })
-            elif type(segment[0]) == 'MultiLineString':
+            elif type(segment.geometry) == 'MultiLineString':
                 print("MultiLineString not implented yet, skipping...")
 
     if overlapping:
