@@ -129,7 +129,6 @@
 			// If no valid cityId specified swap to the first in the list
 			if (new URL(location.href).searchParams.get('city') == null)
 			{
-//				window.location.href = "/"+config.showcase[0].id;
 				default_city = config.showcase[0].id
 				window.location = location.origin + location.pathname + "?city=" + default_city;
 
@@ -137,7 +136,6 @@
 			// Load the requested city
 			else
 			{
-				// cityId = window.location.pathname.match(/\/(.+)/)[1];				
 				cityId = new URL(location.href).searchParams.get('city');
 
 				for (c = 0; c < config.showcase.length; c++)
@@ -164,7 +162,6 @@
 		// Swap cities when requested
 		$('#city_selector').on('change', function ()
 		{
-	//			window.location = location.href + "?city=" + default_city;
 				window.location = location.origin + location.pathname + "?city=" + $(this).val();
 		});
 		
