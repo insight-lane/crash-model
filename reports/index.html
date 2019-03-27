@@ -14,7 +14,8 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
 	<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script type='text/javascript', src='config.js'></script>
+	<script type='text/javascript', src="https://s3-ap-southeast-2.amazonaws.com/insight-lane-showcase/config.js"></script>
+
 	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
 
 	<link rel="stylesheet" href="css/style.css" />
@@ -116,9 +117,9 @@
 
 	<script>
 		// If only one city exists in config, url is irrelevant
-		if (config.cities.length == 1)
+		if (config.showcase.length == 1)
 		{
-			var city = config.cities[0];
+			var city = config.showcase[0];
 			var cityId = city.id;
 			var country = city.name.split(", ")[2];
 		}
@@ -126,20 +127,24 @@
 		else
 		{
 			// If no valid cityId specified swap to the first in the list
-			if (RegExp("\/(.+)").test(window.location.pathname) == false)
+			if (new URL(location.href).searchParams.get('city') == null)
 			{
-				window.location.href = "/"+config.cities[0].id;
+//				window.location.href = "/"+config.showcase[0].id;
+				default_city = config.showcase[0].id
+				window.location = location.origin + location.pathname + "?city=" + default_city;
+
 			}
 			// Load the requested city
 			else
 			{
-				cityId = window.location.pathname.match(/\/(.+)/)[1];
-				
-				for (c = 0; c < config.cities.length; c++)
+				// cityId = window.location.pathname.match(/\/(.+)/)[1];				
+				cityId = new URL(location.href).searchParams.get('city');
+
+				for (c = 0; c < config.showcase.length; c++)
 				{
-					if (config.cities[c].id == cityId)
+					if (config.showcase[c].id == cityId)
 					{
-						var city = config.cities[c];
+						var city = config.showcase[c];
 						var country = city.name.split(", ")[2];
 						break;
 					}
@@ -149,7 +154,7 @@
 				
 		// Populate the city selector with all other cities
 		var citySelector = $('#city_selector');
-		$.each(config.cities, function(key, scCity) {
+		$.each(config.showcase, function(key, scCity) {
 			if (scCity.id != cityId)
 			{
     			citySelector.append($('<option />').val(scCity.id).text(scCity.name));
@@ -159,7 +164,8 @@
 		// Swap cities when requested
 		$('#city_selector').on('change', function ()
 		{
-			window.location.href = $(this).val();
+	//			window.location = location.href + "?city=" + default_city;
+				window.location = location.origin + location.pathname + "?city=" + $(this).val();
 		});
 		
 	</script>
