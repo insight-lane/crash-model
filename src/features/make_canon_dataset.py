@@ -105,7 +105,6 @@ def aggregate_roads(feats, datadir, concerns=[]):
     # Add any concern types if applicable
     filename = os.path.join(datadir, 'concern_joined.json')
     if os.path.exists(filename):
-
         concerns = read_concerns(
             filename, 'near_id'
         )

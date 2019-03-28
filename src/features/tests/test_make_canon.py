@@ -1,10 +1,26 @@
 import os
 import warnings
+import pandas as pd
 from .. import make_canon_dataset
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 DATA_FP = os.path.join(TEST_FP, 'data', 'processed')
 
+
+def test_read_concerns():
+    result = make_canon_dataset.read_concerns(
+        os.path.join(DATA_FP, 'concern_joined.json'),
+        'near_id'
+    )
+    expected = [(
+        'visionzero',
+        pd.DataFrame([3, 1, 1, 1], index=['008', '006', '004', '003']),
+    ), (
+        'seeclickfix',
+        pd.DataFrame([11, 21, 32, 19, 15, 5, 9, 28, 17, 28, 8, 2]),
+        )]
+    assert expected == result
+                
 
 def test_aggregate_roads():
 
