@@ -40,15 +40,18 @@ def read_records(fp, id_col):
 
 def road_make(feats, fp):
     """ Makes road feature df, intersections + non-intersections
-
-    IMPORTANT: if the aggregation type changes, need to also update
-        how aggregation is calculated in src/data/add_map.py
+    Args:
+        feats - list of features to be included
+        fp - geojson file for intersections and non intersections
+    Returns:
+        dataframe consisting of features given (if they exist)
     """
 
     # Read in segments data (geojson)
     print("reading ", fp)
     segments = read_geojson(fp)
     df = pd.DataFrame([x.properties for x in segments])
+
     df.set_index('id', inplace=True)
 
     # Check for missing features
@@ -60,6 +63,7 @@ def road_make(feats, fp):
             + " feature(s) missing, skipping (" +
             ', '.join(missing_feats)
             + ")")
+
     return df[feats]
 
 

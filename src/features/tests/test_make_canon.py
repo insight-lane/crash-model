@@ -43,3 +43,15 @@ def test_road_make():
             == "2 feature(s) missing, skipping (test1, test2)"
     assert list(result.columns) == [
         'width', 'lanes', 'hwy_type', 'osm_speed']
+
+    expected = pd.DataFrame({
+        'id': ['000', '001', '002', '003', '004', '005', '006',
+               '007', '008', '009', '0', '1', '2', '3'],
+        'width': [24, 24, 24, 15, 15, 24, 5, 24, 12, 12, 24, 24, 24, 24],
+        'lanes': [2, 3, 3, 3, 3, 2, 1, 2, 1, 1, 2, 3, 3, 3],
+        'hwy_type': [6, 6, 6, 3, 6, 6, 1, 6, 1, 1, 1, 1, 3, 1],
+        'osm_speed': [0, 0, 0, 0, 25, 0, 25, 0, 25, 25, 25, 25, 25, 25]
+    })
+    expected.set_index('id', inplace=True)
+    assert expected.equals(result)
+
