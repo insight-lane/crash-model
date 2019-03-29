@@ -12,14 +12,18 @@ def test_read_concerns():
         os.path.join(DATA_FP, 'concern_joined.json'),
         'near_id'
     )
-    expected = [(
-        'visionzero',
-        pd.DataFrame([3, 1, 1, 1], index=['008', '006', '004', '003']),
-    ), (
-        'seeclickfix',
-        pd.DataFrame([11, 21, 32, 19, 15, 5, 9, 28, 17, 28, 8, 2]),
-        )]
-    assert expected == result
+
+    expected_v0 = pd.DataFrame(
+        {'visionzero': [3, 1, 1, 1]}, index=['008', '006', '004', '003'])
+    expected_scf = pd.DataFrame(
+        {'seeclickfix': [11, 21, 32, 19, 15, 5, 9, 28, 17, 28, 8, 2]},
+        index=['2', '005', '008', '004', '009',
+               '3', '007', '000', '006', '003', '002', '1'])
+
+    assert expected_v0.equals(result[0][1])
+    assert result[0][0] == 'visionzero'
+    assert expected_scf.equals(result[1][1])
+    assert result[1][0] == 'seeclickfix'
                 
 
 def test_aggregate_roads():

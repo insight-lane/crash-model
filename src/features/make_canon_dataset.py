@@ -82,6 +82,7 @@ def read_concerns(fp, id_col):
         results = {source: [grouped[k]['count'] for k in segments]}
         df = pd.DataFrame(results, index=segments)
         data_frames.append((source, df))
+
     return data_frames
 
 
