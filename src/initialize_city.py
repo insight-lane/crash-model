@@ -190,6 +190,8 @@ def make_js_config(jsfile, city, folder):
         '            id: "{}",\n'.format(folder) +
         '            latitude: {},\n'.format(str(address[1])) +
         '            longitude: {},\n'.format(str(address[2])) +
+        '            file: "preds_final.geojson",\n' +
+        '            crashes: "crashes.json"\n' +
         '        }\n' +
         '    ]\n' +
         '}\n'
