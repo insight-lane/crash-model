@@ -98,6 +98,3 @@ config.js
 
 # Data
 data/
-
-# Terraform plugins
-conf/terraform/.terraform
