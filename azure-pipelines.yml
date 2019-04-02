@@ -15,5 +15,8 @@ steps:
 
 - bash: |
     conda env create -f environment.yml
-    source activate crash-model
-  displayName: 'Install conda dependencies'
+    conda activate crash-model
+    cd src
+    pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
+    py.test --cov=./
+  displayName: 'run tests'
