@@ -10,10 +10,14 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    conda env create -f environment.yml
+    source activate crash-model
+    displayName: 'Install conda dependencies'
+
+# Run Tests
+- script: |
+    cd src
+    pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
+    py.test --cov=./
+    displayName: 'Run tests'
