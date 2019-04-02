@@ -9,15 +9,8 @@ trigger:
 pool:
   vmImage: 'Ubuntu-16.04'
 
-steps:
-- script: |
+# Run Tests
+- bash: |
     conda env create -f environment.yml
     source activate crash-model
-    displayName: 'Install conda dependencies'
-
-# Run Tests
-- script: |
-    cd src
-    pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-    py.test --cov=./
-    displayName: 'Run tests'
+  displayName: 'Install conda dependencies'
