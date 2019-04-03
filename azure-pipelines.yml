@@ -13,7 +13,7 @@ steps:
 - script: echo Hello, world!
   displayName: 'Run a one-line script'
 
-- bash: |
+- script: |
     conda env create -f environment.yml
     conda activate crash-model
     cd src
