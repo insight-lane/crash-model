@@ -13,9 +13,12 @@ steps:
 - script: echo Hello, world!
   displayName: 'Run a one-line script'
 
-- script: |
+- bash: |
+  echo "##vso[task.prependpath]$CONDA/bin"
     conda env create -f environment.yml
     conda activate crash-model
+  displayName: 'run tests'
+- bash: |
     cd src
     pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
     py.test --cov=./
