@@ -17,11 +17,11 @@ steps:
     set -euo pipefail
     . /usr/share/miniconda/etc/profile.d/conda.sh
     conda env create -f environment.yml
+    conda activate crash-model
+    echo Sucessfully activated
   displayName: Create conda environment
 
 - bash: |
-    conda activate crash-model
-    echo Sucessfully activated
     cd src
     pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
     py.test --cov=./
