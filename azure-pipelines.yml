@@ -10,14 +10,16 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
-- script: echo Hello, world!
+- script: echo "conda --version"
   displayName: 'Run a one-line script'
 
 - bash: |
     set -euo pipefail
     . /usr/share/miniconda/etc/profile.d/conda.sh
     conda env create -f environment.yml
-    echo "conda --version"
+  displayName: Create conda environment
+
+- bash: |
     conda activate crash-model
     echo Sucessfully activated
     cd src
