@@ -13,11 +13,9 @@ steps:
 - script: echo Hello, world!
   displayName: 'Run a one-line script'
 
-- bash: echo "##vso[task.prependpath]$CONDA/bin"
-  displayName: Add conda to PATH
-
 - bash: |
     set -euo pipefail
+    . /usr/share/miniconda/etc/profile.d/conda.sh
     conda env create -f environment.yml
     conda activate crash-model
     cd src
