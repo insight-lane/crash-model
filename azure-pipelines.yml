@@ -14,7 +14,7 @@ steps:
   displayName: 'Run a one-line script'
 
 - bash: |
-  echo "##vso[task.prependpath]$CONDA/bin"
+    echo "##vso[task.prependpath]$CONDA/bin"
     conda env create -f environment.yml
     conda activate crash-model
     cd src
