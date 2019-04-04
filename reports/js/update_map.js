@@ -9,7 +9,7 @@ var riskColor = d3.scaleLinear()
 	.range(["#ffe0b2", "#ffb74d", "#ff9800", "#f57c00"]);
 
 
-d3.json("preds_viz_speed20.geojson", function(data) {
+d3.json(city.file, function(data) {
 
 	for (var segment in data.features) {
 		segments.push(data.features[segment].properties);
@@ -35,6 +35,61 @@ d3.json("preds_viz_speed20.geojson", function(data) {
 		.on("click", function(d) { populateSegmentInfo(d.segment_id); });
 
 	makeBarChart(0, median);
+	// populateFeatureImportancesTbl(data);
+	// add crash layer to map so user can view if they choose
+	d3.json(city.crashes, function(data) {
+		// load in standardized crash json and gets total number of crashes by location
+		var summedData = totalCrashesByLocation(data);
+		var maxCrashes = d3.max(summedData, function(d) { return d.value;});
+
+		// then convert the aggregated json into a geojson so it can be displayed on map
+		var crashGeojson = buildGeojson(summedData);
+
+		// on intiial load, do not display crashes
+		map.addLayer({
+			id: 'crashes',
+			type: 'circle',
+			source: {
+				type: 'geojson',
+				data: crashGeojson
+			},
+			layout: {
+				visibility: 'none'
+			},
+			paint: {
+				'circle-radius': {
+					property: 'total_crashes',
+					type: 'exponential',
+					stops: [
+						[1, 3],
+						[maxCrashes, 20]
+					]
+				},
+				'circle-color': '#fff',
+				'circle-stroke-color': '#fff',
+				'circle-opacity': 0.5
+			},
+		}, 'admin-2-boundaries-dispute');
+
+		map.on('click', 'crashes', function(e) {
+			var coordinates = e.features[0].geometry.coordinates.slice();
+			var crashes = e.features[0].properties.total_crashes;
+
+			new mapboxgl.Popup()
+				.setLngLat(coordinates)
+				.setText(crashes > 1 ? crashes + " crashes" : "1 crash")
+				.addTo(map);
+		});
+
+		map.on('mouseenter', 'crashes', function() {
+			map.getCanvas().style.cursor = 'pointer';
+		});
+
+		map.on('mouseleave', 'crashes', function() {
+			map.getCanvas().style.cursor = '';
+		});
+	})
+
 })
 
 function splitSegmentName(segmentName) {
@@ -239,8 +294,8 @@ function getFilterValues() {
 function update_map(map) {
 	filters = getFilterValues();
 	var new_filter;
-
-	if(config.cities[0].id === "boston") {
+	
+	if(cityId === "boston") {
 		new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
 	}
 	else {

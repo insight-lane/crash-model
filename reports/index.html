@@ -14,7 +14,8 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
 	<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script type='text/javascript', src='config.js'></script>
+	<script type='text/javascript', src="https://s3-ap-southeast-2.amazonaws.com/insight-lane-showcase/config.js"></script>
+
 	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
 
 	<link rel="stylesheet" href="css/style.css" />
@@ -25,6 +26,9 @@
 
 	<div class="title overlay">
 		<h1 id="city_name"></h1>
+		<select id="city_selector">
+			<option>change city:</option>
+		</select>
 		<!-- <hr> -->
 		<!-- <h4>Predicted Risk</h4> -->
 		<div class="legend">
@@ -137,6 +141,58 @@
 		</table>
 	</div>
 
+	<script>
+		// If only one city exists in config, url is irrelevant
+		if (config.showcase.length == 1)
+		{
+			var city = config.showcase[0];
+			var cityId = city.id;
+			var country = city.name.split(", ")[2];
+		}
+		// Multiple cities exist in config
+		else
+		{
+			// If no valid cityId specified swap to the first in the list
+			if (new URL(location.href).searchParams.get('city') == null)
+			{
+				default_city = config.showcase[0].id
+				window.location = location.origin + location.pathname + "?city=" + default_city;
+
+			}
+			// Load the requested city
+			else
+			{
+				cityId = new URL(location.href).searchParams.get('city');
+
+				for (c = 0; c < config.showcase.length; c++)
+				{
+					if (config.showcase[c].id == cityId)
+					{
+						var city = config.showcase[c];
+						var country = city.name.split(", ")[2];
+						break;
+					}
+				}
+			}
+		}
+				
+		// Populate the city selector with all other cities
+		var citySelector = $('#city_selector');
+		$.each(config.showcase, function(key, scCity) {
+			if (scCity.id != cityId)
+			{
+    			citySelector.append($('<option />').val(scCity.id).text(scCity.name));
+			}
+		});
+		
+		// Swap cities when requested
+		$('#city_selector').on('change', function ()
+		{
+				window.location = location.origin + location.pathname + "?city=" + $(this).val();
+		});
+		
+	</script>
+	
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<!-- // <script src="js/make_plots.js"></script> -->
 	<script src="js/update_map.js"></script>
@@ -147,9 +203,6 @@
 			$( '#segment_details' ).addClass('slide_right');
 			$( '#highest_risk' ).addClass('visible');
 		});
-
-		var city = config.cities[0];
-		var country = city.name.split(", ")[2];
 
 		// insert city name
 		$('#city_name').text(city.name);
@@ -178,7 +231,7 @@
 				type: 'line',
 				source: {
 				  type: 'geojson',
-				  data: 'preds_final.geojson'
+				  data: city.file
 				},
 				paint: {
 				  'line-color': {
