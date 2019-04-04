@@ -225,10 +225,14 @@ def initialize_and_run(data_model, features, lm_features,
 
     # Initialize tuner
     tune = Tuner(df)
-    # Base XG model
-    tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
-    # Base LR model
-    tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
+    try: 
+        # Base XG model
+        tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
+        # Base LR model
+        tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
+    except ValueError:
+        print('CV fails, likely very few of target available')
+        raise
 
     # Run test
     test = Tester(df)
