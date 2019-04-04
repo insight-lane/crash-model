@@ -44,3 +44,12 @@ def test_get_buffer():
         20
     )
     assert results == []
+
+    # Test multilinestring
+    results = make_map_subset.get_buffer(
+        os.path.join(TEST_FP, 'data', 'make_map_multilinestring.geojson'),
+        42.3693167036633,
+        -71.1010048225989,
+        20
+    )
+    assert len(results['features']) == 1

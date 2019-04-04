@@ -74,8 +74,6 @@ def test_create_segments_from_json(tmpdir):
         path + 'osm_elements.geojson',
         path
     )
-    create_segments.write_segments(
-        non_inters, inters, path, tmpdir.strpath + '/data/')
 
     # Now test for the issue where we thought a dead end was an intersection
     # Just make sure that doesn't die

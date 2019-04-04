@@ -12,8 +12,6 @@ name: brisbane
 # Recommended to limit to just a few years for now
 startdate: 2015-01-01
 enddate: 2017-12-31
-# The type of predictions to generate, 'segment' is default, 'week' is legacy
-level: 'segment'
 
 #################################################################
 # Configuration for data standardization
@@ -44,13 +42,6 @@ crashes_files:
       address: Crash_Street
       vehicles: 
       bikes: 
-
-# If using legacy 'week' predictions:
-# specify year & week on which to predict crashes (best practice is year & week towards the end of your crash data set
-# in format [month, year]
-time_target: [30, 2017]
-# specify how many weeks back to predict in output of train_model
-weeks_back: 1
 
 #################################################################
 # Configuration for default features

@@ -11,8 +11,6 @@ city_radius: 10
 # If given, limit crashes to after startdate and no later than enddate
 startdate:
 enddate:
-# The type of predictions to generate, 'segment' is default, 'week' is legacy
-level: segment
 
 ##############################################################################
 # Configuration for data standardization
@@ -56,11 +54,6 @@ crashes_files:
 # concern column name
 # leave as '' if not adding concerns
 concern: seeclickfix
-
-# week on which to predict crashes (week, year)
-# as is, will end up outputting predictions for all weeks up to this week
-# TODO: Make this more relevant for control
-time_target: [30, 2017]
 
 # Additional data sources
 data_source:
