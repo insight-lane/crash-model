@@ -19,10 +19,10 @@ steps:
     source activate crash-model
   displayName: Create conda environment
 
-script: pip install pylint
+- script: pip install pylint
   displayName: 'Install pylint'
 
-script: pip install -U pytest
+- script: pip install -U pytest
   displayName: 'Install pytest'
 
 - bash: |
