@@ -30,7 +30,7 @@ steps:
   continueOnError: false
 
 - script: |
-    pip install pylint
+    conda install pylint
     cd src
     pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
   displayName: 'Pylint'
