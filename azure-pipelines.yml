@@ -10,8 +10,6 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
-- script: echo "conda --version"
-  displayName: 'Run a one-line script'
 
 - bash: |
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
@@ -21,12 +19,11 @@ steps:
     source activate crash-model
   displayName: Create conda environment
 
-#    set -euo pipefail
-#    . /usr/share/miniconda/etc/profile.d/conda.sh
-#    conda env create -f environment.yml
-#    conda activate crash-model
-#    echo Sucessfully activated
-#  displayName: Create conda environment
+script: pip install pylint
+  displayName: 'Install pylint'
+
+script: pip install -U pytest
+  displayName: 'Install pytest'
 
 - bash: |
     cd src
