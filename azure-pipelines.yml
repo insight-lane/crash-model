@@ -20,6 +20,7 @@ steps:
   displayName: Create conda environment
 
 - script: |
+    pip install --upgrade pip
     python3 -m pip install pylint
     python3 -m pip install -U pytest
   displayName: 'Install pylint etc'
