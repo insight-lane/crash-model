@@ -11,6 +11,16 @@ pool:
 
 steps:
 
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.6'
+    architecture: 'x64'
+
+- script: |
+    python -m pip install --upgrade pip && pip3 install --upgrade setuptools
+  displayName: 'Upgrade pip and setuptools'
+  continueOnError: false
+
 - bash: |
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
     bash ~/miniconda.sh -b -p $HOME/miniconda
