@@ -20,8 +20,6 @@ jobs:
   pool:
     vmImage: 'macOS-10.13'
   steps:
-#  - bash: |
-#      echo "##vso[task.prependpath]$CONDA/bin"
   - bash: |
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
