@@ -1,4 +1,4 @@
-name: boston-crash-model-py3
+name: crash-model
 channels:
 - bioconda
 - r

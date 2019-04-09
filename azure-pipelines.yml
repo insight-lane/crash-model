@@ -22,6 +22,7 @@ jobs:
   steps:
   - bash: |
       echo "##vso[task.prependpath]$CONDA/bin"
+  - bash: |
       sudo chown -R $USER $CONDA
       conda env create --quiet --file environment.yml
       conda activate crash-model
@@ -39,4 +40,6 @@ jobs:
   steps:
   - powershell: |
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-  - script: conda env create --quiet --file environment_pc.yml
+  - script: conda env create --quiet --file environment.yml
+      conda env export
+
