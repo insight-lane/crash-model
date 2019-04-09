@@ -4,7 +4,7 @@ jobs:
     vmImage: 'ubuntu-16.04'
   steps:
   - bash: |
-      set -euo pipefail
+      set -eo pipefail
       wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
       bash ~/miniconda.sh -b -p $HOME/miniconda
       export PATH="$HOME/miniconda/bin:$PATH"
@@ -21,6 +21,7 @@ jobs:
     vmImage: 'macOS-10.13'
   steps:
   - bash: |
+        set -eo pipefail
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
       conda env create --quiet --file environment_mac.yml
