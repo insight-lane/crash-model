@@ -41,6 +41,5 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - powershell: |
-    Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-    conda env create -f environment.yml
-    
+      Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+      conda env create -f environment.yml
