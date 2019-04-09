@@ -46,5 +46,6 @@ jobs:
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   - script: |
       conda env create --file environment.yml
+      conda env activate
       conda env export
 
