@@ -36,6 +36,6 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -O ~/miniconda.sh
-    bash ~miniconda.sh -b -p $HOME/miniconda
+      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -O ~/miniconda.sh
+      bash ~miniconda.sh -b -p $HOME/miniconda
     
