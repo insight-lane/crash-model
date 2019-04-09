@@ -19,8 +19,7 @@ jobs:
       bash <(curl https://codecov.io/bash) -t $env:TOKEN
     env:
         TOKEN: $(codecov.token)
-
-displayName: 'codecov'
+    displayName: 'codecov'
 
 - job: macOS
   pool:
