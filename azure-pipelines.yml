@@ -35,7 +35,7 @@ jobs:
   pool:
     vmImage: 'vs2017-win2016'
   steps:
-  - bash: |
+  - powershell: |
       Invoke-WebRequest -Outfile ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -O 
       bash ~miniconda.sh -b -p $HOME/miniconda
     
