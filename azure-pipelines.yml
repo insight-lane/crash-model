@@ -9,17 +9,14 @@ jobs:
       export PATH="$HOME/miniconda/bin:$PATH"
       conda env create -f environment_linux.yml
       source activate crash-model
-      conda install -y pylint pytest-cov pytest
+#      conda install -y pylint pytest
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-
       py.test --cov=./
-    displayName: 'Run tests on Linux'
-  - script: |
       bash <(curl https://codecov.io/bash) -t $env:TOKEN
     env:
         TOKEN: $(codecov.token)
-    displayName: 'codecov'
+    displayName: 'Run tests on Linux'
 
 - job: macOS
   pool:
@@ -46,6 +43,6 @@ jobs:
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   - script: |
       conda env create --file environment.yml
-      conda env activate
+      conda activate crash-model
       conda env export
 
