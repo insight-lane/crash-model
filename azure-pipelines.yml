@@ -9,10 +9,10 @@ jobs:
       export PATH="$HOME/miniconda/bin:$PATH"
       conda env create -f environment_linux.yml
       source activate crash-model
-      conda install -y pylint
+      conda install -y pylint pytest-cov pytest
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-      python3 -m pip install -U pytest
+
       py.test --cov=./
     displayName: 'Run tests on Linux'
   - script: |
@@ -28,7 +28,7 @@ jobs:
   - bash: |
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
-      conda env create --quiet --file environment.yml
+      conda env create --quiet --file environment_mac.yml
       conda activate crash-model
       conda install -y pylint
       cd src
@@ -46,5 +46,5 @@ jobs:
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   - script: |
       conda env create --file environment_pc.yml
-#      conda env export
+      conda env export
 
