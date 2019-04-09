@@ -26,12 +26,10 @@ jobs:
       sudo chown -R $USER $CONDA
       conda env create --quiet --file environment.yml
       conda activate crash-model
-      conda env export
-#      conda install -y pylint
-#      cd src
+#      conda env export
+      cd src
 #      pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-#      python3 -m pip install -U pytest
-#      py.test
+      py.test
   displayName: 'Run tests on Mac'
 
 
