@@ -21,7 +21,7 @@ dependencies:
 - pylint
 - pyproj
 - pytest
-- python
+- python=3.6
 - pyyaml
 - pytest-cov
 - rtree
