@@ -20,9 +20,10 @@ jobs:
   pool:
     vmImage: 'macOS-10.13'
   steps:
+#  - bash: |
+#      echo "##vso[task.prependpath]$CONDA/bin"
   - bash: |
-      echo "##vso[task.prependpath]$CONDA/bin"
-  - bash: |
+      . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
       conda env create --quiet --file environment.yml
       conda activate crash-model
@@ -40,6 +41,7 @@ jobs:
   steps:
   - powershell: |
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-  - script: conda env create --quiet --file environment.yml
+  - script: |
+      conda env create --quiet --file environment.yml
       conda env export
 
