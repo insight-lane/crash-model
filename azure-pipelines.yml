@@ -40,6 +40,6 @@ jobs:
   - powershell: |
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   - script: |
-      conda env create --quiet --file environment.yml
+      conda env create --file environment.yml
       conda env export
 
