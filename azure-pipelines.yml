@@ -41,7 +41,7 @@ jobs:
   steps:
   - powershell: |
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-  displayName: Add conda to system path  
+    displayName: Add conda to system path  
   - script: |
       conda env create --file environment_pc.yml
       call activate crash-model
