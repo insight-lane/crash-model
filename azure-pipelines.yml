@@ -24,8 +24,9 @@ jobs:
   - bash: |
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
-      conda env create --quiet --file environment_mac.yml
+      conda env create --quiet --file environment.yml
       conda activate crash-model
+      conda env export
       conda install -y pylint
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
@@ -41,7 +42,7 @@ jobs:
   - powershell: |
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   - script: |
-      conda env create --file environment.yml
+      conda env create --file environment_pc.yml
       call activate crash-model
       conda env export
 
