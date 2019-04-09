@@ -29,7 +29,7 @@ jobs:
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
       py.test
-  displayName: 'Run tests on Mac'
+    displayName: 'Run tests on Mac'
 
 
 - job: Windows
@@ -46,4 +46,4 @@ jobs:
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
       py.test
-  displayName: Run tests on Windows
+    displayName: Run tests on Windows
