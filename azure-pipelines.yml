@@ -15,6 +15,12 @@ jobs:
       python3 -m pip install -U pytest
       py.test --cov=./
     displayName: 'Run tests on Linux'
+  - script: |
+      bash <(curl https://codecov.io/bash) -t $env:TOKEN
+    env:
+        TOKEN: $(codecov.token)
+
+displayName: 'codecov'
 
 - job: macOS
   pool:
@@ -40,6 +46,6 @@ jobs:
   - powershell: |
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   - script: |
-      conda env create --file environment.yml
-      conda env export
+      conda env create --file environment_pc.yml
+#      conda env export
 
