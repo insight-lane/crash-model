@@ -21,7 +21,7 @@ jobs:
     vmImage: 'macOS-10.13'
   steps:
   - bash: |
-        set -eo pipefail
+      set -eo pipefail
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
       conda env create --quiet --file environment_mac.yml
