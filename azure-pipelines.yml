@@ -42,6 +42,6 @@ jobs:
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
   - script: |
       conda env create --file environment.yml
-      conda activate crash-model
+      call activate crash-model
       conda env export
 
