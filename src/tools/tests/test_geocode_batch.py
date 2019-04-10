@@ -23,9 +23,7 @@ def test_parse_addresses(tmpdir, monkeypatch):
         os.path.join(TEST_FP, 'data', 'geocoded_addresses.csv'),
         os.path.join(path, 'geocoded_addresses.csv')
     )
-    print(os.path.join(TEST_FP, 'data', 'geocoded_addresses.csv'))
-    print(path)
-    print("--------------------")
+
     datadir = os.path.join(TEST_FP, 'data')
     geocode_batch.parse_addresses(
         tmpdir.strpath,
@@ -38,7 +36,7 @@ def test_parse_addresses(tmpdir, monkeypatch):
     with open(os.path.join(path,
                            'geocoded_addresses.csv'), 'r') as test_file:
         test_file_contents = test_file.read()
-        print(test_file_contents)
+
     assert test_file_contents == """Input Address,Output Address,Latitude,Longitude,Status
 "21 GREYCLIFF RD Boston, MA","21 Greycliff Rd, Brighton, MA 02135, USA",42.3408948,-71.16084219999999,S
 "216 SAVIN HILL AVE Boston, MA Boston, MA","216 Savin Hill Ave, Dorchester, MA 02125",42.3092288,-71.0480357,S

@@ -18,5 +18,5 @@ script:
 - pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
 - py.test --cov=./
 
-#after_success:
-#- codecov
+after_success:
+- codecov

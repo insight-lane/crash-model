@@ -35,7 +35,6 @@ def parse_addresses(directory, filename, city, addressfield,
     print('Timed out on {} addresses'.format(geocoded_count[2]))
 
     # Write out the cache
-    print("Write path" + os.path.join(directory, 'processed', 'geocoded_addresses.csv'))
     with open(os.path.join(directory, 'processed',
                            'geocoded_addresses.csv'), 'w', newline='\n') as csvfile:
 
@@ -50,7 +49,7 @@ def parse_addresses(directory, filename, city, addressfield,
 
         for name, value in cached.items():
             writer.writerow([name] + value)
-    print(cached)
+
     return results
 
 
