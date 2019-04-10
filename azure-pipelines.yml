@@ -42,8 +42,7 @@ jobs:
   - script: |
       conda env create --file environment_pc.yml
       call activate crash-model
-      conda env export
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-      py.test
+      py.test -k test_parse_addresses -s
     displayName: Run tests on Windows
