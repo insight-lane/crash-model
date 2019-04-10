@@ -50,7 +50,7 @@ def parse_addresses(directory, filename, city, addressfield,
 
         for name, value in cached.items():
             writer.writerow([name] + value)
-    print(results)
+    print(cached)
     return results
 
 
