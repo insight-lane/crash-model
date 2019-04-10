@@ -23,7 +23,9 @@ def test_parse_addresses(tmpdir, monkeypatch):
         os.path.join(TEST_FP, 'data', 'geocoded_addresses.csv'),
         os.path.join(path, 'geocoded_addresses.csv')
     )
-
+    print(os.path.join(TEST_FP, 'data', 'geocoded_addresses.csv'))
+    print(path)
+    print("--------------------")
     datadir = os.path.join(TEST_FP, 'data')
     geocode_batch.parse_addresses(
         tmpdir.strpath,
