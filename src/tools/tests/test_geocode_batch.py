@@ -17,7 +17,7 @@ def test_parse_addresses(tmpdir, monkeypatch):
 
     monkeypatch.setattr(geocode_batch, 'lookup_address', mockreturn)
 
-    path = tmpdir.strpath + '/processed'
+    path = os.path.join(tmpdir.strpath, 'processed')
     os.makedirs(path)
     shutil.copyfile(
         os.path.join(TEST_FP, 'data', 'geocoded_addresses.csv'),
@@ -31,7 +31,6 @@ def test_parse_addresses(tmpdir, monkeypatch):
         "Boston, MA",
         'Location'
     )
-    print(path)
 
     # check that the resulting geocoded file is correct
     with open(os.path.join(path,
