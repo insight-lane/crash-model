@@ -60,13 +60,12 @@ def test_supplemental_arg_changes_content_of_config_file(tmpdir, monkeypatch):
     assert test_file_contents == expected_file_contents
 
 
-def test_make_js_config_brisbane(monkeypatch):
+def test_make_js_config_brisbane(monkeypatch, tmpdir):
 
     def mockreturn(address):
         return "Brisbane, Australia", -27.4697707, 153.0251235, 'S'
 
     monkeypatch.setattr(initialize_city, 'geocode_address', mockreturn)
-    tmpdir = py.path.local('/tmp')
 
     # Generate a test config for Brisbane
     initialize_city.make_js_config(
