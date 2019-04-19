@@ -25,6 +25,7 @@ import pandas as pd
 import geopandas as gpd
 import folium
 import branca.colormap as cm
+import yaml
 import argparse
 import os
 
@@ -81,39 +82,63 @@ def add_layer(dataset, modelname, colname, mapname):
                        style_function=lambda feature: {
                                'color': color_scale(feature['properties'][colname])
                                }).add_to(mapname)
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     # parse arguments
     parser.add_argument("-m", "--modelname", nargs="+",
+                        default=[''],
                         help="name of the model, must be unique")
     parser.add_argument("-f", "--filename", nargs="+",
+                        default=['seg_with_predicted.csv'],
                         help="name of the file with the predictions to be plotted on the map, must specify at least 1")
-    parser.add_argument("-c", "--colname", nargs="+",
+    parser.add_argument("-p", "--prediction_col", nargs="+",
+                        default=['prediction'],
                         help="column name that has the predictions, must be specified in the same order as the filenames")
-    parser.add_argument("-lat", "--latitude",
-                        help="alternate latitude for the base map")
-    parser.add_argument("-lon", "--longitude",
-                        help="alternate longitude for the base map")
-    parser.add_argument("-n", "--normalize",
+    parser.add_argument("-c", "--config", type=str,
+                        help="yml file for model config, default is a " + 
+                        "base config with open street map data and crashes only")
+    parser.add_argument("-norm", "--normalize",
                         help="normalize risk scores",
                         action='store_true')
-    parser.add_argument("-dir", "--datadir",
-                        help="alternate data directory for the files")
+    parser.add_argument("-lat", "--latitude",
+                        default=42.3601,
+                        help="alternate latitude for the base map")
+    parser.add_argument("-lng", "--longitude",
+                        default=-71.0589,
+                        help="alternate longitude for the base map")
+    parser.add_argument("-n", "--name",
+                        default='boston',
+                        help="city name used to identify data paths")
     args = parser.parse_args()
 
     # zip filenames and column names
-    if len(args.modelname) == len(args.filename) == len(args.colname):
-        match = zip(args.modelname, args.filename, args.colname)
+    if len(args.modelname) == len(args.filename) == len(args.prediction_col):
+        match = zip(args.modelname, args.filename, args.prediction_col)
     else:
         raise Exception("Number of models, files and column names must match")
 
-    latitude = args.latitude or 42.3601
-    longitude = args.longitude or -71.0589
+    config = {}
+    if args.config:
+        config_file = args.config
+        with open(config_file) as f:
+            config = yaml.safe_load(f)
+    if 'city_latitude' in config:
+        latitude = config['city_latitude']
+    else:
+        latitude = args.latitude
+    if 'city_longitude' in config:
+        longitude = config['city_longitude']
+    else:
+        longitude = args.longitude
 
-    MAP_FP = os.path.join(args.datadir, 'processed/maps')
-    DATA_FP = os.path.join(args.datadir, 'processed')
+    if 'name' in config:
+        name = config['name']
+    else:
+        name = args.name
+    
+    DATA_FP = os.path.join(BASE_DIR, 'data', name, 'processed')
+    MAP_FP = os.path.join(BASE_DIR, 'data', name, 'processed/maps')
     
     # Read in shapefile as a GeoDataframe
     streets = gpd.read_file(os.path.join(MAP_FP, 'inter_and_non_int.geojson'))
@@ -121,23 +146,23 @@ if __name__ == '__main__':
     ### Make map
 
     # First create basemap
-    boston_map = folium.Map([latitude, longitude], tiles='Cartodb dark_matter', zoom_start=12)
-    folium.TileLayer('Cartodb Positron').add_to(boston_map)
+    city_map = folium.Map([latitude, longitude], tiles='Cartodb dark_matter', zoom_start=12)
+    folium.TileLayer('Cartodb Positron').add_to(city_map)
 
     # Create style function to color segments based on their risk score
-    color_scale = cm.linear.YlOrRd.scale(0, 1)
+    color_scale = cm.linear.YlOrRd_09.scale(0, 1)
 
     # Plot model predictions as separate layers
     for model in match:
         predictions = process_data(model[1], model[2], normalize=args.normalize)
-        add_layer(predictions, model[0], model[2], boston_map)
+        add_layer(predictions, model[0], model[2], city_map)
 
     # Add control to toggle between model layers
-    folium.LayerControl(position='bottomright').add_to(boston_map)
+    folium.LayerControl(position='bottomright').add_to(city_map)
 
     # Finally, add legend
     color_scale.caption = "Risk Score"
-    boston_map.add_child(color_scale)
+    city_map.add_child(color_scale)
 
     # Save map as separate html file
-    boston_map.save(os.path.join(MAP_FP, 'risk_map.html'))
+    city_map.save(os.path.join(MAP_FP, 'risk_map.html'))
