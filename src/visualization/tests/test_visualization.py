@@ -1,4 +1,4 @@
-from .. import process_data
+from ..risk_map import process_data
 import os
 import geopandas as gpd
 
@@ -10,4 +10,4 @@ def test_process_data():
 		os.path.join(TEST_FP, 'data', 'test_prediction.csv'),
 		'prediction')
 	assert streets_w_risk.shape[0] == 1
-	assert streets_w_risk['prediction'].mean() == 0.122351
+	assert streets_w_risk['prediction'].mean().round(2) == 0.12
