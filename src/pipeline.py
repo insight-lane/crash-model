@@ -173,6 +173,21 @@ def visualize(DATA_FP):
         DATA_FP
     ])
 
+def risk_map(config_file):
+    """
+    Creates the visualization data set for a city
+    Args:
+        DATA_FP - path to data directory, e.g. ../data/boston/
+    """
+    print("Generating risk map")
+    subprocess.check_call([
+        'python',
+        '-m',
+        'visualization.risk_map',
+        '-c',
+        config_file
+    ])
+
 
 if __name__ == '__main__':
 
@@ -213,3 +228,6 @@ if __name__ == '__main__':
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
         visualize(DATA_FP)
+
+    if not args.onlysteps or 'risk_map' in args.onlysteps:
+        risk_map(args.config_file)

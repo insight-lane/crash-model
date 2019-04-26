@@ -35,7 +35,7 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-def process_data(filename, colname, normalize=False):
+def process_data(streets, filename, colname, normalize=False):
         """Preps model output for plotting on a map
 
         Reads in model output and filters to non-zero predictions.
@@ -44,13 +44,14 @@ def process_data(filename, colname, normalize=False):
         Normalizes the predictions if needed.
 
         Args:
+            streets: gpd dataframe to merge to predictions
             filename: name of the file with the predictions
             colname: name of the predictions column
 
         Returns:
             a dataframe that links segment_ids, predictions and spatial geometries
         """
-        output = pd.read_csv(os.path.join(DATA_FP, filename), dtype={'segment_id':'str'})
+        output = pd.read_csv(filename, dtype={'segment_id':'str'})
 
         # filter dataframe to only seg with risk>0 to reduce size
         output = output[output[colname]>0]
@@ -82,6 +83,7 @@ def add_layer(dataset, modelname, colname, mapname):
                        style_function=lambda feature: {
                                'color': color_scale(feature['properties'][colname])
                                }).add_to(mapname)
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -112,12 +114,6 @@ if __name__ == '__main__':
                         help="city name used to identify data paths")
     args = parser.parse_args()
 
-    # zip filenames and column names
-    if len(args.modelname) == len(args.filename) == len(args.prediction_col):
-        match = zip(args.modelname, args.filename, args.prediction_col)
-    else:
-        raise Exception("Number of models, files and column names must match")
-
     config = {}
     if args.config:
         config_file = args.config
@@ -136,9 +132,18 @@ if __name__ == '__main__':
         name = config['name']
     else:
         name = args.name
-    
+
     DATA_FP = os.path.join(BASE_DIR, 'data', name, 'processed')
     MAP_FP = os.path.join(BASE_DIR, 'data', name, 'processed/maps')
+
+    # zip filenames and column names if running custom
+    #if not args.config:
+    if len(args.modelname) == len(args.filename) == len(args.prediction_col):
+        match = zip(args.modelname, args.filename, args.prediction_col)
+    else:
+        raise Exception("Number of models, files and column names must match")
+    #else:
+        #match = [['risk', 'seg_with_predicted.csv', 'prediction']]
     
     # Read in shapefile as a GeoDataframe
     streets = gpd.read_file(os.path.join(MAP_FP, 'inter_and_non_int.geojson'))
@@ -154,7 +159,9 @@ if __name__ == '__main__':
 
     # Plot model predictions as separate layers
     for model in match:
-        predictions = process_data(model[1], model[2], normalize=args.normalize)
+        predictions = process_data(streets, 
+            os.path.join(DATA_FP, model[1]), 
+            model[2], normalize=args.normalize)
         add_layer(predictions, model[0], model[2], city_map)
 
     # Add control to toggle between model layers
