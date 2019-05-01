@@ -151,8 +151,7 @@ if __name__ == '__main__':
     ### Make map
 
     # First create basemap
-    city_map = folium.Map([latitude, longitude], tiles='Cartodb dark_matter', zoom_start=12)
-    folium.TileLayer('Cartodb Positron').add_to(city_map)
+    city_map = folium.Map([latitude, longitude], tiles='Cartodb Positron', zoom_start=12)
 
     # Create style function to color segments based on their risk score
     color_scale = cm.linear.YlOrRd_09.scale(0, 1)
@@ -165,11 +164,13 @@ if __name__ == '__main__':
         add_layer(predictions, model[0], model[2], city_map)
 
     # Add control to toggle between model layers
-    folium.LayerControl(position='bottomright').add_to(city_map)
+    if len(list(match))>1:
+        folium.LayerControl(position='bottomright').add_to(city_map)
 
     # Finally, add legend
     color_scale.caption = "Risk Score"
     city_map.add_child(color_scale)
+
 
     # Save map as separate html file
     city_map.save(os.path.join(MAP_FP, 'risk_map.html'))

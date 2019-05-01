@@ -158,7 +158,7 @@ def train_model(config_file, DATA_FP):
     ])
 
 
-def visualize(DATA_FP):
+def visualize(DATA_FP, config_file):
     """
     Creates the visualization data set for a city
     Args:
@@ -172,13 +172,6 @@ def visualize(DATA_FP):
         '-d',
         DATA_FP
     ])
-
-def risk_map(config_file):
-    """
-    Creates the visualization data set for a city
-    Args:
-        DATA_FP - path to data directory, e.g. ../data/boston/
-    """
     print("Generating risk map")
     subprocess.check_call([
         'python',
@@ -227,7 +220,4 @@ if __name__ == '__main__':
         train_model(args.config_file, DATA_FP)
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
-        visualize(DATA_FP)
-
-    if not args.onlysteps or 'risk_map' in args.onlysteps:
-        risk_map(args.config_file)
+        visualize(DATA_FP, args.config_file)
