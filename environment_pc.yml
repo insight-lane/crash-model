@@ -115,7 +115,7 @@ dependencies:
   - poppler=0.67.0=heddaa77_6
   - poppler-data=0.4.9=1
   - postgresql=11.2=h06f7779_0
-  - proj4=5.2.0=hfa6e2cd_1001
+  - proj4
   - prometheus_client=0.6.0=py_0
   - prompt_toolkit=2.0.9=py_0
   - py=1.8.0=py_0
