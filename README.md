@@ -93,12 +93,10 @@ Most of the work on this project so far has been done in Python, in Jupyter note
 - conda (included with Anaconda)
 
 ### Environment:
-You'll want to reproduce the packages and package versions required to run code in this repo, ideally in a virtual environment to avoid conflicts with other projects you may be working on. We've tested the environment.yml file on a Windows 64-bit machine and Linux and have done our best to ensure cross-platform compatibility, but if it doesn't work for you, please file an issue.
+You'll want to reproduce the packages and package versions required to run code in this repo, ideally in a virtual environment to avoid conflicts with other projects you may be working on. We have a version of environment.yml without versions, but recommend you use the pinned version for your operating system (environment_linux.yml, environment_mac.yml, or environment_pc.yml) since they shouldn't break if newer conda packages break).
 
-    $ conda env create -f environment.yml
+    $ conda env create -f [environment_linux.yml or other environment file]
     $ activate crash-model
-
-If you'd prefer to use a requirements.txt file, one is available in the [data_gen folder](https://github.com/Data4Democracy/crash-model/tree/master/notebooks/data_generation) for spatial features analysis and in the [benchmark folder](https://github.com/Data4Democracy/crash-model/tree/master/notebooks/benchmark) for running the benchmark model.
 
 ### Docker:
 A basic [Docker](https://www.docker.com) image has been created to run the project in a container, using the ContinuumIO miniconda3 base image (Python 3.6). The virtual environment 'crash-model' is installed and activated when the image is started via container, as well as an apache2 webserver via supervisord to serve the visualization.

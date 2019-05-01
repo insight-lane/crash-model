@@ -36,7 +36,7 @@ def parse_addresses(directory, filename, city, addressfield,
 
     # Write out the cache
     with open(os.path.join(directory, 'processed',
-                           'geocoded_addresses.csv'), 'w') as csvfile:
+                           'geocoded_addresses.csv'), 'w', newline='\n') as csvfile:
 
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow([
@@ -49,6 +49,7 @@ def parse_addresses(directory, filename, city, addressfield,
 
         for name, value in cached.items():
             writer.writerow([name] + value)
+
     return results
 
 
