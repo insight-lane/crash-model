@@ -134,7 +134,7 @@ if __name__ == '__main__':
         name = args.name
 
     DATA_FP = os.path.join(BASE_DIR, 'data', name, 'processed')
-    MAP_FP = os.path.join(BASE_DIR, 'data', name, 'processed/maps')
+    MAP_FP = os.path.join(BASE_DIR, 'data', name, 'processed', 'maps')
 
     # zip filenames and column names if running custom
     #if not args.config:
