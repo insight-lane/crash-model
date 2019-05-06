@@ -14,7 +14,7 @@ class Configuration(object):
             self.continuous_features = self.get_feature_list(config)
 
         self.city = config['city']
-
+        self.name = config['name']
         self.startdate = str(config['startdate']) \
             if config['startdate'] else None
         self.enddate = str(config['enddate']) \
@@ -22,6 +22,8 @@ class Configuration(object):
         self.timezone = pytz.timezone(config['timezone'])
         self.crashes_files = config['crashes_files']
 
+        self.data_source = config['data_source'] if 'data_source' in config \
+            else None
             
     def get_feature_list(self, config):
         """

@@ -2,9 +2,9 @@ import argparse
 import os
 import pandas as pd
 from collections import OrderedDict
-import yaml
 import pytz
 from . import standardization_util
+import data.config
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -14,7 +14,7 @@ BASE_FP = os.path.dirname(CURR_FP)
 def read_file_info(config, datadir):
 
     points = []
-    for source_config in list(config['data_source']):
+    for source_config in list(config.data_source):
 
         print("Processing {} data".format(source_config['name']))
         csv_file = source_config['filename']
@@ -42,8 +42,7 @@ def read_file_info(config, datadir):
                     time = row[source_config['time']]
 
                 date_time = standardization_util.parse_date(
-                    row[source_config['date']], pytz.timezone(
-                        config['timezone']), time=time)
+                    row[source_config['date']], config.timezone, time=time)
                 updated_row = OrderedDict([
                     ("feature", source_config["name"]),
                     ("date", date_time),
@@ -90,10 +89,8 @@ if __name__ == '__main__':
 
     # load config for this city
     config_file = os.path.join(BASE_FP, args.config)
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-
-    if 'data_source' in config:
+    config = data.config.Configuration(config_file)
+    if config.data_source:
         read_file_info(config, args.datadir)
-
-    
+    else:
+        print("No point data found, skipping")    
