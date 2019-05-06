@@ -1,3 +1,4 @@
+import sys
 import pytz
 import yaml
 
@@ -10,9 +11,14 @@ class Configuration(object):
     def __init__(self, filename):
         with open(filename) as f:
             config = yaml.safe_load(f)
+
+        if 'city' not in config.keys() or config['city'] is None:
+            sys.exit('City is required in config file')
+
         self.default_features, self.categorical_features, \
             self.continuous_features = self.get_feature_list(config)
-
+        self.features = self.default_features + self.categorical_features \
+            + self.default_features
         self.city = config['city']
         self.name = config['name']
         self.startdate = str(config['startdate']) \
@@ -24,7 +30,10 @@ class Configuration(object):
 
         self.data_source = config['data_source'] if 'data_source' in config \
             else None
-            
+        self.additional_map_features = config['additional_map_features'] \
+            if 'additional_map_features' in config \
+               else None
+
     def get_feature_list(self, config):
         """
         Make the list of features, and write it to the city's data folder
