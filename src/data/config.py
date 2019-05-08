@@ -12,8 +12,16 @@ class Configuration(object):
         with open(filename) as f:
             config = yaml.safe_load(f)
 
-        if 'city' not in config.keys() or config['city'] is None:
+        if 'city' not in config or config['city'] is None:
             sys.exit('City is required in config file')
+        if 'city_latitude' not in config or config['city_latitude'] is None:
+            sys.exit('city_latitude is required in config file')
+
+        if 'city_longitude' not in config or config['city_longitude'] is None:
+            sys.exit('city_longitude is required in config file')
+
+        if 'city_radius' not in config or config['city_radius'] is None:
+            sys.exit('city_radius is required in config file')
 
         self.default_features, self.categorical_features, \
             self.continuous_features = self.get_feature_list(config)
@@ -33,6 +41,17 @@ class Configuration(object):
         self.additional_map_features = config['additional_map_features'] \
             if 'additional_map_features' in config \
                else None
+        if 'atr' in config and config['atr'] and 'atr_cols' in config and config['atr_cols']:
+            self.atr = config['atr']
+            self.atr_cols = ['speed_coalesced', 'volume_coalesced']
+        else:
+            self.atr_cols = None
+        if 'tmc' in config and config['tmc'] and 'tmc_cols' in config and config['tmc_cols']:
+            self.tmc = config['tmc']
+            self.tmc_cols = ['Conflict']
+        else:
+            self.tmc_cols = None
+
 
     def get_feature_list(self, config):
         """
@@ -74,6 +93,6 @@ class Configuration(object):
         if 'atr_cols' in config and config['atr_cols']:
             feat_types['f_cont'] += config['atr_cols']
 
-        return feat_types['f_cat'], feat_types['f_cont'], feat_types['default']
+        return feat_types['default'], feat_types['f_cat'], feat_types['f_cont']
 
 

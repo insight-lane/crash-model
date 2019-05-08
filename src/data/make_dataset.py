@@ -2,7 +2,6 @@
 import os
 import subprocess
 import argparse
-from . import util
 import data.config
 
 DATA_FP = os.path.dirname(

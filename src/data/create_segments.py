@@ -10,7 +10,6 @@ import json
 import copy
 from shapely.ops import unary_union
 from collections import defaultdict
-import yaml
 from . import util
 import argparse
 import os
@@ -554,7 +553,7 @@ def update_intersection_properties(inters, config):
     and set properties for the intersection
     Args:
         inters - a list of intersection objects
-        config_file - the config filename, which has the features
+        config - the configuration object, which has the features
     Returns:
         inters - updated intersection object list
     """
