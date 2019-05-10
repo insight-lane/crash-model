@@ -319,15 +319,11 @@ def read_records(filename, record_type,
     items = json.load(open(filename))
     if not items:
         return []
-    if record_type == 'concern':
-        import ipdb; ipdb.set_trace()
 
     for item in items:
         record = None
         if record_type == 'crash':
             record = Crash(item)
-        elif record_type == 'concern':
-            record = Concern(item)
         else:
             record = Record(item)
         records.append(record)

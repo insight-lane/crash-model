@@ -25,8 +25,7 @@ class Configuration(object):
 
         self.default_features, self.categorical_features, \
             self.continuous_features = self.get_feature_list(config)
-        self.features = self.default_features + self.categorical_features \
-            + self.default_features
+
         self.city = config['city']
         self.name = config['name']
         self.startdate = str(config['startdate']) \
@@ -52,6 +51,8 @@ class Configuration(object):
         else:
             self.tmc_cols = None
 
+        self.features = self.default_features + self.categorical_features \
+            + self.continuous_features
 
     def get_feature_list(self, config):
         """
