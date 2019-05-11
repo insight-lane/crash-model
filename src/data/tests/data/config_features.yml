@@ -1,3 +1,10 @@
+city: Boston, Massachusetts, USA
+name: boston
+city_latitude: 42.3600825
+city_longitude: -71.0588801
+city_radius: 15
+timezone: America/New_York
+crashes_files: dummy
 
 openstreetmap_features:
   categorical:

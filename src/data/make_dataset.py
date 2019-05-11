@@ -135,7 +135,7 @@ if __name__ == '__main__':
     subprocess.check_call([
         'python',
         '-m',
-        'data.join_segments_crash_concern',
+        'data.join_segments_crash',
         '-d',
         DATA_FP
     ]

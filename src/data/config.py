@@ -29,9 +29,9 @@ class Configuration(object):
         self.city = config['city']
         self.name = config['name']
         self.startdate = str(config['startdate']) \
-            if config['startdate'] else None
+            if 'startdate' in config and config['startdate'] else None
         self.enddate = str(config['enddate']) \
-            if config['enddate'] else None
+            if 'enddate' in config and config['enddate'] else None
         self.timezone = pytz.timezone(config['timezone'])
         self.crashes_files = config['crashes_files']
 
