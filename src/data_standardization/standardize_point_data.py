@@ -31,7 +31,7 @@ def read_file_info(config, datadir):
                 lat = row[source_config['latitude']]
                 lon = row[source_config['longitude']]
             elif 'address' in source_config:
-                street, lat, lon = standardization_util.parse_address(
+                _, lat, lon = standardization_util.parse_address(
                     row[source_config['address']])
             if lat and lon:
                 time = None
