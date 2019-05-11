@@ -7,7 +7,6 @@ import scipy.stats as ss
 import os
 import json
 import argparse
-import yaml
 from .model_classes import Indata, Tuner, Tester
 import data.config
 

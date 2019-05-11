@@ -11,7 +11,7 @@ from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
 import datetime
-from .record import Crash, Concern, Record
+from .record import Crash, Record
 import geojson
 from .segment import Segment
 

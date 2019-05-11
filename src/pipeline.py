@@ -34,9 +34,6 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
     else:
         print("Already standardized crash data, skipping")
 
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-
     # Handling volume data
     if (not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'volume.json'))) or forceupdate:

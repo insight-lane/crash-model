@@ -4,7 +4,6 @@ from dateutil.parser import parse
 import gzip
 import json
 import datetime
-import pytz
 import data.config
 
 CURR_FP = os.path.dirname(

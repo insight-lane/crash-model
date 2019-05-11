@@ -4,7 +4,7 @@
 # Developed by: bpben
 import json
 import pandas as pd
-from data.util import read_geojson, group_json_by_location, group_json_by_field
+from data.util import read_geojson
 import os
 import argparse
 import warnings
