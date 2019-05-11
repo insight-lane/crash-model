@@ -325,7 +325,7 @@ def get_width(width):
         # Sometimes there's bad (non-numeric) width
         # so remove anything that isn't a number or .
         # Skip those that don't have some number in them
-        width = re.sub('[^0-9\.]+', '', width)
+        width = re.sub(r'[^0-9\.]+', '', width)
         if width:
             width = round(float(width))
         else:
@@ -343,7 +343,7 @@ def get_speed(speed):
         speed - an int
     """
     if speed:
-        speeds = [int(x) for x in re.findall('\d+', speed)]
+        speeds = [int(x) for x in re.findall(r'\d+', speed)]
         if speeds:
             return max(speeds)
     return 0
@@ -384,7 +384,7 @@ def clean_ways(orig_file, DOC_FP):
 
         lanes = way_line['properties']['lanes']
         if lanes:
-            lanes = max([int(x) for x in re.findall('\d', lanes)])
+            lanes = max([int(x) for x in re.findall(r'\d', lanes)])
         else:
             lanes = 0
 

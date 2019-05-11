@@ -389,7 +389,7 @@ def get_intersection_name(inter_segments):
                    for x in inter_segments]:
         if street:
             if '[' in street:
-                streets.extend(re.sub("['\[\]]", '', street).split(', '))
+                streets.extend(re.sub(r"['\[\]]", '', street).split(', '))
             else:
                 streets.append(street)
     streets = sorted(list(set(streets)))

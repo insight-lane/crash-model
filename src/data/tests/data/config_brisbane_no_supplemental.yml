@@ -49,14 +49,6 @@ crashes_files:
       vehicles: 
       bikes: 
 
-# List of concern type information
-concern_files:
-  - name: concern
-      filename: test_concerns.csv
-      latitude: 
-      longitude: 
-      time: 
-
 #################################################################
 # Configuration for default features
 
