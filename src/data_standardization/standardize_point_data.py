@@ -24,6 +24,7 @@ def read_file_info(config, datadir):
         df = pd.read_csv(filepath, na_filter=False)
         rows = df.to_dict("records")
         missing = 0
+        missing_date = 0
         for row in rows:
             lat = None
             lon = None
@@ -35,10 +36,13 @@ def read_file_info(config, datadir):
                     row[source_config['address']])
             if lat and lon:
                 time = None
-
+                
                 if 'time' in source_config and source_config['time']:
                     time = row[source_config['time']]
-
+                date_time = row[source_config['date']]
+                if not date_time:
+                    missing_date += 1
+                    continue
                 date_time = standardization_util.parse_date(
                     row[source_config['date']], config.timezone, time=time)
                 updated_row = OrderedDict([
@@ -62,7 +66,10 @@ def read_file_info(config, datadir):
             else:
                 missing += 1
 
-        print("{} entries didn't have a lat/lon".format(missing))
+        if missing:
+            print("{} entries didn't have a lat/lon".format(missing))
+        if missing_date:
+            print("{} entries didn't have a date".format(missing_date))
     if points:
 
         schema_path = os.path.join(os.path.dirname(BASE_FP),
