@@ -1,4 +1,6 @@
+import ruamel.yaml
 from .. import standardize_waze_data
+import data.config
 import os
 import pytz
 
@@ -21,11 +23,22 @@ def test_get_datetime():
     assert result.isoformat() == '2018-11-04T01:13:00-05:00'
 
 
-def test_read_snapshots():
-    config = {
+def test_read_snapshots(tmpdir):
+    config_dict = {
+        'name': 'cambridge',
+        'city_latitude': 42.3600825,
+        'city_longitude': -71.0588801,
+        'city_radius': 15,
+        'timezone': 'America/New_York',
+        'crashes_files': 'dummy',
         'city': "Cambridge, Massachusetts, USA",
         'timezone': "America/New_York"
     }
+    filename = os.path.join(tmpdir, 'test.yml')
+    with open(filename, "w") as f:
+        ruamel.yaml.round_trip_dump(config_dict, f)
+    config = data.config.Configuration(filename)
+
     results = standardize_waze_data.read_snapshots(os.path.join(
         TEST_FP, 'data', 'waze'), config)
 

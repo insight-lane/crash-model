@@ -3,10 +3,8 @@ import os
 from dateutil.parser import parse
 import gzip
 import json
-import yaml
 import datetime
-import pytz
-
+import data.config
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -53,20 +51,20 @@ def read_snapshots(dirname, config, startdate=None, enddate=None):
     To do: handle time zone
     Args:
         dirname - directory the waze data lives in
-        config - configuration dict for city
+        config - configuration object for city
         startdate - drop days before this date
         enddate - drop days after this date
     returns
         a list of all jams, alerts and irregularities for this city
     """
     files = os.listdir(dirname)
-    city = config['city'].split(',')[0]
+    city = config.city.split(',')[0]
 
     all_data = []
     min_start = None
     max_end = None
 
-    timezone = pytz.timezone(config['timezone'])
+    timezone = config.timezone
     count = 0
     if startdate:
         startdate = timezone.localize(parse(startdate))
@@ -158,8 +156,7 @@ if __name__ == '__main__':
 
     # load config for this city
     config_file = args.config
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
+    config = data.config.Configuration(config_file)
 
     snapshots = read_snapshots(
         os.path.join(args.datadir, 'raw', 'waze'),

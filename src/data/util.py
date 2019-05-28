@@ -11,7 +11,7 @@ from os.path import exists as path_exists
 import json
 from dateutil.parser import parse
 import datetime
-from .record import Crash, Concern, Record
+from .record import Crash, Record
 import geojson
 from .segment import Segment
 
@@ -123,7 +123,7 @@ def geocode_address(address, cached={}, mapboxtoken=None):
     if mapboxtoken:
         g = geocoder.mapbox(address, key=mapboxtoken)
     else:
-        g = geocoder.google(address)
+        g = geocoder.arcgis(address)
     attempts = 0
     while g.address is None and attempts < 3:
         attempts += 1
@@ -324,8 +324,6 @@ def read_records(filename, record_type,
         record = None
         if record_type == 'crash':
             record = Crash(item)
-        elif record_type == 'concern':
-            record = Concern(item)
         else:
             record = Record(item)
         records.append(record)
@@ -731,42 +729,6 @@ def output_from_shapes(items, filename):
 
     with open(filename, 'w') as outfile:
         geojson.dump(geojson.FeatureCollection(output), outfile)
-
-
-def get_feature_list(config):
-    """
-    Make the list of features, and write it to the city's data folder
-    That way, we can avoid hardcoding the feature list in multiple places.
-    If you add extra features, the only place you should need to add them
-    is here
-    Args:
-        Config - the city's config file
-    """
-
-    # Features drawn from open street maps
-    feat_types = {'f_cat': [], 'f_cont': []}
-
-    # Run through the possible feature types
-    for feat_type in ['openstreetmap_features',
-                      'waze_features', 'additional_map_features']:
-        if feat_type in config:
-            if 'categorical' in config[feat_type]:
-                feat_types['f_cat'] += [x for x in config[
-                    feat_type]['categorical'].keys()]
-                feat_types['f_cont'] += [x for x in config[
-                    feat_type]['continuous'].keys()]
-
-    # Add point-based features, still in a slightly different format
-    if 'data_source' in config and config['data_source']:
-        for additional in config['data_source']:
-            feat_types[additional['feat']].append(additional['name'])
-
-    # May eventually want to rename this feature to be more general
-    # For now, all atr features are continuous
-    if 'atr_cols' in config and config['atr_cols']:
-        feat_types['f_cont'] += config['atr_cols']
-
-    return feat_types
 
 
 def write_segments(non_inters, inters, mapfp):

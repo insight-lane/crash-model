@@ -50,14 +50,9 @@ def update_properties(segments, df, features):
                     segment.properties[feature] = values[feature][id_mapping[seg_id]]
 
     inters = [x for x in segments if util.is_inter(x.properties['id'])]
-    inters = util.write_records_to_geojson(
-        inters, os.path.join(
-            PROCESSED_DATA_FP, 'maps', 'inters_segments.geojson'))
-
     non_inters = [x for x in segments if not util.is_inter(x.properties['id'])]
-    non_inters = util.write_records_to_geojson(
-        non_inters, os.path.join(
-            PROCESSED_DATA_FP, 'maps', 'non_inters_segments.geojson'))
+    util.write_segments(non_inters, inters, os.path.join(
+        PROCESSED_DATA_FP, 'maps'))
 
 
 def read_volume():
