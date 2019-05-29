@@ -159,7 +159,7 @@ def simple_get_roads(config):
 
     ox.settings.useful_tags_path.append('cycleway')
 
-    if (polygon_pos is not None):
+    if polygon_pos is not None and config.map_geography != 'radius':
         # Check to see if polygon needs to be expanded to include other points
         polygon = expand_polygon(polygon, os.path.join(
             STANDARDIZED_FP, 'crashes.json'))
@@ -174,11 +174,16 @@ def simple_get_roads(config):
             G1 = ox.graph_from_polygon(polygon, network_type='drive',
                                        simplify=False)
     else:
-
-        print("no city polygon found in OpenStreetMaps, building graph of " +
-              "roads within " + str(config.city_radius) + "km of city " +
-              str(config.city_latitude) + " / " +
+        print_string = ""
+        if config.map_geography != 'radius':
+            print_string = "No city polygon found in OpenStreetMaps, building "
+        else:
+            print_string = "Building "
+        print_string += "graph of roads within {} km of city ({}/{})".format(
+              str(config.city_radius),
+              str(config.city_latitude),
               str(config.city_longitude))
+        print(print_string)
         G1 = ox.graph_from_point((config.city_latitude,
                                   config.city_longitude),
                                  distance=config.city_radius * 1000,
