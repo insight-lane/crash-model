@@ -14,19 +14,29 @@ class Configuration(object):
 
         if 'city' not in config or config['city'] is None:
             sys.exit('City is required in config file')
+        self.city = config['city']
+        
         if 'city_latitude' not in config or config['city_latitude'] is None:
             sys.exit('city_latitude is required in config file')
+        self.city_latitude = config['city_latitude']
 
         if 'city_longitude' not in config or config['city_longitude'] is None:
             sys.exit('city_longitude is required in config file')
+        self.city_longitude = config['city_longitude']
 
         if 'city_radius' not in config or config['city_radius'] is None:
             sys.exit('city_radius is required in config file')
+        self.city_radius = config['city_radius']
+
+        if 'map_geography' in config and config['map_geography']:
+            self.map_geography = config['map_geography']
+        else:
+            # The default, if not set, is polygon
+            self.map_geography = 'polygon'
 
         self.default_features, self.categorical_features, \
             self.continuous_features = self.get_feature_list(config)
 
-        self.city = config['city']
         self.name = config['name']
         self.startdate = str(config['startdate']) \
             if 'startdate' in config and config['startdate'] else None
@@ -34,7 +44,7 @@ class Configuration(object):
             if 'enddate' in config and config['enddate'] else None
         self.timezone = pytz.timezone(config['timezone'])
         self.crashes_files = config['crashes_files']
-
+        
         self.data_source = config['data_source'] if 'data_source' in config \
             else None
         self.additional_map_features = config['additional_map_features'] \

@@ -111,6 +111,10 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "timezone: {}\n".format(timezone) +
         "# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)\n" +
         "city_radius: 20\n\n" +
+        "# By default, maps are created from OSM's polygon data and fall back to radius\n" +
+        "# if there is no polygon data, but but you can change the openstreetmap_geography\n" +
+        "# to 'radius' if preferred\n" +
+        "map_geography: polygon\n\n" +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n\n".format(folder) +
         "# If given, limit crashes to after startdate and no later than enddate\n" +
