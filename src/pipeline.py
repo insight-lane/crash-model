@@ -131,7 +131,7 @@ def train_model(config_file, DATA_FP):
     ])
 
 
-def visualize(DATA_FP):
+def visualize(DATA_FP, config_file):
     """
     Creates the visualization data set for a city
     Args:
@@ -144,6 +144,14 @@ def visualize(DATA_FP):
         'data.make_preds_viz',
         '-d',
         DATA_FP
+    ])
+    print("Generating risk map")
+    subprocess.check_call([
+        'python',
+        '-m',
+        'visualization.risk_map',
+        '-c',
+        config_file
     ])
 
 
@@ -185,4 +193,4 @@ if __name__ == '__main__':
         train_model(args.config_file, DATA_FP)
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
-        visualize(DATA_FP)
+        visualize(DATA_FP, args.config_file)
