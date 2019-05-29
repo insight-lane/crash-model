@@ -2,9 +2,7 @@
 import os
 import subprocess
 import argparse
-import yaml
-import sys
-from . import util
+import data.config
 
 DATA_FP = os.path.dirname(
     os.path.dirname(
@@ -35,13 +33,7 @@ if __name__ == '__main__':
     startdate = None
     enddate = None
 
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-
-    # City
-    if 'city' not in list(config.keys()) or config['city'] is None:
-        sys.exit('City is required in config file')
-    city = config['city']
+    config = data.config.Configuration(config_file)
 
     DATA_FP = args.datadir
 
@@ -49,10 +41,10 @@ if __name__ == '__main__':
     extra_map = None
 
     recreate = False
-    outputdir = city.split(',')[0]
+    outputdir = config.city.split(',')[0]
     additional_features = None
-    if 'additional_map_features' in config and config['additional_map_features']:
-        extra_map = config['additional_map_features']['extra_map']
+    if config.additional_map_features:
+        extra_map = config.additional_map_features['extra_map']
 
     # Whether to regenerate maps from open street map
     if args.forceupdate:
@@ -62,10 +54,7 @@ if __name__ == '__main__':
     if os.path.exists(os.path.join(DATA_FP, 'standardized', 'waze.json')):
         waze = True
 
-    feat_types = util.get_feature_list(config)
-    features = feat_types['f_cat'] + feat_types['f_cont']
-
-    print("Generating maps for " + city + ' in ' + DATA_FP)
+    print("Generating maps for " + config.city + ' in ' + DATA_FP)
     if recreate:
         print("Overwriting existing data...")
     # Get the maps out of open street map, both projections
@@ -146,7 +135,7 @@ if __name__ == '__main__':
     subprocess.check_call([
         'python',
         '-m',
-        'data.join_segments_crash_concern',
+        'data.join_segments_crash',
         '-d',
         DATA_FP
     ]
@@ -178,4 +167,4 @@ if __name__ == '__main__':
         '-d',
         DATA_FP,
         '-features'
-    ] + features)
+    ] + config.features)
