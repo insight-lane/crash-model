@@ -23,24 +23,21 @@ PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 
 def snap_records(
-        combined_seg, segments_index, infile, record_type,
+        combined_seg, segments_index, infile,
         startyear=None, endyear=None):
 
-    print("reading {} data...".format(record_type))
-    records = util.read_records(infile, record_type, startyear, endyear)
-    if record_type == 'concern' and not records:
-        print("no concerns found")
-        return
+    print("reading crash data...")
+    records = util.read_records(infile, 'crash', startyear, endyear)
 
     # Find nearest crashes - 30 tolerance
-    print("snapping " + record_type + " records to segments")
+    print("snapping crash records to segments")
     util.find_nearest(
         records, combined_seg, segments_index, 30, type_record=True)
 
     jsonfile = os.path.join(
-        PROCESSED_DATA_FP, record_type + '_joined.json')
+        PROCESSED_DATA_FP, 'crash_joined.json')
 
-    print("output " + record_type + " data to " + jsonfile)
+    print("output crash data to " + jsonfile)
     with open(jsonfile, 'w') as f:
         json.dump([r.properties for r in records], f)
 
@@ -66,11 +63,6 @@ if __name__ == '__main__':
     combined_seg, segments_index = util.read_segments(dirname=MAP_FP)
     snap_records(
         combined_seg, segments_index,
-        os.path.join(RAW_DATA_FP, 'crashes.json'), 'crash',
+        os.path.join(RAW_DATA_FP, 'crashes.json'),
         startyear=args.startyear, endyear=args.endyear)
 
-    concern_file = os.path.join(os.path.join(RAW_DATA_FP, 'concerns.json'))
-    if os.path.exists(concern_file):
-        snap_records(
-            combined_seg, segments_index,
-            concern_file, 'concern')

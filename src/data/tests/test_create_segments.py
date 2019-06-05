@@ -1,3 +1,4 @@
+import data.config
 from .. import create_segments
 from ..record import Record
 from ..segment import Segment, Intersection
@@ -174,9 +175,10 @@ def test_update_intersection_properties(tmpdir):
         tmpdir)
     non_inters, inters = create_segments.add_point_based_features(
         non_inters, inters, outputfile, featsfile)
-    
+    config = data.config.Configuration(
+        os.path.join(base_path, 'config_features.yml'))
     results = create_segments.update_intersection_properties(
-        inters, os.path.join(base_path, 'config_features.yml'))
+        inters, config)
     assert results[0].properties == {
         'id': 975,
         'width': 13,

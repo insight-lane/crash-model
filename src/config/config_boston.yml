@@ -15,19 +15,6 @@ enddate: 2017-12-31
 ##############################################################################
 # Configuration for data standardization
 
-# List of concern type information
-concern_files:
-  - name: concern
-    filename: Vision_Zero_Entry.csv
-    latitude:
-    longitude:
-    time:
-  - name: see_click_fix
-    filename: bos_scf.csv
-    latitude:
-    longitude:
-    time: created
-
 # crash file configurations
 crashes_files:
     vzopendata.csv:
@@ -56,12 +43,6 @@ crashes_files:
             bikes: mode_type
 
 ##############################################################################
-
-# configuration for running the model training and prediction
-
-# concern column name
-# leave as '' if not adding concerns
-concern: 'visionzero'
 
 # atr filepath (should be in processed subfolder)
 # leave as '' if not adding atrs
@@ -113,4 +94,18 @@ additional_map_features:
     Surface_Tp: Road type
     F_F_Class: Functional class
 
+
+# Additional data sources
+data_source:
+- name: visionzero
+  filename: Vision_Zero_Entry.csv
+  latitude: Y
+  longitude: X
+  date: REQUESTDATE
+  category: REQUESTTYPE
+- name: see_click_fix
+  filename: bos_scf.csv
+  latitude: Y
+  longitude: X
+  date: created
 

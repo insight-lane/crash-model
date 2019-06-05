@@ -10,7 +10,6 @@ import json
 import copy
 from shapely.ops import unary_union
 from collections import defaultdict
-import yaml
 from . import util
 import argparse
 import os
@@ -18,6 +17,7 @@ import re
 from shapely.geometry import MultiLineString, LineString
 from .segment import Segment, Intersection, IntersectionBuffer
 from .record import Record
+import data.config
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -389,7 +389,7 @@ def get_intersection_name(inter_segments):
                    for x in inter_segments]:
         if street:
             if '[' in street:
-                streets.extend(re.sub("['\[\]]", '', street).split(', '))
+                streets.extend(re.sub(r"['\[\]]", '', street).split(', '))
             else:
                 streets.append(street)
     streets = sorted(list(set(streets)))
@@ -546,24 +546,20 @@ def create_segments_from_json(roads_shp_path, mapfp):
     return non_int_w_ids, union_inter
 
 
-def update_intersection_properties(inters, config_file):
+def update_intersection_properties(inters, config):
     """
     Since intersection data includes properties from each contributing segment,
     use the max value for each feature (as given by config file) available
     and set properties for the intersection
     Args:
         inters - a list of intersection objects
-        config_file - the config filename, which has the features
+        config - the configuration object, which has the features
     Returns:
         inters - updated intersection object list
     """
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
 
-    features = util.get_feature_list(config)
-    all_features = features['f_cat'] + features['f_cont']
     for inter in inters:
-        for feature in all_features:
+        for feature in config.features:
 
             values = [x[feature] for x in inter.data if feature in x]
             if values:
@@ -627,7 +623,8 @@ if __name__ == '__main__':
             additional_feats_filename=additional_feats_file,
             forceupdate=args.forceupdate
         )
-
-    inters = update_intersection_properties(inters, args.config)
+    config = data.config.Configuration(args.config)
+    
+    inters = update_intersection_properties(inters, config)
     util.write_segments(non_inters, inters, MAP_FP)
 

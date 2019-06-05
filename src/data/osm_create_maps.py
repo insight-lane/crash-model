@@ -8,10 +8,9 @@ import csv
 import geojson
 import json
 import requests
-import yaml
-import sys
 from . import util
 from shapely.geometry import Polygon, LineString, LinearRing
+import data.config
 
 MAP_FP = None
 STANDARDIZED_FP = None
@@ -155,12 +154,12 @@ def simple_get_roads(config):
 
     # confirm if a polygon is available for this city, which determines which
     # graph function is appropriate
-    print("searching nominatim for " + str(config['city']) + " polygon")
-    polygon_pos, polygon = find_osm_polygon(config['city'])
+    print("searching nominatim for " + str(config.city) + " polygon")
+    polygon_pos, polygon = find_osm_polygon(config.city)
 
     ox.settings.useful_tags_path.append('cycleway')
 
-    if (polygon_pos is not None):
+    if polygon_pos is not None and config.map_geography != 'radius':
         # Check to see if polygon needs to be expanded to include other points
         polygon = expand_polygon(polygon, os.path.join(
             STANDARDIZED_FP, 'crashes.json'))
@@ -168,36 +167,26 @@ def simple_get_roads(config):
             print("city polygon found in OpenStreetMaps at position " +
                   str(polygon_pos) + ", building graph of roads within " +
                   "specified bounds")
-            G1 = ox.graph_from_place(config['city'], network_type='drive',
+            G1 = ox.graph_from_place(config.city, network_type='drive',
                                      simplify=False, which_result=polygon_pos)
         else:
             print("using buffered city polygon")
             G1 = ox.graph_from_polygon(polygon, network_type='drive',
                                        simplify=False)
     else:
-        # City & lat+lng+radius required from config to graph from point
-        if ('city' not in list(config.keys()) or config['city'] is None):
-            sys.exit('city is required in config file')
-
-        if ('city_latitude' not in list(config.keys()) or
-                config['city_latitude'] is None):
-            sys.exit('city_latitude is required in config file')
-
-        if ('city_longitude' not in list(config.keys()) or
-                config['city_longitude'] is None):
-            sys.exit('city_longitude is required in config file')
-
-        if ('city_radius' not in list(config.keys()) or
-                config['city_radius'] is None):
-            sys.exit('city_radius is required in config file')
-
-        print("no city polygon found in OpenStreetMaps, building graph of " +
-              "roads within " + str(config['city_radius']) + "km of city " +
-              str(config['city_latitude']) + " / " +
-              str(config['city_longitude']))
-        G1 = ox.graph_from_point((config['city_latitude'],
-                                  config['city_longitude']),
-                                 distance=config['city_radius'] * 1000,
+        print_string = ""
+        if config.map_geography != 'radius':
+            print_string = "No city polygon found in OpenStreetMaps, building "
+        else:
+            print_string = "Building "
+        print_string += "graph of roads within {} km of city ({}/{})".format(
+              str(config.city_radius),
+              str(config.city_latitude),
+              str(config.city_longitude))
+        print(print_string)
+        G1 = ox.graph_from_point((config.city_latitude,
+                                  config.city_longitude),
+                                 distance=config.city_radius * 1000,
                                  network_type='drive', simplify=False)
 
     G = ox.simplify_graph(G1)
@@ -341,7 +330,7 @@ def get_width(width):
         # Sometimes there's bad (non-numeric) width
         # so remove anything that isn't a number or .
         # Skip those that don't have some number in them
-        width = re.sub('[^0-9\.]+', '', width)
+        width = re.sub(r'[^0-9\.]+', '', width)
         if width:
             width = round(float(width))
         else:
@@ -359,7 +348,7 @@ def get_speed(speed):
         speed - an int
     """
     if speed:
-        speeds = [int(x) for x in re.findall('\d+', speed)]
+        speeds = [int(x) for x in re.findall(r'\d+', speed)]
         if speeds:
             return max(speeds)
     return 0
@@ -400,7 +389,7 @@ def clean_ways(orig_file, DOC_FP):
 
         lanes = way_line['properties']['lanes']
         if lanes:
-            lanes = max([int(x) for x in re.findall('\d', lanes)])
+            lanes = max([int(x) for x in re.findall(r'\d', lanes)])
         else:
             lanes = 0
 
@@ -512,10 +501,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    config_file = args.config
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-
+    config = data.config.Configuration(args.config)
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
     DOC_FP = os.path.join(args.datadir, 'docs')
     STANDARDIZED_FP = os.path.join(args.datadir, 'standardized')

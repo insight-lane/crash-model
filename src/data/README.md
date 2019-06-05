@@ -1,6 +1,6 @@
 # Crash model data generation
 
-This directory contains all the data_generation steps of the pipeline process, starting with standardized json crash and concern files
+This directory contains all the data_generation steps of the pipeline process, starting with standardized json crash and point-based feature files
 
 ## Data dependencies
 
@@ -88,19 +88,18 @@ To add Boston's specific data to the boston model, we need to find the intersect
     - data/processed/inters_data.json (modified with new features)
 
 ### 4) Join segments and point data
-- Reads in crash/concern point data and intersection/non-intersection segments
+- Reads in crash point data and intersection/non-intersection segments
 - Snaps points to nearest segment
     - Tolerance of 30m for crashes, 20m for concerns
 - Writes shapefile of joined points and json data file
 - Includes coordinates and near_id referring to segment id (intersection or non intersection)
-- <b>Usage:</b> `python -m data.join_segments_crash_concern`
+- <b>Usage:</b> `python -m data.join_segments_crash`
 - <b>Dependencies:</b>
     - inters/non_inters shape data
     - CAD crash data: data/raw/cad_crash_events_with_transport_2016_wgs84.csv
   Vision Zero comments: data/raw/Vision_Zero_Entry.csv
 - <b>Results:</b>
     - crash_joined.shp
-    - concern_joined.shp
 
 ### 5) (Optional) Process the Automated Traffic Recordings (ATRs)
 - We only process ATRs for Boston at this time
@@ -120,17 +119,17 @@ To add Boston's specific data to the boston model, we need to find the intersect
 
 ### 7) Make canonical dataset
 - This script lives in src/features, but can be run using make_dataset
-- Reads in crash/concern data
+- Reads in crash data
 - Aggregates crash/concern (default by week)
 - Reads in road features for intersections and non-intersections
 - Aggregates road features to max value
     - e.g. intersection features set to max of all roads joined to it
 - Creates dataframe with 52 weeks for each segment
-- Joins weekly crash/concerns to dataframe
+- Joins weekly crashes to dataframe
 - <b>Usage:</b>`python -m features.make_canon_dataset`
 - <b>Dependencies:</b>
-    - crash/concern_joined
-    - inters/non_inters
+    - crash_joined
+    - inter_and_non_int.geojson
 - <b>Results:</b>
     - vz_predict_dataset.csv.gz
 

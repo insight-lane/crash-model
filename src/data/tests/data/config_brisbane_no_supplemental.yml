@@ -9,6 +9,11 @@ timezone: Australia/Brisbane
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 20
 
+# By default, maps are created from OSM's polygon data and fall back to radius
+# if there is no polygon data, but but you can change the openstreetmap_geography
+# to 'radius' if preferred
+map_geography: polygon
+
 # The folder under data where this city's data is stored
 name: brisbane
 
@@ -48,14 +53,6 @@ crashes_files:
       address: 
       vehicles: 
       bikes: 
-
-# List of concern type information
-concern_files:
-  - name: concern
-      filename: test_concerns.csv
-      latitude: 
-      longitude: 
-      time: 
 
 #################################################################
 # Configuration for default features

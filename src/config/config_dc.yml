@@ -42,14 +42,6 @@ crashes_files:
       vehicles: TOTAL_VEHICLES
       bikes: TOTAL_BICYCLES
 
-# List of concern type information
-concern_files:
-  - name: concern
-    filename: Vision_Zero_Safety.csv
-    latitude: Y
-    longitude: X
-    time: REQUESTDATE
-
 #################################################################
 # Configuration for default features
 
@@ -64,3 +56,11 @@ openstreetmap_features:
     lanes: Number of lanes
   continuous:
     width_per_lane: Average width per lane
+
+
+data_source:
+- name: visionzero
+  filename: Vision_Zero_Safety.csv
+  latitude: Y
+  longitude: X
+  date: REQUESTDATE

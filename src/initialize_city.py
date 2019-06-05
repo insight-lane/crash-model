@@ -96,7 +96,7 @@ def write_default_features(f, waze=False, supplemental=[],
 
 
 def make_config_file(yml_file, city, timezone, folder, crash,
-                     concern, waze, additional_map=None, supplemental=[]):
+                     waze, additional_map=None, supplemental=[]):
     address = geocode_address(city)
 
     f = open(yml_file, 'w')
@@ -111,6 +111,10 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "timezone: {}\n".format(timezone) +
         "# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)\n" +
         "city_radius: 20\n\n" +
+        "# By default, maps are created from OSM's polygon data and fall back to radius\n" +
+        "# if there is no polygon data, but but you can change the openstreetmap_geography\n" +
+        "# to 'radius' if preferred\n" +
+        "map_geography: polygon\n\n" +
         "# The folder under data where this city's data is stored\n" +
         "name: {}\n\n".format(folder) +
         "# If given, limit crashes to after startdate and no later than enddate\n" +
@@ -149,20 +153,10 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "      bikes: \n\n"
     )
 
-    if concern:
-        f.write(
-            "# List of concern type information\n" +
-            "concern_files:\n" +
-            "  - name: concern\n" +
-            "      filename: {}\n".format(concern) +
-            "      latitude: \n" +
-            "      longitude: \n" +
-            "      time: \n\n"
-        )
-
     write_default_features(f, waze, supplemental, additional_map)
     f.write("")
     f.close()
+
     print("Wrote new configuration file in {}".format(yml_file))
 
 
@@ -196,8 +190,6 @@ if __name__ == '__main__':
                         help="folder name, e.g. 'boston'")
     parser.add_argument('-crash', '--crash_file', type=str, required=True,
                         help="crash file path")
-    parser.add_argument('-concern', '--concern_file', type=str,
-                        help="concern file path")
     parser.add_argument('-supplemental', '--supplemental', type=str,
                         help="additional point-based feature files" +
                         "comma separated")
@@ -214,15 +206,12 @@ if __name__ == '__main__':
 
     crash = args.crash_file.split('/')[-1]
     crash_dir = os.path.join(DATA_FP, 'raw', 'crashes')
-    concern = None
     supplemental_paths = []
     supplemental_files = []
     waze = False
     if args.waze:
         waze = True
 
-    if args.concern_file:
-        concern = args.concern_file.split('/')[-1]
     if args.supplemental:
         supplemental_paths = args.supplemental.split(',')
         for point_file in supplemental_paths:
@@ -236,16 +225,9 @@ if __name__ == '__main__':
         os.makedirs(DATA_FP)
         os.makedirs(os.path.join(DATA_FP, 'raw'))
         os.makedirs(crash_dir)
-        concern_dir = os.path.join(DATA_FP, 'raw', 'concerns')
-        os.makedirs(concern_dir)
         os.makedirs(os.path.join(DATA_FP, 'processed'))
         os.makedirs(os.path.join(DATA_FP, 'standardized'))
         shutil.copyfile(args.crash_file, os.path.join(crash_dir, crash))
-
-        if args.concern_file:
-            shutil.copyfile(args.concern_file, os.path.join(
-                concern_dir, concern))
-            print("Including concern data")
 
         # If a waze directory was given, copy
         if args.waze:
@@ -266,7 +248,7 @@ if __name__ == '__main__':
         BASE_DIR, 'src/config/config_' + args.folder + '.yml')
     if not os.path.exists(yml_file):
         make_config_file(yml_file, args.city, tzlocal.get_localzone().zone,
-                         args.folder, crash, concern, waze,
+                         args.folder, crash, waze,
                          additional_map=args.additionalmap,
                          supplemental=supplemental_files)
 

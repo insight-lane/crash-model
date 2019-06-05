@@ -20,7 +20,6 @@ def test_initialize_city_brisbane_no_supplemental(tmpdir, monkeypatch):
         'Australia/Brisbane',
         'brisbane',
         'test_crashes.csv',
-        'test_concerns.csv',
         False
     )
 
@@ -32,6 +31,7 @@ def test_initialize_city_brisbane_no_supplemental(tmpdir, monkeypatch):
             TEST_FP, 'data', 'config_brisbane_no_supplemental.yml'), 'r'
     ) as test_file:
         expected_file_contents = test_file.read()
+
     assert test_file_contents == expected_file_contents
 
 
@@ -46,7 +46,6 @@ def test_supplemental_arg_changes_content_of_config_file(tmpdir, monkeypatch):
         'Australia/Brisbane',
         'brisbane',
         'test_crashes.csv',
-        'test_concerns.csv',
         ['parking_tickets_dummy_file_1.csv']
     )
 
