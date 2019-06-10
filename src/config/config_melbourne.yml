@@ -68,4 +68,3 @@ openstreetmap_features:
     lanes: Number of lanes
   continuous:
     width_per_lane: Average width per lane
-
