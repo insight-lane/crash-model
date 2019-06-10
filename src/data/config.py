@@ -33,6 +33,8 @@ class Configuration(object):
         else:
             # The default, if not set, is polygon
             self.map_geography = 'polygon'
+        if 'boundary_shapefile' in config and config['boundary_shapefile']:
+            self.boundary_shapefile = config['boundary_shapefile']
 
         self.default_features, self.categorical_features, \
             self.continuous_features = self.get_feature_list(config)
