@@ -240,13 +240,13 @@ def simple_get_roads(config):
 
     names = {'traffic_signals': 'signal', 'crossing': 'crosswalk'}
     features = []
-    for index, row in node_feats.iterrows():
+    for _, row in node_feats.iterrows():
         features.append(geojson.Feature(
             geometry=geojson.Point((row['x'], row['y'])),
             id=row['osmid'],
             properties={'feature': names[row['highway']]},
         ))
-    for index, row in intersections.iterrows():
+    for _, row in intersections.iterrows():
         features.append(geojson.Feature(
             geometry=geojson.Point((row['x'], row['y'])),
             id=row['osmid'],
