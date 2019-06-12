@@ -44,6 +44,7 @@ The demo city data is stored as *data-latest.zip* using data-world. Contact one 
     - City name is the full name of the city, e.g. "Cambridge, MA, USA".
     - Folder name is what you'd like the city's data directory to be named, e.g. "cambridge".
     - The latitude and longitude will be auto-populated by the initialize_city script, but you can modify this
+    - If you wish to create a default map from a radius instead of the open street map city boundaries, you can specify it by setting 'map_geography: radius'. If you would like to specify a particular polygon, you can set 'map_geography' to 'shapefile' and boundary_shapefile to the name of the file with one or more polygons making a boundary region. The shapefile should be saved into <your city's directory>/raw/maps/
     - The time zone will be auto-populated as your current time zone, but you can modify this if it's for a city outside of the time zone on your computer (we use tz database time zones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
     - If you give a startdate and/or an enddate, the system will only look at crashes that fall within that date range
     - The crash file is a csv file of crashes that includes (at minimum) columns for latitude, longitude, and date of crashes.
