@@ -203,10 +203,10 @@ def get_graph(config):
     return G1
     
 
-def simple_get_roads(config):
+def simple_get_roads(config, mapfp):
     """
     Use osmnx to get a simplified version of open street maps for the city
-    Writes osm_nodes and osm_ways shapefiles to MAP_FP
+    Writes osm_nodes and osm_ways shapefiles to mapfp
     Args:
         config object
     Returns:
@@ -252,26 +252,26 @@ def simple_get_roads(config):
             id=row['osmid'],
             properties={'feature': 'intersection'},
         ))
-        
+
     features = geojson.FeatureCollection(features)
 
-    with open(os.path.join(MAP_FP, 'features.geojson'), "w") as f:
+    with open(os.path.join(mapfp, 'features.geojson'), "w") as f:
         json.dump(features, f)
 
     # Store simplified network
     ox.save_graph_shapefile(
-        G, filename='temp', folder=MAP_FP)
+        G, filename='temp', folder=mapfp)
 
     # Copy and remove temp directory
-    tempdir = os.path.join(MAP_FP, 'temp')
+    tempdir = os.path.join(mapfp, 'temp')
     for filename in os.listdir(os.path.join(tempdir, 'edges')):
         _, extension = filename.split('.')
         shutil.move(os.path.join(tempdir, 'edges', filename),
-                    os.path.join(MAP_FP, 'osm_ways.' + extension))
+                    os.path.join(mapfp, 'osm_ways.' + extension))
     for filename in os.listdir(os.path.join(tempdir, 'nodes')):
         _, extension = filename.split('.')
         shutil.move(os.path.join(tempdir, 'nodes', filename),
-                    os.path.join(MAP_FP, 'osm_nodes.' + extension))
+                    os.path.join(mapfp, 'osm_nodes.' + extension))
     shutil.rmtree(tempdir)
 
 
@@ -309,7 +309,6 @@ def get_connections(ways, nodes):
         nodes - a dict containing the roads connected to each node
         ways - the ways, with a unique osmid-fromnode-to-node string
     """
-
     node_info = {}
     for way in ways:
         # There are some collector roads and others that don't
@@ -533,7 +532,7 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
        or args.forceupdate:
         print('Generating map from open street map...')
-        simple_get_roads(config)
+        simple_get_roads(config, MAP_FP)
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
        or args.forceupdate:
