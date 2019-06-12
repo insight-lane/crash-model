@@ -8,12 +8,14 @@ import csv
 import geojson
 import json
 import requests
+import geopandas
 from . import util
 from shapely.geometry import Polygon, LineString, LinearRing
 import data.config
 
 MAP_FP = None
 STANDARDIZED_FP = None
+RAW_FP = None
 
 
 def find_osm_polygon(city):
@@ -137,32 +139,42 @@ def buffer_polygon(polygon, points):
     return polygon
 
 
-def simple_get_roads(config):
+def get_graph(config):
     """
-    Use osmnx to get a simplified version of open street maps for the city
-    Writes osm_nodes and osm_ways shapefiles to MAP_FP
+    Use osmnx to get a graph for a city according to shape type
+    specified in config object
     Args:
-        city
+        config object
     Returns:
-        None, but creates the following shape files:
-           osm_ways.shp - the simplified road network
-           osm_nodes.shp - the intersections and dead ends
-        And creates the following directory:
-           all_nodes - containing edges and nodes directories
-               for the unsimplified road network
+        osmnx graph object
     """
 
+    if config.map_geography == 'shapefile':
+        print("Reading from shape file")
+        # Read in boundary shapefile and convert it to 4326 projection
+        polygons = geopandas.read_file(os.path.join(
+            RAW_FP, 'maps', config.boundary_shapefile))
+        polygons = polygons.to_crs({'init': 'epsg:4326'})
+        # Add an arbitrary column to group by
+        polygons['groupby'] = 0
+        combined_polys = polygons.dissolve(by='groupby')
+        poly = combined_polys.geometry[0]
+        print("graphing from polygon")
+        G1 = ox.graph_from_polygon(poly, network_type='drive',
+                                   simplify=False)
+        print("finished graphing from polygon")
+        return G1
+        
     # confirm if a polygon is available for this city, which determines which
     # graph function is appropriate
     print("searching nominatim for " + str(config.city) + " polygon")
     polygon_pos, polygon = find_osm_polygon(config.city)
 
-    ox.settings.useful_tags_path.append('cycleway')
-
     if polygon_pos is not None and config.map_geography != 'radius':
         # Check to see if polygon needs to be expanded to include other points
         polygon = expand_polygon(polygon, os.path.join(
             STANDARDIZED_FP, 'crashes.json'))
+
         if not polygon:
             print("city polygon found in OpenStreetMaps at position " +
                   str(polygon_pos) + ", building graph of roads within " +
@@ -183,12 +195,30 @@ def simple_get_roads(config):
               str(config.city_radius),
               str(config.city_latitude),
               str(config.city_longitude))
-        print(print_string)
+
         G1 = ox.graph_from_point((config.city_latitude,
                                   config.city_longitude),
                                  distance=config.city_radius * 1000,
                                  network_type='drive', simplify=False)
+    return G1
+    
 
+def simple_get_roads(config, mapfp):
+    """
+    Use osmnx to get a simplified version of open street maps for the city
+    Writes osm_nodes and osm_ways shapefiles to mapfp
+    Args:
+        config object
+    Returns:
+        None
+        This function creates the following files
+           features.geojson - traffic signals, crosswalks and intersections
+           osm_ways.shp - the simplified road network
+           osm_nodes.shp - the intersections and dead ends
+    """
+
+    ox.settings.useful_tags_path.append('cycleway')
+    G1 = get_graph(config)
     G = ox.simplify_graph(G1)
 
     # Label endpoints
@@ -196,26 +226,52 @@ def simple_get_roads(config):
     for node, count in list(streets_per_node.items()):
         if count <= 1:
             G.nodes()[node]['dead_end'] = True
+            G1.nodes()[node]['dead_end'] = True
 
     # osmnx creates a directory for the nodes and edges
     # Store all nodes, since they can be other features
-    ox.save_graph_shapefile(
-        G1, filename='all_nodes', folder=MAP_FP)
+
+    # Get relevant node features out of the unsimplified graph
+    nodes, data = zip(*G1.nodes(data=True))
+    gdf_nodes = geopandas.GeoDataFrame(list(data), index=nodes)
+    node_feats = gdf_nodes[gdf_nodes['highway'].isin(
+        ['crossing', 'traffic_signals'])]
+    intersections = gdf_nodes[gdf_nodes['dead_end'] == True]
+
+    names = {'traffic_signals': 'signal', 'crossing': 'crosswalk'}
+    features = []
+    for _, row in node_feats.iterrows():
+        features.append(geojson.Feature(
+            geometry=geojson.Point((row['x'], row['y'])),
+            id=row['osmid'],
+            properties={'feature': names[row['highway']]},
+        ))
+    for _, row in intersections.iterrows():
+        features.append(geojson.Feature(
+            geometry=geojson.Point((row['x'], row['y'])),
+            id=row['osmid'],
+            properties={'feature': 'intersection'},
+        ))
+
+    features = geojson.FeatureCollection(features)
+
+    with open(os.path.join(mapfp, 'features.geojson'), "w") as f:
+        json.dump(features, f)
 
     # Store simplified network
     ox.save_graph_shapefile(
-        G, filename='temp', folder=MAP_FP)
+        G, filename='temp', folder=mapfp)
 
     # Copy and remove temp directory
-    tempdir = os.path.join(MAP_FP, 'temp')
+    tempdir = os.path.join(mapfp, 'temp')
     for filename in os.listdir(os.path.join(tempdir, 'edges')):
         _, extension = filename.split('.')
         shutil.move(os.path.join(tempdir, 'edges', filename),
-                    os.path.join(MAP_FP, 'osm_ways.' + extension))
+                    os.path.join(mapfp, 'osm_ways.' + extension))
     for filename in os.listdir(os.path.join(tempdir, 'nodes')):
         _, extension = filename.split('.')
         shutil.move(os.path.join(tempdir, 'nodes', filename),
-                    os.path.join(MAP_FP, 'osm_nodes.' + extension))
+                    os.path.join(mapfp, 'osm_nodes.' + extension))
     shutil.rmtree(tempdir)
 
 
@@ -253,7 +309,6 @@ def get_connections(ways, nodes):
         nodes - a dict containing the roads connected to each node
         ways - the ways, with a unique osmid-fromnode-to-node string
     """
-
     node_info = {}
     for way in ways:
         # There are some collector roads and others that don't
@@ -455,40 +510,6 @@ def write_geojson(way_results, node_results, outfp):
         geojson.dump(feat_collection, outfile)
 
 
-def write_features(all_nodes_file):
-    """
-    Adds relevant features (at this time, only point-based)
-    from open street maps
-    """
-
-    all_node_results = fiona.open(all_nodes_file)
-
-    features = []
-    # Go through the rest of the nodes, and add any of them that have
-    # (hardcoded) open street map features that we care about
-    # For the moment, all_nodes only contains street nodes, so we'll
-    # only look at signals and crosswalks
-    for node in all_node_results:
-        if node['properties']['highway'] == 'crossing':
-            features.append(geojson.Feature(
-                geometry=geojson.Point(node['geometry']['coordinates']),
-                id=node['properties']['osmid'],
-                properties={'feature': 'crosswalk'},
-            ))
-
-        elif node['properties']['highway'] == 'traffic_signals':
-            features.append(geojson.Feature(
-                geometry=geojson.Point(node['geometry']['coordinates']),
-                id=node['properties']['osmid'],
-                properties={'feature': 'signal'},
-            ))
-
-    features = geojson.FeatureCollection(features)
-
-    with open(os.path.join(MAP_FP, 'features.geojson'), "w") as f:
-        json.dump(features, f)
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", type=str, required=True,
@@ -505,12 +526,13 @@ if __name__ == '__main__':
     MAP_FP = os.path.join(args.datadir, 'processed/maps')
     DOC_FP = os.path.join(args.datadir, 'docs')
     STANDARDIZED_FP = os.path.join(args.datadir, 'standardized')
-    
+    RAW_FP = os.path.join(args.datadir, 'raw')
+
     # If maps do not exist, create
     if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
        or args.forceupdate:
         print('Generating map from open street map...')
-        simple_get_roads(config)
+        simple_get_roads(config, MAP_FP)
 
     if not os.path.exists(os.path.join(MAP_FP, 'osm_elements.geojson')) \
        or args.forceupdate:
@@ -523,4 +545,3 @@ if __name__ == '__main__':
             DOC_FP
         )
 
-    write_features(os.path.join(MAP_FP, 'all_nodes', 'nodes', 'nodes.shp'))

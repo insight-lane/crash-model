@@ -9,6 +9,8 @@ timezone: Australia/Melbourne
 
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 50
+map_geography: shapefile
+boundary_shapefile: VicRoads_Regions.shp
 
 # The folder under data where this city's data is stored
 name: melbourne
@@ -66,22 +68,3 @@ openstreetmap_features:
     lanes: Number of lanes
   continuous:
     width_per_lane: Average width per lane
-
-
-# Additional data sources
-# Any csv file with rows corresponding to location points
-data_source:
-  - name: supp_file
-    filename: C:\Users\superuser\Documents\crash_prediction\data4democracy\crash-model\data\melbourne\raw\crashes\Crashes_Last_Five_Years_Supp1.csv
-    address:
-    date: ACCIDENT_DATE
-    time: ACCIDENT_TIME
-    category:
-    notes:
-    # Feature is 'categorical' or 'continuous'
-    feat: 'categorical'
-    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' 
-    feat_agg: 'default'
-    # if latest, the column name where the value can be found 
-    value: 'PEDESTRIAN'
-

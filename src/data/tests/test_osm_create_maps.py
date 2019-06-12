@@ -1,8 +1,12 @@
 import os
 import shutil
 from shapely.geometry import Polygon
+import networkx as nx
+import json
+import fiona
 from .. import osm_create_maps
 from .. import util
+from .. import config
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -76,3 +80,35 @@ def test_expand_polygon():
     assert result_shape.contains(records[0].point)
     assert result_shape.contains(records[1].point) is False
     assert result_shape.contains(records[2].point)
+
+
+def mockreturn(config):
+    G1 = nx.read_gpickle(os.path.join(TEST_FP, 'data', 'osm_output.gpickle'))
+    return G1
+
+
+def test_simple_get_roads(tmpdir, monkeypatch):
+
+    monkeypatch.setattr(osm_create_maps, 'get_graph', mockreturn)
+    c = config.Configuration(
+        os.path.join(TEST_FP, 'data', 'config_features.yml'))
+    osm_create_maps.simple_get_roads(c, tmpdir)
+
+    with open(os.path.join(tmpdir, 'features.geojson')) as f:
+        data = json.load(f)
+    signals = [x for x in data['features']
+               if x['properties']['feature'] == 'signal']
+    assert len(signals) == 2
+    intersections = [x for x in data['features']
+                     if x['properties']['feature'] == 'intersection']
+    assert len(intersections) == 14
+    crosswalks = [x for x in data['features']
+                  if x['properties']['feature'] == 'crosswalk']
+    assert len(crosswalks) == 9
+
+    nodes = fiona.open(os.path.join(tmpdir, 'osm_nodes.shp'))
+    ways = fiona.open(os.path.join(tmpdir, 'osm_ways.shp'))
+
+    # It's just coincidence that the number of ways and nodes is the same
+    assert len(nodes) == 28
+    assert len(ways) == 28
