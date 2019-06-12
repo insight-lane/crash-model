@@ -1,30 +1,46 @@
 import os
+import ruamel.yaml
 import pandas as pd
 from .. import train_model
+import data.config
+
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_get_features():
-    data = pd.DataFrame(data={
+def test_get_features(tmpdir):
+    test_data = pd.DataFrame(data={
         'width': [10, 12],
         'signal': [1, 0],
         'jam_percent': [1, 12],
         'lanes': [2, 1]
     })
-    f_cat, f_cont, feats = train_model.get_features(
-        {
-            'openstreetmap_features': {
-                'categorical': {
-                    'signal': 'Signal',
-                    'test_missing': 'Missing Field'
-                },
-                'continuous': {'missing': 'Missing Field'}
+    config_dict = {
+        'name': 'cambridge',
+        'city_latitude': 42.3600825,
+        'city_longitude': -71.0588801,
+        'city_radius': 15,
+        'crashes_files': 'dummy',
+        'city': "Cambridge, Massachusetts, USA",
+        'timezone': "America/New_York",
+        'openstreetmap_features': {
+            'categorical': {
+                'signal': 'Signal',
+                'test_missing': 'Missing Field'
             },
-            'atr': '',
-            'tmc': '',
-            'concern': ''
-        }, data)
+            'continuous': {'missing': 'Missing Field'}
+        },
+        'atr': '',
+        'tmc': '',
+        'concern': ''
+    }
+
+    config_filename = os.path.join(tmpdir, 'test.yml')
+    with open(config_filename, "w") as f:
+        ruamel.yaml.round_trip_dump(config_dict, f)
+    config = data.config.Configuration(config_filename)
+
+    f_cat, f_cont, feats = train_model.get_features(config, test_data)
     assert f_cat == ['signal']
     assert f_cont == []
     assert feats == ['signal']

@@ -1,46 +1,43 @@
 # City name
-city: Brisbane, Australia
+city: Melbourne, VIC, Australia
 # City centerpoint latitude & longitude (default geocoded values set)
-city_latitude: -27.4697707
-city_longitude: 153.0251235
+city_latitude: -37.8163
+city_longitude: 144.9631
 
 # City's time zone: defaults to the local time zone of computer initializing the city's config file
-timezone: Australia/Brisbane
-# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
-city_radius: 20
+timezone: Australia/Melbourne
 
-# By default, maps are created from OSM's polygon data and fall back to radius
-# if there is no polygon data, but but you can change the openstreetmap_geography
-# to 'radius' if preferred
-map_geography: polygon
+# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
+city_radius: 50
 
 # The folder under data where this city's data is stored
-name: brisbane
+name: melbourne
 
 # If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-startdate: 
-enddate: 
+startdate: 1/8/2013
+enddate:
+
 
 #################################################################
 # Configuration for data standardization
 
 # crash file configurations
 crashes_files:
-  test_crashes.csv:
+  C:\Users\superuser\Documents\crash_prediction\data4democracy\crash-model\data\melbourne\raw\crashes\Crashes_Last_Five_Years.csv:
     required:
-      id: 
-      latitude: 
-      longitude: 
+      id: ID
+      latitude: LATITUDE
+      longitude: LONGITUDE
       # If date supplied in single column:
-      date_complete: 
+      date_complete: ACCIDENT_DATE
       # If date is separated into year/month/day:
       date_year: 
       date_month: 
       # Leave date_day empty if not available
       date_day: 
       # If time is available and separate from date:
-      time: 
+      time: ACCIDENT_TIME
       # If time specified, time_format is one of:
       # default (HH:MM:SS)
       # seconds (since midnight)
@@ -52,7 +49,7 @@ crashes_files:
       # and you will need to run the geocode_batch script - see the README
       address: 
       vehicles: 
-      bikes: 
+      bikes:
 
 #################################################################
 # Configuration for default features
@@ -70,4 +67,21 @@ openstreetmap_features:
   continuous:
     width_per_lane: Average width per lane
 
+
+# Additional data sources
+# Any csv file with rows corresponding to location points
+data_source:
+  - name: supp_file
+    filename: C:\Users\superuser\Documents\crash_prediction\data4democracy\crash-model\data\melbourne\raw\crashes\Crashes_Last_Five_Years_Supp1.csv
+    address:
+    date: ACCIDENT_DATE
+    time: ACCIDENT_TIME
+    category:
+    notes:
+    # Feature is 'categorical' or 'continuous'
+    feat: 'categorical'
+    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' 
+    feat_agg: 'default'
+    # if latest, the column name where the value can be found 
+    value: 'PEDESTRIAN'
 

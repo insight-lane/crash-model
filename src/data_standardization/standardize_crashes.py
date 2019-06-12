@@ -5,17 +5,16 @@ import argparse
 import os
 import pandas as pd
 from pandas.io.json import json_normalize
-import yaml
 from collections import OrderedDict
 import csv
 import calendar
 import random
-import pytz
 import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
 from shapely.geometry import Point
 import geopandas as gpd
 from data.util import read_geocode_cache
+import data.config
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -292,18 +291,7 @@ if __name__ == '__main__':
 
     # load config
     config_file = args.config
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-
-    # by default standardize all available crashes
-    startdate = None
-    enddate = None
-
-    if config['startdate']:
-        startdate = str(config['startdate'])
-
-    if config['enddate']:
-        enddate = str(config['enddate'])
+    config = data.config.Configuration(config_file)
 
     crash_dir = os.path.join(args.datadir, "raw/crashes")
     if not os.path.exists(crash_dir):
@@ -312,9 +300,7 @@ if __name__ == '__main__':
     print("searching "+crash_dir+" for raw files:")
     dict_crashes = {}
 
-    for csv_file in list(config['crashes_files'].keys()):
-        csv_config = config['crashes_files'][csv_file]
-
+    for csv_file, csv_config in config.crashes_files.items():
         if not os.path.exists(os.path.join(crash_dir, csv_file)):
             raise SystemExit(os.path.join(
                 crash_dir, csv_file) + " not found, exiting")
@@ -332,11 +318,11 @@ if __name__ == '__main__':
             raw_crashes,
             csv_config['required'],
             csv_config['optional'],
-            pytz.timezone(config['timezone']),
+            config.timezone,
             args.datadir,
-            config['city'],
-            startdate,
-            enddate
+            config.city,
+            config.startdate,
+            config.enddate
         )
 
         print("{} crashes loaded with standardized fields, checking for specific fields".format(

@@ -15,14 +15,6 @@ enddate:
 ##############################################################################
 # Configuration for data standardization
 
-# List of concern type information
-concern_files:
-- name: concern
-  filename: Commonwealth_Connect_Service_Requests.csv
-  latitude: lat
-  longitude: lng
-  time: ticket_created_date_time
-
 # crash file configurations
 crashes_files:
   Crashes20152017.csv:
@@ -51,10 +43,6 @@ crashes_files:
       bikes:
 
 
-# concern column name
-# leave as '' if not adding concerns
-concern: seeclickfix
-
 # Additional data sources
 data_source:
 - name: parking_tickets
@@ -65,7 +53,14 @@ data_source:
   category: Violation Description
   notes:
     # Feature can be categorical (f_cat) or continuous (f_cont)
-  feat: f_cont
+  feat_type: continuous
+- name: seeclickfix
+  filename: Commonwealth_Connect_Service_Requests.csv
+  latitude: lat
+  longitude: lng
+  date: ticket_created_date_time
+  category: issue_type  
+#  feat_type: categorical
 
 openstreetmap_features:
   categorical:

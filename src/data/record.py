@@ -47,12 +47,3 @@ class Crash(Record):
     def timestamp(self):
         return parse(self.properties['dateOccurred'])
 
-
-class Concern(Record):
-    def __init__(self, properties):
-        Record.__init__(self, properties)
-
-    @property
-    def timestamp(self):
-        return parse(self.properties['dateCreated'])
-

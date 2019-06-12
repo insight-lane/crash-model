@@ -10,12 +10,13 @@ BASE_DIR = os.path.dirname(
 
 def data_standardization(config_file, DATA_FP, forceupdate=False):
     """
-    Standardize data from a csv file into compatible crashes and concerns
+    Standardize data from a csv file into compatible crashes
     according to a config file
     Args:
         config_file
         DATA_FP - data directory for this city
     """
+
     # standardize data, if the files don't already exist
     # or forceupdate
     if not os.path.exists(os.path.join(
@@ -33,29 +34,6 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
     else:
         print("Already standardized crash data, skipping")
 
-    
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-    
-    # There has to be concern data in the config file to try processing it
-    if ('concern_files' in list(config.keys())
-        and config['concern_files'] and not os.path.exists(os.path.join(
-            DATA_FP, 'standardized', 'concerns.json'))) or forceupdate:
-        subprocess.check_call([
-            'python',
-            '-m',
-            'data_standardization.standardize_concerns',
-            '-c',
-            config_file,
-            '-d',
-            DATA_FP
-        ])
-    else:
-        if 'concern_files' not in list(config.keys()) or not config['concern_files']:
-            print("No concerns defined in config file")
-        elif not forceupdate:
-            print("Already standardized concern data, skipping")
-
     # Handling volume data
     if (not os.path.exists(os.path.join(
             DATA_FP, 'standardized', 'volume.json'))) or forceupdate:
@@ -64,31 +42,27 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
             '-m',
             'data_standardization.standardize_volume',
             '-c',
-            config['name'],
+            config_file,
             '-d',
             DATA_FP
         ])
     else:
         print("Already standardized volume data, skipping")
 
-    if 'data_source' in config and config['data_source'] and \
-       (not os.path.exists(os.path.join(
-           DATA_FP, 'standardized', 'points.json'))):
+    if not os.path.exists(os.path.join(
+           DATA_FP, 'standardized', 'points.json')) or forceupdate:
         subprocess.check_call([
             'python',
             '-m',
             'data_standardization.standardize_point_data',
             '-c',
-            os.path.join(BASE_DIR, 'src', 'config',
-                         'config_' + config['name'] + '.yml'),
+            config_file,
             '-d',
             DATA_FP
         ])
     else:
-        if 'data_source' not in config or not config['data_source']:
-            print("No point data found, skipping")
-        else:
-            print("Already standardized point data, skipping")
+        print("Already standardized point data, skipping")
+    forceupdate = True
 
     if os.path.exists(os.path.join(DATA_FP, 'raw', 'waze')) and \
        (not os.path.exists(os.path.join(BASE_DIR, 'standardized', 'waze.json')
@@ -98,8 +72,7 @@ def data_standardization(config_file, DATA_FP, forceupdate=False):
             '-m',
             'data_standardization.standardize_waze_data',
             '-c',
-            os.path.join(BASE_DIR, 'src', 'config',
-                         'config_' + config['name'] + '.yml'),
+            config_file,
             '-d',
             DATA_FP,
             # The script can filter by dates, but if this is something

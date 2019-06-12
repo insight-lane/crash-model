@@ -2,9 +2,8 @@ import argparse
 import os
 import pandas as pd
 from collections import OrderedDict
-import yaml
-import pytz
 from . import standardization_util
+import data.config
 
 CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
@@ -14,7 +13,7 @@ BASE_FP = os.path.dirname(CURR_FP)
 def read_file_info(config, datadir):
 
     points = []
-    for source_config in list(config['data_source']):
+    for source_config in list(config.data_source):
 
         print("Processing {} data".format(source_config['name']))
         csv_file = source_config['filename']
@@ -25,25 +24,27 @@ def read_file_info(config, datadir):
         df = pd.read_csv(filepath, na_filter=False)
         rows = df.to_dict("records")
         missing = 0
+        missing_date = 0
         for row in rows:
             lat = None
             lon = None
-            street = None
             if 'latitude' in source_config and 'longitude' in source_config:
                 lat = row[source_config['latitude']]
                 lon = row[source_config['longitude']]
             elif 'address' in source_config:
-                street, lat, lon = standardization_util.parse_address(
+                _, lat, lon = standardization_util.parse_address(
                     row[source_config['address']])
             if lat and lon:
                 time = None
-
+                
                 if 'time' in source_config and source_config['time']:
                     time = row[source_config['time']]
-
+                date_time = row[source_config['date']]
+                if not date_time:
+                    missing_date += 1
+                    continue
                 date_time = standardization_util.parse_date(
-                    row[source_config['date']], pytz.timezone(
-                        config['timezone']), time=time)
+                    row[source_config['date']], config.timezone, time=time)
                 updated_row = OrderedDict([
                     ("feature", source_config["name"]),
                     ("date", date_time),
@@ -52,8 +53,6 @@ def read_file_info(config, datadir):
                         ("longitude", lon)
                     ]))
                 ])
-                if street:
-                    updated_row['street'] = street
                 if "category" in source_config and source_config['category']:
                     updated_row['category'] = row[source_config['category']]
                 if "notes" in source_config and source_config['notes']:
@@ -67,7 +66,10 @@ def read_file_info(config, datadir):
             else:
                 missing += 1
 
-        print("{} entries didn't have a lat/lon".format(missing))
+        if missing:
+            print("{} entries didn't have a lat/lon".format(missing))
+        if missing_date:
+            print("{} entries didn't have a date".format(missing_date))
     if points:
 
         schema_path = os.path.join(os.path.dirname(BASE_FP),
@@ -90,10 +92,8 @@ if __name__ == '__main__':
 
     # load config for this city
     config_file = os.path.join(BASE_FP, args.config)
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-
-    if 'data_source' in config:
+    config = data.config.Configuration(config_file)
+    if config.data_source:
         read_file_info(config, args.datadir)
-
-    
+    else:
+        print("No point data found, skipping")    
