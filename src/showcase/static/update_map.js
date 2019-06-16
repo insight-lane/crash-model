@@ -8,7 +8,7 @@ var riskColor = d3.scaleLinear()
 	.domain([0.2, 0.4, 0.6, 0.8])
 	.range(["#ffe0b2", "#ffb74d", "#ff9800", "#f57c00"]);
 
-
+console.log(city.file)
 d3.json(city.file, function(data) {
 
 	for (var segment in data.features) {
