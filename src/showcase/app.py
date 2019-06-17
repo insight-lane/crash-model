@@ -1,22 +1,11 @@
 import os
-import json
 from flask import Flask, render_template, send_from_directory
 
 
 app = Flask(__name__)
 
 
-DATA_FP = os.path.join(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.dirname(os.path.abspath(__file__)))), 'data')
-CURR_FP = os.path.dirname(os.path.abspath(__file__))
-
-
-def get_default_city():
-    with open(os.path.join(CURR_FP, 'static', 'config.json'), 'r') as f:
-        config = json.load(f)
-    return config[0]['id']
+CONFIG_FILE = os.path.join('static', 'config.js')
 
 
 @app.route('/data/<path:path>')
@@ -26,12 +15,16 @@ def static_files(path):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-
+    if 'CONFIG_FILE' in os.environ:
+        global CONFIG_FILE
+        CONFIG_FILE = os.environ['CONFIG_FILE']
     return render_template(
         'index.html',
-        mapbox_token=os.environ['MAPBOX_TOKEN']
+        mapbox_token=os.environ['MAPBOX_TOKEN'],
+        config_file=CONFIG_FILE
     )
 
 
 if __name__ == '__main__':
+
     app.run(host='0.0.0.0')
