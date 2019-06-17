@@ -210,7 +210,7 @@
 		$('#city_name').text(city.name);
 
 		// create base map
-		mapboxgl.accessToken = config.MAPBOX_TOKEN;
+		mapboxgl.accessToken = "{{ mapbox_token }}";
 
 		var map = new mapboxgl.Map({
 		  container: 'city_map',
