@@ -35,34 +35,36 @@ def combine_predictions_and_segments(predictions, segments):
 
     print("combining predictions with segments")
     combined_preds = []
+
+    # turns segments into a dict for quick lookup
+    segments_dict = {str(segment["id"]): segment for segment in segments}
+
     for pred_data in predictions:
+        segment = segments_dict[str(pred_data["segment_id"])]
+        prop = {
+            "prediction": pred_data["prediction"],
+            "target": pred_data["target"],
+            "segment_id": pred_data["segment_id"]
+        }
+        # Eventually handle osm_speed vs SPEEDLIMIT as part
+        # of the configuration
+        if 'SPEEDLIMIT' in pred_data:
+            prop['SPEEDLIMIT'] = pred_data['SPEED_LIMIT']
+        elif 'osm_speed' not in pred_data:
+            prop['osm_speed'] = 0
+        else:
+            prop['osm_speed'] = pred_data['osm_speed']
 
-        for segment in segments:
-            # find the matching segment to obtain the display name
-            if str(pred_data["segment_id"]) == str(segment["id"]):
-                prop = {
-                    "prediction": pred_data["prediction"],
-                    "target": pred_data["target"],
-                    "segment_id": pred_data["segment_id"]
-                }
-                # Eventually handle osm_speed vs SPEEDLIMIT as part
-                # of the configuration
-                if 'SPEEDLIMIT' in pred_data:
-                    prop['SPEEDLIMIT'] = pred_data['SPEED_LIMIT']
-                else:
-                    prop['osm_speed'] = pred_data['osm_speed']
-
-                prop["segment"] = {
-                    "id": str(segment["id"]),
-                    "display_name": segment["properties"]["display_name"],
-                    "center_x": segment["properties"]["center_x"],
-                    "center_y": segment["properties"]["center_y"]
-                }
-                combined_preds.append(geojson.Feature(
-                    geometry=segment["geometry"],
-                    properties=prop
-                ))
-                break
+        prop["segment"] = {
+            "id": str(segment["id"]),
+            "display_name": segment["properties"]["display_name"],
+            "center_x": segment["properties"]["center_x"],
+            "center_y": segment["properties"]["center_y"]
+        }
+        combined_preds.append(geojson.Feature(
+            geometry=segment["geometry"],
+            properties=prop
+        ))
 
     # Sort highest risk to lowest risk
     combined_preds = sorted(
