@@ -3,7 +3,6 @@ city: Los Angeles, CA, USA
 # City centerpoint latitude & longitude (default geocoded values set)
 city_latitude: 34.0522
 city_longitude: -118.2437
-
 # City's time zone: defaults to the local time zone of computer initializing the city's config file
 timezone: America/Los_Angeles
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
@@ -14,7 +13,7 @@ name: losangeles
 
 # If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-startdate: 1/1/2016
+startdate: 
 enddate: 
 
 #################################################################
@@ -22,20 +21,20 @@ enddate:
 
 # crash file configurations
 crashes_files:
-  LA_TrafficData.csv:
+  LA_collision_data.csv:
     required:
       id: ID
-      latitude: Latitude 
-      longitude: Longitude
+      latitude: point_y
+      longitude: point_x
       # If date supplied in single column:
-      date_complete: Date
+      date_complete: collision_date
       # If date is separated into year/month/day:
       date_year: 
       date_month: 
       # Leave date_day empty if not available
       date_day: 
       # If time is available and separate from date:
-      time: Time
+      time: collision_time
       # If time specified, time_format is one of:
       # default (HH:MM:SS)
       # seconds (since midnight)
@@ -45,7 +44,7 @@ crashes_files:
       summary: 
       # If the crash file doesn't have a lat/lon, you must give the address field
       # and you will need to run the geocode_batch script - see the README
-      address: Address
+      address: 
       vehicles: 
       bikes: 
 
@@ -64,5 +63,7 @@ openstreetmap_features:
     lanes: Number of lanes
   continuous:
     width_per_lane: Average width per lane
+
+
 
 
