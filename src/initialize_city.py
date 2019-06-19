@@ -28,6 +28,7 @@ def write_default_features(f, waze=False, supplemental=[],
     # To change the default features, modify this data structure
     osm = {
         "categorical": [
+            'osm_speed: Speed limit',
             'width: Width',
             'cycleway_type: Bike lane',
             'signal: Signal',

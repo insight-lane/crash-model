@@ -2,6 +2,7 @@ import argparse
 import yaml
 import os
 import subprocess
+import shutil
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -153,6 +154,19 @@ def visualize(DATA_FP, config_file):
         '-c',
         config_file
     ])
+
+    # Copy files into showcase directory
+    showcase_dir = os.path.join(BASE_DIR, 'src', 'showcase', 'data')
+    if not os.path.exists(showcase_dir):
+        os.makedirs(showcase_dir)
+    shutil.copyfile(
+        os.path.join(DATA_FP, 'processed', 'preds_viz.geojson'),
+        os.path.join(showcase_dir, config['name'], 'preds_viz.geojson'))
+    shutil.copyfile(
+        os.path.join(DATA_FP, 'standardized', 'crashes_rollup.geojson'),
+        os.path.join(showcase_dir, config['name'], 'crashes_rollup.geojson'))
+
+    
 
 
 if __name__ == '__main__':

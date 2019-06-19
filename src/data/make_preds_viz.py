@@ -19,6 +19,7 @@ import pandas as pd
 import geojson
 import sys
 
+
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.dirname(
@@ -35,21 +36,39 @@ def combine_predictions_and_segments(predictions, segments):
     print("combining predictions with segments")
     combined_preds = []
     for pred_data in predictions:
+
         for segment in segments:
             # find the matching segment to obtain the display name
             if str(pred_data["segment_id"]) == str(segment["id"]):
-                pred_data["segment"] = {
+                prop = {
+                    "prediction": pred_data["prediction"],
+                    "target": pred_data["target"],
+                }
+                # Eventually handle osm_speed vs SPEEDLIMIT as part
+                # of the configuration
+                if 'SPEEDLIMIT' in pred_data:
+                    prop['SPEEDLIMIT'] = pred_data['SPEED_LIMIT']
+                else:
+                    prop['osm_speed'] = pred_data['osm_speed']
+
+                prop["segment"] = {
                     "id": str(segment["id"]),
                     "display_name": segment["properties"]["display_name"],
                     "center_x": segment["properties"]["center_x"],
                     "center_y": segment["properties"]["center_y"]
                 }
-
                 combined_preds.append(geojson.Feature(
                     geometry=segment["geometry"],
-                    properties=pred_data,
+                    properties=prop
                 ))
                 break
+
+    # Sort highest risk to lowest risk
+    combined_preds = sorted(
+        combined_preds,
+        key=lambda x: x['properties']['prediction'],
+        reverse=True
+    )
 
     return combined_preds
 

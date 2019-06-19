@@ -8,6 +8,7 @@ crashes_files: dummy
 
 openstreetmap_features:
   categorical:
+    osm_speed: Speed limit
     width: Width
     cycleway_type: Bike lane
     oneway: One Way
