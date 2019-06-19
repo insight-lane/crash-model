@@ -14,10 +14,6 @@ d3.json(city.file, function(data) {
 		segments.push(data.features[segment].properties);
 	}
 
-	segments.sort(function(a, b) {
-		return d3.descending(a.prediction, b.prediction);
-	})
-
 	var midpoint = Math.floor(segments.length/2);
 	var median = segments[midpoint].prediction;
 
@@ -136,7 +132,6 @@ function populateSegmentInfo(segmentID) {
 	else {
 		d3.select("#segment_details #interventionsTbl .interventionEffect").text("n/a");
 	}
-
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
 	d3.select('#segment_details').classed('visible', true);
