@@ -175,7 +175,7 @@
 				}
 			}
 		}
-				
+
 		// Populate the city selector with all other cities
 		var citySelector = $('#city_selector');
 		$.each(config.showcase, function(key, scCity) {
@@ -184,15 +184,15 @@
     			citySelector.append($('<option />').val(scCity.id).text(scCity.name));
 			}
 		});
-		
+
 		// Swap cities when requested
 		$('#city_selector').on('change', function ()
 		{
 				window.location = location.origin + location.pathname + "?city=" + $(this).val();
 		});
-		
+
 	</script>
-	
+
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<!-- // <script src="js/make_plots.js"></script> -->
 	<script src="js/update_map.js"></script>
@@ -205,6 +205,7 @@
 		});
 
 		// insert city name
+		// var city = config.showcase[4];
 		$('#city_name').text(city.name);
 
 		// create base map
@@ -271,7 +272,7 @@
 				type: 'circle',
 				source: {
 					type: 'geojson',
-					data: 'crashes_rollup.geojson'
+					data: city.crashes
 				},
 				layout: {
 					visibility: 'none'

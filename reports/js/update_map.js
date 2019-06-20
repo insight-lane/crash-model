@@ -8,7 +8,7 @@ var riskColor = d3.scaleLinear()
 	.domain([0.2, 0.4, 0.6, 0.8])
 	.range(["#ffe0b2", "#ffb74d", "#ff9800", "#f57c00"]);
 
-
+// var city = config.showcase[4];
 d3.json(city.file, function(data) {
 
 	for (var segment in data.features) {
@@ -36,61 +36,7 @@ d3.json(city.file, function(data) {
 
 	makeBarChart(0, median);
 	// populateFeatureImportancesTbl(data);
-	// add crash layer to map so user can view if they choose
-	d3.json(city.crashes, function(data) {
-		// load in standardized crash json and gets total number of crashes by location
-		var summedData = totalCrashesByLocation(data);
-		var maxCrashes = d3.max(summedData, function(d) { return d.value;});
-
-		// then convert the aggregated json into a geojson so it can be displayed on map
-		var crashGeojson = buildGeojson(summedData);
-
-		// on intiial load, do not display crashes
-		map.addLayer({
-			id: 'crashes',
-			type: 'circle',
-			source: {
-				type: 'geojson',
-				data: crashGeojson
-			},
-			layout: {
-				visibility: 'none'
-			},
-			paint: {
-				'circle-radius': {
-					property: 'total_crashes',
-					type: 'exponential',
-					stops: [
-						[1, 3],
-						[maxCrashes, 20]
-					]
-				},
-				'circle-color': '#fff',
-				'circle-stroke-color': '#fff',
-				'circle-opacity': 0.5
-			},
-		}, 'admin-2-boundaries-dispute');
-
-		map.on('click', 'crashes', function(e) {
-			var coordinates = e.features[0].geometry.coordinates.slice();
-			var crashes = e.features[0].properties.total_crashes;
-
-			new mapboxgl.Popup()
-				.setLngLat(coordinates)
-				.setText(crashes > 1 ? crashes + " crashes" : "1 crash")
-				.addTo(map);
-		});
-
-		map.on('mouseenter', 'crashes', function() {
-			map.getCanvas().style.cursor = 'pointer';
-		});
-
-		map.on('mouseleave', 'crashes', function() {
-			map.getCanvas().style.cursor = '';
-		});
-	})
-
-})
+});
 
 function splitSegmentName(segmentName) {
 	var i = segmentName.length;
@@ -294,7 +240,7 @@ function getFilterValues() {
 function update_map(map) {
 	filters = getFilterValues();
 	var new_filter;
-	
+
 	if(cityId === "boston") {
 		new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
 	}
@@ -307,7 +253,7 @@ function update_map(map) {
 
 // event handlers to toggle crashes layer
 d3.select("#checkbox_crashes").on("change", function() {
-	if(this.checked) {
+	if(d3.select("#checkbox_crashes").property("checked")) {
 		map.setLayoutProperty('crashes', 'visibility', 'visible');
 	}
 	else {
