@@ -76,13 +76,6 @@ function populateSegmentInfo(segmentID) {
 	// update feature importances based on segment's attributes
 	// updateFeatureImportances(segmentData);
 
-	// populate intervention data
-	if(segmentData.SPEEDLIMIT > 20) {
-		d3.select("#segment_details #interventionsTbl .interventionEffect").text(DECIMALFMT(segmentData.predicted));
-	}
-	else {
-		d3.select("#segment_details #interventionsTbl .interventionEffect").text("n/a");
-	}
 
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);
