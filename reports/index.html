@@ -54,9 +54,13 @@
 			</div>
 			<div class="filter speedlimit">
 				<label for="speed_selector">Speed limit greater than: </label>
-				<output for="speed_selector" id="selected_speed">5mph</output>
-				<input type="range" id="speed_slider" autocomplete="off" min="5" max="50" step="5" value="5">
+				<output for="speed_selector" id="selected_speed">0km/h</output>
+				<input type="range" id="speed_slider" autocomplete="off" min="0" max="100" step="10" value="0">
 			</div>
+		</div>
+		<hr>
+		<div class="attribution">
+			<p>Insight Lane is a Data4Democracy project. Learn more about us here.</p>
 		</div>
 	</div>
 
@@ -177,7 +181,7 @@
 		});
 
 		// insert city name
-		// var city = config.showcase[4];
+		var city = config.showcase[4];
 		$('#city_name').text(city.name);
 
 		// create base map

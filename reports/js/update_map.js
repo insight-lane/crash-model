@@ -8,7 +8,7 @@ var riskColor = d3.scaleLinear()
 	.domain([0.2, 0.4, 0.6, 0.8])
 	.range(["#ffe0b2", "#ffb74d", "#ff9800", "#f57c00"]);
 
-// var city = config.showcase[4];
+var city = config.showcase[4];
 d3.json(city.file, function(data) {
 
 	for (var segment in data.features) {
@@ -215,7 +215,7 @@ d3.select('#risk_slider').on("input", function() {
 d3.select('#speed_slider').on("input", function() {
 
 	// update values displayed next to slider
-	d3.select('#selected_speed').text(this.value + "mph");
+	d3.select('#selected_speed').text(this.value + "km/h");
 
 	update_map(map);
 });
