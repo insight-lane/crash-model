@@ -346,4 +346,19 @@ th {
 
 .attribution {
     font-size: 0.75em;
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    grid-gap: 10px;
+}
+
+.d4dLogo .star {
+    fill: #eb4d4c;
+}
+
+.attribution p {
+    margin: 0;
+}
+
+.attribution a {
+    color: #fff;
 }
