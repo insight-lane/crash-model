@@ -4,12 +4,27 @@ Crash Modeling
 Outline:
 -----------------------
  - Project Overview
- - Project Background
- - Connect
+ - Data Sources and Modelling
  - Getting Started
+ - Connect with us
+ - Project Organization
 
 Project Overview
 -----------------------
+
+**Motivation**
+
+This project was originally begun as a collaboration between Data4Democracy and the City of Boston.
+
+On Jan 25th, 2017, [9 pedestrians were hit in Boston by vehicles](http://www.bostonherald.com/news/local_coverage/2017/01/battle_for_safer_streets_nine_pedestrians_hit_in_boston_in_1_day). While this was a particularly dangerous day, there were 21 fatalities and over 4000 severe injuries due to crashes in 2016 alone, representing a public health issue for all those who live, work, or travel in Boston. The City of Boston would like to partner with Data For Democracy to help develop a dynamic prediction system that they can use to identify potential trouble spots to help make Boston a safer place for its citizens by targeting timely interventions to prevent crashes before they happen.
+
+This is part of the City's long-term [Vision Zero initiative](http://www.visionzeroboston.org/), which is committed to the goal of zero fatal and serious traffic crashes in the city by 2030. The Vision Zero concept was first conceived in Sweden in 1997 and has been widely credited with a significant reduction in fatal and serious crashes on Sweden’s roads in the decades since then. Cities across the United States are adopting bold Vision Zero initiatives that share these common principles.
+
+> Children growing up today deserve...freedom and mobility. Our seniors should be able to safely get around the communities they helped build and have access to the world around them. Driving, walking, or riding a bike on Boston’s streets should not be a test of courage.
+>
+> — Mayor Martin J. Walsh
+
+
 **What is the goal of the project?**
 
 The goal of the project is to promote the development of safer roads by identifying areas of high risk in a city's road network. It seeks to support the decision-making of transportation departments in 3 ways:
@@ -22,7 +37,8 @@ The goal of the project is to promote the development of safer roads by identify
 
 **Who are the intended users of the project?**
 
-Though originally begun as a collaboration between Data4Democracy and the City of Boston, the project is now being developed to work for any city that wishes to use it. City transportation departments and those responsible for managing risk on road networks are the intended users.
+Though originally a collaboration between Data4Democracy and the City of Boston, the project is now being developed to work for any city that wishes to use it. The intended users include city transportation departments, those responsible for managing risk on road networks and individuals interested in crash risk.
+
 
 **How does the project achieve its goal?**
 
@@ -54,49 +70,46 @@ The intended roadmap of development for the project can be found at [https://git
 
 **How can I access the project?**
 
-This repo can be downloaded and run in its entirity using Docker, or you can see a current deployment of the project at [https://insightlane.org](https://insightlane.org).
+This repo can be downloaded and run in its entirety using Docker, or you can see a current deployment of the project at [https://insightlane.org](https://insightlane.org).
 
-Project Background
+
+Data Sources and Modelling
 -----------------------
+### Data Sources
+-	[Open street maps network and features](https://wiki.openstreetmap.org/wiki/Map_Features)
+-	Crash data must be provided (see data standards)
+-	Pipeline can incorporate other networks and features (see using custom data sources)
+-	All our processed data is in a private repository in data.world -- ping a project lead or maintainer on Slack to get access. More detailed documentation is contained there.
 
-This project was originally begun as a collaboration between Data4Democracy and the City of Boston.
 
-On Jan 25th, 2017, [9 pedestrians were hit in Boston by vehicles](http://www.bostonherald.com/news/local_coverage/2017/01/battle_for_safer_streets_nine_pedestrians_hit_in_boston_in_1_day). While this was a particularly dangerous day, there were 21 fatalities and over 4000 severe injuries due to crashes in 2016 alone, representing a public health issue for all those who live, work, or travel in Boston. The City of Boston would like to partner with Data For Democracy to help develop a dynamic prediction system that they can use to identify potential trouble spots to help make Boston a safer place for its citizens by targeting timely interventions to prevent crashes before they happen.
-
-This is part of the City's long-term [Vision Zero initiative](http://www.visionzeroboston.org/), which is committed to the goal of zero fatal and serious traffic crashes in the city by 2030. The Vision Zero concept was first conceived in Sweden in 1997 and has been widely credited with a significant reduction in fatal and serious crashes on Sweden’s roads in the decades since then. Cities across the United States are adopting bold Vision Zero initiatives that share these common principles.
-
-> Children growing up today deserve...freedom and mobility. Our seniors should be able to safely get around the communities they helped build and have access to the world around them. Driving, walking, or riding a bike on Boston’s streets should not be a test of courage.
->
-> — Mayor Martin J. Walsh
-
-Connect
------------------------
-Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](https://www.datafordemocracy.org/join-us)!
-
-Leads:
- - [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
- - [@j-t-t](https://datafordemocracy.slack.com/messages/@j-t-t)
- - [@alicefeng](https://datafordemocracy.slack.com/messages/@alicefeng)
- - [@terryf82](https://datafordemocracy.slack.com/messages/@terryf82)
+### Data Model 
+-	The [data dictionary](https://github.com/Data4Democracy/crash-model/blob/master/docs/model_data_dictionary.md) contains information about the default features included in the model 
+-	As of V2.0, the models tests [Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html) vs [XGBoost](https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier) and picks the best performing (based on [ROC AUC](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html))
 
 Getting Started
 -----------------------
-### Contributing:
-- **"First-timers" are welcome!** Whether you're trying to learn data science, hone your coding skills, or get started collaborating over the web, we're happy to help. If you have any questions feel free to pose them on our Slack channel, or reach out to one of the team leads. If you have questions about Git and GitHub specifically, our [github-playground repo](https://github.com/Data4Democracy/github-playground) and the [#github-help](https://datafordemocracy.slack.com/messages/github-help) Slack channel are good places to start.
-- **Feeling comfortable with GitHub, and ready to dig in?** Check out our GitHub issues and projects. This is our official listing of the work that we are planning to get done.
-- **This README is a living document:** If you see something you think should be changed, feel free to edit and submit a pull request. Not only will this be a huge help to the group, it is also a great first PR!
-- **Got an idea for something we should be working on?** You can submit an issue on our GitHub page, mention your idea on Slack, or reach out to one of the project leads.
+## Setting up
 
 ### Dependencies:
 Most of the work on this project so far has been done in Python, in Jupyter notebooks.
 - Python 3.6 (we recommend [Anaconda](https://www.continuum.io/downloads))
 - conda (included with Anaconda)
 
+### Module Dependencies
+If using conda, you can get all the depencies using the [environment_linux.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_linux.yml), [environment_mac.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_mac.yml), or [environment_pc.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_pc.yml) files.
+Python modules: Use requirements\_spatial.txt
+
+
+rtree additionally requires download and installation of [libspatialindex](http://libspatialindex.github.io/)
+(For Anaconda install, can use [conda-forge](https://anaconda.org/conda-forge/libspatialindex))
+
+
 ### Environment:
 You'll want to reproduce the packages and package versions required to run code in this repo, ideally in a virtual environment to avoid conflicts with other projects you may be working on. We have a version of environment.yml without versions, but recommend you use the pinned version for your operating system (environment_linux.yml, environment_mac.yml, or environment_pc.yml) since they shouldn't break if newer conda packages break).
 
     $ conda env create -f [environment_linux.yml or other environment file]
     $ activate crash-model
+
 
 ### Docker:
 A basic [Docker](https://www.docker.com) image has been created to run the project in a container, using the ContinuumIO miniconda3 base image (Python 3.6). The virtual environment 'crash-model' is installed and activated when the image is started via container, as well as an apache2 webserver via supervisord to serve the visualization.
@@ -126,30 +139,44 @@ Once you have a running container, you can get a shell on it to run the pipeline
 
 	$ docker exec -it bcm.local /bin/bash
 
-### Data:
 
-At the moment, the [RF benchmark model](https://github.com/Data4Democracy/crash-model/blob/master/notebooks/benchmark/crash_predict_benchmark.ipynb) is running off of a dataset of historical crashes in 2016 per street segment + week. All our processed data is in a private repository in data.world [here](https://data.world/data4democracy/boston-crash-model) -- ping a project lead or maintainer on Slack to get access. More detailed documentation is contained there.
+## Contributing
+"First-timers" are welcome! Whether you're trying to learn data science, hone your coding skills, or get started collaborating over the web, we're happy to help. If you have any questions feel free to pose them on our [Slack channel](https://datafordemocracy.slack.com/messages/p-crash-model), or reach out to one of the team leads. If you have questions about Git and GitHub specifically, our github-playground repo and the #github-help Slack channel are good places to start.
 
-Data can be downloaded from the web frontend to data.world; it is expected to reside in the data directory.
 
-At a high level, there are a variety of raw data sources available to us:
-- Historical [crash data](http://app01.cityofboston.gov/VisionZero)
-- Street segment inventories
-- The Vision Zero crowdsourced [concerns map](http://app01.cityofboston.gov/VZSafety)
-- [Other open city data](https://data.boston.gov/) (constituent requests, liquor licenses, assessing data)
+**I want to know what’s going on and pick up a task I like**
+-	Open tasks are available [here](https://github.com/Data4Democracy/crash-model/issues)
+-	Issues pertaining towards upcoming releases are available [here](https://github.com/Data4Democracy/crash-model/projects)
 
-Building off of [Vision Zero crash data](http://app01.cityofboston.gov/VisionZero) & the [Vision Zero concerns map](http://app01.cityofboston.gov/VZSafety).
 
-### Project Organization
-------------
+**I want to add a new city**
+-	See instructions in src README
+
+**I want to add a new city to our showcase**
+-	Link to onboard showcase
+
+
+Connect with us
+-----------------------
+Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](https://www.datafordemocracy.org/join-us)!
+
+Leads:
+ - [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
+ - [@j-t-t](https://datafordemocracy.slack.com/messages/@j-t-t)
+ - [@alicefeng](https://datafordemocracy.slack.com/messages/@alicefeng)
+ - [@terryf82](https://datafordemocracy.slack.com/messages/@terryf82)
+
+
+Project Organization
+-----------------------
 
     ├── LICENSE
     ├── README.md          <- The top-level README for developers using this project.
     ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
+    │   ├── external       <- Data from third party sources.
+    │   ├── interim        <- Intermediate data that has been transformed.
+    │   ├── processed      <- The final, canonical data sets for modeling.
+    │   └── raw            <- The original, immutable data dump.
     │
     ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
     │
@@ -162,26 +189,26 @@ Building off of [Vision Zero crash data](http://app01.cityofboston.gov/VisionZer
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     │
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
+    │   └── figures        <- Generated graphics and figures to be used in reporting
     │
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
     │
     ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
+    │   ├── __init__.py    <- Makes src a Python module
     │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
+    │   ├── data           <- Scripts to download or generate data
+    │   │   └── make_dataset.py
     │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
+    │   ├── features       <- Scripts to turn raw data into features for modeling
+    │   │   └── build_features.py
     │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
+    │   ├── models         <- Scripts to train models and then use trained models to make
     │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
+    │   │   ├── predict_model.py
+    │   │   └── train_model.py
     │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
+    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
+    │       └── visualize.py
 
 <p><small>Project structure based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
