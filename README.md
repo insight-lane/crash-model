@@ -75,37 +75,43 @@ This repo can be downloaded and run in its entirety using Docker, or you can see
 
 Data Sources and Modelling
 -----------------------
-###Data Sources
+### Data Sources
 -	[Open street maps network and features](https://wiki.openstreetmap.org/wiki/Map_Features)
 -	Crash data must be provided (see data standards)
 -	Pipeline can incorporate other networks and features (see using custom data sources)
 -	All our processed data is in a private repository in data.world -- ping a project lead or maintainer on Slack to get access. More detailed documentation is contained there.
 
 
-###Data Model 
+### Data Model 
 -	The [data dictionary](https://github.com/Data4Democracy/crash-model/blob/master/docs/model_data_dictionary.md) contains information about the default features included in the model 
 -	As of V2.0, the models tests [Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html) vs [XGBoost](https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier) and picks the best performing (based on [ROC AUC](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html))
 
 Getting Started
 -----------------------
-###Setting up
-**Dependencies:**
+## Setting up
+
+### Dependencies:
 Most of the work on this project so far has been done in Python, in Jupyter notebooks.
 - Python 3.6 (we recommend [Anaconda](https://www.continuum.io/downloads))
 - conda (included with Anaconda)
-**Module Dependencies**
+
+### Module Dependencies
 If using conda, you can get all the depencies using the [environment_linux.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_linux.yml), [environment_mac.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_mac.yml), or [environment_pc.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_pc.yml) files.
 Python modules: Use requirements\_spatial.txt
 
+
 rtree additionally requires download and installation of [libspatialindex](http://libspatialindex.github.io/)
 (For Anaconda install, can use [conda-forge](https://anaconda.org/conda-forge/libspatialindex))
-**Environment:**
+
+
+### Environment:
 You'll want to reproduce the packages and package versions required to run code in this repo, ideally in a virtual environment to avoid conflicts with other projects you may be working on. We have a version of environment.yml without versions, but recommend you use the pinned version for your operating system (environment_linux.yml, environment_mac.yml, or environment_pc.yml) since they shouldn't break if newer conda packages break).
 
     $ conda env create -f [environment_linux.yml or other environment file]
     $ activate crash-model
 
-**Docker:**
+
+### Docker:
 A basic [Docker](https://www.docker.com) image has been created to run the project in a container, using the ContinuumIO miniconda3 base image (Python 3.6). The virtual environment 'crash-model' is installed and activated when the image is started via container, as well as an apache2 webserver via supervisord to serve the visualization.
 
 You can download the latest stable image from D4D's Docker Hub repo by running the following command, from a machine with the Docker engine installed:
@@ -134,7 +140,7 @@ Once you have a running container, you can get a shell on it to run the pipeline
 	$ docker exec -it bcm.local /bin/bash
 
 
-###Contributing
+## Contributing
 "First-timers" are welcome! Whether you're trying to learn data science, hone your coding skills, or get started collaborating over the web, we're happy to help. If you have any questions feel free to pose them on our [Slack channel](https://datafordemocracy.slack.com/messages/p-crash-model), or reach out to one of the team leads. If you have questions about Git and GitHub specifically, our github-playground repo and the #github-help Slack channel are good places to start.
 
 
