@@ -159,12 +159,16 @@ def visualize(DATA_FP, config_file):
     showcase_dir = os.path.join(BASE_DIR, 'src', 'showcase', 'data')
     if not os.path.exists(showcase_dir):
         os.makedirs(showcase_dir)
+
+    showcase_dir = os.path.join(showcase_dir, config['name'])
+    if not os.path.exists(showcase_dir):
+        os.makedirs(showcase_dir)
     shutil.copyfile(
         os.path.join(DATA_FP, 'processed', 'preds_viz.geojson'),
-        os.path.join(showcase_dir, config['name'], 'preds_viz.geojson'))
+        os.path.join(showcase_dir, 'preds_viz.geojson'))
     shutil.copyfile(
         os.path.join(DATA_FP, 'standardized', 'crashes_rollup.geojson'),
-        os.path.join(showcase_dir, config['name'], 'crashes_rollup.geojson'))
+        os.path.join(showcase_dir, 'crashes_rollup.geojson'))
 
     
 

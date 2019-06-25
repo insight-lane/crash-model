@@ -49,7 +49,7 @@ def combine_predictions_and_segments(predictions, segments):
         # Eventually handle osm_speed vs SPEEDLIMIT as part
         # of the configuration
         if 'SPEEDLIMIT' in pred_data:
-            prop['SPEEDLIMIT'] = pred_data['SPEED_LIMIT']
+            prop['SPEEDLIMIT'] = pred_data['SPEEDLIMIT']
         elif 'osm_speed' not in pred_data:
             prop['osm_speed'] = 0
         else:
@@ -61,6 +61,7 @@ def combine_predictions_and_segments(predictions, segments):
             "center_x": segment["properties"]["center_x"],
             "center_y": segment["properties"]["center_y"]
         }
+
         combined_preds.append(geojson.Feature(
             geometry=segment["geometry"],
             properties=prop

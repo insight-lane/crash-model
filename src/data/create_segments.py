@@ -500,8 +500,9 @@ def create_segments_from_json(roads_shp_path, mapfp):
         x, y = util.get_center_point(segment)
         x, y = util.reproject([[x, y]], inproj='epsg:3857',
                               outproj='epsg:4326')[0]['coordinates']
-        segment.properties['center_y'] = y
-        segment.properties['center_x'] = x
+
+        segment.properties['center_y'] = round(y, 4)
+        segment.properties['center_x'] = round(x, 4)
 
     print("extracted {} non-intersection segments".format(len(non_int_w_ids)))
 
