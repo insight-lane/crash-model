@@ -74,8 +74,7 @@ def test_make_js_config_brisbane(monkeypatch, tmpdir):
     )
 
     # check that the file contents generated is identical to a pre-built string
-    expected_file_contents = """
-var config = [
+    expected_file_contents = """var config = [
     {
         name: "Brisbane, Australia",
         id: "brisbane",
@@ -84,11 +83,9 @@ var config = [
         file: "data/brisbane/preds_viz.geojson",
         crashes: "data/brisbane/crashes_rollup.geojson"
     }
-]
-"""
-
+]"""
+    expected_file_contents = expected_file_contents.lstrip()
+    
     with open(tmpdir.join('/test_js_config_brisbane.js'), 'r') as test_file:
         test_file_contents = test_file.read()
-    print(test_file_contents)
-    print(expected_file_contents)
     assert test_file_contents == expected_file_contents
