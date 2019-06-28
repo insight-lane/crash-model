@@ -15,7 +15,11 @@ def print_feat_set(f, features):
         f.write("  {}:\n".format(feat_type))
         for feature in features[feat_type]:
             f.write("    {}\n".format(feature))
-
+    f.write("\n")
+    f.write("# Speed limit is a required feature\n" +
+            "# If you choose to override OpenStreetMaps' speed limit, replace 'osm_speed' with the feature name here\n" +
+            "speed_limit: osm_speed\n\n"
+            )
     
 def write_default_features(f, waze=False, supplemental=[],
                            additional_map=None):
@@ -28,7 +32,6 @@ def write_default_features(f, waze=False, supplemental=[],
     # To change the default features, modify this data structure
     osm = {
         "categorical": [
-            'osm_speed: Speed limit',
             'width: Width',
             'cycleway_type: Bike lane',
             'signal: Signal',

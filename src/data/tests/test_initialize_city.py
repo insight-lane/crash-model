@@ -31,7 +31,7 @@ def test_initialize_city_brisbane_no_supplemental(tmpdir, monkeypatch):
             TEST_FP, 'data', 'config_brisbane_no_supplemental.yml'), 'r'
     ) as test_file:
         expected_file_contents = test_file.read()
-
+    print(tmpdir)
     assert test_file_contents == expected_file_contents
 
 
