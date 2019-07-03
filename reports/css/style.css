@@ -9,7 +9,7 @@ body {
 h1 {
     font-weight: normal;
     margin: 0px;
-    line-height: 60px;
+    line-height: 40px;
     font-size: 2.04rem;
 }
 
@@ -78,6 +78,10 @@ hr {
 .slide_right {
     transition: 0.5s;
     right: -25vw;
+}
+
+#city_selector {
+    margin: 15px 0;
 }
 
 .btn {
@@ -338,3 +342,23 @@ th {
   margin-left: 0;
 }
 
+
+
+.attribution {
+    font-size: 0.75em;
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    grid-gap: 10px;
+}
+
+.d4dLogo .star {
+    fill: #eb4d4c;
+}
+
+.attribution p {
+    margin: 0;
+}
+
+.attribution a {
+    color: #fff;
+}
