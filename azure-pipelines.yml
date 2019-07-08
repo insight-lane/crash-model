@@ -9,8 +9,8 @@ jobs:
       bash ~/miniconda.sh -b -p $HOME/miniconda
       export PATH="$HOME/miniconda/bin:$PATH"
       conda env create -f environment.yml
-      conda env export
       source activate crash-model
+      conda env export
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
       py.test --cov=./
@@ -26,8 +26,8 @@ jobs:
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
       conda env create -f environment.yml
-      conda env export
       conda activate crash-model
+      conda env export
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
       py.test
@@ -43,8 +43,8 @@ jobs:
     displayName: Add conda to system path  
   - script: |
       conda env create -f environment.yml
-      conda env export
       call activate crash-model
+      conda env export
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
       py.test -k test_parse_addresses -s -v
