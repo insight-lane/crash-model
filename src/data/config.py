@@ -115,7 +115,6 @@ class Configuration(object):
             feat_types['f_cat'].append('osm_speed')
         else:
             feat_types['f_cat'].append(config['speed_limit'])
-        import ipdb; ipdb.set_trace()
 
         return feat_types['default'], feat_types['f_cat'], feat_types['f_cont']
 
