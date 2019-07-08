@@ -27,8 +27,6 @@ jobs:
       sudo chown -R $USER $CONDA
       conda env create -f environment.yml
       conda env export
-
-#      conda env create --quiet --file environment_mac.yml
       conda activate crash-model
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
@@ -46,8 +44,6 @@ jobs:
   - script: |
       conda env create -f environment.yml
       conda env export
-
-#      conda env create --file environment_pc.yml
       call activate crash-model
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
