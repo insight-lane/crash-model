@@ -96,5 +96,11 @@ Found in src/models <br><br>
 
 5) Visualizing the results
 
-Found in src/visualization and reports/ <br><br>
-The script to generate the datasets needed to power the visualization can be found in src/visualization while the actual files used to display the visualization are found in /reports/.
+Once you have run the pipeline you can visualize results from your city, or you can view the showcase locally <br>
+
+To run locally:
+- `cd showcase`
+- You should have already exported your MAPBOX_TOKEN and CONFIG_FILE earlier in following along with this README, so check that those are set
+- `flask run`
+
+Details about other visualization scripts can be found in the README under src/visualization
