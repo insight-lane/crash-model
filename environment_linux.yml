@@ -19,7 +19,7 @@ dependencies:
   - cairo=1.16.0=h18b612c_1001
   - certifi=2019.6.16=py36_0
   - cffi=1.12.3=py36h8022711_0
-  - cfitsio=3.430=h0bd2449_1002
+  - cfitsio=3.470=hb60a0a2_1
   - chardet=3.0.4=py36_1003
   - click=7.0=py_0
   - click-plugins=1.1.1=py_0
@@ -37,19 +37,19 @@ dependencies:
   - et_xmlfile=1.0.1=py_1001
   - expat=2.2.5=he1b5a44_1003
   - fiona=1.8.6=py36hf242f0b_3
-  - flask=1.1.0=py_0
+  - flask=1.1.1=py_0
   - folium=0.9.1=py_0
   - fontconfig=2.13.1=he4413a7_1000
   - freetype=2.10.0=he983fc9_0
   - freexl=1.0.5=h14c3975_1002
   - future=0.17.1=py36_1000
-  - gdal=2.4.2=py36h5f563d9_0
+  - gdal=2.4.2=py36h5f563d9_2
   - geocoder=1.38.1=py_1
   - geographiclib=1.49=py_0
   - geojson=2.4.1=py_0
   - geopandas=0.5.0=py_3
   - geopy=1.20.0=py_0
-  - geos=3.7.1=hf484d3e_1000
+  - geos=3.7.2=he1b5a44_1
   - geotiff=1.5.1=h560c3f3_2
   - gettext=0.19.8.1=hc5be6a0_1002
   - giflib=5.1.7=h516909a_1
@@ -76,7 +76,7 @@ dependencies:
   - json-c=0.13.1=h14c3975_1001
   - jsonschema=3.0.1=py36_0
   - jupyter=1.0.0=py_2
-  - jupyter_client=5.3.0=py_0
+  - jupyter_client=5.3.1=py_0
   - jupyter_console=6.0.0=py_0
   - jupyter_core=4.4.0=py_0
   - kealib=1.4.10=h58c409b_1005
@@ -90,7 +90,7 @@ dependencies:
   - libedit=3.1.20170329=hf8c457e_1001
   - libffi=3.2.1=he1b5a44_1006
   - libgcc-ng=9.1.0=hdf63c60_0
-  - libgdal=2.4.2=h654d158_0
+  - libgdal=2.4.2=h0845e09_2
   - libgfortran-ng=7.3.0=hdf63c60_0
   - libiconv=1.15=h516909a_1005
   - libkml=1.3.0=h4fcabce_1010
@@ -101,7 +101,7 @@ dependencies:
   - libpq=11.4=hd9ab2ff_1
   - libsodium=1.0.16=h14c3975_1001
   - libspatialindex=1.9.0=he1b5a44_1
-  - libspatialite=4.3.0a=h4c5cd43_1028
+  - libspatialite=4.3.0a=he1bb1e1_1029
   - libssh2=1.8.2=h22169c7_2
   - libstdcxx-ng=9.1.0=hdf63c60_0
   - libtiff=4.0.10=h648cc4a_1001
@@ -125,7 +125,7 @@ dependencies:
   - openblas=0.3.6=h6e990d7_4
   - openjpeg=2.3.1=h58a6597_0
   - openpyxl=2.6.2=py_0
-  - openssl=1.1.1b=h14c3975_1
+  - openssl=1.1.1c=h516909a_0
   - osmnx=0.10=py_1
   - packaging=19.0=py_0
   - pandas=0.24.2=py36hb3f55d8_0
@@ -172,16 +172,16 @@ dependencies:
   - requests=2.22.0=py36_0
   - rtree=0.8.3=py36h666c49c_1002
   - ruamel=1.0=py36_0
-  - ruamel.yaml=0.15.96=py36h516909a_0
+  - ruamel.yaml=0.15.98=py36h516909a_0
   - scikit-learn=0.21.2=py36hcdab131_1
   - scipy=1.3.0=py36h921218d_0
   - seaborn=0.9.0=py_1
   - send2trash=1.5.0=py_0
   - setuptools=41.0.1=py36_0
-  - shapely=1.6.4=py36h06cd6f9_1005
+  - shapely=1.6.4=py36hec07ddf_1006
   - sip=4.19.8=py36hf484d3e_1000
   - six=1.12.0=py36_1000
-  - sqlite=3.28.0=hcee41ef_1
+  - sqlite=3.29.0=hcee41ef_0
   - statsmodels=0.10.0=py36hc1659b7_0
   - terminado=0.8.2=py36_0
   - testpath=0.4.2=py_1001
