@@ -1,0 +1,6 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "total_crashes": 2, "crash_dates": "2015-04-03T09:10:00-04:00,2015-09-18T08:45:00-04:00" }, "geometry": { "type": "Point", "coordinates": [ -71.107141, 42.353438 ] } },
+{ "type": "Feature", "properties": { "total_crashes": 2, "crash_dates": "2015-06-25T17:00:00-04:00,2016-06-01T20:30:00-04:00" }, "geometry": { "type": "Point", "coordinates": [ -71.10526852, 42.35351 ] } }
+]}
