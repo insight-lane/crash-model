@@ -6,6 +6,7 @@ dependencies:
 - widgetsnbextension=3.2.1=py36_0
 - codecov
 - fiona
+- flask
 - folium
 - geopandas
 - geocoder

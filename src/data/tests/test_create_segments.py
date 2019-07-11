@@ -179,8 +179,10 @@ def test_update_intersection_properties(tmpdir):
         os.path.join(base_path, 'config_features.yml'))
     results = create_segments.update_intersection_properties(
         inters, config)
+    print(results[0].properties)
     assert results[0].properties == {
         'id': 975,
+        'osm_speed': '25',
         'width': 13,
         'cycleway_type': None,
         'oneway': 1,

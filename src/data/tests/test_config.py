@@ -37,9 +37,12 @@ def test_get_feature_list(tmpdir):
     config = data.config.Configuration(yml_file)
     assert config.continuous_features == ['width_per_lane']
     assert config.categorical_features == [
-        'width', 'cycleway_type', 'signal', 'oneway', 'lanes']
+        'width', 'cycleway_type', 'signal', 'oneway', 'lanes', 'osm_speed']
     assert set(config.features) == set([
-        'width', 'cycleway_type', 'signal', 'oneway', 'lanes', 'width_per_lane'])
+        'width', 'cycleway_type', 'signal',
+        'oneway', 'lanes', 'width_per_lane',
+        'osm_speed'
+    ])
 
     config_dict['waze_features'] = {
         'categorical': {'jam': 'Existence of a jam'},
@@ -50,10 +53,12 @@ def test_get_feature_list(tmpdir):
 
     assert config.continuous_features == ['width_per_lane', 'jam_percent']
     assert config.categorical_features == [
-        'width', 'cycleway_type', 'signal', 'oneway', 'lanes', 'jam']
+        'width', 'cycleway_type', 'signal',
+        'oneway', 'lanes', 'jam', 'osm_speed']
     assert set(config.features) == set([
         'width_per_lane', 'jam_percent',
-        'width', 'cycleway_type', 'signal', 'oneway', 'lanes', 'jam'])
+        'width', 'cycleway_type', 'signal',
+        'oneway', 'lanes', 'jam', 'osm_speed'])
 
     config_dict['waze_features'] = {}
     config_dict['openstreetmap_features'] = {}
@@ -61,18 +66,18 @@ def test_get_feature_list(tmpdir):
         'extra_map': 'test',
         'continuous': {'AADT': 'test name'},
         'categorical': {
-            'SPEEDLIMIT': 'test name2',
             'Struct_Cnd': 'test name3',
             'Surface_Tp': 'test name4',
             'F_F_Class': 'test name5'
         }
     }
+    config_dict['speed_limit'] = 'SPEEDLIMIT'
 
     write_to_file(yml_file, config_dict)
     config = data.config.Configuration(yml_file)
 
-    assert config.categorical_features == [
-        'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class']
+    assert set(config.categorical_features) == set([
+        'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'])
     assert config.continuous_features == ['AADT']
     assert set(config.features) == set([
         'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class', 'AADT'])

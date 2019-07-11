@@ -8,9 +8,9 @@ city_longitude: 144.9631
 timezone: Australia/Melbourne
 
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
-city_radius: 50
-map_geography: shapefile
-boundary_shapefile: VicRoads_Regions.shp
+city_radius: 10
+#map_geography: shapefile
+#boundary_shapefile: VicRoads_Regions.shp
 
 # The folder under data where this city's data is stored
 name: melbourne

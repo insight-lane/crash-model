@@ -70,4 +70,9 @@ openstreetmap_features:
   continuous:
     width_per_lane: Average width per lane
 
+# Speed limit is a required feature
+# If you choose to override OpenStreetMaps' speed limit, replace 'osm_speed' with the feature name here
+speed_limit: osm_speed
+
+
 
