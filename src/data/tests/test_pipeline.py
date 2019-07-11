@@ -15,7 +15,6 @@ def test_copy_files(tmpdir):
     os.makedirs(os.path.join(base_dir, 'processed'))
     os.makedirs(data_dir)
     os.makedirs(os.path.join(data_dir, 'processed'))
-    os.makedirs(os.path.join(data_dir, 'standardized'))
 
     orig_file = os.path.join(
             TEST_FP,
@@ -44,7 +43,7 @@ def test_copy_files(tmpdir):
             'crashes_rollup.geojson'),
         os.path.join(
             data_dir,
-            'standardized',
+            'processed',
             'crashes_rollup.geojson'
         )
     )
