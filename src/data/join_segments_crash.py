@@ -8,7 +8,6 @@
 
 import json
 from . import util
-from .record import Record
 import os
 import argparse
 from pandas.io.json import json_normalize
