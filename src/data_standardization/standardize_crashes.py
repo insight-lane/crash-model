@@ -4,15 +4,12 @@
 import argparse
 import os
 import pandas as pd
-from pandas.io.json import json_normalize
 from collections import OrderedDict
 import csv
 import calendar
 import random
 import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
-from shapely.geometry import Point
-import geopandas as gpd
 from data.util import read_geocode_cache
 import data.config
 
