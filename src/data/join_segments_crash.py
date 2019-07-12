@@ -8,6 +8,7 @@
 
 import json
 from . import util
+from .record import Record
 import os
 import argparse
 from pandas.io.json import json_normalize
@@ -37,7 +38,12 @@ def snap_records(
     print("snapping crash records to segments")
     util.find_nearest(
         records, combined_seg, segments_index, 30, type_record=True)
-
+    record_num = len(records)
+    records = [x for x in records if x.near_id]
+    dropped_records = record_num - len(records)
+    if dropped_records:
+        print("Dropped {} crashes that don't map to a segment".format(dropped_records))
+        print("{} crashes remain".format(len(records)))
     jsonfile = os.path.join(
         PROCESSED_DATA_FP, 'crash_joined.json')
 
@@ -96,6 +102,7 @@ def make_crash_rollup(crashes_json):
     crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
 
     crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
+
     return crashes_agg_gdf
 
 
@@ -123,7 +130,7 @@ if __name__ == '__main__':
         os.path.join(RAW_DATA_FP, 'crashes.json'),
         startyear=args.startyear, endyear=args.endyear)
 
-    with open(os.path.join(RAW_DATA_FP, 'crashes.json')) as crash_file:
+    with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json')) as crash_file:
         data = json.load(crash_file)
     crashes_agg_gdf = make_crash_rollup(data)
 
