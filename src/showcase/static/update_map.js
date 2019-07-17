@@ -8,16 +8,11 @@ var riskColor = d3.scaleLinear()
 	.domain([0.2, 0.4, 0.6, 0.8])
 	.range(["#ffe0b2", "#ffb74d", "#ff9800", "#f57c00"]);
 
-// var city = config.showcase[4];
 d3.json(city.file, function(data) {
 
 	for (var segment in data.features) {
 		segments.push(data.features[segment].properties);
 	}
-
-	segments.sort(function(a, b) {
-		return d3.descending(a.prediction, b.prediction);
-	})
 
 	var midpoint = Math.floor(segments.length/2);
 	var median = segments[midpoint].prediction;
@@ -75,7 +70,6 @@ function populateSegmentInfo(segmentID) {
 
 	// update feature importances based on segment's attributes
 	// updateFeatureImportances(segmentData);
-
 
 	// hide highest risk panel and slide in segment details panel
 	d3.select('#segment_details').classed('slide_right', false);

@@ -89,11 +89,10 @@ additional_map_features:
   continuous:
     AADT: Average annual daily traffic
   categorical:
-    SPEEDLIMIT: Speed limit
     Struct_Cnd: Condition
     Surface_Tp: Road type
     F_F_Class: Functional class
-
+speed_limit: SPEEDLIMIT
 
 # Additional data sources
 data_source:
