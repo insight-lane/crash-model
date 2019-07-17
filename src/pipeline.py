@@ -2,6 +2,7 @@ import argparse
 import yaml
 import os
 import subprocess
+import shutil
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -155,6 +156,31 @@ def visualize(DATA_FP, config_file):
     ])
 
 
+def copy_files(base_dir, data_fp, config):
+    """
+    Copy necessary files into showcase directory
+    Args:
+        base_dir - top level directory
+        data_fp - data directory
+        config
+    """
+
+    showcase_dir = os.path.join(base_dir, 'src', 'showcase', 'data')
+    if not os.path.exists(showcase_dir):
+        os.makedirs(showcase_dir)
+
+    showcase_dir = os.path.join(showcase_dir, config['name'])
+    if not os.path.exists(showcase_dir):
+        os.makedirs(showcase_dir)
+
+    shutil.copyfile(
+        os.path.join(data_fp, 'processed', 'preds_viz.geojson'),
+        os.path.join(showcase_dir, 'preds_viz.geojson'))
+    shutil.copyfile(
+        os.path.join(data_fp, 'standardized', 'crashes_rollup.geojson'),
+        os.path.join(showcase_dir, 'crashes_rollup.geojson'))
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -194,3 +220,4 @@ if __name__ == '__main__':
 
     if not args.onlysteps or 'visualization' in args.onlysteps:
         visualize(DATA_FP, args.config_file)
+        copy_files(BASE_DIR, DATA_FP, config)

@@ -15,7 +15,7 @@ class Configuration(object):
         if 'city' not in config or config['city'] is None:
             sys.exit('City is required in config file')
         self.city = config['city']
-        
+
         if 'city_latitude' not in config or config['city_latitude'] is None:
             sys.exit('city_latitude is required in config file')
         self.city_latitude = config['city_latitude']
@@ -109,6 +109,12 @@ class Configuration(object):
         # For now, all atr features are continuous
         if 'atr_cols' in config and config['atr_cols']:
             feat_types['f_cont'] += config['atr_cols']
+
+        if 'speed_limit' not in config:
+            # Set default speed limit
+            feat_types['f_cat'].append('osm_speed')
+        else:
+            feat_types['f_cat'].append(config['speed_limit'])
 
         return feat_types['default'], feat_types['f_cat'], feat_types['f_cont']
 

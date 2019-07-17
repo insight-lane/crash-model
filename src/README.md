@@ -58,14 +58,15 @@ The demo city data is stored as *data-latest.zip* using data-world. Contact one 
         - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well. If your csv file does not contain an id field, just put ID here, and the csv will be modified to add an ID
         - If you have any supplemental files, they will be listed under data_source. For each data source, you'll need to enter the column headers for latitude, longitude, and date.
         - Modify time_target to be the last month and year of your crash data (this is legacy and you won't need to do this unless you want to do week-by-week modeling)
-- Manually edit config.js in /reports/ to add your mapbox api key (from when you made a mapbox account) as MAPBOX_TOKEN
+- export your mapbox api key (from when you made a mapbox account) as an environment variable called MAPBOX_TOKEN
+- Export your config file as CONFIG_FILE (e.g. `export CONFIG_FILE=data/config_boston.yml` but replace boston with your city's folder name)
 
 ### Geocoding
 
 - If your crash file provides addresses but not latitude/longitude, you'll need to geocode your crash file before running the pipeline. This can be done from the src directory by running `python -m tools.geocode_batch -d <data directory created from the initalize_city script> -f <crash filename> -a <address field in the crash csv file> -c <city name, e.g. "Boston, Massachusetts, USA"`. If you have a very large number of entries to geocode, you may choose to use mapbox's geocoder instead of google's (the default for this script). In that case, you can also pass in your mapbox token to the script with the -m flag.
 
 ### Running on existing cities
-- Cities we have already set up will already have a config file.
+- Cities we have already set up on the showcase can be viewed using the default configuration file. If you'd prefer to view these cities, use that configuration file instead: `export CONFIG_FILE=static/config.js'
 
 - Run the pipeline: `python pipeline.py -c <config file>`
 
@@ -95,5 +96,11 @@ Found in src/models <br><br>
 
 5) Visualizing the results
 
-Found in src/visualization and reports/ <br><br>
-The script to generate the datasets needed to power the visualization can be found in src/visualization while the actual files used to display the visualization are found in /reports/.
+Once you have run the pipeline you can visualize results from your city, or you can view the showcase locally <br>
+
+To run locally:
+- `cd showcase`
+- You should have already exported your MAPBOX_TOKEN and CONFIG_FILE earlier in following along with this README, so check that those are set
+- `flask run`
+
+Details about other visualization scripts can be found in the README under src/visualization

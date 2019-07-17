@@ -14,11 +14,11 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
 	<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script type='text/javascript', src="https://s3-ap-southeast-2.amazonaws.com/insight-lane-showcase/config.js"></script>
+	<script type='text/javascript', src="{{ config_file }}"></script>
 
 	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
 
-	<link rel="stylesheet" href="css/style.css" />
+	<link rel="stylesheet" href="static/style.css" />
 </head>
 <body>
 
@@ -124,9 +124,9 @@
 
 	<script>
 		// If only one city exists in config, url is irrelevant
-		if (config.showcase.length == 1)
+		if (config.length == 1)
 		{
-			var city = config.showcase[0];
+			var city = config[0];
 			var cityId = city.id;
 			var country = city.name.split(", ")[2];
 		}
@@ -136,8 +136,8 @@
 			// If no valid cityId specified swap to the first in the list
 			if (new URL(location.href).searchParams.get('city') == null)
 			{
-				default_city = config.showcase[0].id
-				window.location = location.origin + location.pathname + "?city=" + default_city;
+				default_city = config[0].id
+		window.location = location.pathname + "?city=" + default_city;
 
 			}
 			// Load the requested city
@@ -145,11 +145,11 @@
 			{
 				cityId = new URL(location.href).searchParams.get('city');
 
-				for (c = 0; c < config.showcase.length; c++)
+				for (c = 0; c < config.length; c++)
 				{
-					if (config.showcase[c].id == cityId)
+					if (config[c].id == cityId)
 					{
-						var city = config.showcase[c];
+						var city = config[c];
 						var country = city.name.split(", ")[2];
 						break;
 					}
@@ -159,7 +159,7 @@
 
 		// Populate the city selector with all other cities
 		var citySelector = $('#city_selector');
-		$.each(config.showcase, function(key, scCity) {
+		$.each(config, function(key, scCity) {
 			if (scCity.id != cityId)
 			{
     			citySelector.append($('<option />').val(scCity.id).text(scCity.name));
@@ -169,14 +169,14 @@
 		// Swap cities when requested
 		$('#city_selector').on('change', function ()
 		{
-				window.location = location.origin + location.pathname + "?city=" + $(this).val();
+				window.location = location.pathname + "?city=" + $(this).val();
 		});
 
 	</script>
 
 	<script src="https://d3js.org/d3.v4.min.js"></script>
-	<!-- // <script src="js/make_plots.js"></script> -->
-	<script src="js/update_map.js"></script>
+	<!-- // <script src="static/make_plots.js"></script> -->
+	<script src="static/update_map.js"></script>
 
 	<script>
 		$( '#close_btn' ).on('click', function() {
@@ -190,7 +190,7 @@
 		$('#city_name').text(city.name);
 
 		// create base map
-		mapboxgl.accessToken = config.MAPBOX_TOKEN;
+		mapboxgl.accessToken = "{{ mapbox_token }}";
 
 		var map = new mapboxgl.Map({
 		  container: 'city_map',

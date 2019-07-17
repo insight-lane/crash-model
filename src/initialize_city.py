@@ -15,7 +15,11 @@ def print_feat_set(f, features):
         f.write("  {}:\n".format(feat_type))
         for feature in features[feat_type]:
             f.write("    {}\n".format(feature))
-
+    f.write("\n")
+    f.write("# Speed limit is a required feature\n" +
+            "# If you choose to override OpenStreetMaps' speed limit, replace 'osm_speed' with the feature name here\n" +
+            "speed_limit: osm_speed\n\n"
+            )
     
 def write_default_features(f, waze=False, supplemental=[],
                            additional_map=None):
@@ -164,22 +168,21 @@ def make_js_config(jsfile, city, folder):
     address = geocode_address(city)
 
     f = open(jsfile, 'w')
+
     f.write(
-        'var config = {\n' +
-        '    MAPBOX_TOKEN: "",\n' +
-        '    cities: [\n' +
-        '        {\n' +
-        '            name: "{}",\n'.format(city) +
-        '            id: "{}",\n'.format(folder) +
-        '            latitude: {},\n'.format(str(address[1])) +
-        '            longitude: {},\n'.format(str(address[2])) +
-        '            file: "preds_final.geojson",\n' +
-        '            crashes: "crashes.json"\n' +
-        '        }\n' +
-        '    ]\n' +
-        '}\n'
+        'var config = [\n' +
+        '    {\n' +
+        '        name: "{}",\n'.format(city) +
+        '        id: "{}",\n'.format(folder) +
+        '        latitude: {},\n'.format(str(address[1])) +
+        '        longitude: {},\n'.format(str(address[2])) +
+        '        file: "data/{}/preds_viz.geojson",\n'.format(folder) +
+        '        crashes: "data/{}/crashes_rollup.geojson"\n'.format(folder) +
+        '    }\n' +
+        ']'
     )
     f.close()
+
 
 if __name__ == '__main__':
 
@@ -253,7 +256,8 @@ if __name__ == '__main__':
                          supplemental=supplemental_files)
 
     js_file = os.path.join(
-        BASE_DIR, 'reports/config.js')
+        BASE_DIR, 'src', 'showcase', 'data', 'config_' + args.folder + '.js')
+
     if not os.path.exists(js_file):
         print("Writing config.js")
         make_js_config(js_file, args.city, args.folder)

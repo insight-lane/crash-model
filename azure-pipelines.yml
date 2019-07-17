@@ -8,7 +8,7 @@ jobs:
       wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
       bash ~/miniconda.sh -b -p $HOME/miniconda
       export PATH="$HOME/miniconda/bin:$PATH"
-      conda env create -f environment_linux.yml
+      conda env create -f environment.yml
       source activate crash-model
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
@@ -24,7 +24,7 @@ jobs:
       set -eo pipefail
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
-      conda env create --quiet --file environment_mac.yml
+      conda env create -f environment_mac.yml
       conda activate crash-model
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
@@ -40,7 +40,7 @@ jobs:
       Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to system path  
   - script: |
-      conda env create --file environment_pc.yml
+      conda env create -f environment_pc.yml
       call activate crash-model
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py

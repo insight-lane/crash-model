@@ -31,7 +31,7 @@ def test_initialize_city_brisbane_no_supplemental(tmpdir, monkeypatch):
             TEST_FP, 'data', 'config_brisbane_no_supplemental.yml'), 'r'
     ) as test_file:
         expected_file_contents = test_file.read()
-
+    print(tmpdir)
     assert test_file_contents == expected_file_contents
 
 
@@ -74,22 +74,18 @@ def test_make_js_config_brisbane(monkeypatch, tmpdir):
     )
 
     # check that the file contents generated is identical to a pre-built string
-    expected_file_contents = """var config = {
-    MAPBOX_TOKEN: "",
-    cities: [
-        {
-            name: "Brisbane, Australia",
-            id: "brisbane",
-            latitude: -27.4697707,
-            longitude: 153.0251235,
-            file: "preds_final.geojson",
-            crashes: "crashes.json"
-        }
-    ]
-}
-"""
-
+    expected_file_contents = """var config = [
+    {
+        name: "Brisbane, Australia",
+        id: "brisbane",
+        latitude: -27.4697707,
+        longitude: 153.0251235,
+        file: "data/brisbane/preds_viz.geojson",
+        crashes: "data/brisbane/crashes_rollup.geojson"
+    }
+]"""
+    expected_file_contents = expected_file_contents.lstrip()
+    
     with open(tmpdir.join('/test_js_config_brisbane.js'), 'r') as test_file:
         test_file_contents = test_file.read()
-
     assert test_file_contents == expected_file_contents
