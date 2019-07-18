@@ -177,7 +177,7 @@ def copy_files(base_dir, data_fp, config):
         os.path.join(data_fp, 'processed', 'preds_viz.geojson'),
         os.path.join(showcase_dir, 'preds_viz.geojson'))
     shutil.copyfile(
-        os.path.join(data_fp, 'standardized', 'crashes_rollup.geojson'),
+        os.path.join(data_fp, 'processed', 'crashes_rollup.geojson'),
         os.path.join(showcase_dir, 'crashes_rollup.geojson'))
 
 

@@ -18,7 +18,6 @@ dependencies:
   - ca-certificates=2019.6.16=hecc5488_0
   - certifi=2019.6.16=py36_0
   - cffi=1.12.3=py36hb32ad35_0
-  - cfitsio=3.470=hfa6e2cd_1
   - chardet=3.0.4=py36_1003
   - click=7.0=py_0
   - click-plugins=1.1.1=py_0
@@ -41,18 +40,18 @@ dependencies:
   - freetype=2.10.0=h5db478b_0
   - freexl=1.0.5=hd288d7e_1002
   - future=0.17.1=py36_1000
-  - gdal=2.4.2=py36he6b6c38_2
+  - gdal=2.4.1=py36hdf5ee75_2
   - geocoder=1.38.1=py_1
   - geographiclib=1.49=py_0
   - geojson=2.4.1=py_0
-  - geopandas=0.5.0=py_3
+  - geopandas=0.5.1=py_0
   - geopy=1.20.0=py_0
-  - geos=3.7.2=habb2df7_1
-  - geotiff=1.5.1=h8f84788_2
+  - geos=3.7.1=h33f27b4_0
+  - geotiff=1.5.1=h7bfc4c5_1
   - gettext=0.19.8.1=hb01d8f6_1002
   - glib=2.58.3=hc0c2ac7_1001
   - hdf4=4.2.13=hf8e6fe8_1002
-  - hdf5=1.10.5=nompi_hcc15c50_1100
+  - hdf5=1.10.4=nompi_hcc15c50_1106
   - icc_rt=2019.0.0=h0cc432a_1
   - icu=58.1=vc14_0
   - idna=2.8=py36_1000
@@ -75,7 +74,7 @@ dependencies:
   - jupyter_client=5.3.1=py_0
   - jupyter_console=6.0.0=py_0
   - jupyter_core=4.4.0=py_0
-  - kealib=1.4.10=hf7dc31f_1005
+  - kealib=1.4.10=heacb130_1003
   - kiwisolver=1.1.0=py36he980bc4_0
   - krb5=1.16.3=hdd46e55_1001
   - lazy-object-proxy=1.4.1=py36hfa6e2cd_0
@@ -83,16 +82,16 @@ dependencies:
   - libcblas=3.8.0=8_mkl
   - libcurl=7.65.1=h4496350_0
   - libffi=3.2.1=h6538335_1006
-  - libgdal=2.4.2=h084b31b_2
+  - libgdal=2.4.1=h47faea2_2
   - libiconv=1.15=hfa6e2cd_1005
   - libkml=1.3.0=h4ece8bf_1010
   - liblapack=3.8.0=8_mkl
-  - libnetcdf=4.6.2=ha953453_1002
+  - libnetcdf=4.6.2=h396784b_1001
   - libpng=1.6.37=h7602738_0
   - libpq=11.4=hb0bdaea_1
-  - libsodium=1.0.16=h2fa13f4_1001
+  - libsodium=1.0.17=h2fa13f4_0
   - libspatialindex=1.8.5=he025d50_4
-  - libspatialite=4.3.0a=h832c139_1029
+  - libspatialite=4.3.0a=h505de5d_1027
   - libssh2=1.8.2=h642c060_2
   - libtiff=4.0.10=h6512ee2_1003
   - libxgboost=0.90=0
@@ -138,7 +137,7 @@ dependencies:
   - poppler=0.67.0=heddaa77_6
   - poppler-data=0.4.9=1
   - postgresql=11.4=h06f7779_1
-  - proj4=6.1.0=hc2d0af5_2
+  - proj4=6.0.0=hc2d0af5_1
   - prometheus_client=0.7.1=py_0
   - prompt_toolkit=2.0.9=py_0
   - py=1.8.0=py_0
@@ -148,7 +147,7 @@ dependencies:
   - pylint=2.3.1=py36_0
   - pyopenssl=19.0.0=py36_0
   - pyparsing=2.4.0=py_0
-  - pyproj=2.2.1=py36h3f740ce_0
+  - pyproj=2.1.3=py36h2ea4b28_1
   - pyqt=5.9.2=py36h6538335_0
   - pyrsistent=0.15.3=py36hfa6e2cd_0
   - pysocks=1.7.0=py36_0
@@ -159,7 +158,7 @@ dependencies:
   - pytz=2019.1=py_0
   - pywinpty=0.5.5=py36_1000
   - pyyaml=5.1.1=py36hfa6e2cd_0
-  - pyzmq=18.0.2=py36he7828b0_0
+  - pyzmq=18.0.2=py36he7828b0_1
   - qt=5.9.7=hc6833c9_1
   - qtconsole=4.5.1=py_0
   - ratelim=0.1.6=py_2
@@ -172,7 +171,7 @@ dependencies:
   - seaborn=0.9.0=py_1
   - send2trash=1.5.0=py_0
   - setuptools=41.0.1=py36_0
-  - shapely=1.6.4=py36ha35856d_1006
+  - shapely=1.6.4=py36h7d20962_1005
   - sip=4.19.8=py36h6538335_1000
   - six=1.12.0=py36_1000
   - sqlite=3.29.0=hfa6e2cd_0
@@ -202,7 +201,7 @@ dependencies:
   - xlrd=1.2.0=py_0
   - xz=5.2.4=h2fa13f4_1001
   - yaml=0.1.7=hfa6e2cd_1001
-  - zeromq=4.3.1=he025d50_1000
+  - zeromq=4.3.1=h6538335_1002
   - zipp=0.5.1=py_0
   - zlib=1.2.11=h2fa13f4_1004
   - zstd=1.4.0=hd8a0e53_0
