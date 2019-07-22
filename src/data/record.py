@@ -1,5 +1,9 @@
+from pyproj import Transformer
 from . import util
 from dateutil.parser import parse
+
+
+transformer = Transformer.from_proj(4326, 3857)
 
 
 class Record(object):
@@ -11,7 +15,8 @@ class Record(object):
         else:
             self.point = util.get_reproject_point(
                 properties['location']['latitude'],
-                properties['location']['longitude'])
+                properties['location']['longitude'],
+                transformer)
         self.properties = properties
 
     @property

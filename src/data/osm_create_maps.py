@@ -65,8 +65,8 @@ def expand_polygon(polygon, points_file, max_percent=.1):
     if polygon['type'] != 'Polygon':
         return None
 
-    polygon_coords = [util.get_reproject_point(
-        x[1], x[0], coords=True) for x in polygon['coordinates'][0]]
+    polygon_coords = util.reproject([x for x in polygon['coordinates'][0]])
+    polygon_coords = [x['coordinates'] for x in polygon_coords]
 
     poly_shape = Polygon(polygon_coords)
 
