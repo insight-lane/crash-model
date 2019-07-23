@@ -150,7 +150,7 @@ dependencies:
   - pylint=2.3.1=py36_0
   - pyopenssl=19.0.0=py36_0
   - pyparsing=2.4.1=py_0
-  - pyproj=2.2.1=py36hc44880f_0
+  - pyproj=1.9.6
   - pyqt=5.9.2=py36hcca6a23_0
   - pyrsistent=0.15.3=py36h516909a_0
   - pysocks=1.7.0=py36_0
