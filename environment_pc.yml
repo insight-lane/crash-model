@@ -82,7 +82,7 @@ dependencies:
   - libcblas=3.8.0=8_mkl
   - libcurl=7.65.1=h4496350_0
   - libffi=3.2.1=h6538335_1006
-  - libgdal=2.4.1=h47faea2_2
+  - libgdal=2.3.3=h10f50ba_0
   - libiconv=1.15=hfa6e2cd_1005
   - libkml=1.3.0=h4ece8bf_1010
   - liblapack=3.8.0=8_mkl
