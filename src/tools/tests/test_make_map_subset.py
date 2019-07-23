@@ -25,7 +25,7 @@ def test_get_buffer():
 
     # Make sure that all the resulting features are at least partially
     # within the buffer
-    transformer = Transformer.from_proj(4326, 3857)
+    transformer = Transformer.from_proj(4326, 3857, always_xy=True)
     center_point = get_reproject_point(
         42.3693239,
         -71.10103649999999,
