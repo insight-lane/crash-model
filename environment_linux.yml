@@ -42,7 +42,7 @@ dependencies:
   - freetype=2.10.0=he983fc9_0
   - freexl=1.0.5=h14c3975_1002
   - future=0.17.1=py36_1000
-  - gdal=2.4.2=py36h5f563d9_2
+  - gdal=2.4.1=py27h5f563d9_10
   - geocoder=1.38.1=py_1
   - geographiclib=1.49=py_0
   - geojson=2.4.1=py_0
