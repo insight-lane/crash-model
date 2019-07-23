@@ -31,7 +31,7 @@ DATA_FP = None
 
 
 def get_intersection_buffers(intersections, intersection_buffer_units,
-                             debug=False):
+                             debug=True):
     """
     Buffers intersection according to proj units
     Args:
