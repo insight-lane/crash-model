@@ -44,30 +44,6 @@ def test_write_shp(tmpdir):
     util.write_shp(schema, tmppath + '/test', data, 'point', 'properties')
 
 
-def test_read_record():
-    x = float(-71.07)
-    y = float(42.30)
-    # Test with no projections given
-    record = {'a': 1, 'b': 'x'}
-
-    # Don't project if you don't pass in projections
-    result = util.read_record(record, x, y)
-    expected = {
-        'point': Point(float(x), float(y)),
-        'properties': record
-    }
-
-    assert result == expected
-
-    orig = pyproj.Proj(init='epsg:4326')
-    result = util.read_record(record, x, y, orig)
-
-    # Test projecting
-    expected['point'] = Point(
-        float(-7911476.210677952), float(5206024.46129235))
-    assert result == expected
-
-
 def find_nearest():
     # todo
     pass
@@ -268,7 +244,7 @@ def test_output_from_shapes(tmpdir):
     # Read in the output, and just validate a couple of coordinates
     with open(path) as f:
         items = geojson.load(f)
-
+        print(items['features'][0])
         assert items['features'][0]['geometry']['type'] == 'Polygon'
         np.testing.assert_almost_equal(
             items['features'][0]['geometry']['coordinates'][0][0],

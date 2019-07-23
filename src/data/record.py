@@ -3,7 +3,7 @@ from . import util
 from dateutil.parser import parse
 
 
-transformer = Transformer.from_proj(4326, 3857)
+transformer = Transformer.from_proj(4326, 3857, always_xy=True)
 
 
 class Record(object):

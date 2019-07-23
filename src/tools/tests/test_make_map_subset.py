@@ -2,6 +2,7 @@
 from .. import make_map_subset
 from data.util import get_reproject_point, reproject_records
 import os
+from pyproj import Transformer
 
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +25,11 @@ def test_get_buffer():
 
     # Make sure that all the resulting features are at least partially
     # within the buffer
-    center_point = get_reproject_point(42.3693239, -71.10103649999999)
+    transformer = Transformer.from_proj(4326, 3857)
+    center_point = get_reproject_point(
+        42.3693239,
+        -71.10103649999999,
+        transformer)
     buff_poly = center_point.buffer(20)
 
     # To do this, have to convert the points and linestrings back to 3857
@@ -34,7 +39,8 @@ def test_get_buffer():
 
     point_3857 = get_reproject_point(
         point[0]['geometry']['coordinates'][1],
-        point[0]['geometry']['coordinates'][0])
+        point[0]['geometry']['coordinates'][0],
+        transformer)
     assert point_3857.within(buff_poly)
 
     results = make_map_subset.get_buffer(
