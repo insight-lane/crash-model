@@ -11,7 +11,7 @@ dependencies:
   - attrs=19.1.0=py_0
   - backcall=0.1.0=py_0
   - bleach=3.1.0=py_0
-  - boost-cpp=1.68.0=h11c811c_1000
+  - boost-cpp=1.70.0=ha2d47e9_1
   - branca=0.3.1=py_0
   - bzip2=1.0.8=h516909a_0
   - ca-certificates=2019.6.16=hecc5488_0
@@ -42,7 +42,7 @@ dependencies:
   - freetype=2.10.0=he983fc9_0
   - freexl=1.0.5=h14c3975_1002
   - future=0.17.1=py36_1000
-  - gdal=2.4.1=py27h5f563d9_10
+  - gdal=2.4.2=py36h5f563d9_5
   - geocoder=1.38.1=py_1
   - geographiclib=1.49=py_0
   - geojson=2.4.1=py_0
@@ -85,12 +85,12 @@ dependencies:
   - libblas=3.8.0=10_openblas
   - libcblas=3.8.0=10_openblas
   - libcurl=7.65.3=hda55be3_0
-  - libdap4=3.19.1=hd48c02d_1000
+  - libdap4=3.20.2=hd48c02d_1000
   - libedit=3.1.20170329=hf8c457e_1001
   - libffi=3.2.1=he1b5a44_1006
-  - libgdal=2.3.3=h2e7e64b_0
+  - libgdal=2.4.2=h524de44_5
   - libiconv=1.15=h516909a_1005
-  - libkml=1.3.0=h328b03d_1009
+  - libkml=1.3.0=h4fcabce_1010
   - liblapack=3.8.0=10_openblas
   - libnetcdf=4.6.2=h056eaf5_1002
   - libopenblas=0.3.6=h6e990d7_4
@@ -100,12 +100,11 @@ dependencies:
   - libspatialindex=1.9.0=he1b5a44_1
   - libspatialite=4.3.0a=he1bb1e1_1029
   - libssh2=1.8.2=h22169c7_2
-  - libtiff=4.0.10=h57b8799_1003
+  - libtiff=4.0.10=h648cc4a_1001
   - libuuid=2.32.1=h14c3975_1000
   - libxcb=1.13=h14c3975_1002
   - libxgboost=0.82=he1b5a44_1
   - libxml2=2.9.9=h13577e0_2
-  - lz4-c=1.8.3=he1b5a44_1001
   - markupsafe=1.1.1=py36h14c3975_0
   - matplotlib=3.1.1=py36_0
   - matplotlib-base=3.1.1=py36hfd891ef_0
@@ -133,7 +132,7 @@ dependencies:
   - pcre=8.41=hf484d3e_1003
   - pexpect=4.7.0=py36_0
   - pickleshare=0.7.5=py36_1000
-  - pip=19.1.1=py36_0
+  - pip=19.2.1=py36_0
   - pixman=0.38.0=h516909a_1003
   - pluggy=0.12.0=py_0
   - poppler=0.67.0=ha967d66_7
@@ -163,7 +162,7 @@ dependencies:
   - pyyaml=5.1.1=py36h516909a_0
   - pyzmq=18.0.2=py36h1768529_2
   - qt=5.9.7=h52cfd70_2
-  - qtconsole=4.5.1=py_0
+  - qtconsole=4.5.2=py_0
   - ratelim=0.1.6=py_2
   - readline=8.0=hf8c457e_0
   - requests=2.22.0=py36_1
@@ -215,7 +214,6 @@ dependencies:
   - zeromq=4.3.2=he1b5a44_2
   - zipp=0.5.1=py_0
   - zlib=1.2.11=h516909a_1005
-  - zstd=1.4.0=h3b9ef0a_0
   - _libgcc_mutex=0.1=main
   - libgcc-ng=9.1.0=hdf63c60_0
   - libgfortran-ng=7.3.0=hdf63c60_0
