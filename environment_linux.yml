@@ -35,7 +35,7 @@ dependencies:
   - entrypoints=0.3=py36_1000
   - et_xmlfile=1.0.1=py_1001
   - expat=2.2.5=he1b5a44_1003
-  - fiona=1.8.6=py36hf242f0b_3
+  - fiona=1.8.5=py36hf242f0b_0
   - flask=1.1.1=py_0
   - folium=0.9.1=py_0
   - fontconfig=2.13.1=he4413a7_1000
@@ -46,7 +46,7 @@ dependencies:
   - geocoder=1.38.1=py_1
   - geographiclib=1.49=py_0
   - geojson=2.4.1=py_0
-  - geopandas=0.5.0=py_0
+  - geopandas=0.5.1=py_0
   - geopy=1.20.0=py_0
   - geos=3.7.2=he1b5a44_1
   - geotiff=1.5.1=h560c3f3_2
@@ -150,7 +150,7 @@ dependencies:
   - pylint=2.3.1=py36_0
   - pyopenssl=19.0.0=py36_0
   - pyparsing=2.4.1=py_0
-  - pyproj=1.9.6
+  - pyproj=2.2.1=py36hc44880f_0
   - pyqt=5.9.2=py36hcca6a23_0
   - pyrsistent=0.15.3=py36h516909a_0
   - pysocks=1.7.0=py36_0
