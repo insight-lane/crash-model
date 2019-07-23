@@ -46,7 +46,7 @@ dependencies:
   - geocoder=1.38.1=py_1
   - geographiclib=1.49=py_0
   - geojson=2.4.1=py_0
-  - geopandas=0.5.1=py_0
+  - geopandas=0.5.0=py_0
   - geopy=1.20.0=py_0
   - geos=3.7.2=he1b5a44_1
   - geotiff=1.5.1=h560c3f3_2
