@@ -209,8 +209,7 @@ d3.select('#risk_slider').on("input", function() {
 d3.select('#speed_slider').on("input", function() {
 
 	// update values displayed next to slider
-	d3.select('#selected_speed').text(this.value + "km/h");
-
+	d3.select('#selected_speed').text(this.value);
 	update_map(map);
 });
 
