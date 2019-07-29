@@ -4,10 +4,10 @@ from shapely.geometry import Polygon
 import networkx as nx
 import json
 import fiona
-from pyproj import Transformer
 from .. import osm_create_maps
 from .. import util
 from .. import config
+from ..record import transformer_4326_to_3857
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -54,16 +54,17 @@ def test_expand_polygon():
     result = osm_create_maps.expand_polygon(test_polygon, points_file)
     assert result is None
 
-    transformer = Transformer.from_proj(4326, 3857, always_xy=True)
     polygon_coords = [util.get_reproject_point(
-        x[1], x[0], transformer, coords=True) for x in test_polygon['coordinates'][0]]
+        x[1], x[0], transformer_4326_to_3857, coords=True
+    ) for x in test_polygon['coordinates'][0]]
     orig_shape = Polygon(polygon_coords)
 
     result = osm_create_maps.expand_polygon(test_polygon, points_file,
                                             max_percent=.7)
 
     result_coords = [util.get_reproject_point(
-        x[1], x[0], transformer, coords=True) for x in result.exterior.coords]
+        x[1], x[0], transformer_4326_to_3857, coords=True
+    ) for x in result.exterior.coords]
     result_shape = Polygon(result_coords)
 
     # Check whether the new polygon has a larger area than the old one

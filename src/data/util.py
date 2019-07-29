@@ -14,7 +14,7 @@ import datetime
 from .record import Crash, Record
 import geojson
 from .segment import Segment
-from pyproj import Transformer
+from .record import transformer_4326_to_3857, transformer_3857_to_4326
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -484,7 +484,7 @@ def reproject(coords, transformer=None):
     """
     new_coords = []
     if not transformer:
-        transformer = Transformer.from_proj(4326, 3857, always_xy=True)
+        transformer = transformer_4326_to_3857
 
     for coord in coords:
         re_point = transformer.transform(coord[0], coord[1])
@@ -499,15 +499,14 @@ def reproject_records(records, transformer=None):
     Records can either be points, line strings, or multiline strings
     Args:
         records - list of records to reproject
-        inproj - defaults to 4326
-        outproj - defaults to 3857
+        optional: transformer object (if not given, defaults to 4326->3857)
     Returns:
         list of reprojected records
     """
     results = []
 
     if not transformer:
-        transformer = Transformer.from_proj(4326, 3857, always_xy=True)
+        transformer = transformer_4326_to_3857
 
     for record in records:
         coords = record['geometry']['coordinates']
@@ -570,8 +569,7 @@ def prepare_geojson(elements):
         A geojson feature collection
     """
 
-    transformer = Transformer.from_proj(3857, 4326, always_xy=True)
-    elements = reproject_records(elements, transformer)
+    elements = reproject_records(elements, transformer_3857_to_4326)
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
@@ -671,28 +669,28 @@ def output_from_shapes(items, filename):
         nothing, writes to file
     """
     output = []
-    transformer = Transformer.from_proj(3857, 4326, always_xy=True)
+
     for item, properties in items:
         if item.type == 'Polygon':
             coords = [x for x in item.exterior.coords]
             reprojected_coords = [[get_reproject_point(
-                x[1], x[0], transformer, coords=True)
+                x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in coords]]
         elif item.type == 'MultiLineString':
             lines = [x for x in item]
             reprojected_coords = []
             for line in lines:
                 reprojected_coords.append([get_reproject_point(
-                    x[1], x[0], transformer, coords=True)
+                    x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in line.coords])
         elif item.type == 'LineString':
             coords = [x for x in item.coords]
             reprojected_coords = [get_reproject_point(
-                x[1], x[0], transformer, coords=True)
+                x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in coords]
         elif item.type == 'Point':
             reprojected_coords = get_reproject_point(
-                item.y, item.x, transformer,
+                item.y, item.x, transformer_3857_to_4326,
                 coords=True
             )
         else:

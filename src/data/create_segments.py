@@ -15,9 +15,9 @@ import argparse
 import os
 import re
 from shapely.geometry import MultiLineString, LineString
-from pyproj import Transformer
 from .segment import Segment, Intersection, IntersectionBuffer
 from .record import Record
+from .record import transformer_3857_to_4326
 import data.config
 
 BASE_DIR = os.path.dirname(
@@ -491,7 +491,6 @@ def create_segments_from_json(roads_shp_path, mapfp):
         if 'streets' in x['properties'] else None
         for x in inter_nodes
     }
-    transformer = Transformer.from_proj(3857, 4326)
 
     for i, segment in enumerate(non_int_lines):
         segment.properties['id'] = '00' + str(i)
@@ -501,7 +500,8 @@ def create_segments_from_json(roads_shp_path, mapfp):
         non_int_w_ids.append(segment)
 
         x, y = util.get_center_point(segment)
-        x, y = util.reproject([[x, y]], transformer)[0]['coordinates']
+        x, y = util.reproject(
+            [[x, y]], transformer_3857_to_4326)[0]['coordinates']
 
         segment.properties['center_y'] = round(y, 4)
         segment.properties['center_x'] = round(x, 4)
@@ -539,7 +539,8 @@ def create_segments_from_json(roads_shp_path, mapfp):
             segment_data.append(segment)
 
         x, y = util.get_center_point(intersection)
-        x, y = util.reproject([[x, y]], transformer)[0]['coordinates']
+        x, y = util.reproject(
+            [[x, y]], transformer_3857_to_4326)[0]['coordinates']
         intersection.properties['center_x'] = x
         intersection.properties['center_y'] = y
         intersection.data = segment_data
