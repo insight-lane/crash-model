@@ -7,7 +7,7 @@ import geojson
 from data.util import read_geojson, get_reproject_point
 from data.util import prepare_geojson, reproject_records
 from data.add_waze_data import get_linestring
-from pyproj import Transformer
+from data.record import transformer_4326_to_3857
 
 
 def get_buffer(filename, lat, lon, radius):
@@ -28,8 +28,7 @@ def get_buffer(filename, lat, lon, radius):
 
     # Calculate the bounding circle
     overlapping = []
-    transformer = Transformer.from_proj(4326, 3857, always_xy=True)
-    point = get_reproject_point(lat, lon, transformer)
+    point = get_reproject_point(lat, lon, transformer_4326_to_3857)
     buffered_poly = point.buffer(radius)
     for segment in segments:
         if segment.geometry.intersects(buffered_poly):
