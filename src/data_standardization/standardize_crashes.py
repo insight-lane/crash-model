@@ -174,36 +174,32 @@ def add_city_specific_fields(crash, formatted_crash, fields):
     if "address" in list(fields.keys()) and fields["address"]:
         formatted_crash["address"] = crash[fields["address"]]
 
-    # setup a vehicles list for each crash
-    formatted_crash["vehicles"] = []
-
-    # check for car involvement
-    if "vehicles" in list(fields.keys()) and fields["vehicles"] == "mode_type":
-        # this needs work, but for now any of these mode types
-        # translates to a car being involved, quantity unknown
-        if crash[fields["vehicles"]] == "mv" or crash[fields["vehicles"]] == "ped" or crash[fields["vehicles"]] == "":
-            formatted_crash["vehicles"].append({"category": "car"})
-
-    elif "vehicles" in list(fields.keys()) and fields["vehicles"] == "TOTAL_VEHICLES":
-        if crash[fields["vehicles"]] != 0 and crash[fields["vehicles"]] != "":
-            formatted_crash["vehicles"].append({
-                "category": "car",
-                "quantity": int(crash[fields["vehicles"]])
-            })
-
-    # check for bike involvement
-    if "bikes" in list(fields.keys()) and fields["bikes"] == "mode_type":
-        # assume bike and car involved, quantities unknown
-        if crash[fields["bikes"]] == "bike":
-            formatted_crash["vehicles"].append({"category": "car"})
-            formatted_crash["vehicles"].append({"category": "bike"})
-
-    elif "bikes" in list(fields.keys()) and fields["bikes"] == "TOTAL_BICYCLES":
-        if crash[fields["bikes"]] != 0 and crash[fields["bikes"]] != "":
-            formatted_crash['vehicles'].append({
-                "category": "bike",
-                "quantity": int(crash[fields["bikes"]])
-            })
+    mode = None
+    if 'mode' in fields and 'format' in fields['mode']:
+        # Check for mode type
+        # There are two ways to specify mode
+        # The first is a single column with different values for vehicle/ped/bike
+        if fields['mode']['format'] == 'column':
+            value = crash[fields['mode']['column_name']]
+            if fields['mode']['pedestrian'] == value:
+                mode = 'pedestrian'
+            elif fields['mode']['bike'] == value:
+                mode = 'bike'
+            else:
+                mode = 'vehicle'
+        # The second is a different column for each mode
+        elif fields['mode']['format'] == 'multicolumn':
+            ped_value = crash[fields['mode']['pedestrian']]
+            if ped_value:
+                mode = 'pedestrian'
+            else:
+                bike_value = crash[fields['mode']['bike']]
+                if bike_value:
+                    mode = 'bike'
+                else:
+                    mode = 'vehicle'
+            
+    formatted_crash['mode'] = mode
     return formatted_crash
 
 

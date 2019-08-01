@@ -39,9 +39,11 @@ crashes_files:
     optional:
       summary:
       address: Address
-      vehicles:
-      bikes:
-
+      mode:
+        format: column
+        column_name: Type
+        pedestrian: PED
+        bike: CYC
 
 # Additional data sources
 data_source:

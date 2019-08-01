@@ -40,8 +40,11 @@ crashes_files:
     optional:
       summary: Crash_DCA_Description
       address: Crash_Street
-      vehicles: 
-      bikes: 
+      mode:
+        format: multicolumn
+        pedestrian: Count_Unit_Pedestrian
+        bike: Count_Unit_Bicycle
+
 
 #################################################################
 # Configuration for default features
