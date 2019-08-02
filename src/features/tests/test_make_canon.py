@@ -7,6 +7,22 @@ TEST_FP = os.path.dirname(os.path.abspath(__file__))
 DATA_FP = os.path.join(TEST_FP, 'data', 'processed')
 
 
+def test_read_records():
+    result = make_canon_dataset.read_records(
+        os.path.join(DATA_FP, 'crash_joined.json'),
+        'near_id'
+    )
+    expected = pd.DataFrame({
+        'near_id': [1, 2, 3, '000', '002', '003', '004', '005', '007', '008'],
+        'crash': [2, 18, 2, 5, 3, 14, 2, 11, 1, 4],
+        'bike': [0, 3, 0, 0, 1, 1, 0, 3, 0, 1],
+        'pedestrian': [0, 3, 1, 1, 0, 0, 1, 0, 0, 0],
+        'vehicle': [2, 12, 1, 4, 2, 13, 1, 8, 1, 3]
+    })
+    assert expected.equals(result)
+    
+
+
 def test_aggregate_roads():
 
     aggregated, cr_con = make_canon_dataset.aggregate_roads(

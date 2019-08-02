@@ -30,11 +30,29 @@ def read_records(fp, id_col):
 
     with open(fp, 'r') as f:
         data = json.load(f)
+
     df = pd.DataFrame(data)
 
     print("total number of records in {}:{}".format(fp, len(df)))
     
     df_g = df.groupby([id_col]).size()
+    cols = ['crash']
+    # Get counts for all the modes
+    for mode, mode_df in df.groupby('mode'):
+
+        df_g = pd.concat(
+            [df_g, mode_df.groupby('near_id').size().astype(int)],
+            axis=1,
+        )
+
+
+        cols.append(mode)
+    df_g.columns = cols
+
+    df_g.reset_index(inplace=True)
+
+    df_g[cols] = df_g[cols].fillna(value=0).astype(int)
+
     return(df_g)
 
 
@@ -72,15 +90,9 @@ def aggregate_roads(feats, datadir):
     # read/aggregate crashes
     crash = read_records(os.path.join(datadir, 'crash_joined.json'),
                          'near_id')
-    crash = pd.concat([crash], axis=1)
-    crash.columns = ['crash']
-
-    # if null for a certain week = 0 (no crash)
-    crash.reset_index(inplace=True)
-
-    crash = crash.fillna(0)
     # Make near_id string (for matching to segments)
     crash['near_id'] = crash['near_id'].astype('str')
+    import ipdb; ipdb.set_trace()
 
     # combined road feature dataset parameters
     fp = os.path.join(datadir, 'maps', 'inter_and_non_int.geojson')
