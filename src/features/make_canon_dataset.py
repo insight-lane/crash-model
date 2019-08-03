@@ -44,10 +44,10 @@ def read_records(fp, id_col):
             [df_g, mode_df.groupby('near_id').size().astype(int)],
             axis=1,
         )
-
-
         cols.append(mode)
+
     df_g.columns = cols
+    df_g.index = df_g.index.set_names(['near_id'])
 
     df_g.reset_index(inplace=True)
 
@@ -92,7 +92,6 @@ def aggregate_roads(feats, datadir):
                          'near_id')
     # Make near_id string (for matching to segments)
     crash['near_id'] = crash['near_id'].astype('str')
-    import ipdb; ipdb.set_trace()
 
     # combined road feature dataset parameters
     fp = os.path.join(datadir, 'maps', 'inter_and_non_int.geojson')
