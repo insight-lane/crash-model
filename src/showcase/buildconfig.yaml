@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/insight-lane/showcase', '--file', 'Dockerfile.gcp', '.']
+images:
+- 'gcr.io/insight-lane/showcase'
