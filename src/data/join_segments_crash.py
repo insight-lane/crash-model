@@ -12,6 +12,7 @@ import os
 import argparse
 from pandas.io.json import json_normalize
 from shapely.geometry import Point
+import pandas as pd
 import geopandas as gpd
 
 
@@ -63,12 +64,25 @@ def calculate_crashes_by_location(df):
         - a dataframe with the total number of crashes at each unique crash location
           and list of unique crash dates
     """
+    foo = df.groupby(['latitude', 'longitude', 'mode']).agg(['count', 'unique'])
     crashes_agg = df.groupby(['latitude', 'longitude']).agg(['count', 'unique'])
+
     crashes_agg.columns = crashes_agg.columns.get_level_values(1)
     crashes_agg.rename(columns={'count': 'total_crashes', 'unique': 'crash_dates'}, inplace=True)
     crashes_agg.reset_index(inplace=True)
+
+    result_df = pd.DataFrame()
+    # aggregate the mode counts
+    for location, location_df in df.groupby(['latitude', 'longitude']):
+        for mode, mode_df in location_df.groupby(['mode']):
+
+
+            import ipdb; ipdb.set_trace()
     
     crashes_agg['crash_dates'] = crashes_agg['crash_dates'].str.join(',')
+
+
+
     return crashes_agg
 
 
@@ -86,22 +100,28 @@ def make_crash_rollup(crashes_json):
             - list of unique dates that crashes occurred
             - GeoJSON point features created from the latitude and longitude
     """
-    df_std_crashes = json_normalize(crashes_json)
-    df_std_crashes = df_std_crashes[
-        ["dateOccurred", "location.latitude", "location.longitude"]]
-    df_std_crashes.rename(columns={
-        "location.latitude": "latitude",
-        "location.longitude": "longitude"
-    }, inplace=True)
 
-    crashes_agg = calculate_crashes_by_location(df_std_crashes)
-    crashes_agg["coordinates"] = list(zip(
-        crashes_agg.longitude, crashes_agg.latitude))
-    crashes_agg["coordinates"] = crashes_agg["coordinates"].apply(Point)
-    crashes_agg = crashes_agg[["coordinates", "total_crashes", "crash_dates"]]
-
-    crashes_agg_gdf = gpd.GeoDataFrame(crashes_agg, geometry="coordinates")
-
+    crash_locations = {}
+    for crash in crashes_json:
+        loc = (crash['location']['longitude'], crash['location']['latitude'])
+        if loc not in crash_locations:
+            crash_locations[loc] = {
+                'crash_dates': [],
+                'vehicle': 0,
+                'pedestrian': 0,
+                'bike': 0,
+                'total_crashes': 0,
+                'coordinates': Point(loc),
+            }
+        crash_locations[loc]['total_crashes'] += 1
+        crash_locations[loc][crash['mode']] += 1
+        crash_locations[loc]['crash_dates'].append(crash['dateOccurred'])
+    crashes_agg_gdf = gpd.GeoDataFrame(
+        pd.DataFrame.from_dict(crash_locations, orient='index'),
+        geometry='coordinates'
+    )
+    crashes_agg_gdf['crash_dates'] = crashes_agg_gdf['crash_dates'].apply(
+        lambda x: ",".join(x))
     return crashes_agg_gdf
 
 
@@ -137,6 +157,7 @@ if __name__ == '__main__':
         args.datadir, "processed", "crashes_rollup.geojson")
     if os.path.exists(crashes_agg_path):
         os.remove(crashes_agg_path)
+
     crashes_agg_gdf.to_file(
         os.path.join(args.datadir, "processed", "crashes_rollup.geojson"),
         driver="GeoJSON"
