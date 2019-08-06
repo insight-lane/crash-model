@@ -166,6 +166,10 @@ def make_config_file(yml_file, city, timezone, folder, crash,
 
 def make_js_config(jsfile, city, folder):
     address = geocode_address(city)
+    city_segments = city.split()
+    speed_unit = 'kph'
+    if city_segments[-1] == 'USA':
+        speed_unit = 'mph'
 
     f = open(jsfile, 'w')
 
@@ -176,6 +180,7 @@ def make_js_config(jsfile, city, folder):
         '        id: "{}",\n'.format(folder) +
         '        latitude: {},\n'.format(str(address[1])) +
         '        longitude: {},\n'.format(str(address[2])) +
+        '        speed_unit: "{}",\n'.format(speed_unit) +
         '        file: "data/{}/preds_viz.geojson",\n'.format(folder) +
         '        crashes: "data/{}/crashes_rollup.geojson"\n'.format(folder) +
         '    }\n' +
@@ -259,5 +264,5 @@ if __name__ == '__main__':
         BASE_DIR, 'src', 'showcase', 'data', 'config_' + args.folder + '.js')
 
     if not os.path.exists(js_file):
-        print("Writing config.js")
+        print("Writing {}".format(js_file))
         make_js_config(js_file, args.city, args.folder)

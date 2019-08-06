@@ -185,41 +185,11 @@ def read_geojson(fp):
     """ Read geojson file, reproject to 3857, and
     output tuple geometry + property """
 
-    data = fiona.open(fp)
-    data = reproject_records([x for x in data])
+    with open(fp) as f:
+        data = json.load(f)
+    data = reproject_records([x for x in data['features']])
+
     return [Segment(x['geometry'], x['properties']) for x in data]
-
-
-def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
-    """ Write Shapefile
-    Args:
-        schema : schema dictionary
-        fp : file (.shp file)
-        data : a list of tuples
-            one element of the tuple is a shapely shape,
-            the other is a dict of properties
-        shape_key : column name or tuple index of Shapely shape
-        prop_key : column name or tuple index of properties
-    """
-
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
-
-        for i in data:
-
-            # some mismatch in yearly crash data
-            # need to force it to conform to schema
-            for k in schema['properties']:
-                if k not in i[prop_key]:
-                    i[prop_key][k] = ''
-
-            entry = {
-                'geometry': mapping(i[shape_key]),
-                # need to maintain key order because of fiona persnicketiness
-                'properties': {k: i[prop_key][k]
-                               for k in schema['properties']},
-            }
-
-            c.write(entry)
 
 
 def get_reproject_point(lat, lon, transformer,

@@ -59,7 +59,8 @@ The demo city data is stored as *data-latest.zip* using data-world. Contact one 
         - If you have any supplemental files, they will be listed under data_source. For each data source, you'll need to enter the column headers for latitude, longitude, and date.
         - Modify time_target to be the last month and year of your crash data (this is legacy and you won't need to do this unless you want to do week-by-week modeling)
 - export your mapbox api key (from when you made a mapbox account) as an environment variable called MAPBOX_TOKEN
-- Export your config file as CONFIG_FILE (e.g. `export CONFIG_FILE=data/config_boston.yml` but replace boston with your city's folder name)
+- Running the initialize_city script will also generate a javascript config file in the showcase data directory, e.g. `src/showcase/data/config_boston.js`. You'll want to set a CONFIG_FILE environment variable to be that file: `export CONFIG_FILE=data/config_boston.yml` but replace boston with your city's folder name
+- If the city name given in the initialize_city script (e.g. Boston, Massachusetts, USA) ends with 'USA', the speed unit set in the javascript config file will be 'mph', otherwise it will be 'kph'. If you'd like to change this, you can manually set it in the config_<city>.js file.
 
 ### Geocoding
 
