@@ -1,9 +1,9 @@
 import json
 import os
 import rtree
-import pyproj
 import argparse
 from . import util
+from .record import Record
 import numpy as np
 import pandas as pd
 from pandas.io.json import json_normalize
@@ -71,18 +71,25 @@ def read_volume():
 
             if record['location']['longitude'] and record[
                     'location']['latitude']:
-                volume.append(util.read_record(
-                    {
-                        'speed': record['speed']['averageSpeed'],
-                        'heavy': record['volume']['totalHeavyVehicles'],
-                        'light': record['volume']['totalLightVehicles'],
-                        'bikes': record['volume']['bikes'],
-                        'volume': record['volume']['totalVolume'],
-                        'orig': record['location']['address']
-                    },
-                    float(record['location']['longitude']),
-                    float(record['location']['latitude']),
-                    orig=pyproj.Proj(init='epsg:4326')))
+
+                properties = {
+                    'speed': record['speed']['averageSpeed'],
+                    'heavy': record['volume']['totalHeavyVehicles'],
+                    'light': record['volume']['totalLightVehicles'],
+                    'bikes': record['volume']['bikes'],
+                    'volume': record['volume']['totalVolume'],
+                    'orig': record['location']['address']
+                }
+
+                properties['location'] = {
+                    'latitude': float(record['location']['latitude']),
+                    'longitude': float(record['location']['longitude'])
+                }
+                record = Record(properties)
+
+                volume.append(record)
+
+    return [{'point': x.point, 'properties': x.properties} for x in volume]
 
     return volume
 
@@ -114,6 +121,7 @@ def propagate_volume():
     print('Created spatial index')
 
     volume = read_volume()
+
     # Find nearest atr - 20 tolerance
     print("Snapping atr to segments")
     util.find_nearest(volume, combined_seg, segments_index, 20)

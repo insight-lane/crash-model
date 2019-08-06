@@ -12,6 +12,8 @@ import geopandas
 from . import util
 from shapely.geometry import Polygon, LineString, LinearRing
 import data.config
+from .record import transformer_3857_to_4326
+
 
 MAP_FP = None
 STANDARDIZED_FP = None
@@ -65,8 +67,8 @@ def expand_polygon(polygon, points_file, max_percent=.1):
     if polygon['type'] != 'Polygon':
         return None
 
-    polygon_coords = [util.get_reproject_point(
-        x[1], x[0], coords=True) for x in polygon['coordinates'][0]]
+    polygon_coords = util.reproject([x for x in polygon['coordinates'][0]])
+    polygon_coords = [x['coordinates'] for x in polygon_coords]
 
     poly_shape = Polygon(polygon_coords)
 
@@ -85,13 +87,9 @@ def expand_polygon(polygon, points_file, max_percent=.1):
         poly_shape = buffer_polygon(poly_shape, outside)
 
         # Convert back to 4326 projection
-        coords = [util.get_reproject_point(
-            x[1],
-            x[0],
-            inproj='epsg:3857',
-            outproj='epsg:4326',
-            coords=True
-        ) for x in poly_shape.exterior.coords]
+        coords = util.reproject(poly_shape.exterior.coords, transformer_3857_to_4326)
+        coords = [x['coordinates'] for x in coords]
+
         poly_shape = Polygon(coords)
 
         return poly_shape
