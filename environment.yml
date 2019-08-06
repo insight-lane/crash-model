@@ -34,4 +34,5 @@ dependencies:
 - tzlocal
 #- xgboost
 - xlrd
+- zstd
 
