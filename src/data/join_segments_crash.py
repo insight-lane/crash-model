@@ -52,43 +52,10 @@ def snap_records(
         json.dump([r.properties for r in records], f)
 
 
-def calculate_crashes_by_location(df):
-    """
-    Calculates total number of crashes that occurred at each unique lat/lng pair and
-    generates a comma-separated string of the dates that crashes occurred at that location
-
-    Inputs:
-        - a dataframe where each row represents one unique crash incident
-
-    Output:
-        - a dataframe with the total number of crashes at each unique crash location
-          and list of unique crash dates
-    """
-    foo = df.groupby(['latitude', 'longitude', 'mode']).agg(['count', 'unique'])
-    crashes_agg = df.groupby(['latitude', 'longitude']).agg(['count', 'unique'])
-
-    crashes_agg.columns = crashes_agg.columns.get_level_values(1)
-    crashes_agg.rename(columns={'count': 'total_crashes', 'unique': 'crash_dates'}, inplace=True)
-    crashes_agg.reset_index(inplace=True)
-
-    result_df = pd.DataFrame()
-    # aggregate the mode counts
-    for location, location_df in df.groupby(['latitude', 'longitude']):
-        for mode, mode_df in location_df.groupby(['mode']):
-
-
-            import ipdb; ipdb.set_trace()
-    
-    crashes_agg['crash_dates'] = crashes_agg['crash_dates'].str.join(',')
-
-
-
-    return crashes_agg
-
-
 def make_crash_rollup(crashes_json):
     """
-    Generates a GeoDataframe with the total number of crashes and a comma-separated string
+    Generates a GeoDataframe with the total number of crashes, number of bike,
+    pedestrian and vehicle crashes, along with a comma-separated string
     of crash dates per unique lat/lng pair
 
     Inputs:
@@ -97,6 +64,9 @@ def make_crash_rollup(crashes_json):
     Output:
         - a GeoDataframe with the following columns:
             - total number of crashes
+            - total number of bike crashes
+            - total number of pedestrian crashes
+            - total number of vehicle crashes
             - list of unique dates that crashes occurred
             - GeoJSON point features created from the latitude and longitude
     """
@@ -106,12 +76,12 @@ def make_crash_rollup(crashes_json):
         loc = (crash['location']['longitude'], crash['location']['latitude'])
         if loc not in crash_locations:
             crash_locations[loc] = {
-                'crash_dates': [],
-                'vehicle': 0,
+                'coordinates': Point(loc),
+                'total_crashes': 0,
                 'pedestrian': 0,
                 'bike': 0,
-                'total_crashes': 0,
-                'coordinates': Point(loc),
+                'vehicle': 0,
+                'crash_dates': [],
             }
         crash_locations[loc]['total_crashes'] += 1
         crash_locations[loc][crash['mode']] += 1
@@ -120,8 +90,10 @@ def make_crash_rollup(crashes_json):
         pd.DataFrame.from_dict(crash_locations, orient='index'),
         geometry='coordinates'
     )
+    crashes_agg_gdf.index = range(len(crashes_agg_gdf))
     crashes_agg_gdf['crash_dates'] = crashes_agg_gdf['crash_dates'].apply(
-        lambda x: ",".join(x))
+        lambda x: ",".join(sorted(set(x))))
+
     return crashes_agg_gdf
 
 
