@@ -10,7 +10,6 @@ import json
 from . import util
 import os
 import argparse
-from pandas.io.json import json_normalize
 from shapely.geometry import Point
 import pandas as pd
 import geopandas as gpd
