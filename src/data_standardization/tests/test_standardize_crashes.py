@@ -273,3 +273,99 @@ def test_date_formats(tmpdir):
     assert len(standardize_crashes.read_standardized_fields(
         crashes_with_date, fields_date_no_day, {},
         pytz.timezone("America/New_York"), tmpdir, 'test_city')) == 1
+
+
+def test_add_city_specific_fields():
+    config_fields = {
+        'mode': {
+            'format': 'column',
+            'column_name': 'Type',
+            'pedestrian': 'PED',
+            'bike': 'CYC'
+        }
+    }
+    crash_auto = {
+        'DateTime': '1/1/2015 0:45',
+        'Address': 'GREEN ST & PLEASANT ST',
+        'Type': 'AUTO',
+        'EMS': 'N',
+        'X': 71.10602800000001,
+        'Y': 42.365871999999996,
+        'ID': 1
+    }
+    formatted_crash = {
+        'id': 1,
+        'dateOccurred': '2015-01-01T00:45:00-05:00',
+        'location': {
+            'latitude': 42.365871999999996,
+            'longitude': -71.10602800000001
+        }
+    }
+    # Tests for single column version of mode
+    result = standardize_crashes.add_city_specific_fields(
+        crash_auto, formatted_crash, config_fields)
+    assert result['mode'] == 'vehicle'
+
+    crash_bike = {
+        'DateTime': '1/5/2015 9:17',
+        'Address': '395 COLUMBIA ST',
+        'Type': 'CYC',
+        'EMS': 'N',
+        'X': -71.09474718,
+        'Y': 42.37245524,
+        'ID': 12
+    }
+    formatted_crash_bike = {
+        'id': 12,
+        'dateOccurred': '2015-01-05T09:17:00-05:00',
+        'location': {
+            'latitude': 42.37245524,
+            'longitude': -71.09474718
+        }
+    }
+    result = standardize_crashes.add_city_specific_fields(
+        crash_bike, formatted_crash_bike, config_fields)
+    assert result['mode'] == 'bike'
+
+    # Tests for multicolumn version of mode
+    config_fields_multicolumn = {
+        'summary': 'MAR_ADDRESS',
+        'mode': {
+            'format': 'multicolumn',
+            'pedestrian': 'TOTAL_PEDESTRIANS',
+            'bike': 'TOTAL_BICYCLES'}
+    }
+    crash_auto_multicolumn = {
+        'MAR_ADDRESS': '400 NEW YORK AVENUE NW',
+        'TOTAL_PEDESTRIANS': 0,
+        'TOTAL_BICYCLES': 0
+    }
+    crash_formatted = {
+        'id': 1,
+        'dateOccurred': '2014-07-06T01:00:00-04:00',
+        'location': {
+            'latitude': 38.9044810958,
+            'longitude': -77.0161807127
+        }
+    }
+    result = standardize_crashes.add_city_specific_fields(
+        crash_auto_multicolumn, crash_formatted, config_fields_multicolumn)
+    assert result['mode'] == 'vehicle'
+    assert result['summary'] == '400 NEW YORK AVENUE NW'
+
+    crash_ped_multicolumn = {
+        'MAR_ADDRESS': '400 NEW YORK AVENUE NW',
+        'TOTAL_PEDESTRIANS': 1,
+        'TOTAL_BICYCLES': 0
+    }
+    crash_formatted = {
+        'id': 1,
+        'dateOccurred': '2016-07-22T22:36:49-04:00',
+        'location': {
+            'latitude': 38.8921170792,
+            'longitude': -77.0175669483
+        }
+    }
+    result = standardize_crashes.add_city_specific_fields(
+        crash_ped_multicolumn, crash_formatted, config_fields_multicolumn)
+    assert result['mode'] == 'pedestrian'
