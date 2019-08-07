@@ -77,13 +77,15 @@ def make_crash_rollup(crashes_json):
             crash_locations[loc] = {
                 'coordinates': Point(loc),
                 'total_crashes': 0,
-                'pedestrian': 0,
-                'bike': 0,
-                'vehicle': 0,
                 'crash_dates': [],
             }
+            if 'mode' in crash and crash['mode']:
+                crash_locations[loc]['pedestrian'] = 0
+                crash_locations[loc]['bike'] = 0
+                crash_locations[loc]['vehicle'] = 0
         crash_locations[loc]['total_crashes'] += 1
-        crash_locations[loc][crash['mode']] += 1
+        if 'mode' in crash and crash['mode']:
+            crash_locations[loc][crash['mode']] += 1
         crash_locations[loc]['crash_dates'].append(crash['dateOccurred'])
     crashes_agg_gdf = gpd.GeoDataFrame(
         pd.DataFrame.from_dict(crash_locations, orient='index'),
