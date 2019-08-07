@@ -36,6 +36,7 @@ def read_records(fp, id_col):
     print("total number of records in {}:{}".format(fp, len(df)))
     
     df_g = df.groupby([id_col]).size()
+    df_g = df_g.to_frame()
     cols = ['crash']
     # Get counts for all the modes
     for mode, mode_df in df.groupby('mode'):
