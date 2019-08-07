@@ -71,16 +71,15 @@ def test_make_rollup():
         Point(-71.097, 42.361),
         Point(-71.127, 42.396)]
     expected_rollup["total_crashes"] = [3, 1, 2]
-    expected_rollup["pedestrian"] = [1, 0, 0]
-    expected_rollup["bike"] = [0, 1, 1]
-    expected_rollup["vehicle"] = [2, 0, 1]
-
-
     expected_rollup["crash_dates"] = [
         "2015-01-01T00:45:00-05:00,2015-04-15T00:45:00-05:00,2015-10-20T00:45:00-05:00",
         "2015-01-01T01:12:00-05:00",
         "2015-01-01T01:54:00-05:00"
     ]
+    expected_rollup["pedestrian"] = [1, 0, 0]
+    expected_rollup["bike"] = [0, 1, 1]
+    expected_rollup["vehicle"] = [2, 0, 1]
+
 
     results = join_segments_crash.make_crash_rollup(standardized_crashes)
 
