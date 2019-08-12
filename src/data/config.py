@@ -70,6 +70,12 @@ class Configuration(object):
         self.features = self.default_features + self.categorical_features \
             + self.continuous_features
 
+        self.split_columns = []
+        for crash, crash_value in config['crashes_files'].items():
+            if 'optional' in crash_value and 'split_columns' in crash_value['optional']:
+                self.split_columns += crash_value['optional']['split_columns'].keys()
+
+        
     def get_feature_list(self, config):
         """
         Make the list of features, and write it to the city's data folder
