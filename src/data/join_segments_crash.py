@@ -13,6 +13,7 @@ import argparse
 from shapely.geometry import Point
 import pandas as pd
 import geopandas as gpd
+import data.config
 
 
 BASE_DIR = os.path.dirname(
@@ -51,7 +52,7 @@ def snap_records(
         json.dump([r.properties for r in records], f)
 
 
-def make_crash_rollup(crashes_json):
+def make_crash_rollup(crashes_json, split_columns):
     """
     Generates a GeoDataframe with the total number of crashes, number of bike,
     pedestrian and vehicle crashes, along with a comma-separated string
@@ -61,46 +62,64 @@ def make_crash_rollup(crashes_json):
         - a json of standardized crash data
 
     Output:
-        - a GeoDataframe with the following columns:
+        - a list of GeoDataframes
+          (one for the total counts, and one for each split_column)
+          Each GeoDataFrame has the following columns:
             - total number of crashes
-            - total number of bike crashes
-            - total number of pedestrian crashes
-            - total number of vehicle crashes
             - list of unique dates that crashes occurred
             - GeoJSON point features created from the latitude and longitude
     """
 
-    crash_locations = {}
+    crash_locations = {
+        'total': {}
+    }
+    for column in split_columns:
+        crash_locations[column] = {}
+
+    # Make multiple crash rollup files
     for crash in crashes_json:
         loc = (crash['location']['longitude'], crash['location']['latitude'])
-        if loc not in crash_locations:
-            crash_locations[loc] = {
+
+        if loc not in crash_locations['total']:
+            crash_locations['total'][loc] = {
                 'coordinates': Point(loc),
                 'total_crashes': 0,
                 'crash_dates': [],
             }
-            if 'mode' in crash and crash['mode']:
-                crash_locations[loc]['pedestrian'] = 0
-                crash_locations[loc]['bike'] = 0
-                crash_locations[loc]['vehicle'] = 0
-        crash_locations[loc]['total_crashes'] += 1
-        if 'mode' in crash and crash['mode']:
-            crash_locations[loc][crash['mode']] += 1
-        crash_locations[loc]['crash_dates'].append(crash['dateOccurred'])
-    crashes_agg_gdf = gpd.GeoDataFrame(
-        pd.DataFrame.from_dict(crash_locations, orient='index'),
-        geometry='coordinates'
-    )
-    crashes_agg_gdf.index = range(len(crashes_agg_gdf))
-    crashes_agg_gdf['crash_dates'] = crashes_agg_gdf['crash_dates'].apply(
-        lambda x: ",".join(sorted(set(x))))
+        crash_locations['total'][loc]['total_crashes'] += 1
+        date = crash['dateOccurred']
 
-    return crashes_agg_gdf
+        crash_locations['total'][loc]['crash_dates'].append(date)
+        for column in split_columns:
+            if column in crash:
+                if loc not in crash_locations[column]:
+                    crash_locations[column][loc] = {
+                        'coordinates': Point(loc),
+                        'total_crashes': 0,
+                        'crash_dates': [],
+                    }
+                crash_locations[column][loc]['total_crashes'] += 1
+                crash_locations[column][loc]['crash_dates'].append(crash['dateOccurred'])
+
+    crashes_agg = {}
+    for crash_type in crash_locations.keys():
+        crashes_agg_gdf = gpd.GeoDataFrame(
+            pd.DataFrame.from_dict(crash_locations[crash_type], orient='index'),
+            geometry='coordinates'
+        )
+        crashes_agg_gdf.index = range(len(crashes_agg_gdf))
+        crashes_agg_gdf['crash_dates'] = crashes_agg_gdf['crash_dates'].apply(
+            lambda x: ",".join(sorted(set(x))))
+        crashes_agg[crash_type] = crashes_agg_gdf
+
+    return crashes_agg
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", type=str,
+                        help="Config file", required=True)
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
     parser.add_argument("-start", "--startyear", type=str,
@@ -109,7 +128,8 @@ if __name__ == '__main__':
                         help="Can limit data to crashes this year or earlier")
 
     args = parser.parse_args()
-
+    config = data.config.Configuration(args.config)
+    
     # Can override the hardcoded data directory
     if args.datadir:
         RAW_DATA_FP = os.path.join(args.datadir, 'standardized')
@@ -124,14 +144,15 @@ if __name__ == '__main__':
 
     with open(os.path.join(PROCESSED_DATA_FP, 'crash_joined.json')) as crash_file:
         data = json.load(crash_file)
-    crashes_agg_gdf = make_crash_rollup(data)
+    crashes_agg_list = make_crash_rollup(data, config.split_columns)
 
     crashes_agg_path = os.path.join(
         args.datadir, "processed", "crashes_rollup.geojson")
     if os.path.exists(crashes_agg_path):
         os.remove(crashes_agg_path)
 
-    crashes_agg_gdf.to_file(
-        os.path.join(args.datadir, "processed", "crashes_rollup.geojson"),
-        driver="GeoJSON"
-    )
+    for mode, crashes_agg_gdf in crashes_agg_list.items():
+        crashes_agg_gdf.to_file(
+            os.path.join(args.datadir, "processed", "crashes_rollup_" + mode + ".geojson"),
+            driver="GeoJSON"
+        )
