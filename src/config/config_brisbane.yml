@@ -40,10 +40,15 @@ crashes_files:
     optional:
       summary: Crash_DCA_Description
       address: Crash_Street
-      mode:
-        format: multicolumn
-        pedestrian: Count_Unit_Pedestrian
-        bike: Count_Unit_Bicycle
+      split_columns:
+        pedestrian:
+          column_name: Count_Unit_Pedestrian
+          column_value: any
+        bike:
+          column_name: Count_Unit_Bicycle
+          column_value: any
+        vehicle:
+          not_column: pedestrian bike
 
 
 #################################################################

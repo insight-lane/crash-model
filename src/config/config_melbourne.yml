@@ -50,10 +50,15 @@ crashes_files:
       # If the crash file doesn't have a lat/lon, you must give the address field
       # and you will need to run the geocode_batch script - see the README
       address:
-      mode:
-        format: multicolumn
-        pedestrian: PEDESTRIAN
-        bike: BICYCLIST
+      split_columns:
+        pedestrian:
+          column_name: PEDESTRIAN
+          column_value: any
+        bike:
+          column_name: BICYCLIST
+          column_value: any
+        vehicle:
+          not_column: pedestrian bike
 
 #################################################################
 # Configuration for default features

@@ -39,11 +39,16 @@ crashes_files:
         optional:
             summary: location_type
             address: 
-            mode:
-                format: column
+            split_columns:
+              pedestrian:
                 column_name: mode_type
-                pedestrian: ped
-                bike: bike
+                column_value: ped
+              bike:
+                column_name: mode_type
+                column_value: bike
+              vehicle:
+                column_name: mode_type
+                column_value: mv
 
 ##############################################################################
 
