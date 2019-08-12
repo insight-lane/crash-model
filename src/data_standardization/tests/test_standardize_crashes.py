@@ -277,11 +277,19 @@ def test_date_formats(tmpdir):
 
 def test_add_city_specific_fields():
     config_fields = {
-        'mode': {
-            'format': 'column',
-            'column_name': 'Type',
-            'pedestrian': 'PED',
-            'bike': 'CYC'
+        'split_columns': {
+            'pedestrian': {
+                'column_name': 'Type',
+                'column_value': 'PED'
+            },
+            'bike': {
+                'column_name': 'Type',
+                'column_value': 'CYC'
+            },
+            'vehicle': {
+                'column_name': 'Type',
+                'column_value': 'AUTO'
+            }
         }
     }
     crash_auto = {
@@ -304,7 +312,9 @@ def test_add_city_specific_fields():
     # Tests for single column version of mode
     result = standardize_crashes.add_city_specific_fields(
         crash_auto, formatted_crash, config_fields)
-    assert result['mode'] == 'vehicle'
+    assert result['vehicle'] == 1
+    assert 'pedestrian' not in result
+    assert 'bike' not in result
 
     crash_bike = {
         'DateTime': '1/5/2015 9:17',
@@ -325,15 +335,26 @@ def test_add_city_specific_fields():
     }
     result = standardize_crashes.add_city_specific_fields(
         crash_bike, formatted_crash_bike, config_fields)
-    assert result['mode'] == 'bike'
+    assert result['bike'] == 1
+    assert 'vehicle' not in result
+    assert 'pedestrian' not in result
 
     # Tests for multicolumn version of mode
     config_fields_multicolumn = {
         'summary': 'MAR_ADDRESS',
-        'mode': {
-            'format': 'multicolumn',
-            'pedestrian': 'TOTAL_PEDESTRIANS',
-            'bike': 'TOTAL_BICYCLES'}
+        'split_columns': {
+            'pedestrian': {
+                'column_name': 'TOTAL_PEDESTRIANS',
+                'column_value': 'any'
+            },
+            'bike': {
+                'column_name': 'TOTAL_BICYCLES',
+                'column_value': 'any'
+            },
+            'vehicle': {
+                'not_column': 'pedestrian bike'
+            }
+        }
     }
     crash_auto_multicolumn = {
         'MAR_ADDRESS': '400 NEW YORK AVENUE NW',
@@ -350,7 +371,9 @@ def test_add_city_specific_fields():
     }
     result = standardize_crashes.add_city_specific_fields(
         crash_auto_multicolumn, crash_formatted, config_fields_multicolumn)
-    assert result['mode'] == 'vehicle'
+    assert result['vehicle'] == 1
+    assert 'pedestrian' not in result
+    assert 'bike' not in result
     assert result['summary'] == '400 NEW YORK AVENUE NW'
 
     crash_ped_multicolumn = {
@@ -368,4 +391,6 @@ def test_add_city_specific_fields():
     }
     result = standardize_crashes.add_city_specific_fields(
         crash_ped_multicolumn, crash_formatted, config_fields_multicolumn)
-    assert result['mode'] == 'pedestrian'
+    assert result['pedestrian'] == 1
+    assert 'vehicle' not in result
+    assert 'bike' not in result
