@@ -207,7 +207,7 @@ if __name__ == '__main__':
         steps = args.onlysteps.split(',')
 
     # Read config file
-    config = data.config.Configuration(args.config)
+    config = data.config.Configuration(args.config_file)
 
     DATA_FP = os.path.join(BASE_DIR, 'data', config.name)
 
