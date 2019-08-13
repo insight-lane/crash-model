@@ -8,6 +8,8 @@ from data.util import read_geojson
 import os
 import argparse
 import warnings
+import data.config
+
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -123,28 +125,22 @@ def combine_crash_with_segments(crash, aggregated):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
-    parser.add_argument("-features", "--featlist", nargs="+", default=[
-        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
-        help="List of segment features to include")
+    parser.add_argument("-c", "--config", type=str,
+                        help="Config file", required=True)
 
     args = parser.parse_args()
+
+    config = data.config.Configuration(args.config)
 
     # Can override the hardcoded data directory
     if args.datadir:
         DATA_FP = os.path.join(args.datadir, 'processed')
         MAP_FP = os.path.join(DATA_FP, 'maps')
 
-    # Can override the hardcoded feature list
-    feats = ['AADT', 'SPEEDLIMIT',
-             'Struct_Cnd', 'Surface_Tp',
-             'F_F_Class']
-    if args.featlist:
-        feats = args.featlist
-
+    feats = config.features
     print("Data directory: " + DATA_FP)
 
     aggregated, crash = aggregate_roads(
