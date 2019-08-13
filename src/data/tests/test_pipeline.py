@@ -2,6 +2,9 @@
 import os
 import shutil
 import pipeline
+import ruamel
+import data.config
+
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
@@ -40,14 +43,48 @@ def test_copy_files(tmpdir):
             TEST_FP,
             'data',
             'viz_preds_tests',
-            'crashes_rollup.geojson'),
+            'crashes_rollup_all.geojson'),
         os.path.join(
             data_dir,
             'processed',
-            'crashes_rollup.geojson'
+            'crashes_rollup_all.geojson'
         )
     )
-    config = {'name': 'cambridge'}
+    shutil.copy(
+        os.path.join(
+            TEST_FP,
+            'data',
+            'viz_preds_tests',
+            'crashes_rollup_pedestrian.geojson'),
+        os.path.join(
+            data_dir,
+            'processed',
+            'crashes_rollup_pedestrian.geojson'
+        )
+    )
+    config_dict = {
+        'name': 'cambridge',
+        'crashes_files': {
+            'file1': {
+                'optional': {
+                    'split_columns': {
+                        'pedestrian': {}
+                    }
+                }
+            }
+        },
+        'city_latitude': 42.3600825,
+        'city_longitude': -71.0588801,
+        'city_radius': 15,
+        'city': "Cambridge, Massachusetts, USA",
+        'timezone': "America/New_York",
+
+    }
+    config_filename = os.path.join(tmpdir, 'test.yml')
+    with open(config_filename, "w") as f:
+        ruamel.yaml.round_trip_dump(config_dict, f)
+    config = data.config.Configuration(config_filename)
+
     pipeline.copy_files(
         base_dir,
         data_dir,
@@ -59,7 +96,14 @@ def test_copy_files(tmpdir):
         'showcase',
         'data',
         'cambridge',
-        'crashes_rollup.geojson'))
+        'crashes_rollup_all.geojson'))
+    assert os.path.exists(os.path.join(
+        base_dir,
+        'src',
+        'showcase',
+        'data',
+        'cambridge',
+        'crashes_rollup_pedestrian.geojson'))
     assert os.path.exists(os.path.join(
         base_dir,
         'src',

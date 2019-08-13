@@ -1,0 +1,5 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "total_crashes": 1, "crash_dates": "2015-04-03T09:10:00-04:00" }, "geometry": { "type": "Point", "coordinates": [ -71.107141, 42.353438 ] } },
+]}

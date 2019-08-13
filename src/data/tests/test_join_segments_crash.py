@@ -110,6 +110,6 @@ def test_make_rollup():
 
     results = join_segments_crash.make_crash_rollup(standardized_crashes, split_columns)
 
-    assert_frame_equal(results['total'], expected_rollup_total)
+    assert_frame_equal(results['all'], expected_rollup_total)
     assert_frame_equal(results['pedestrian'], expected_rollup_pedestrian)
     assert_frame_equal(results['bike'], expected_rollup_bike)

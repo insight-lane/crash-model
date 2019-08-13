@@ -52,7 +52,7 @@ def snap_records(
         json.dump([r.properties for r in records], f)
 
 
-def make_crash_rollup(crashes_json, split_columns):
+def make_crash_rollup(crashes_json, split_columns=[]):
     """
     Generates a GeoDataframe with the total number of crashes, number of bike,
     pedestrian and vehicle crashes, along with a comma-separated string
@@ -71,7 +71,7 @@ def make_crash_rollup(crashes_json, split_columns):
     """
 
     crash_locations = {
-        'total': {}
+        'all': {}
     }
     for column in split_columns:
         crash_locations[column] = {}
@@ -80,16 +80,16 @@ def make_crash_rollup(crashes_json, split_columns):
     for crash in crashes_json:
         loc = (crash['location']['longitude'], crash['location']['latitude'])
 
-        if loc not in crash_locations['total']:
-            crash_locations['total'][loc] = {
+        if loc not in crash_locations['all']:
+            crash_locations['all'][loc] = {
                 'coordinates': Point(loc),
                 'total_crashes': 0,
                 'crash_dates': [],
             }
-        crash_locations['total'][loc]['total_crashes'] += 1
+        crash_locations['all'][loc]['total_crashes'] += 1
         date = crash['dateOccurred']
 
-        crash_locations['total'][loc]['crash_dates'].append(date)
+        crash_locations['all'][loc]['crash_dates'].append(date)
         for column in split_columns:
             if column in crash:
                 if loc not in crash_locations[column]:
@@ -151,8 +151,8 @@ if __name__ == '__main__':
     if os.path.exists(crashes_agg_path):
         os.remove(crashes_agg_path)
 
-    for mode, crashes_agg_gdf in crashes_agg_list.items():
+    for split, crashes_agg_gdf in crashes_agg_list.items():
         crashes_agg_gdf.to_file(
-            os.path.join(args.datadir, "processed", "crashes_rollup_" + mode + ".geojson"),
+            os.path.join(args.datadir, "processed", "crashes_rollup_" + split + ".geojson"),
             driver="GeoJSON"
         )

@@ -30,7 +30,7 @@ def test_read_snapshots(tmpdir):
         'city_longitude': -71.0588801,
         'city_radius': 15,
         'timezone': 'America/New_York',
-        'crashes_files': 'dummy',
+        'crashes_files': {'test': {}},
         'city': "Cambridge, Massachusetts, USA",
         'timezone': "America/New_York"
     }
