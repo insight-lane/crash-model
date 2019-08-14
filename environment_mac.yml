@@ -119,7 +119,7 @@ dependencies:
   - ncurses=6.1=h0a44026_1002
   - networkx=2.3=py_0
   - notebook=6.0.0=py36_0
-  - numpy=1.17.0=py36h6b0580a_0
+  - numpy=1.16.4=py36h6b0580a_0
   - openjpeg=2.3.1=hc1feee7_0
   - openpyxl=2.6.2=py_0
   - openssl=1.1.1c=h01d97ff_0
