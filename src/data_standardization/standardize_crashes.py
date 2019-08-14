@@ -198,7 +198,7 @@ def add_split_columns(crash, formatted_crash, fields):
     splits_dict = {}
     for key, value in split_columns.items():
 
-        if key in negative_splits:
+        if key in negative_splits or 'column_value' not in value or not value['column_name']:
             continue
 
         if value['column_value'] == 'any' and crash[value['column_name']]:
