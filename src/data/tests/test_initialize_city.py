@@ -80,6 +80,7 @@ def test_make_js_config_brisbane(monkeypatch, tmpdir):
         id: "brisbane",
         latitude: -27.4697707,
         longitude: 153.0251235,
+        speed_unit: "kph",
         file: "data/brisbane/preds_viz.geojson",
         crashes: "data/brisbane/crashes_rollup.geojson"
     }
@@ -87,5 +88,39 @@ def test_make_js_config_brisbane(monkeypatch, tmpdir):
     expected_file_contents = expected_file_contents.lstrip()
     
     with open(tmpdir.join('/test_js_config_brisbane.js'), 'r') as test_file:
+        test_file_contents = test_file.read()
+    assert test_file_contents == expected_file_contents
+
+
+def test_make_js_config_boston(monkeypatch, tmpdir):
+
+    def mockreturn(address):
+
+        return "Boston, Massachusetts USA", 42.3600825, -71.0588801, 'S'
+
+    monkeypatch.setattr(initialize_city, 'geocode_address', mockreturn)
+
+    # Generate a test config for Boston
+    initialize_city.make_js_config(
+        tmpdir.join('/test_js_config_boston.js'),
+        'Boston, Massachusetts USA',
+        'boston',
+    )
+
+    # check that the file contents generated is identical to a pre-built string
+    expected_file_contents = """var config = [
+    {
+        name: "Boston, Massachusetts USA",
+        id: "boston",
+        latitude: 42.3600825,
+        longitude: -71.0588801,
+        speed_unit: "mph",
+        file: "data/boston/preds_viz.geojson",
+        crashes: "data/boston/crashes_rollup.geojson"
+    }
+]"""
+    expected_file_contents = expected_file_contents.lstrip()
+    
+    with open(tmpdir.join('/test_js_config_boston.js'), 'r') as test_file:
         test_file_contents = test_file.read()
     assert test_file_contents == expected_file_contents

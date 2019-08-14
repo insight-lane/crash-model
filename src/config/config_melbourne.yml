@@ -26,7 +26,7 @@ enddate:
 
 # crash file configurations
 crashes_files:
-  C:\Users\superuser\Documents\crash_prediction\data4democracy\crash-model\data\melbourne\raw\crashes\Crashes_Last_Five_Years.csv:
+  Crashes_Last_Five_Years.csv:
     required:
       id: ID
       latitude: LATITUDE
