@@ -51,18 +51,11 @@ crashes_files:
       # If the crash file doesn't have a lat/lon, you must give the address field
       # and you will need to run the geocode_batch script - see the README
       address: 
-      # This section allows you to specify if the crash was a pedestrian or bicycle crash
-      # If the crash csv file specifies mode in a single column, the format is 'column'
-      # column_name is the name of the column and the pedestrian and bike fields
-      # are the value in the column corresponding to pedestrian/bike crashes
-      # If there is a different column for reach mode, the format is 'multicolumn'
-      # there is no column_name field, and the pedestrian and bike values are the
-      # names of the pedestrian/bike columns
-      mode:
-        format: column
-        column_name:
-        pedestrian:
-        bike:
+      # This section allows you to specify additional feature in the crash file
+      # (split_columns) to go into the training set
+      # Most commonly split_columns are used for mode (pedestrian/bike/vehicle)
+      # but you can specify other fields in the crash data file.
+      # See the README for examples
 
 #################################################################
 # Configuration for default features
