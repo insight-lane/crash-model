@@ -72,7 +72,7 @@ class Configuration(object):
 
         self.split_columns = []
 
-        for crash, crash_value in config['crashes_files'].items():
+        for _, crash_value in config['crashes_files'].items():
             if 'optional' in crash_value and 'split_columns' in crash_value['optional']:
                 self.split_columns += crash_value['optional']['split_columns'].keys()
 
