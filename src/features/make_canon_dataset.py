@@ -20,12 +20,14 @@ MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
 DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 
-def read_records(fp, id_col):
+def read_records(fp, id_col, split_columns=[]):
     """
-    Read point data, output segments with crash counts
+    Read point data, output segments with crash counts, and counts
+    for each additional column that's been specified in split_columns
     Args:
         fp - file, probably a crash_joined.json file
         id_col - column that corresponds to segment id, probably near_id
+        split_columns - a list of columns to add
     Returns:
         Pandas dataframe with the segment/crash info
     """
@@ -34,27 +36,22 @@ def read_records(fp, id_col):
         data = json.load(f)
 
     df = pd.DataFrame(data)
+    df = df.fillna(0)
 
     print("total number of records in {}:{}".format(fp, len(df)))
     
     df_g = df.groupby([id_col]).size()
     df_g = df_g.to_frame()
-    cols = ['crash']
+    df_g.columns = ['crash']
+
     # Get counts for all the modes
-    for mode, mode_df in df.groupby('mode'):
+    extra_columns = df[[id_col] + split_columns].groupby(
+        'near_id').sum()
+    extra_columns = extra_columns.astype('int')
 
-        df_g = pd.concat(
-            [df_g, mode_df.groupby('near_id').size().astype(int)],
-            axis=1,
-        )
-        cols.append(mode)
-
-    df_g.columns = cols
-    df_g.index = df_g.index.set_names(['near_id'])
+    df_g = pd.concat([df_g, extra_columns], axis=1)
 
     df_g.reset_index(inplace=True)
-
-    df_g[cols] = df_g[cols].fillna(value=0).astype(int)
 
     return(df_g)
 
@@ -88,11 +85,14 @@ def road_make(feats, fp):
     return df[feats]
 
 
-def aggregate_roads(feats, datadir):
+def aggregate_roads(feats, datadir, split_columns):
 
     # read/aggregate crashes
-    crash = read_records(os.path.join(datadir, 'crash_joined.json'),
-                         'near_id')
+    crash = read_records(
+        os.path.join(datadir, 'crash_joined.json'),
+        'near_id',
+        split_columns
+    )
     # Make near_id string (for matching to segments)
     crash['near_id'] = crash['near_id'].astype('str')
 
@@ -145,7 +145,8 @@ if __name__ == '__main__':
 
     aggregated, crash = aggregate_roads(
         feats,
-        DATA_FP
+        DATA_FP,
+        config.split_columns
     )
 
     crash_roads = combine_crash_with_segments(

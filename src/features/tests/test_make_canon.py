@@ -3,14 +3,17 @@ import warnings
 import pandas as pd
 from .. import make_canon_dataset
 
+
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 DATA_FP = os.path.join(TEST_FP, 'data', 'processed')
 
 
-def test_read_records():
+def test_read_records(tmpdir):
+
     result = make_canon_dataset.read_records(
         os.path.join(DATA_FP, 'crash_joined.json'),
-        'near_id'
+        'near_id',
+        ['bike', 'pedestrian', 'vehicle']
     )
     expected = pd.DataFrame({
         'near_id': [1, 2, 3, '000', '002', '003', '004', '005', '007', '008'],
@@ -19,15 +22,17 @@ def test_read_records():
         'pedestrian': [0, 3, 1, 1, 0, 0, 1, 0, 0, 0],
         'vehicle': [2, 12, 1, 4, 2, 13, 1, 8, 1, 3]
     })
+
     assert expected.equals(result)
-    
 
 
 def test_aggregate_roads():
 
     aggregated, cr_con = make_canon_dataset.aggregate_roads(
         ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway'],
-        datadir=DATA_FP)
+        DATA_FP,
+        ['bike', 'pedestrian', 'vehicle']
+    )
 
     cr_con_roads = make_canon_dataset.combine_crash_with_segments(
         cr_con, aggregated)
