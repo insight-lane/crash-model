@@ -36,9 +36,9 @@ dependencies:
   - entrypoints=0.3=py36_1000
   - et_xmlfile=1.0.1=py_1001
   - expat=2.2.5=he1b5a44_1003
-  - fiona=1.8.6=py36hf242f0b_3
-  - flask=1.1.1=py_0
-  - folium=0.9.1=py_0
+  - fiona=1.8.6=py36h5f563d9_4
+  - flask=1.1.1=py_1
+  - folium=0.10.0=py_0
   - fontconfig=2.13.1=he4413a7_1000
   - freetype=2.10.0=he983fc9_0
   - freexl=1.0.5=h14c3975_1002
@@ -61,9 +61,9 @@ dependencies:
   - icu=58.2=hf484d3e_1000
   - idna=2.8=py36_1000
   - importlib_metadata=0.18=py36_0
-  - ipdb=0.12=py_0
+  - ipdb=0.12.2=py_0
   - ipykernel=5.1.1=py36h5ca1d4c_0
-  - ipython=7.6.1=py36h5ca1d4c_0
+  - ipython=7.7.0=py36h5ca1d4c_0
   - ipython_genutils=0.2.0=py_1
   - ipywidgets=7.2.1=py36_1
   - isort=4.3.21=py36_0
@@ -122,7 +122,7 @@ dependencies:
   - ncurses=6.1=hf484d3e_1002
   - networkx=2.3=py_0
   - notebook=6.0.0=py36_0
-  - numpy=1.16.4=py36h95a1406_0
+  - numpy=1.17.0=py36h95a1406_0
   - openblas=0.3.6=h6e990d7_4
   - openjpeg=2.3.1=h58a6597_0
   - openpyxl=2.6.2=py_0
@@ -159,12 +159,12 @@ dependencies:
   - pyqt=5.9.2=py36hcca6a23_0
   - pyrsistent=0.15.3=py36h516909a_0
   - pysocks=1.7.0=py36_0
-  - pytest=5.0.1=py36_0
+  - pytest=5.0.1=py36_1
   - pytest-cov=2.7.1=py_0
   - python=3.6.7=h357f687_1005
   - python-dateutil=2.8.0=py_0
   - pytz=2019.1=py_0
-  - pyyaml=5.1.1=py36h516909a_0
+  - pyyaml=5.1.2=py36h516909a_0
   - pyzmq=18.0.2=py36h1768529_2
   - qt=5.9.7=h52cfd70_2
   - qtconsole=4.5.2=py_0
@@ -173,8 +173,8 @@ dependencies:
   - requests=2.22.0=py36_1
   - rtree=0.8.3=py36h666c49c_1002
   - ruamel=1.0=py36_0
-  - ruamel.yaml=0.15.100=py36h516909a_0
-  - scikit-learn=0.21.2=py36hcdab131_1
+  - ruamel.yaml=0.16.1=py36h516909a_0
+  - scikit-learn=0.21.3=py36hcdab131_0
   - scipy=1.3.0=py36h921218d_0
   - seaborn=0.9.0=py_1
   - send2trash=1.5.0=py_0
@@ -219,5 +219,6 @@ dependencies:
   - zeromq=4.3.2=he1b5a44_2
   - zipp=0.5.1=py_0
   - zlib=1.2.11=h516909a_1005
-# Take this out eventually, but currently there's a package that didn't install this and should have
   - zstd=1.4.0=h3b9ef0a_0
+prefix: /home/jenny/anaconda3/envs/crash-model
+
