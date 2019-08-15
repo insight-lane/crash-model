@@ -152,7 +152,19 @@ if __name__ == '__main__':
         os.remove(crashes_agg_path)
 
     for split, crashes_agg_gdf in crashes_agg_list.items():
+        if split == 'all':
+            filename = os.path.join(
+                args.datadir,
+                "processed",
+                "crashes_rollup.geojson"
+            )
+        else:
+            filename = os.path.join(
+                args.datadir,
+                "processed",
+                "crashes_rollup_" + split + ".geojson"
+            )
         crashes_agg_gdf.to_file(
-            os.path.join(args.datadir, "processed", "crashes_rollup_" + split + ".geojson"),
+            filename,
             driver="GeoJSON"
         )

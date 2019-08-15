@@ -43,11 +43,11 @@ def test_copy_files(tmpdir):
             TEST_FP,
             'data',
             'viz_preds_tests',
-            'crashes_rollup_all.geojson'),
+            'crashes_rollup.geojson'),
         os.path.join(
             data_dir,
             'processed',
-            'crashes_rollup_all.geojson'
+            'crashes_rollup.geojson'
         )
     )
     shutil.copy(
@@ -96,7 +96,7 @@ def test_copy_files(tmpdir):
         'showcase',
         'data',
         'cambridge',
-        'crashes_rollup_all.geojson'))
+        'crashes_rollup.geojson'))
     assert os.path.exists(os.path.join(
         base_dir,
         'src',

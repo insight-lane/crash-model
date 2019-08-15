@@ -178,7 +178,7 @@ def copy_files(base_dir, data_fp, config):
         os.path.join(showcase_dir, 'preds_viz.geojson'))
 
     # Copy over all crash rollup files
-    files = ['crashes_rollup_all.geojson']
+    files = ['crashes_rollup.geojson']
     for split in config.split_columns:
         files.append('crashes_rollup_' + split + ".geojson")
 
