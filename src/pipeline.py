@@ -1,8 +1,8 @@
 import argparse
-import yaml
 import os
 import subprocess
 import shutil
+import data.config
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -169,18 +169,25 @@ def copy_files(base_dir, data_fp, config):
     if not os.path.exists(showcase_dir):
         os.makedirs(showcase_dir)
 
-    showcase_dir = os.path.join(showcase_dir, config['name'])
+    showcase_dir = os.path.join(showcase_dir, config.name)
     if not os.path.exists(showcase_dir):
         os.makedirs(showcase_dir)
 
     shutil.copyfile(
         os.path.join(data_fp, 'processed', 'preds_viz.geojson'),
         os.path.join(showcase_dir, 'preds_viz.geojson'))
-    shutil.copyfile(
-        os.path.join(data_fp, 'processed', 'crashes_rollup.geojson'),
-        os.path.join(showcase_dir, 'crashes_rollup.geojson'))
 
+    # Copy over all crash rollup files
+    files = ['crashes_rollup.geojson']
+    for split in config.split_columns:
+        files.append('crashes_rollup_' + split + ".geojson")
 
+    for file in files:
+        shutil.copyfile(
+            os.path.join(data_fp, 'processed', file),
+            os.path.join(showcase_dir, file))
+
+    
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -199,16 +206,15 @@ if __name__ == '__main__':
         steps = args.onlysteps.split(',')
 
     # Read config file
-    with open(args.config_file) as f:
-        config = yaml.safe_load(f)
+    config = data.config.Configuration(args.config_file)
 
-    DATA_FP = os.path.join(BASE_DIR, 'data', config['name'])
+    DATA_FP = os.path.join(BASE_DIR, 'data', config.name)
 
     if not args.onlysteps or 'standardization' in args.onlysteps:
         data_standardization(args.config_file, DATA_FP, forceupdate=args.forceupdate)
 
-    startdate = config['startdate']
-    enddate = config['enddate']
+    startdate = config.startdate
+    enddate = config.enddate
     if not args.onlysteps or 'generation' in args.onlysteps:
         data_generation(args.config_file, DATA_FP,
                         startdate=startdate,

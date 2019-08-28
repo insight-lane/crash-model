@@ -47,9 +47,12 @@ crashes_files:
       summary: 
       # If the crash file doesn't have a lat/lon, you must give the address field
       # and you will need to run the geocode_batch script - see the README
-      address: 
-      vehicles: 
-      bikes: 
+      address:
+      # This section allows you to specify additional feature in the crash file
+      # (split_columns) to go into the training set
+      # Most commonly split_columns are used for mode (pedestrian/bike/vehicle)
+      # but you can specify other fields in the crash data file.
+      # See the README for examples
 
 # List of concern type information
 concern_files:

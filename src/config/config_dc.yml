@@ -39,8 +39,16 @@ crashes_files:
       time_format: 
     optional:
       summary: MAR_ADDRESS
-      vehicles: TOTAL_VEHICLES
-      bikes: TOTAL_BICYCLES
+      split_columns:
+        pedestrian:
+          column_name: TOTAL_PEDESTRIANS
+          column_value: any
+        bike:
+          column_name: TOTAL_BICYCLES
+          column_value: any
+        vehicle:
+          column_name: TOTAL_VEHICLES
+          column_value: any
 
 #################################################################
 # Configuration for default features
