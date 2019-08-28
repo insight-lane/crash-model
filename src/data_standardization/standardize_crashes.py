@@ -174,36 +174,54 @@ def add_city_specific_fields(crash, formatted_crash, fields):
     if "address" in list(fields.keys()) and fields["address"]:
         formatted_crash["address"] = crash[fields["address"]]
 
-    # setup a vehicles list for each crash
-    formatted_crash["vehicles"] = []
+    # Add all features that have been specified under split_columns
+    if 'split_columns' in fields:
+        formatted_crash = add_split_columns(crash, formatted_crash, fields)
+    return formatted_crash
 
-    # check for car involvement
-    if "vehicles" in list(fields.keys()) and fields["vehicles"] == "mode_type":
-        # this needs work, but for now any of these mode types
-        # translates to a car being involved, quantity unknown
-        if crash[fields["vehicles"]] == "mv" or crash[fields["vehicles"]] == "ped" or crash[fields["vehicles"]] == "":
-            formatted_crash["vehicles"].append({"category": "car"})
 
-    elif "vehicles" in list(fields.keys()) and fields["vehicles"] == "TOTAL_VEHICLES":
-        if crash[fields["vehicles"]] != 0 and crash[fields["vehicles"]] != "":
-            formatted_crash["vehicles"].append({
-                "category": "car",
-                "quantity": int(crash[fields["vehicles"]])
-            })
+def add_split_columns(crash, formatted_crash, fields):
+    """
+    Add any fields specified in the split_columns field of the config
+    Args:
+        crash - a dict of unformatted crash information
+        formatted_crash - a dict with formatted crash fields
+        fields - a dict of config information about the crash fields
+    Returns:
+        formatted_fields
+    """
+    split_columns = fields['split_columns']
 
-    # check for bike involvement
-    if "bikes" in list(fields.keys()) and fields["bikes"] == "mode_type":
-        # assume bike and car involved, quantities unknown
-        if crash[fields["bikes"]] == "bike":
-            formatted_crash["vehicles"].append({"category": "car"})
-            formatted_crash["vehicles"].append({"category": "bike"})
+    # Negative splits are all fields that only have a positive value if none of
+    # the columns specified in not_column have values, so look at these separately
+    negative_splits = [x for x in split_columns if 'not_column' in split_columns[x].keys()]
+    splits_dict = {}
+    for key, value in split_columns.items():
 
-    elif "bikes" in list(fields.keys()) and fields["bikes"] == "TOTAL_BICYCLES":
-        if crash[fields["bikes"]] != 0 and crash[fields["bikes"]] != "":
-            formatted_crash['vehicles'].append({
-                "category": "bike",
-                "quantity": int(crash[fields["bikes"]])
-            })
+        if key in negative_splits or 'column_value' not in value or not value['column_name']:
+            continue
+
+        if value['column_value'] == 'any' and crash[value['column_name']]:
+            splits_dict[key] = 1
+        else:
+            if crash[value['column_name']] == value['column_value']:
+                splits_dict[key] = 1
+
+    for column in negative_splits:
+        # These are the columns that can't have a value for the current column to be true
+        # E.g. column is vehicle, and bike and pedestrian need to not be present in splits_dict
+        compare_columns = split_columns[column]['not_column'].split()
+        value = True
+
+        for compare_column in compare_columns:
+            if compare_column in splits_dict:
+                value = False
+        if value:
+            splits_dict[column] = 1
+
+    for key, value in splits_dict.items():
+        formatted_crash[key] = value
+
     return formatted_crash
 
 

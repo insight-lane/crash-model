@@ -8,6 +8,8 @@ from data.util import read_geojson
 import os
 import argparse
 import warnings
+import data.config
+
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -18,23 +20,39 @@ MAP_FP = os.path.join(BASE_DIR, 'data/processed/maps')
 DATA_FP = os.path.join(BASE_DIR, 'data/processed')
 
 
-def read_records(fp, id_col):
+def read_records(fp, id_col, split_columns=[]):
     """
-    Read point data, output segments with crash counts
+    Read point data, output segments with crash counts, and counts
+    for each additional column that's been specified in split_columns
     Args:
         fp - file, probably a crash_joined.json file
         id_col - column that corresponds to segment id, probably near_id
+        split_columns - a list of columns to add
     Returns:
         Pandas dataframe with the segment/crash info
     """
 
     with open(fp, 'r') as f:
         data = json.load(f)
+
     df = pd.DataFrame(data)
+    df = df.fillna(0)
 
     print("total number of records in {}:{}".format(fp, len(df)))
     
     df_g = df.groupby([id_col]).size()
+    df_g = df_g.to_frame()
+    df_g.columns = ['crash']
+
+    # Get counts for all the modes
+    extra_columns = df[[id_col] + split_columns].groupby(
+        'near_id').sum()
+    extra_columns = extra_columns.astype('int')
+
+    df_g = pd.concat([df_g, extra_columns], axis=1)
+
+    df_g.reset_index(inplace=True)
+
     return(df_g)
 
 
@@ -67,18 +85,14 @@ def road_make(feats, fp):
     return df[feats]
 
 
-def aggregate_roads(feats, datadir):
+def aggregate_roads(feats, datadir, split_columns):
 
     # read/aggregate crashes
-    crash = read_records(os.path.join(datadir, 'crash_joined.json'),
-                         'near_id')
-    crash = pd.concat([crash], axis=1)
-    crash.columns = ['crash']
-
-    # if null for a certain week = 0 (no crash)
-    crash.reset_index(inplace=True)
-
-    crash = crash.fillna(0)
+    crash = read_records(
+        os.path.join(datadir, 'crash_joined.json'),
+        'near_id',
+        split_columns
+    )
     # Make near_id string (for matching to segments)
     crash['near_id'] = crash['near_id'].astype('str')
 
@@ -111,33 +125,28 @@ def combine_crash_with_segments(crash, aggregated):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="Can give alternate data directory")
-    parser.add_argument("-features", "--featlist", nargs="+", default=[
-        'AADT', 'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class'],
-        help="List of segment features to include")
+    parser.add_argument("-c", "--config", type=str,
+                        help="Config file", required=True)
 
     args = parser.parse_args()
+
+    config = data.config.Configuration(args.config)
 
     # Can override the hardcoded data directory
     if args.datadir:
         DATA_FP = os.path.join(args.datadir, 'processed')
         MAP_FP = os.path.join(DATA_FP, 'maps')
 
-    # Can override the hardcoded feature list
-    feats = ['AADT', 'SPEEDLIMIT',
-             'Struct_Cnd', 'Surface_Tp',
-             'F_F_Class']
-    if args.featlist:
-        feats = args.featlist
-
+    feats = config.features
     print("Data directory: " + DATA_FP)
 
     aggregated, crash = aggregate_roads(
         feats,
-        DATA_FP
+        DATA_FP,
+        config.split_columns
     )
 
     crash_roads = combine_crash_with_segments(

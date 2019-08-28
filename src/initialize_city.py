@@ -153,8 +153,11 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "      # If the crash file doesn't have a lat/lon, you must give the address field\n" +
         "      # and you will need to run the geocode_batch script - see the README\n" +
         "      address: \n" +
-        "      vehicles: \n" +
-        "      bikes: \n\n"
+        "      # This section allows you to specify additional feature in the crash file\n" +
+        "      # (split_columns) to go into the training set\n" +
+        "      # Most commonly split_columns are used for mode (pedestrian/bike/vehicle)\n" +
+        "      # but you can specify other fields in the crash data file.\n" +
+        "      # See the README for examples\n\n"
     )
 
     write_default_features(f, waze, supplemental, additional_map)

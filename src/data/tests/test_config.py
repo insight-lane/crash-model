@@ -17,7 +17,7 @@ def test_get_feature_list(tmpdir):
         'city_longitude': -71.0588801,
         'city_radius': 15,
         'timezone': 'America/New_York',
-        'crashes_files': 'dummy',
+        'crashes_files': {'test': {}},
         'openstreetmap_features': {
             'categorical': {
                 'width': 'Width',

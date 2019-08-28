@@ -39,9 +39,16 @@ crashes_files:
     optional:
       summary:
       address: Address
-      vehicles:
-      bikes:
-
+      split_columns:
+        pedestrian:
+          column_name: Type
+          column_value: PED
+        bike:
+          column_name: Type
+          column_value: CYC
+        vehicle:
+          column_name: Type
+          column_value: AUTO
 
 # Additional data sources
 data_source:

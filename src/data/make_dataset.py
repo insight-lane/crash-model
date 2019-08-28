@@ -137,7 +137,9 @@ if __name__ == '__main__':
         '-m',
         'data.join_segments_crash',
         '-d',
-        DATA_FP
+        DATA_FP,
+        '-c',
+        config_file
     ]
         + (['-start', startdate] if startdate else [])
         + (['-end', enddate] if enddate else [])
@@ -166,5 +168,6 @@ if __name__ == '__main__':
         'features.make_canon_dataset',
         '-d',
         DATA_FP,
-        '-features'
-    ] + config.features)
+        '-c',
+        config_file,
+    ])
