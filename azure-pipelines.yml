@@ -10,6 +10,7 @@ jobs:
       export PATH="$HOME/miniconda/bin:$PATH"
       conda env create -f environment_linux.yml
       source activate crash-model
+      conda env export
       cd src
       pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
       py.test --cov=./

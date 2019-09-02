@@ -129,7 +129,7 @@ dependencies:
   - openssl=1.1.1c=h516909a_0
   - osmnx=0.10=py_1
   - packaging=19.0=py_0
-  - pandas=0.25.0=py36hb3f55d8_0
+  - pandas
   - pandoc=2.7.3=0
   - pandocfilters=1.4.2=py_1
   - parso=0.5.1=py_0
