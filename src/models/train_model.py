@@ -35,11 +35,6 @@ def output_importance(trained_model, features, datadir, target):
             os.path.join(
                 datadir, 'feature_importances_%s.json' % target), 'w') as f:
             json.dump(feature_imp_dict, f)
-def get_target(config):
-    if config.split_columns!=[]:
-        return(config.split_columns)
-    else:
-        return(['crash'])
 
 def set_params():
 
@@ -248,9 +243,6 @@ def initialize_and_run(data_model, features, lm_features, target,
     # train on full data
     trained_model = best_model.fit(data_model[best_model_features], data_model[target])
 
-    # running this to test performance at different weeks
-#    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
-
     predict(trained_model, data_model, best_model_features,
             features, target, datadir)
 
@@ -277,6 +269,12 @@ if __name__ == '__main__':
     PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data', config.name, 'processed/')
     seg_data = os.path.join(PROCESSED_DATA_FP, config.seg_data)
 
+    # get the targets
+    if config.split_columns!=[]:
+        targets = config.split_columns
+    else:
+        targets = ['crash']
+
     print(('Outputting to: %s' % PROCESSED_DATA_FP))
 
     # Read in data
@@ -292,8 +290,6 @@ if __name__ == '__main__':
     data_segs, features, lm_features = process_features(
         features, f_cat, f_cont, data_segs)
     print("full features:{}".format(features))
-    # get the targets
-    targets = get_target(config)
 
     for target in targets:
         # want any instance of target

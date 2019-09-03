@@ -114,7 +114,6 @@ def make_crash_rollup(crashes_json, split_columns=[]):
 
     return crashes_agg
 
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
