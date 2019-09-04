@@ -71,7 +71,6 @@ def set_defaults(config):
     args:
         config object
     """
-
     if not hasattr(config, 'seg_data'):
         config.seg_data = 'vz_predict_dataset.csv.gz'
 
