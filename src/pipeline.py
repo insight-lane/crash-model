@@ -194,7 +194,7 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--config_file", required=True, type=str,
                         help="config file location")
     parser.add_argument('--forceupdate', action='store_true',
-                        help='Whether to force update the maps')
+                        help='Whether to force update the maps and standard data')
     # Can also choose which steps of the process to run
     parser.add_argument('--onlysteps',
                         help="Give list of steps to run, as comma-separated " +
