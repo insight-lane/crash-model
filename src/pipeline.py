@@ -175,14 +175,14 @@ def copy_files(base_dir, data_fp, config):
     if not os.path.exists(showcase_dir):
         os.makedirs(showcase_dir)
 
-    shutil.copyfile(
-        os.path.join(data_fp, 'processed', 'preds_viz.geojson'),
-        os.path.join(showcase_dir, 'preds_viz.geojson'))
-
-    # Copy over all crash rollup files
-    files = ['crashes_rollup.geojson']
-    for split in config.split_columns:
-        files.append('crashes_rollup_' + split + ".geojson")
+    files = []
+    if config.split_columns:
+        for column in config.split_columns:
+            files.append('preds_viz_' + column + '.geojson')
+            files.append('crashes_rollup_' + column + ".geojson")
+    else:
+        files.append('preds_viz.geojson')
+        files.append('crashes_rollup.geojson')
 
     for file in files:
         shutil.copyfile(
