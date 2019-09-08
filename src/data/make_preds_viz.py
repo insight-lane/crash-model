@@ -18,7 +18,7 @@ import os
 import pandas as pd
 import geojson
 import sys
-
+import data.config
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -95,37 +95,51 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--datadir", type=str,
                         help="data directory")
+    parser.add_argument("-c", "--config", type=str,
+                        help="yml file for model config"
+    )
 
     args = parser.parse_args()
-
-    # print(os.getcwd())
+    config = data.config.Configuration(args.config)
 
     # confirm files exist & load data
-    predictions_file = os.path.join(
-        DATA_FP, args.datadir, "processed", "seg_with_predicted.json")
-    if not os.path.exists(predictions_file):
-        sys.exit("predictions file not found at {}, exiting".format(
-            predictions_file))
+    files = {}
+    for column in config.split_columns:
+        files["seg_with_predicted_" + column + '.json'] = column
+    if not files:
+        files["seg_with_predicted.json"] = None
 
-    # load the predictions
-    print("loading predictions: ", end="")
-    preds_data = pd.read_json(
-        predictions_file, orient="index", typ="series", dtype=False)
-    print("{} found".format(len(preds_data)))
+    for filename, column in files.items():
+        predictions_file = os.path.join(
+            DATA_FP, args.datadir, "processed", filename)
+        if not os.path.exists(predictions_file):
+            sys.exit("predictions file not found at {}, exiting".format(
+                predictions_file))
 
-    segments_file = os.path.join(
-        DATA_FP, args.datadir, "processed", "maps", "inter_and_non_int.geojson")
-    if not os.path.exists(segments_file):
-        sys.exit("segment file not found at {}, exiting".format(segments_file))
+        # load the predictions
+        print("loading predictions: ", end="")
+        preds_data = pd.read_json(
+            predictions_file, orient="index", typ="series", dtype=False)
+        print("{} found".format(len(preds_data)))
 
-    # load the segments
-    print("loading segments: ", end="")
-    segs_features = pd.read_json(segments_file)
-    # TODO segments data standard should probably key each segment by its id
-    segs_data = segs_features["features"]
-    print("{} found".format(len(segs_data)))
+        segments_file = os.path.join(
+            DATA_FP, args.datadir, "processed", "maps", "inter_and_non_int.geojson")
+        if not os.path.exists(segments_file):
+            sys.exit("segment file not found at {}, exiting".format(segments_file))
 
-    # output the combined prediction + segment data for use
-    preds_viz = combine_predictions_and_segments(preds_data, segs_data)
-    write_preds_as_geojson(preds_viz, os.path.join(
-        DATA_FP, args.datadir, "processed", "preds_viz.geojson"))
+        # load the segments
+        print("loading segments: ", end="")
+        segs_features = pd.read_json(segments_file)
+        # TODO segments data standard should probably key each segment by its id
+        segs_data = segs_features["features"]
+        print("{} found".format(len(segs_data)))
+
+        # output the combined prediction + segment data for use
+        preds_viz = combine_predictions_and_segments(preds_data, segs_data)
+        output_file = "preds_viz"
+        if column:
+            output_file += "_" + column
+        output_file += ".geojson"
+
+        write_preds_as_geojson(preds_viz, os.path.join(
+            DATA_FP, args.datadir, "processed", output_file))

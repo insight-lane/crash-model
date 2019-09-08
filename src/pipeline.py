@@ -144,7 +144,9 @@ def visualize(DATA_FP, config_file):
         '-m',
         'data.make_preds_viz',
         '-d',
-        DATA_FP
+        DATA_FP,
+        '-c',
+        config_file
     ])
     print("Generating risk map")
     subprocess.check_call([
