@@ -237,6 +237,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(DATA_FP, 'raw'))
         os.makedirs(crash_dir)
         os.makedirs(os.path.join(DATA_FP, 'processed'))
+        os.makedirs(os.path.join(DATA_FP, 'processed', 'maps'))
         os.makedirs(os.path.join(DATA_FP, 'standardized'))
         shutil.copyfile(args.crash_file, os.path.join(crash_dir, crash))
 
@@ -263,8 +264,12 @@ if __name__ == '__main__':
                          additional_map=args.additionalmap,
                          supplemental=supplemental_files)
 
+    showcase_data = os.path.join(
+        BASE_DIR, 'src', 'showcase', 'data')
+    if not os.path.exists(showcase_data):
+        os.makedirs(showcase_data)
     js_file = os.path.join(
-        BASE_DIR, 'src', 'showcase', 'data', 'config_' + args.folder + '.js')
+        showcase_data, 'config_' + args.folder + '.js')
 
     if not os.path.exists(js_file):
         print("Writing {}".format(js_file))
