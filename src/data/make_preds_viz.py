@@ -43,7 +43,7 @@ def combine_predictions_and_segments(predictions, segments):
         segment = segments_dict[str(pred_data["segment_id"])]
         prop = {
             "prediction": pred_data["prediction"],
-            "target": pred_data["target"],
+            "crash": pred_data["crash"],
             "segment_id": pred_data["segment_id"]
         }
         # Eventually handle osm_speed vs SPEEDLIMIT as part
