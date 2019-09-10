@@ -189,7 +189,60 @@ def copy_files(base_dir, data_fp, config):
             os.path.join(data_fp, 'processed', file),
             os.path.join(showcase_dir, file))
 
-    
+
+def make_js_config(BASE_DIR, config):
+    """
+    Make a city specific js config file in the showcase's data directory
+    Args:
+        BASE_DIR - city's data directory
+        config - configuration object
+    Returns:
+        nothing, just writes the js file in showcase/data/
+    """
+
+    showcase_data = os.path.join(
+        BASE_DIR, 'src', 'showcase', 'data')
+    if not os.path.exists(showcase_data):
+        os.makedirs(showcase_data)
+
+    jsfile = os.path.join(showcase_data, 'config_' + config.name + '.js')
+    print ("writing javascript config file in {}".format(jsfile))
+
+    f = open(jsfile, 'w')
+    f.write(
+        'var config = [\n')
+
+    if config.split_columns:
+        for split_column in config.split_columns:
+            name = config.city + " (" + split_column + ")"
+            f.write(
+                '    {\n' +
+                '        name: "{}",\n'.format(name) +
+                '        id: "{}",\n'.format(config.name) +
+                '        latitude: {},\n'.format(config.city_latitude) +
+                '        longitude: {},\n'.format(config.city_longitude) +
+                '        speed_unit: "{}",\n'.format(config.speed_unit) +
+                '        file: "data/{}/preds_viz_{}.geojson",\n'.format(config.name, split_column) +
+                '        crashes: "data/{}/crashes_rollup_{}.geojson"\n'.format(config.name, split_column) +
+                '    },\n'
+            )
+    else:
+        f.write(
+            '    {\n' +
+            '        name: "{}",\n'.format(config.city) +
+            '        id: "{}",\n'.format(config.name) +
+            '        latitude: {},\n'.format(config.city_latitude) +
+            '        longitude: {},\n'.format(config.city_longitude) +
+            '        speed_unit: "{}",\n'.format(config.speed_unit) +
+            '        file: "data/{}/preds_viz.geojson",\n'.format(config.name) +
+            '        crashes: "data/{}/crashes_rollup.geojson"\n'.format(config.name) +
+            '    }\n'
+        )
+        
+    f.write(']')
+    f.close()
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -229,3 +282,4 @@ if __name__ == '__main__':
     if not args.onlysteps or 'visualization' in args.onlysteps:
         visualize(DATA_FP, args.config_file)
         copy_files(BASE_DIR, DATA_FP, config)
+        make_js_config(BASE_DIR, config)

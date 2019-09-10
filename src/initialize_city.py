@@ -102,6 +102,10 @@ def write_default_features(f, waze=False, supplemental=[],
 def make_config_file(yml_file, city, timezone, folder, crash,
                      waze, additional_map=None, supplemental=[]):
     address = geocode_address(city)
+    city_segments = city.split()
+    speed_unit = 'kph'
+    if city_segments[-1] == 'USA':
+        speed_unit = 'mph'
 
     f = open(yml_file, 'w')
 
@@ -114,7 +118,8 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "# City's time zone: defaults to the local time zone of computer initializing the city's config file\n" +
         "timezone: {}\n".format(timezone) +
         "# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)\n" +
-        "city_radius: 20\n\n" +
+        "city_radius: 20\n" +
+        "speed_unit: {}\n\n".format(speed_unit) +
         "# By default, maps are created from OSM's polygon data and fall back to radius\n" +
         "# if there is no polygon data, but but you can change the openstreetmap_geography\n" +
         "# to 'radius' if preferred\n" +
@@ -165,31 +170,6 @@ def make_config_file(yml_file, city, timezone, folder, crash,
     f.close()
 
     print("Wrote new configuration file in {}".format(yml_file))
-
-
-def make_js_config(jsfile, city, folder):
-    address = geocode_address(city)
-    city_segments = city.split()
-    speed_unit = 'kph'
-    if city_segments[-1] == 'USA':
-        speed_unit = 'mph'
-
-    f = open(jsfile, 'w')
-
-    f.write(
-        'var config = [\n' +
-        '    {\n' +
-        '        name: "{}",\n'.format(city) +
-        '        id: "{}",\n'.format(folder) +
-        '        latitude: {},\n'.format(str(address[1])) +
-        '        longitude: {},\n'.format(str(address[2])) +
-        '        speed_unit: "{}",\n'.format(speed_unit) +
-        '        file: "data/{}/preds_viz.geojson",\n'.format(folder) +
-        '        crashes: "data/{}/crashes_rollup.geojson"\n'.format(folder) +
-        '    }\n' +
-        ']'
-    )
-    f.close()
 
 
 if __name__ == '__main__':
@@ -264,13 +244,3 @@ if __name__ == '__main__':
                          additional_map=args.additionalmap,
                          supplemental=supplemental_files)
 
-    showcase_data = os.path.join(
-        BASE_DIR, 'src', 'showcase', 'data')
-    if not os.path.exists(showcase_data):
-        os.makedirs(showcase_data)
-    js_file = os.path.join(
-        showcase_data, 'config_' + args.folder + '.js')
-
-    if not os.path.exists(js_file):
-        print("Writing {}".format(js_file))
-        make_js_config(js_file, args.city, args.folder)
