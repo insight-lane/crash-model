@@ -218,7 +218,7 @@ def make_js_config(BASE_DIR, config):
             f.write(
                 '    {\n' +
                 '        name: "{}",\n'.format(name) +
-                '        id: "{}",\n'.format(config.name) +
+                '        id: "{}",\n'.format(config.name + '_' + split_column) +
                 '        latitude: {},\n'.format(config.city_latitude) +
                 '        longitude: {},\n'.format(config.city_longitude) +
                 '        speed_unit: "{}",\n'.format(config.speed_unit) +
