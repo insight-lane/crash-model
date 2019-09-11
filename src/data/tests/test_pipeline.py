@@ -35,19 +35,7 @@ def test_copy_files(tmpdir):
         os.path.join(
             data_dir,
             'processed',
-            'preds_viz.geojson'
-        )
-    )
-    shutil.copy(
-        os.path.join(
-            TEST_FP,
-            'data',
-            'viz_preds_tests',
-            'crashes_rollup.geojson'),
-        os.path.join(
-            data_dir,
-            'processed',
-            'crashes_rollup.geojson'
+            'preds_viz_pedestrian.geojson'
         )
     )
     shutil.copy(
@@ -97,13 +85,6 @@ def test_copy_files(tmpdir):
         'showcase',
         'data',
         'cambridge',
-        'crashes_rollup.geojson'))
-    assert os.path.exists(os.path.join(
-        base_dir,
-        'src',
-        'showcase',
-        'data',
-        'cambridge',
         'crashes_rollup_pedestrian.geojson'))
     assert os.path.exists(os.path.join(
         base_dir,
@@ -111,7 +92,7 @@ def test_copy_files(tmpdir):
         'showcase',
         'data',
         'cambridge',
-        'preds_viz.geojson'))
+        'preds_viz_pedestrian.geojson'))
 
 
 def test_make_js_config_brisbane(tmpdir):

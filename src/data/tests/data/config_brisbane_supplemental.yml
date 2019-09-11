@@ -7,6 +7,7 @@ city_longitude: 153.0251235
 timezone: Australia/Brisbane
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 20
+speed_unit: kph
 
 # By default, maps are created from OSM's polygon data and fall back to radius
 # if there is no polygon data, but but you can change the openstreetmap_geography
