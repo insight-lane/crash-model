@@ -20,13 +20,6 @@ import geojson
 import sys
 import data.config
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.abspath(__file__))))
-
-DATA_FP = os.path.join(BASE_DIR, 'data')
-
 
 def combine_predictions_and_segments(predictions, segments):
     """
@@ -90,18 +83,13 @@ def write_preds_as_geojson(preds, outfp):
             len(preds), outfp))
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--datadir", type=str,
-                        help="data directory")
-    parser.add_argument("-c", "--config", type=str,
-                        help="yml file for model config"
-    )
-
-    args = parser.parse_args()
-    config = data.config.Configuration(args.config)
-
+def write_all_preds(DATA_FP, config):
+    """
+    For each split column, read prediction file and write postprocessed file
+    Args:
+        DATA_FP - the data directory
+        config - a configuration object
+    """
     # confirm files exist & load data
     files = {}
     for column in config.split_columns:
@@ -111,7 +99,7 @@ if __name__ == "__main__":
 
     for filename, column in files.items():
         predictions_file = os.path.join(
-            DATA_FP, args.datadir, "processed", filename)
+            DATA_FP, "processed", filename)
         if not os.path.exists(predictions_file):
             sys.exit("predictions file not found at {}, exiting".format(
                 predictions_file))
@@ -123,7 +111,7 @@ if __name__ == "__main__":
         print("{} found".format(len(preds_data)))
 
         segments_file = os.path.join(
-            DATA_FP, args.datadir, "processed", "maps", "inter_and_non_int.geojson")
+            DATA_FP, "processed", "maps", "inter_and_non_int.geojson")
         if not os.path.exists(segments_file):
             sys.exit("segment file not found at {}, exiting".format(segments_file))
 
@@ -142,4 +130,18 @@ if __name__ == "__main__":
         output_file += ".geojson"
 
         write_preds_as_geojson(preds_viz, os.path.join(
-            DATA_FP, args.datadir, "processed", output_file))
+            DATA_FP, "processed", output_file))
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--datadir", type=str,
+                        help="data directory")
+    parser.add_argument("-c", "--config", type=str,
+                        help="yml file for model config"
+    )
+
+    args = parser.parse_args()
+    config = data.config.Configuration(args.config)
+    write_all_preds(args.datadir, config)
