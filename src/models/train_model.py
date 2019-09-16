@@ -136,6 +136,8 @@ def predict(trained_model, data_model, best_model_features,
         fn = 'seg_with_predicted'
     else:
         fn = 'seg_with_predicted_%s' % target
+        # For each resulting seg_with_predicted dataset, whether or not
+        # there was a crash is given in the 'crash' column
         df_pred = df_pred.rename(columns={target: 'crash'})
 
     df_pred.to_csv(os.path.join(datadir, fn+'.csv'), index=False)
