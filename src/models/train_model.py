@@ -132,10 +132,14 @@ def predict(trained_model, data_model, best_model_features,
     preds = trained_model.predict_proba(data_model[features])[::, 1]
     df_pred = data_model.copy(deep=True)
     df_pred['prediction'] = preds
-    if target=='crash':
+    if target == 'crash':
         fn = 'seg_with_predicted'
     else:
         fn = 'seg_with_predicted_%s' % target
+        # For each resulting seg_with_predicted dataset, whether or not
+        # there was a crash is given in the 'crash' column
+        df_pred = df_pred.rename(columns={target: 'crash'})
+
     df_pred.to_csv(os.path.join(datadir, fn+'.csv'), index=False)
     df_pred.to_json(os.path.join(datadir, fn+'.json'), orient='index')
 
