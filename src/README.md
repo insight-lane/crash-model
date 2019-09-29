@@ -89,7 +89,7 @@ The demo city data is stored as *data-latest.zip* using data-world. Contact one 
 
 ```
 - export your mapbox api key (from when you made a mapbox account) as an environment variable called MAPBOX_TOKEN
-- Running the initialize_city script will also generate a javascript config file in the showcase data directory, e.g. `src/showcase/data/config_boston.js`. You'll want to set a CONFIG_FILE environment variable to be that file: `export CONFIG_FILE=data/config_boston.yml` but replace boston with your city's folder name
+- Running the initialize_city script will also generate a javascript config file in the showcase data directory, e.g. `src/showcase/data/config_boston.js`. You'll want to set a CONFIG_FILE environment variable to be that file: `export CONFIG_FILE=data/config_boston.js` but replace boston with your city's folder name
 - If the city name given in the initialize_city script (e.g. Boston, Massachusetts, USA) ends with 'USA', the speed unit set in the javascript config file will be 'mph', otherwise it will be 'kph'. If you'd like to change this, you can manually set it in the config_<city>.js file.
 
 ### Geocoding
@@ -133,5 +133,7 @@ To run locally:
 - `cd showcase`
 - You should have already exported your MAPBOX_TOKEN and CONFIG_FILE earlier in following along with this README, so check that those are set
 - `flask run`
+
+If you have set split columns in the config .yml file, you can select which split column's map you'd like to look at. Most frequently this would be mode, so you would see (for example) 'Boston, Massachusetts (bike)', 'Boston, Massachusetts (pedestrian)', and 'Boston, Massachusetts (vehicle)', showing the risk map and crashes for each mode type.
 
 Details about other visualization scripts can be found in the README under src/visualization
