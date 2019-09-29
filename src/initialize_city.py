@@ -153,8 +153,11 @@ def make_config_file(yml_file, city, timezone, folder, crash,
         "      # If the crash file doesn't have a lat/lon, you must give the address field\n" +
         "      # and you will need to run the geocode_batch script - see the README\n" +
         "      address: \n" +
-        "      vehicles: \n" +
-        "      bikes: \n\n"
+        "      # This section allows you to specify additional feature in the crash file\n" +
+        "      # (split_columns) to go into the training set\n" +
+        "      # Most commonly split_columns are used for mode (pedestrian/bike/vehicle)\n" +
+        "      # but you can specify other fields in the crash data file.\n" +
+        "      # See the README for examples\n\n"
     )
 
     write_default_features(f, waze, supplemental, additional_map)
@@ -166,6 +169,10 @@ def make_config_file(yml_file, city, timezone, folder, crash,
 
 def make_js_config(jsfile, city, folder):
     address = geocode_address(city)
+    city_segments = city.split()
+    speed_unit = 'kph'
+    if city_segments[-1] == 'USA':
+        speed_unit = 'mph'
 
     f = open(jsfile, 'w')
 
@@ -176,6 +183,7 @@ def make_js_config(jsfile, city, folder):
         '        id: "{}",\n'.format(folder) +
         '        latitude: {},\n'.format(str(address[1])) +
         '        longitude: {},\n'.format(str(address[2])) +
+        '        speed_unit: "{}",\n'.format(speed_unit) +
         '        file: "data/{}/preds_viz.geojson",\n'.format(folder) +
         '        crashes: "data/{}/crashes_rollup.geojson"\n'.format(folder) +
         '    }\n' +
@@ -259,5 +267,5 @@ if __name__ == '__main__':
         BASE_DIR, 'src', 'showcase', 'data', 'config_' + args.folder + '.js')
 
     if not os.path.exists(js_file):
-        print("Writing config.js")
+        print("Writing {}".format(js_file))
         make_js_config(js_file, args.city, args.folder)

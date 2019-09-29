@@ -14,6 +14,7 @@ import datetime
 from .record import Crash, Record
 import geojson
 from .segment import Segment
+from .record import transformer_4326_to_3857, transformer_3857_to_4326
 
 
 PROJ = pyproj.Proj(init='epsg:3857')
@@ -184,59 +185,14 @@ def read_geojson(fp):
     """ Read geojson file, reproject to 3857, and
     output tuple geometry + property """
 
-    data = fiona.open(fp)
-    data = reproject_records([x for x in data])
+    with open(fp) as f:
+        data = json.load(f)
+    data = reproject_records([x for x in data['features']])
+
     return [Segment(x['geometry'], x['properties']) for x in data]
 
 
-def write_shp(schema, fp, data, shape_key, prop_key, crs={}):
-    """ Write Shapefile
-    Args:
-        schema : schema dictionary
-        fp : file (.shp file)
-        data : a list of tuples
-            one element of the tuple is a shapely shape,
-            the other is a dict of properties
-        shape_key : column name or tuple index of Shapely shape
-        prop_key : column name or tuple index of properties
-    """
-
-    with fiona.open(fp, 'w', 'ESRI Shapefile', schema, crs=crs) as c:
-
-        for i in data:
-
-            # some mismatch in yearly crash data
-            # need to force it to conform to schema
-            for k in schema['properties']:
-                if k not in i[prop_key]:
-                    i[prop_key][k] = ''
-
-            entry = {
-                'geometry': mapping(i[shape_key]),
-                # need to maintain key order because of fiona persnicketiness
-                'properties': {k: i[prop_key][k]
-                               for k in schema['properties']},
-            }
-
-            c.write(entry)
-
-
-def read_record(record, x, y, orig=None, new=PROJ):
-    """
-    Reads record, outputs dictionary with point and properties
-    Specify orig if reprojecting
-    """
-    if (orig is not None):
-        x, y = pyproj.transform(orig, new, x, y)
-    r_dict = {
-        'point': Point(float(x), float(y)),
-        'properties': record
-    }
-    return(r_dict)
-
-
-def get_reproject_point(lat, lon, inproj='epsg:4326',
-                        outproj='epsg:3857',
+def get_reproject_point(lat, lon, transformer,
                         coords=False):
     """
     Turn a point in one projection into another
@@ -247,32 +203,15 @@ def get_reproject_point(lat, lon, inproj='epsg:4326',
     Returns:
         A point in the specified projection
     """
-    lon, lat = pyproj.transform(
-        pyproj.Proj(init=inproj), pyproj.Proj(init=outproj),
+
+    lon, lat = transformer.transform(
         lon, lat
     )
+
     if coords:
         return float(lon), float(lat)
     else:
         return Point(float(lon), float(lat))
-
-
-def raw_to_record_list(raw, orig, x='X', y='Y'):
-    """
-    Takes a list of dicts, and reprojects it into a list of records
-    Args:
-        raw - list of dicts
-        orig - original projection
-        x - name of key indicating longitude (default 'X')
-        y - name of key indicating latitude (default 'Y')
-    """
-    result = []
-    for r in raw:
-        result.append(
-            read_record(r, r[x], r[y],
-                        orig=orig)
-        )
-    return result
 
 
 def read_records_from_geojson(filename):
@@ -502,38 +441,47 @@ def track(index, step, tot):
         print("finished {} of {}".format(index, tot))
 
 
-def reproject(coords, inproj='epsg:4326', outproj='epsg:3857'):
+def reproject(coords, transformer=None):
+    """
+    Reproject a set of coordinate points
+    Args:
+        coords: a list of coords
+        transformer - a pyproj transformer object
+            if not given, the default is to transform from
+            4326 to 3857 projection
+    Returns:
+        new_coords = a list of reprojected json points
+    """
     new_coords = []
-    inproj = pyproj.Proj(init=inproj)
-    outproj = pyproj.Proj(init=outproj)
+    if not transformer:
+        transformer = transformer_4326_to_3857
 
     for coord in coords:
-        re_point = pyproj.transform(inproj, outproj, coord[0], coord[1])
+        re_point = transformer.transform(coord[0], coord[1])
         point = Point(re_point)
         new_coords.append(mapping(point))
     return new_coords
 
 
-def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
+def reproject_records(records, transformer=None):
     """
     Reprojects a set of records from one projection to another
     Records can either be points, line strings, or multiline strings
     Args:
         records - list of records to reproject
-        inproj - defaults to 4326
-        outproj - defaults to 3857
+        optional: transformer object (if not given, defaults to 4326->3857)
     Returns:
         list of reprojected records
     """
     results = []
-    inproj = pyproj.Proj(init=inproj)
-    outproj = pyproj.Proj(init=outproj)
+
+    if not transformer:
+        transformer = transformer_4326_to_3857
 
     for record in records:
-
         coords = record['geometry']['coordinates']
         if record['geometry']['type'] == 'Point':
-            re_point = pyproj.transform(inproj, outproj, coords[0], coords[1])
+            re_point = transformer.transform(coords[0], coords[1])
             point = Point(re_point)
             results.append({'geometry': point,
                             'properties': record['properties']})
@@ -542,8 +490,8 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
             for segment in coords:
                 new_segment = []
                 for coord in segment:
-                    new_segment.append(pyproj.transform(
-                        inproj, outproj, coord[0], coord[1]))
+                    new_segment.append(transformer.transform(
+                        coord[0], coord[1]))
                 new_coords.append(new_segment)
 
             results.append({'geometry': MultiLineString(new_coords),
@@ -552,7 +500,7 @@ def reproject_records(records, inproj='epsg:4326', outproj='epsg:3857'):
             new_coords = []
             for coord in coords:
                 new_coords.append(
-                    pyproj.transform(inproj, outproj, coord[0], coord[1])
+                    transformer.transform(coord[0], coord[1])
                 )
             results.append({'geometry': LineString(new_coords),
                             'properties': record['properties']})
@@ -591,8 +539,7 @@ def prepare_geojson(elements):
         A geojson feature collection
     """
 
-    elements = reproject_records(elements, inproj='epsg:3857',
-                                 outproj='epsg:4326')
+    elements = reproject_records(elements, transformer_3857_to_4326)
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
@@ -663,8 +610,8 @@ def get_roads_and_inters(filename):
         roads, intersections
     """
     data = fiona.open(filename)
-    data = reproject_records([x for x in data])
 
+    data = reproject_records([x for x in data])
     # All the line strings are roads
     roads = [Segment(x['geometry'], x['properties']) for x in data
              if x['geometry'].type == 'LineString']
@@ -692,27 +639,28 @@ def output_from_shapes(items, filename):
         nothing, writes to file
     """
     output = []
+
     for item, properties in items:
         if item.type == 'Polygon':
             coords = [x for x in item.exterior.coords]
             reprojected_coords = [[get_reproject_point(
-                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in coords]]
         elif item.type == 'MultiLineString':
             lines = [x for x in item]
             reprojected_coords = []
             for line in lines:
                 reprojected_coords.append([get_reproject_point(
-                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                    x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in line.coords])
         elif item.type == 'LineString':
             coords = [x for x in item.coords]
             reprojected_coords = [get_reproject_point(
-                x[1], x[0], inproj='epsg:3857', outproj='epsg:4326', coords=True)
+                x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in coords]
         elif item.type == 'Point':
             reprojected_coords = get_reproject_point(
-                item.y, item.x, inproj='epsg:3857', outproj='epsg:4326',
+                item.y, item.x, transformer_3857_to_4326,
                 coords=True
             )
         else:

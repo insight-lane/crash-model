@@ -40,6 +40,9 @@ def test_all(tmpdir):
         'data.join_segments_crash',
         '-d',
         path,
+        '-c',
+        path + '/config_features.yml'
+
     ])
     data = json.load(open(path + '/processed/crash_joined.json'))
     assert data[0]['near_id'] == 2

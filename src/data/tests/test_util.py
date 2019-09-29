@@ -2,7 +2,6 @@ from .. import util
 from ..segment import Segment
 import os
 from shapely.geometry import Point, LineString, MultiLineString
-import pyproj
 import fiona
 import geojson
 import numpy as np
@@ -16,56 +15,8 @@ def test_read_geojson():
     assert len(res) == 6
     assert type(res[0].geometry) == Point
 
-
-def test_write_shp(tmpdir):
-    """
-    Just make sure this runs
-    """
-
-    tmppath = tmpdir.strpath
-    schema = {
-        'geometry': 'Point',
-        'properties': {
-            'STATUS': 'str',
-            'X': 'str',
-            'Y': 'str'
-        }
-    }
-    data = (
-        {
-            'point': Point(0, 0),
-            'properties': {'X': 1, 'Y': 'a'}
-        },
-        {
-            'point': Point(1, 1),
-            'properties': {'X': 2, 'Y': 'b', 'STATUS': 'c'}
-        }
-    )
-    util.write_shp(schema, tmppath + '/test', data, 'point', 'properties')
-
-
-def test_read_record():
-    x = float(-71.07)
-    y = float(42.30)
-    # Test with no projections given
-    record = {'a': 1, 'b': 'x'}
-
-    # Don't project if you don't pass in projections
-    result = util.read_record(record, x, y)
-    expected = {
-        'point': Point(float(x), float(y)),
-        'properties': record
-    }
-
-    assert result == expected
-
-    orig = pyproj.Proj(init='epsg:4326')
-    result = util.read_record(record, x, y, orig)
-
-    # Test projecting
-    expected['point'] = Point(
-        float(-7911476.210677952), float(5206024.46129235))
-    assert result == expected
+    # Test that the connected components get read
+    assert 'connected_segments' in res[0].properties
 
 
 def find_nearest():
@@ -268,7 +219,7 @@ def test_output_from_shapes(tmpdir):
     # Read in the output, and just validate a couple of coordinates
     with open(path) as f:
         items = geojson.load(f)
-
+        print(items['features'][0])
         assert items['features'][0]['geometry']['type'] == 'Polygon'
         np.testing.assert_almost_equal(
             items['features'][0]['geometry']['coordinates'][0][0],

@@ -20,7 +20,7 @@ def test_get_features(tmpdir):
         'city_latitude': 42.3600825,
         'city_longitude': -71.0588801,
         'city_radius': 15,
-        'crashes_files': 'dummy',
+        'crashes_files': {'test': {}},
         'city': "Cambridge, Massachusetts, USA",
         'timezone': "America/New_York",
         'openstreetmap_features': {
@@ -54,5 +54,5 @@ def test_initialize_and_run(tmpdir):
                 'hwy_type1', 'hwy_type5', 'oneway0', 'signal1', 'hwy_type9',
                 'lanes3', 'lanes2', 'intersection', 'osm_speed0',
                 'osm_speed25', 'signal0', 'hwy_type0']
-    train_model.initialize_and_run(model, features, features,
+    train_model.initialize_and_run(model, features, features, 'target',
                                    tmpdir, seed=1)

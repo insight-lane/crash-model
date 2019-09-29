@@ -10,6 +10,8 @@ import pyproj
 import os
 import argparse
 import sys
+from ..record import Record
+
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(
@@ -113,20 +115,28 @@ def snap_inter_and_non_inter(summary):
         segments_index.insert(idx, element.geometry.bounds)
     print("Snapping tmcs to intersections")
 
-    address_records = util.raw_to_record_list(
-        summary, pyproj.Proj(init='epsg:4326'), x='Longitude', y='Latitude')
-    util.find_nearest(address_records, inter, segments_index, 30)
+    # Turn the summary into the format that works for reprojection
+    address_records = []
+    for properties in summary:
+        properties['location'] = {
+            'latitude': properties['Latitude'],
+            'longitude': properties['Longitude']
+        }
+        address_records.append(Record(properties))
+
+    util.find_nearest(address_records, inter, segments_index, 30, type_record=True)
 
     # Find_nearest got the nearest intersection id, but we want to compare
     # against all segments too.  They don't always match, which may be
     # something we'd like to look into
     for address in address_records:
-        address['properties']['near_intersection_id'] = \
-            str(address['properties']['near_id'])
-        address['properties']['near_id'] = ''
+        address.properties['near_intersection_id'] = \
+            str(address.properties['near_id'])
+        address.properties['near_id'] = ''
 
     combined_seg, segments_index = util.read_segments(os.path.join(PROCESSED_DATA_FP, 'maps'))
-    util.find_nearest(address_records, combined_seg, segments_index, 30)
+    util.find_nearest(address_records, combined_seg, segments_index, 30, type_record=True)
+
     return address_records
 
 
@@ -542,14 +552,14 @@ if __name__ == '__main__':
         all_crashes, crashes_by_location = util.group_json_by_location(items)
 
         for record in address_records:
-            if record['properties']['near_id'] \
-               and str(record['properties']['near_id']) \
+            if record.properties['near_id'] \
+               and str(record.properties['near_id']) \
                in list(crashes_by_location.keys()):
-                record['properties']['crash_count'] = crashes_by_location[
-                    str(record['properties']['near_id'])]['count']
+                record.properties['crash_count'] = crashes_by_location[
+                    str(record.properties['near_id'])]['count']
 
         with open(summary_file, 'w') as f:
-            address_records = [x['properties'] for x in address_records]
+            address_records = [x.properties for x in address_records]
             json.dump(address_records, f)
     else:
         address_records = json.load(open(summary_file))

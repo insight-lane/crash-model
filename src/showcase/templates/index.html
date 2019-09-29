@@ -54,7 +54,8 @@
 			</div>
 			<div class="filter speedlimit">
 				<label for="speed_selector">Speed limit greater than: </label>
-				<output for="speed_selector" id="selected_speed">0km/h</output>
+				<output for="speed_selector" id="selected_speed">0 </output>
+                                <label for="speed_selector" id="speed_unit"></label>
 				<input type="range" id="speed_slider" autocomplete="off" min="0" max="100" step="10" value="0">
 			</div>
 		</div>
@@ -189,6 +190,8 @@
 		// var city = config.showcase[4];
 		$('#city_name').text(city.name);
 
+                // insert city speed unit
+                $('#speed_unit').text(city.speed_unit);
 		// create base map
 		mapboxgl.accessToken = "{{ mapbox_token }}";
 

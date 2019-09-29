@@ -44,7 +44,7 @@ def test_read_file_info_default(tmpdir):
         'city_latitude': 42.3600825,
         'city_longitude': -71.0588801,
         'city_radius': 15,
-        'crashes_files': 'dummy',
+        'crashes_files': {'test': {}},
         'city': "Cambridge, Massachusetts, USA",
         'timezone': "America/New_York",
         'data_source': [{
@@ -106,7 +106,7 @@ def test_read_file_info_agg(tmpdir):
         'city_latitude': 42.3600825,
         'city_longitude': -71.0588801,
         'city_radius': 15,
-        'crashes_files': 'dummy',
+        'crashes_files': {'test': {}},
         'city': "Cambridge, Massachusetts, USA",
         'timezone': "America/New_York",
         'data_source': [{
