@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(
             os.path.abspath(__file__))))
 
 
-def output_importance(trained_model, features, datadir):
+def output_importance(trained_model, features, datadir, target):
     # output feature importances or coefficients
     if hasattr(trained_model, 'feature_importances_'):
         feature_imp_dict = dict(zip(features, trained_model.feature_importances_.astype(float)))
@@ -27,9 +27,14 @@ def output_importance(trained_model, features, datadir):
         return("No feature importances/coefficients detected")
 
     # conversion to json
-    with open(os.path.join(datadir, 'feature_importances.json'), 'w') as f:
-        json.dump(feature_imp_dict, f)
-
+    if target=='crash':
+        with open(os.path.join(datadir, 'feature_importances.json'), 'w') as f:
+            json.dump(feature_imp_dict, f)
+    else:
+        with open(
+            os.path.join(
+                datadir, 'feature_importances_%s.json' % target), 'w') as f:
+            json.dump(feature_imp_dict, f)
 
 def set_params():
 
@@ -66,7 +71,6 @@ def set_defaults(config):
     args:
         config object
     """
-
     if not hasattr(config, 'seg_data'):
         config.seg_data = 'vz_predict_dataset.csv.gz'
 
@@ -116,7 +120,7 @@ def get_features(config, data):
 
 
 def predict(trained_model, data_model, best_model_features,
-            features, perf_cutoff, datadir):
+            features, target, datadir):
     """
 
     Args:
@@ -128,8 +132,16 @@ def predict(trained_model, data_model, best_model_features,
     preds = trained_model.predict_proba(data_model[features])[::, 1]
     df_pred = data_model.copy(deep=True)
     df_pred['prediction'] = preds
-    df_pred.to_csv(os.path.join(datadir, 'seg_with_predicted.csv'), index=False)
-    df_pred.to_json(os.path.join(datadir, 'seg_with_predicted.json'), orient='index')
+    if target == 'crash':
+        fn = 'seg_with_predicted'
+    else:
+        fn = 'seg_with_predicted_%s' % target
+        # For each resulting seg_with_predicted dataset, whether or not
+        # there was a crash is given in the 'crash' column
+        df_pred = df_pred.rename(columns={target: 'crash'})
+
+    df_pred.to_csv(os.path.join(datadir, fn+'.csv'), index=False)
+    df_pred.to_json(os.path.join(datadir, fn+'.json'), orient='index')
 
 
 def add_extra_features(data_segs, config, datadir):
@@ -185,20 +197,20 @@ def process_features(features, f_cat, f_cont, data_segs):
     return data_segs, features, lm_features
 
 
-def initialize_and_run(data_model, features, lm_features,
+def initialize_and_run(data_model, features, lm_features, target,
                        datadir, seed=None):
 
     cvp, mp, perf_cutoff = set_params()
 
     # Initialize data
-    df = Indata(data_model, 'target')
+    df = Indata(data_model, target)
     # Create train/test split
     df.tr_te_split(.7, seed=seed)
 
     # Parameters for model
     # class weight
     # this needs to adapt to the model data, so can't be specified up from
-    a = data_model['target'].value_counts(normalize=True)
+    a = data_model[target].value_counts(normalize=True)
     w = 1/a[1]
     mp['XGBClassifier']['scale_pos_weight'] = [w]
 
@@ -232,17 +244,14 @@ def initialize_and_run(data_model, features, lm_features,
         print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
 
     # train on full data
-    trained_model = best_model.fit(data_model[best_model_features], data_model['target'])
-
-    # running this to test performance at different weeks
-#    tuned_model = skl.LogisticRegression(**test.rundict['LR_base']['bp'])
+    trained_model = best_model.fit(data_model[best_model_features], data_model[target])
 
     predict(trained_model, data_model, best_model_features,
-            features, perf_cutoff, datadir)
+            features, target, datadir)
 
     # output feature importances or coefficients
 
-    output_importance(trained_model, features, datadir)
+    output_importance(trained_model, features, datadir, target)
 
 
 if __name__ == '__main__':
@@ -263,6 +272,12 @@ if __name__ == '__main__':
     PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data', config.name, 'processed/')
     seg_data = os.path.join(PROCESSED_DATA_FP, config.seg_data)
 
+    # get the targets
+    if config.split_columns!=[]:
+        targets = config.split_columns
+    else:
+        targets = ['crash']
+
     print(('Outputting to: %s' % PROCESSED_DATA_FP))
 
     # Read in data
@@ -277,17 +292,16 @@ if __name__ == '__main__':
 
     data_segs, features, lm_features = process_features(
         features, f_cat, f_cont, data_segs)
-    # if not week, get any crash 0/1
-    any_crash = data.groupby('segment_id')['crash'].max()
-    any_crash = (any_crash>0).astype(int)
-    any_crash.name = 'target'
-    data_model = data_segs.set_index('segment_id').join(any_crash).reset_index()
     print("full features:{}".format(features))
 
-    initialize_and_run(data_model, features, lm_features,
-                       PROCESSED_DATA_FP)
-
-
-    
+    for target in targets:
+        # want any instance of target
+        any_target = data.groupby('segment_id')[target].max()
+        any_target = (any_target>0).astype(int)
+        any_target.name = target
+        data_model = data_segs.set_index('segment_id').join(any_target).reset_index()    
+        print("running model for target: %s" % target )
+        initialize_and_run(data_model, features, lm_features, target,
+                           PROCESSED_DATA_FP)
 
 

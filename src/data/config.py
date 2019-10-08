@@ -28,6 +28,11 @@ class Configuration(object):
             sys.exit('city_radius is required in config file')
         self.city_radius = config['city_radius']
 
+        if 'speed_unit' not in config or config['speed_unit'] is None:
+            self.speed_unit = 'mph'
+        else:
+            self.speed_unit = config['speed_unit']
+
         if 'map_geography' in config and config['map_geography']:
             self.map_geography = config['map_geography']
         else:

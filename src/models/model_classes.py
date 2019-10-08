@@ -4,8 +4,6 @@ import sklearn.ensemble as ske
 import sklearn.svm as svm
 import sklearn.linear_model as skl
 import xgboost as xgb
-import seaborn as sns
-import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.model_selection import RandomizedSearchCV, KFold, GroupShuffleSplit
 from sklearn.calibration import CalibratedClassifierCV
@@ -235,73 +233,3 @@ class Tester():
     def run_tuned(self, name, cal=True, cal_m='sigmoid'):
         """ Wrapper for run_model when using Tuner object """
         self.run_model(name, self.rundict[name]['model'], self.rundict[name]['features'], cal, cal_m)
-
-    def lift_chart(self, x_col, y_col, data, ax=None, pct=True):
-        """ 
-        create lift chart 
-        x_col = pctiles of predictions
-        y_col = % positive class
-        """
-        p = sns.barplot(x=x_col, y=y_col, data=data, 
-                        palette='Greens', ax = None, ci=None)
-        vals = p.get_yticks()
-        xvals = [x.get_text().split(',')[-1].strip(']') for x in p.get_xticklabels()]
-        if pct==True:
-            p.set_yticklabels(['{:3.0f}%'.format(i*100) for i in vals])
-            xvals = ['{:2.1f}%'.format(float(x)*100) for x in xvals]
-        p.set_xticklabels(xvals, rotation=30)
-        p.set_facecolor('white')
-        p.set_xlabel('')
-        p.set_ylabel('')
-        p.set_title('Predicted probability vs actual percent')
-        return(p)
-    
-    def density(self, data, score_col, ax=None):
-        """ create kdeplot of predictions """
-        p = sns.kdeplot(data[score_col], ax=ax)
-        p.set_facecolor('white')
-        p.legend('')
-        p.set_xlabel('Predicted probability')
-        p.set_title('KDE plot predictions')
-        return(p)
-
-    def density_and_lift_charts(self, model, features=None, model_params=None, verbose=True, qcut=10):
-        """ 
-        produces prediction density and decile lift chart 
-        currently only works for binary targets (0/1)
-        model (str or object with predict) : name in rundict (if used), otherwise model
-        features (list) : list of features, if not available in rundict
-        model_params : can just pass model params (from rundict)
-        verbose : True if you want the prediction deciles to be output
-        qcut : can specify percentile cut (default = decile)
-        """
-        if model_params:
-            pass
-        elif model not in self.rundict:
-            _, probs = self.predsprobs(model, self.data.test_x[features])
-        else:
-            model_params = self.rundict[model]
-            _, probs = self.predsprobs(model_params['m_fit'],
-                self.data.test_x[model_params['features']])
-        risk_df = pd.DataFrame(
-            {'probs':probs, 'target':self.data.test_y})
-        risk_df['categories'] = pd.qcut(risk_df['probs'], qcut)
-        risk_mean = risk_df.groupby('categories')['target'].mean().reset_index()
-        if verbose:
-            print(risk_df.probs.describe())
-            print(risk_mean)
-        _, axes = plt.subplots(1, 2)
-        self.lift_chart('categories', 'target', risk_df, 
-                   ax=axes[1])
-        self.density(risk_df, 'probs', ax=axes[0])
-        plt.show()
-
-    
-    def to_csv(self):
-        """ outputs rundict to csv """
-        if self.rundict == {}:
-            raise ValueError('No results found')
-        else:
-            now = pd.to_datetime('today').value
-            #Make dataframe, transpose so each row = model
-            pd.DataFrame(self.rundict).T.to_csv('results_{}.csv'.format(now))

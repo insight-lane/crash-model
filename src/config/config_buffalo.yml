@@ -1,13 +1,13 @@
 # City name
-city: Brisbane, Australia
+city: Buffalo, NY, USA
 # City centerpoint latitude & longitude (default geocoded values set)
-city_latitude: -27.4697707
-city_longitude: 153.0251235
+city_latitude: 42.885440000000074
+city_longitude: -78.87845999999996
+
 # City's time zone: defaults to the local time zone of computer initializing the city's config file
-timezone: Australia/Brisbane
+timezone: America/New_York
 # Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
 city_radius: 20
-speed_unit: kph
 
 # By default, maps are created from OSM's polygon data and fall back to radius
 # if there is no polygon data, but but you can change the openstreetmap_geography
@@ -15,30 +15,32 @@ speed_unit: kph
 map_geography: polygon
 
 # The folder under data where this city's data is stored
-name: brisbane
+name: buffalo
+
 # If given, limit crashes to after startdate and no later than enddate
 # Recommended to limit to just a few years for now
-startdate: 
-enddate: 
+startdate: 2016-01-01
+enddate: 2018-12-31
+
 #################################################################
 # Configuration for data standardization
 
 # crash file configurations
 crashes_files:
-  test_crashes.csv:
+  buffalo_converted.csv:
     required:
-      id: 
-      latitude: 
-      longitude: 
+      id: CASE_NUM
+      latitude: lat_converted
+      longitude: lon_converted
       # If date supplied in single column:
-      date_complete: 
+      date_complete: ACC_DATE
       # If date is separated into year/month/day:
       date_year: 
       date_month: 
       # Leave date_day empty if not available
       date_day: 
       # If time is available and separate from date:
-      time: 
+      time: ACCD_TME
       # If time specified, time_format is one of:
       # default (HH:MM:SS)
       # seconds (since midnight)
@@ -48,36 +50,12 @@ crashes_files:
       summary: 
       # If the crash file doesn't have a lat/lon, you must give the address field
       # and you will need to run the geocode_batch script - see the README
-      address:
+      address: 
       # This section allows you to specify additional feature in the crash file
       # (split_columns) to go into the training set
       # Most commonly split_columns are used for mode (pedestrian/bike/vehicle)
       # but you can specify other fields in the crash data file.
       # See the README for examples
-
-# List of concern type information
-concern_files:
-  - name: concern
-      filename: test_concerns.csv
-      latitude: 
-      longitude: 
-      time: 
-
-# Additional data sources
-data_source:
-  - name: 
-    filename: parking_tickets_dummy_file_1.csv
-    address: 
-    date: 
-    time: 
-    category: 
-    notes: 
-    # Feature is categorical (f_cat) or continuous (f_cont) 
-    feat: 
-    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' 
-    feat_agg: 
-    # if latest, the column name where the value can be found 
-    value: 
 
 #################################################################
 # Configuration for default features
@@ -97,6 +75,7 @@ openstreetmap_features:
 
 # Speed limit is a required feature
 # If you choose to override OpenStreetMaps' speed limit, replace 'osm_speed' with the feature name here
-# speed_limit: osm_speed
+speed_limit: osm_speed
+
 
 
