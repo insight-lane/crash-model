@@ -148,14 +148,6 @@ def visualize(DATA_FP, config_file):
         '-c',
         config_file
     ])
-    print("Generating risk map")
-    subprocess.check_call([
-        'python',
-        '-m',
-        'visualization.risk_map',
-        '-c',
-        config_file
-    ])
 
 
 def copy_files(base_dir, data_fp, config):
