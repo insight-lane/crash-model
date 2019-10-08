@@ -5,33 +5,43 @@ name: philly
 # City centerpoint latitude & longitude
 city_latitude: 39.9526
 city_longitude: -75.1652
+timezone: America/New_York
 # Radius of city's road network from centerpoint in km (required if OSM has no polygon data)
 city_radius: 15
-
 # If given, limit crashes to after startdate and no later than enddate
-startdate: 2011-01-01
-enddate: 2015-01-01
+startdate: 2017-01-01
+enddate: 2017-12-31
 
-timezone: America/New_York
 ##############################################################################
 # Configuration for data standardization
+
 # crash file configurations
 crashes_files:
-    vztest.csv:
+    crash_data_collision_crash_2007_2017.csv:
         required:
-            id: OBJECTID
-            latitude: LATITUDE
-            longitude: LONGITUDE
+            id: objectid_1
+            latitude: dec_lat
+            longitude: dec_long
             date_complete: 
-            date_year: CRASH_YEAR
-            date_month: CRASH_MONTH
+            date_year: crash_year
+            date_month: crash_month
             date_day:
-            time: 
-            time_format: 
+            time: time_of_day
+            time_format: military
         optional:
-            intersection: INTERSECT_TYPE
+            intersection: intersect_type
+            split_columns:
+                pedestrian:
+                    column_name: ped_count
+                    column_value: any
+                bike:
+                    column_name: bicycle_count
+                    column_value: any
+                vehicle:
+                    column_name: vehicle_count
+                    column_value: any
 
-##############################################################################
+#################################################################
 # Configuration for default features
 
 # Default features from open street map. You can remove features you don't want
@@ -41,12 +51,14 @@ openstreetmap_features:
   categorical:
     width: Width
     cycleway_type: Bike lane
+    signal: Signal
     oneway: One Way
     lanes: Number of lanes
+    hwy_type: Highway type
   continuous:
     width_per_lane: Average width per lane
 
-
+# Additional data sources
 data_source: 
   - name: DVRPCTrafficVolume 
     filename: DVRPC_Traffic_Counts.csv
@@ -61,7 +73,7 @@ data_source:
     # if latest, the desired value 
     value: AADT 
   - name: DVRPCWalkVolume
-    filename: DVRPC_Pedestrian_Counts.csv
+    filename: DVRPC__Pedestrian_Counts.csv
     latitude: LATITUDE 
     longitude: LONGITUDE
     date: SETDATE
@@ -73,7 +85,7 @@ data_source:
     # if latest, the desired value 
     value: AADP 
   - name: DVRPCBikeVolume
-    filename: DVRPC_Bicycle_Counts.csv
+    filename: DVRPC__Bicycle__Counts.csv
     latitude: LATITUDE 
     longitude: LONGITUDE
     date: SETDATE
@@ -83,7 +95,14 @@ data_source:
     # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
     feat_agg: latest
     # if latest, the desired value 
-    value: AADB 
+    value: AADT 
+  - name: parking_tickets
+    filename: parking_violations_14.csv
+    latitude: lat 
+    longitude: lon
+    date: issue_datetime
+    category: violation_desc 
+    notes: 
+    # Feature can be categorical (f_cat) or continuous (f_cont)
+    feat: f_cont
 
-
-process: True
