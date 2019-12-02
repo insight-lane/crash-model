@@ -100,7 +100,7 @@ dependencies:
   - libpng=1.6.37=hed695b0_0
   - libpq=11.4=hd9ab2ff_3
   - libsodium=1.0.17=h516909a_0
-  - libspatialindex
+  - libspatialindex=1.9.3=he1b5a44_1
   - libspatialite=4.3.0a=he1bb1e1_1029
   - libssh2=1.8.2=h22169c7_2
   - libstdcxx-ng=9.1.0=hdf63c60_0
