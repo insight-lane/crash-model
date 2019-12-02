@@ -2,7 +2,7 @@ import argparse
 import os
 import shutil
 import tzlocal
-from data.util import geocode_address
+from data.geocoding_util import geocode_address
 from distutils.dir_util import copy_tree
 
 BASE_DIR = os.path.dirname(

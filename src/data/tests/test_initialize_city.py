@@ -1,4 +1,3 @@
-import py
 import os
 import initialize_city
 

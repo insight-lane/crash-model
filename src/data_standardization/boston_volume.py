@@ -1,5 +1,5 @@
 import os
-from data.util import read_geocode_cache, lookup_address
+from data.geocoding_util import read_geocode_cache, lookup_address
 import re
 import openpyxl
 from collections import OrderedDict
