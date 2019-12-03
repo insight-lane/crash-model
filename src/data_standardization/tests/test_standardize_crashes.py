@@ -1,14 +1,11 @@
 from .. import standardize_crashes
-from data.util import write_geocode_cache
+from data.geocoding_util import write_geocode_cache
 from jsonschema import validate
 import json
 import os
 import csv
-import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point
 import pytz
-import pytest
+
 
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 

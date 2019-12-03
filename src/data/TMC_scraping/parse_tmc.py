@@ -4,9 +4,9 @@ from os.path import exists as path_exists
 import re
 from dateutil.parser import parse
 from .. import util
+from .. import geocoding_util
 import rtree
 import json
-import pyproj
 import os
 import argparse
 import sys
@@ -52,25 +52,6 @@ def find_date(filename):
     return parse(segments[len(segments) - 1]).date()
 
 
-def lookup_address(intersection, cached):
-    """
-    Look up an intersection first in the cache, and if it
-    doesn't exist, geocode it
-
-    Args:
-        intersection: string
-        cached: dict
-    Returns:
-        tuple of original address, geocoded address, latitude, longitude
-    """
-    if intersection in list(cached.keys()):
-        print(intersection + ' is cached')
-        return cached[intersection]
-    else:
-        print('geocoding ' + intersection)
-        return list(util.geocode_address(intersection))
-
-
 def find_address_from_filename(filename, cached):
     """
     Parses out filename to give an intersection
@@ -88,7 +69,7 @@ def find_address_from_filename(filename, cached):
 
     if len(streets) >= 2:
         intersection = streets[0] + ' and ' + streets[1] + ' Boston, MA'
-        result = lookup_address(intersection, cached)
+        result = geocoding_util.lookup_address(intersection, cached)
 
         # It's possible that google can't look up the address by the
         # first two street names for an intersection containing three
@@ -97,7 +78,7 @@ def find_address_from_filename(filename, cached):
                 or 'Boston' not in str(result[0])) and len(streets) > 2:
             intersection = streets[0] + ' and ' + streets[2] + ' Boston, MA'
             print('trying again, this time geocoding ' + intersection)
-            result = list(util.geocode_address(intersection))
+            result = list(geocoding_util.geocode_address(intersection))
         result.insert(0, intersection)
 
         return result
@@ -417,7 +398,7 @@ def parse_conflicts():
     cached = {}
     if path_exists(geocoded_file):
         print('reading geocoded cache file')
-        cached = util.read_geocode_cache(filename=geocoded_file)
+        cached = geocoding_util.read_geocode_cache(filename=geocoded_file)
 
     summary = []
     for filename in listdir(TMC_FP):
@@ -503,7 +484,7 @@ def parse_conflicts():
                     summary.append(value)
 
     # Write out the cached file
-    util.write_geocode_cache(cached, filename=geocoded_file)
+    geocoding_util.write_geocode_cache(cached, filename=geocoded_file)
 
     print("parsed " + str(count) + " TMC files")
     return summary

@@ -160,6 +160,7 @@ def propagate_volume():
         before-after)))
 
     # change dtypes
+    volume_df = volume_df.fillna(0)
     volume_df['id'] = volume_df['id']
     volume_df['heavy'] = volume_df['heavy'].astype(int)
     volume_df['light'] = volume_df['light'].astype(int)

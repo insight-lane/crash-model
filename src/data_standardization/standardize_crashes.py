@@ -10,7 +10,7 @@ import calendar
 import random
 import dateutil.parser as date_parser
 from .standardization_util import parse_date, validate_and_write_schema
-from data.util import read_geocode_cache
+from data.geocoding_util import read_geocode_cache
 import data.config
 
 CURR_FP = os.path.dirname(

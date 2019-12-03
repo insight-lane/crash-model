@@ -1,8 +1,8 @@
 # City name
 city: Somerville, Massachusetts, USA
 # City centerpoint latitude & longitude (default geocoded values set)
-city_latitude: None
-city_longitude: None
+city_latitude: 42.3876
+city_longitude: -71.0995
 
 # City's time zone: defaults to the local time zone of computer initializing the city's config file
 timezone: America/New_York
@@ -46,8 +46,17 @@ crashes_files:
       # If the crash file doesn't have a lat/lon, you must give the address field
       # and you will need to run the geocode_batch script - see the README
       address: Location
-      vehicles:
-      bikes:
+      split_columns:
+        pedestrian:
+          column_name: Pedestrian
+          column_value: any
+        bike:
+          column_name: Bicycle
+          column_value: any
+        vehicle:
+          not_column: pedestrian bike
+
+
 
 #################################################################
 # Configuration for default features

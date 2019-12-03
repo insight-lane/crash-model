@@ -2,7 +2,7 @@
 import argparse
 import os
 import csv
-from data.util import lookup_address, read_geocode_cache
+from data.geocoding_util import lookup_address, read_geocode_cache
 
 
 def parse_addresses(directory, filename, city, addressfield,

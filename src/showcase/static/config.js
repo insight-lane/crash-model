@@ -54,6 +54,33 @@ var config = [
             crashes: "data/cambridge/crashes_rollup_vehicle.geojson"
         },
         {
+            name: "Somerville, Massachusetts, USA (pedestrian)",
+            id: "somerville_pedestrian",
+            latitude: 42.3876,
+            longitude: -71.0995,
+            speed_unit: "mph",
+            file: "data/somerville/preds_viz_pedestrian.geojson",
+            crashes: "data/somerville/crashes_rollup_pedestrian.geojson"
+        },
+        {
+            name: "Somerville, Massachusetts, USA (bike)",
+            id: "somerville_bike",
+            latitude: 42.3876,
+            longitude: -71.0995,
+            speed_unit: "mph",
+            file: "data/somerville/preds_viz_bike.geojson",
+            crashes: "data/somerville/crashes_rollup_bike.geojson"
+        },
+        {
+            name: "Somerville, Massachusetts, USA (vehicle)",
+            id: "somerville_vehicle",
+            latitude: 42.3876,
+            longitude: -71.0995,
+            speed_unit: "mph",
+            file: "data/somerville/preds_viz_vehicle.geojson",
+            crashes: "data/somerville/crashes_rollup_vehicle.geojson"
+        },
+        {
             id: "dc",
             name: "Washington D.C, USA (bike)",
             latitude: 38.9071923,
