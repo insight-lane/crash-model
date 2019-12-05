@@ -24,7 +24,7 @@ jobs:
       set -eo pipefail
       . /usr/local/miniconda/etc/profile.d/conda.sh
       sudo chown -R $USER $CONDA
-      conda env create -f environment_mac.yml
+      conda env create -f environment.yml
       conda activate crash-model
       conda env export
       cd src
