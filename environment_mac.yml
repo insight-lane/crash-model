@@ -167,7 +167,7 @@ dependencies:
   - ratelim=0.1.6=py_2
   - readline=8.0=hcfe32e1_0
   - requests=2.22.0=py36_1
-  - rtree=0.9.3
+  - rtree=0.9.1
   - ruamel.yaml=0.16.5=py36h0b31af3_1
   - ruamel.yaml.clib=0.2.0=py36h0b31af3_0
   - scikit-learn=0.22=py36h3dc85bc_0
