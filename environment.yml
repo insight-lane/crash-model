@@ -30,7 +30,7 @@ dependencies:
 - ruamel.yaml
 - seaborn
 - scikit-learn
-- shapely=1.6.4-py37h5c88e11_1006
+- shapely=1.6.4-py36h0567c5e_1006
 - tzlocal
 #- xgboost
 - xlrd
