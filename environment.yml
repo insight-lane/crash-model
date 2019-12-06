@@ -8,9 +8,9 @@ dependencies:
 - fiona
 - flask
 - folium
-- geopandas=0.5.1
+- geopandas
 - geocoder
-- geojson=2.4.1
+- geojson
 - ipdb
 - ipython
 - jupyter
@@ -30,7 +30,7 @@ dependencies:
 - ruamel.yaml
 - seaborn
 - scikit-learn
-- shapely=1.6.4
+- shapely=1.6.4-py37h5c88e11_1006
 - tzlocal
 #- xgboost
 - xlrd
