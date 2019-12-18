@@ -54,6 +54,33 @@ var config = [
       crashes: "https://storage.googleapis.com/insightlane-showcase/data_mode/cambridge/crashes_rollup_vehicle.geojson"
   },
   {
+    name: "Somerville, Massachusetts, USA (pedestrian)",
+    id: "somerville_pedestrian",
+    latitude: 42.3876,
+    longitude: -71.0995,
+    speed_unit: "mph",
+    file: "https://storage.googleapis.com/insightlane-showcase/data_mode/somerville/preds_viz_pedestrian.geojson",
+    crashes: "https://storage.googleapis.com/insightlane-showcase/data_mode/somerville/crashes_rollup_pedestrian.geojson"
+  },
+  {
+      name: "Somerville, Massachusetts, USA (bike)",
+      id: "somerville_bike",
+      latitude: 42.3876,
+      longitude: -71.0995,
+      speed_unit: "mph",
+      file: "https://storage.googleapis.com/insightlane-showcase/data_mode/somerville/preds_viz_bike.geojson",
+      crashes: "https://storage.googleapis.com/insightlane-showcase/data_mode/somerville/crashes_rollup_bike.geojson"
+  },
+  {
+      name: "Somerville, Massachusetts, USA (vehicle)",
+      id: "somerville_vehicle",
+      latitude: 42.3876,
+      longitude: -71.0995,
+      speed_unit: "mph",
+      file: "https://storage.googleapis.com/insightlane-showcase/data_mode/somerville/preds_viz_vehicle.geojson",
+      crashes: "https://storage.googleapis.com/insightlane-showcase/data_mode/somerville/crashes_rollup_vehicle.geojson"
+  },
+  {
       id: "dc",
       name: "Washington D.C, USA (bike)",
       latitude: 38.9071923,
@@ -79,6 +106,15 @@ var config = [
       speed_unit: "mph",
       file: "https://storage.googleapis.com/insightlane-showcase/data_mode/dc/preds_viz_vehicle.geojson",
       crashes: "https://storage.googleapis.com/insightlane-showcase/data_mode/dc/crashes_rollup_vehicle.geojson"
+  },
+  {
+      id: "buffalo",
+      name: "Buffalo, NY, USA",
+      latitude: 42.880230,
+      longitude: -78.878738,
+      speed_unit: "mph",
+      file: "https://storage.googleapis.com/insightlane-showcase/data_mode/buffalo/preds_viz.geojson",
+      crashes: "https://storage.googleapis.com/insightlane-showcase/data_mode/buffalo/crashes_rollup.geojson"
   },
   {
       id: "brisbane",
