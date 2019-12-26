@@ -36,8 +36,8 @@ ADD conf/start.sh /start.sh
 RUN chmod +x /start.sh
 
 # Setup the project's virtual environment
-COPY environment.yml /app/environment.yml
-RUN ["conda", "env", "create", "--file", "environment.yml"]
+COPY environment_linux.yml /app/environment_linux.yml
+RUN ["conda", "env", "create", "--file", "environment_linux.yml"]
 
 # Use bash for the entrypoint rather than sh, for 'conda activate' compatibility
 ENTRYPOINT ["/bin/bash", "-c"]
