@@ -7,6 +7,7 @@ import scipy.stats as ss
 import os
 import json
 import argparse
+from copy import deepcopy
 from .model_classes import Indata, Tuner, Tester
 import data.config
 
@@ -167,8 +168,31 @@ def add_extra_features(data_segs, config, datadir):
 
 
 def process_features(features, f_cat, f_cont, data_segs):
+    """
+    Function for processing features for use in the model
+    Initial stage removes any uninformative features (single-value)
+    Categorical features will be one-hot encoded
+    Continuous features will be log-transformed
+    :param features: full list of features
+    :param f_cat: list of categorical features
+    :param f_cont: list of continuous features
+    :param data_segs: data at the segment level
+    :return: data_segs with added features, features for nonlinear/linear models
+    """
+    # remove uninformative features
+    remove_f = []
+    for f in features:
+        if data_segs[f].nunique()==1:
+            remove_f.append(f)
+
+    if len(remove_f)>0:
+        print('Uninformative features found: {}'.format(remove_f))
+        features = [f for f in features if f not in remove_f]
+        f_cont = [f for f in f_cont if f not in remove_f]
+        f_cat = [f for f in f_cat if f not in remove_f]
+
     # features for linear model
-    lm_features = features
+    lm_features = deepcopy(features)
 
     print(('Processing categorical: {}'.format(f_cat)))
     for f in f_cat:

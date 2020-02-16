@@ -44,6 +44,21 @@ def test_get_features(tmpdir):
     assert f_cat == ['signal']
     assert f_cont == []
     assert feats == ['signal']
+
+def test_process_features(tmpdir):
+    test_data = pd.DataFrame(data={
+        'width': [10, 12],
+        'signal': [1, 0],
+        'jam_percent': [0, 0],
+        'lanes': [2, 1],
+        'segment_id': ['001', '002']
+    })
+    f_cat = ['signal', 'lanes']
+    f_cont = ['width', 'jam_percent']
+    features = ['signal', 'lanes', 'width', 'jam_percent']
+    test_data, features, lm_features = train_model.process_features(features, f_cat, f_cont, test_data)
+    assert set(features) == set(['intersection', 'signal1', 'signal0', 'log_width', 'lanes2', 'lanes1'])
+    assert set(lm_features) == set(['intersection', 'signal1', 'log_width', 'lanes2'])
     
 
 def test_initialize_and_run(tmpdir):
