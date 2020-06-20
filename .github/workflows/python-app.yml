@@ -34,8 +34,7 @@ jobs:
         conda env create -f environment_linux.yml
         source activate crash-model
         cd src
-        pylint pipeline.py initialize_city.py data/*.py visualization/*.py da\
-ta_standardization/*.py models/*.py features/*.py tools/*.py
+        pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
     - name: Test with pytest
       run: |
         pytest --cov=./
