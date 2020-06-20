@@ -29,6 +29,4 @@ jobs:
         source activate crash-model
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-    - name: Test with pytest
-      run: |
         pytest --cov=./
