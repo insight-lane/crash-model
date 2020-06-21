@@ -33,7 +33,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
-        file: ./coverage.xml
+        file: ./src/coverage.xml
         flags: unittests
         env_vars: OS,PYTHON
         name: codecov-umbrella
