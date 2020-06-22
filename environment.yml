@@ -20,7 +20,7 @@ dependencies:
 - pandas
 - py-xgboost
 - pylint
-- pyproj=2.2.1=py36hc44880f_0 # pinned
+- pyproj=2.2.1 # pinned
 - pytest
 - python=3.6
 - pyyaml
