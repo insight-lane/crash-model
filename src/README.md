@@ -137,3 +137,18 @@ To run locally:
 If you have set split columns in the config .yml file, you can select which split column's map you'd like to look at. Most frequently this would be mode, so you would see (for example) 'Boston, Massachusetts (bike)', 'Boston, Massachusetts (pedestrian)', and 'Boston, Massachusetts (vehicle)', showing the risk map and crashes for each mode type.
 
 Details about other visualization scripts can be found in the README under src/visualization
+
+
+## Tech-only: Updating pinned versions of environments
+
+Occasionally, we need to update the environment_linux.yml, environment_mac.yml and environment_pc.yml files. To do this, create a conda environment that uses the environment.yml file, and run the test suite. If the tests pass, you can do `conda env export` which will output all the pinned libraries, and write that to the environment file that matches your os. To update the environment for operating systems that you don't have access to, you can get the pinned version by running the github action continuous integration. To do that, in the the appropriate job in .github/workflows/main.yml add `conda env export > new_environment.yml` after `conda activate crash-model`. Then add the following at the bottom of the job
+
+
+```    - name: Upload conda env export
+      uses: actions/upload-artifact@v1
+      with:
+        name: new_environment.yml
+        path: new_environment.yml
+```
+
+Then after the actions run (generate a draft pull request to get them to run), the file will appear in the results from the job, under Artifacts. You can download that and save it to the appropriate environment_<os>.yml file
