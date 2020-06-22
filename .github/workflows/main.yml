@@ -18,7 +18,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install dependencies
+    - name: Run linux tests
       run: |
         set -eo pipefail
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
@@ -45,14 +45,19 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install dependencies
+    - name: Run mac tests
       run: |
         set -eo pipefail
         . /usr/local/miniconda/etc/profile.d/conda.sh
         sudo chown -R $USER $CONDA
         conda env create -f environment.yml
         conda activate crash-model
-        conda env export
+        conda env export > new_environment.yml
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
+    - name: Upload conda env export
+      uses: actions/upload-artifact@v1
+      with:
+        name: environment_mac.yml
+        path: new_environment.yml
