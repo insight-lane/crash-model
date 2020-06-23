@@ -61,3 +61,20 @@ jobs:
       with:
         name: environment_mac.yml
         path: new_environment.yml
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+  - powershell: |
+      Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+  - script: |
+      conda env create -f environment.yml
+      call activate crash-model
+      conda env export
+      cd src
+      pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
+      py.test
