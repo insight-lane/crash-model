@@ -73,5 +73,3 @@ jobs:
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
-    - name: Upload conda env export
-      uses: actions/upload-artifact@v1
