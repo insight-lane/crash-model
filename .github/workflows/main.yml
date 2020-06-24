@@ -26,9 +26,15 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         conda env create -f environment.yml
         source activate crash-model
+        conda env export > new_environment.yml
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         pytest --cov=./ --cov-report=xml
+    - name: Upload conda env export
+      uses: actions/upload-artifact@v1
+      with:
+        name: environment_linux.yml
+        path: new_environment.yml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -52,15 +58,10 @@ jobs:
         sudo chown -R $USER $CONDA
         conda env create -f environment.yml
         conda activate crash-model
-        conda env export > new_environment.yml
+        conda env export
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
-    - name: Upload conda env export
-      uses: actions/upload-artifact@v1
-      with:
-        name: environment_mac.yml
-        path: new_environment.yml
   windows:
     runs-on: windows-latest
     steps:
