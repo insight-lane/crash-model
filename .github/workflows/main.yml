@@ -24,17 +24,11 @@ jobs:
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
         bash ~/miniconda.sh -b -p $HOME/miniconda
         export PATH="$HOME/miniconda/bin:$PATH"
-        conda env create -f environment.yml
+        conda env create -f environment_linux.yml
         source activate crash-model
-        conda env export > new_environment.yml
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         pytest --cov=./ --cov-report=xml
-    - name: Upload conda env export
-      uses: actions/upload-artifact@v1
-      with:
-        name: environment_linux.yml
-        path: new_environment.yml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -76,7 +70,12 @@ jobs:
       shell: bash -l {0}
       run: |
         set -eo pipefail
-        conda env export
+        conda env export > new_environment.yml
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
+    - name: Upload conda env export
+      uses: actions/upload-artifact@v1
+      with:
+        name: environment_linux.yml
+        path: new_environment.yml
