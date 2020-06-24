@@ -65,17 +65,13 @@ jobs:
         auto-update-conda: true
         python-version: 3.8
         activate-environment: crash-model
-        environment-file: environment.yml
+        environment-file: environment_pc.yml
     - name: Run windows tests
       shell: bash -l {0}
       run: |
         set -eo pipefail
-        conda env export > new_environment.yml
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
     - name: Upload conda env export
       uses: actions/upload-artifact@v1
-      with:
-        name: environment_linux.yml
-        path: new_environment.yml
