@@ -78,4 +78,4 @@ jobs:
         conda env export
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-        py.test
+        py.test -k test_make_canon -s
