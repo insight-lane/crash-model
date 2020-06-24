@@ -27,7 +27,8 @@ def test_read_records(tmpdir):
     print(result.shape)
     print(result == expected)
     print(expected.shape)
-    assert expected.equals(result)
+    print(expected)
+    pd.testing.assert_frame_equal(result, expected)
 
 
 def test_aggregate_roads():
