@@ -22,13 +22,7 @@ def test_read_records(tmpdir):
         'pedestrian': [0, 3, 1, 1, 0, 0, 1, 0, 0, 0],
         'vehicle': [2, 12, 1, 4, 2, 13, 1, 8, 1, 3]
     })
-    print(DATA_FP)
-    print(result)
-    print(result.shape)
-    print(result == expected)
-    print(expected.shape)
-    print(expected)
-    pd.testing.assert_frame_equal(result, expected)
+    pd.testing.assert_frame_equal(result, expected, check_dtype=False)
 
 
 def test_aggregate_roads():
