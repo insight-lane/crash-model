@@ -16,8 +16,8 @@ dependencies:
 - matplotlib
 - numpy
 - openpyxl
-- osmnx=0.10=py_1
-- pandas=1.0.4
+- osmnx=0.11
+- pandas
 - py-xgboost
 - pylint
 - pyproj=2.2.1 # pinned
