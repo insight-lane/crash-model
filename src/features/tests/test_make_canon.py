@@ -24,6 +24,9 @@ def test_read_records(tmpdir):
     })
     print(DATA_FP)
     print(result)
+    print(result.shape)
+    print(result == expected)
+    print(expected.shape)
     assert expected.equals(result)
 
 
