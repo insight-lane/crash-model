@@ -69,12 +69,12 @@ jobs:
       with:
         auto-update-conda: true
         python-version: 3.8
+        activate-environment: crash-model
+        environment-file: environment_pc.yml
     - name: Run windows tests
-      shell: bash
+      shell: bash -l {0}
       run: |
         set -eo pipefail
-        conda env create -f environment_pc.yml
-        conda activate crash-model
         conda env export
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
