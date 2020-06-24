@@ -22,7 +22,8 @@ def test_read_records(tmpdir):
         'pedestrian': [0, 3, 1, 1, 0, 0, 1, 0, 0, 0],
         'vehicle': [2, 12, 1, 4, 2, 13, 1, 8, 1, 3]
     })
-
+    print(DATA_FP)
+    print(result)
     assert expected.equals(result)
 
 
