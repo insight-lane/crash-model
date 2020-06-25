@@ -8,7 +8,7 @@ import os
 import json
 import argparse
 from copy import deepcopy
-from .model_classes import Indata, Tuner, Tester
+from model_classes import Indata, Tuner, Tester
 import data.config
 
 # all model outputs must be stored in the "data/processed/" directory
@@ -120,8 +120,7 @@ def get_features(config, data):
     return f_cat, f_cont, features
 
 
-def predict(trained_model, data_model, best_model_features,
-            features, target, datadir):
+def predict(trained_model, data_model, features, target, datadir):
     """
 
     Args:
@@ -270,8 +269,7 @@ def initialize_and_run(data_model, features, lm_features, target,
     # train on full data
     trained_model = best_model.fit(data_model[best_model_features], data_model[target])
 
-    predict(trained_model, data_model, best_model_features,
-            features, target, datadir)
+    predict(trained_model, data_model, best_model_features, target, datadir)
 
     # output feature importances or coefficients
 
