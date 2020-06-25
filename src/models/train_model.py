@@ -8,7 +8,7 @@ import os
 import json
 import argparse
 from copy import deepcopy
-from model_classes import Indata, Tuner, Tester
+from .model_classes import Indata, Tuner, Tester
 import data.config
 
 # all model outputs must be stored in the "data/processed/" directory
