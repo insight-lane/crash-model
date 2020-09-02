@@ -11,13 +11,7 @@ rtree additionally requires download and installation of [libspatialindex](http:
 
 ## Useful Tools
 
-Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download.html) might be helpful to visualize shape files and easily see their attributes
-
-## Code conventions
-
-## Testing
-
-We use Travis continuous integration to ensure that our test suite passes before branches can be merged into master.  To run the tests locally, run `py.test` in the src/ directory.
+Although it's not necessary, QGIS (http://www.qgis.org/en/site/forusers/download.html) might be helpful to visualize shape files and easily see their attributes, particularly if you are encountering polygon related issues.
 
 ## Overview
 
@@ -30,14 +24,11 @@ These features include
 
 We also can map city-specific maps (and features associated with their roads) to the base open street map.
 
-## Running the pipeline: data generation through visualization
+## Onboarding a new city
 
-This section walks you through how to generate and visualize data for any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), or for any city that you have suitable data for (at a minimum crashes, ideally concerns as well).
+This section walks you through how to generate and visualize data for a new city.
 
-The demo city data is stored as *data-latest.zip* using data-world. Contact one of the project leads if you don't yet have access.
-
-### Visualization
-- If you want to visualize the data, you'll need to create a mapbox account (https://www.mapbox.com/)
+If you'd prefer to run the pipeling on any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), you can access the demo city data at *data-latest.zip* using data-world. Contact one of the project leads if you don't yet have access. You can skip the initialization step and go straight to running the pipeline.
 
 ### Initializing a city
 - If you're running on a new city (that does not have a configuration file in src/data/config), you will need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --supplemental <supplemental file1>,<supplemental file2>`. You should give the full path to the crash file and any supplemental files, and they will be copied into the city's data directory as part of initialization. Concern files are given as supplemental files, as are any other point-based features.
@@ -88,24 +79,20 @@ The demo city data is stored as *data-latest.zip* using data-world. Contact one 
           not_column: pedestrian bike
 
 ```
-- export your mapbox api key (from when you made a mapbox account) as an environment variable called MAPBOX_TOKEN
-- Running the initialize_city script will also generate a javascript config file in the showcase data directory, e.g. `src/showcase/data/config_boston.js`. You'll want to set a CONFIG_FILE environment variable to be that file: `export CONFIG_FILE=data/config_boston.js` but replace boston with your city's folder name
-- If the city name given in the initialize_city script (e.g. Boston, Massachusetts, USA) ends with 'USA', the speed unit set in the javascript config file will be 'mph', otherwise it will be 'kph'. If you'd like to change this, you can manually set it in the config_<city>.js file.
-
 ### Geocoding
 
 - If your crash file provides addresses but not latitude/longitude, you'll need to geocode your crash file before running the pipeline. This can be done from the src directory by running `python -m tools.geocode_batch -d <data directory created from the initalize_city script> -f <crash filename> -a <address field in the crash csv file> -c <city name, e.g. "Boston, Massachusetts, USA"`. If you have a very large number of entries to geocode, you may choose to use mapbox's geocoder instead of google's (the default for this script). In that case, you can also pass in your mapbox token to the script with the -m flag.
 
-### Running on existing cities
-- Cities we have already set up on the showcase can be viewed using the default configuration file. If you'd prefer to view these cities, use that configuration file instead: `export CONFIG_FILE=static/config.js'
 
-- Run the pipeline: `python pipeline.py -c <config file>`
+## Running the Pipeline
 
-## Individual pipeline steps
+To run the pipeline to process the data, create the model and create visualizations by running `python pipeline.py -c config/config_<your_city>.yml`
+
+This will run through Data Standardization, Data Generation, Feature Generation and Model Training
 
 To learn more about any individual steps (which are themselves often broken up into a number of steps), look at the README in that directory
 
-### 1) Data Standardization
+1) Data Standardization
 
 Found in src/data_standardization <br><br>
 Cities can provide csv files containing crash and point-based feature data (including, but not limited to concerns).  Due to the varying recording methodologies used across cities, we run this step to turn csv files into compatible JSON files.
@@ -125,18 +112,35 @@ The feature generation step takes the data from the data generation step, and tu
 
 Found in src/models <br><br>
 
-5) Visualizing the results
+
+
+## Visualizing the results
 
 Once you have run the pipeline you can visualize results from your city, or you can view the showcase locally <br>
 
+If you want to visualize the data, you'll need to first create a mapbox account (https://www.mapbox.com/)
+
 To run locally:
 - `cd showcase`
-- You should have already exported your MAPBOX_TOKEN and CONFIG_FILE earlier in following along with this README, so check that those are set
+- export your mapbox api key (from when you made a mapbox account) as an environment variable: `export MAPBOX_TOKEN=<your_mapbox_token>`
+- Running the pipeline script will also generate a javascript config file in the showcase data directory, e.g. `src/showcase/data/config_boston.js`. You'll want to set a CONFIG_FILE environment variable to be that file: `export CONFIG_FILE=data/config_<your_city>.js`
+- If the city name given in the initialize_city script (e.g. Boston, Massachusetts, USA) ends with 'USA', the speed unit set in the javascript config file will be 'mph', otherwise it will be 'kph'. If you'd like to change this, you can manually set it in the config_<your_city>.js file.
 - `flask run`
 
 If you have set split columns in the config .yml file, you can select which split column's map you'd like to look at. Most frequently this would be mode, so you would see (for example) 'Boston, Massachusetts (bike)', 'Boston, Massachusetts (pedestrian)', and 'Boston, Massachusetts (vehicle)', showing the risk map and crashes for each mode type.
 
 Details about other visualization scripts can be found in the README under src/visualization
+
+### Running on existing cities
+- Cities we have already set up on the showcase can be viewed using the default configuration file. If you'd prefer to view these cities, use that configuration file instead: `export CONFIG_FILE=static/config.js'
+
+
+
+## Code conventions
+
+## Testing
+
+We use Travis continuous integration to ensure that our test suite passes before branches can be merged into master.  To run the tests locally, run `py.test` in the src/ directory.
 
 
 ## Tech-only: Updating pinned versions of environments
