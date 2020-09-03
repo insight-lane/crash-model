@@ -155,7 +155,7 @@ dependencies:
   - py-xgboost=0.82=py36he1b5a44_1
   - pycparser=2.19=py36_1
   - pygments=2.4.2=py_0
-  - pylint=2.5.3=py36h9f0ad1d_0
+  - pylint=2.4.1=py36_0
   - pyopenssl=19.0.0=py36_0
   - pyparsing=2.4.1=py_0
   - pyproj=2.2.1=py36hc44880f_0
