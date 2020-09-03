@@ -49,8 +49,8 @@ def read_file_info(config, datadir):
                     ("feature", source_config["name"]),
                     ("date", date_time),
                     ("location", OrderedDict([
-                        ("latitude", lat),
-                        ("longitude", lon)
+                        ("latitude", float(lat)),
+                        ("longitude", float(lon))
                     ]))
                 ])
                 if "category" in source_config and source_config['category']:
