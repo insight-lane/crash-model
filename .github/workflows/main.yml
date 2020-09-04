@@ -27,7 +27,6 @@ jobs:
         conda env create -f environment_linux.yml
         source activate crash-model
         cd src
-        pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         pytest --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
@@ -50,7 +49,7 @@ jobs:
         set -eo pipefail
         . /usr/local/miniconda/etc/profile.d/conda.sh
         sudo chown -R $USER $CONDA
-        conda env create -f environment.yml
+        conda env create -f environment_mac.yml
         conda activate crash-model
         conda env export
         cd src
