@@ -32,7 +32,7 @@ We also can map city-specific maps (and features associated with their roads) to
 
 ## Running the pipeline: data generation through visualization
 
-This section walks you through how to generate and visualize data for any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), or for any city that you have suitable data for (at a minimum crashes, ideally concerns as well).
+This section walks you through how to generate and visualize data for any of our demo cities, or for any city that you have suitable data for (at a minimum crashes, ideally concerns as well).
 
 The demo city data is stored as *data-latest.zip* using data-world. Contact one of the project leads if you don't yet have access.
 
