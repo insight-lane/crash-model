@@ -226,8 +226,8 @@ function getFilterValues() {
 function update_map(map) {
 	filters = getFilterValues();
 	var new_filter;
-
-	if(cityId === "boston") {
+    console.log(cityId);
+    if(cityId.includes("boston")) {
 		new_filter = ['all', ['>=', 'prediction', +filters['riskThreshold']], ['>=', 'SPEEDLIMIT', +filters['speedlimit']]];
 	}
 	else {
