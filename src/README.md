@@ -28,7 +28,7 @@ We also can map city-specific maps (and features associated with their roads) to
 
 This section walks you through how to generate and visualize data for a new city.
 
-If you'd prefer to run the pipeline on any of our demo cities (Boston MA, Cambridge MA or Washigton D.C), you can access the demo city data at *data-latest.zip* using data-world. Contact one of the project leads if you don't yet have access. You can skip the initialization step and go straight to running the pipeline.
+If you'd prefer to run the pipeline on any of our demo cities, you can access the demo city data at *data-latest.zip* using data-world. Contact one of the project leads if you don't yet have access. You can skip the initialization step and go straight to running the pipeline.
 
 ### Initializing a city
 - If you're running on a new city (that does not have a configuration file in src/data/config), you will need to initialize it first to create directories and generate a config.  In the src directory, run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --supplemental <supplemental file1>,<supplemental file2>`. You should give the full path to the crash file and any supplemental files, and they will be copied into the city's data directory as part of initialization. Concern files are given as supplemental files, as are any other point-based features.
