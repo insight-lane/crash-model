@@ -10,8 +10,13 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  linux:
+    env:
+      PYTHONFAULTHANDLER: "true"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
@@ -34,6 +39,8 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: true
   mac:
+    env:
+      PYTHONFAULTHANDLER: "true"
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
@@ -47,10 +54,13 @@ jobs:
         set -eo pipefail
         . /usr/local/miniconda/etc/profile.d/conda.sh
         sudo chown -R $USER $CONDA
+        conda activate crash-model
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
   windows:
+    env:
+      PYTHONFAULTHANDLER: "true"
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
