@@ -47,8 +47,6 @@ jobs:
         set -eo pipefail
         . /usr/local/miniconda/etc/profile.d/conda.sh
         sudo chown -R $USER $CONDA
- #       conda activate crash-model
- #       conda env export
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
