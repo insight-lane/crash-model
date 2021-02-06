@@ -67,9 +67,9 @@ jobs:
     - uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
-        python-version: 3.8
         activate-environment: crash-model
-        environment-file: environment_pc.yml
+        environment-file: conda-win-64.lock
+
     - name: Run windows tests
       shell: bash -l {0}
       run: |
