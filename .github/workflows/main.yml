@@ -18,7 +18,7 @@ jobs:
         with:
           auto-update-conda: false
           activate-environment: crash-model
-          environment-file: crash-model/conda-linux-64.lock
+          environment-file: /conda-linux-64.lock
     - name: Run linux tests
       run: |
         set -eo pipefail
@@ -36,16 +36,16 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+    - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: false
+          activate-environment: crash-model
+          environment-file: conda-osx-64.lock
     - name: Run mac tests
       run: |
         set -eo pipefail
         . /usr/local/miniconda/etc/profile.d/conda.sh
         sudo chown -R $USER $CONDA
-        conda env create -f environment_mac.yml
         conda activate crash-model
         conda env export
         cd src
