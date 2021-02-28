@@ -10,24 +10,26 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  linux:
+    env:
+      PYTHONFAULTHANDLER: "true"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: 3.8
+        auto-update-conda: false
+        activate-environment: crash-model
+        environment-file: conda-linux-64.lock
     - name: Run linux tests
       run: |
         set -eo pipefail
-        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
-        bash ~/miniconda.sh -b -p $HOME/miniconda
-        export PATH="$HOME/miniconda/bin:$PATH"
-        conda env create -f environment_linux.yml
-        source activate crash-model
+        conda activate crash-model
         cd src
-        pytest --cov=./ --cov-report=xml
+        py.test --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
@@ -37,34 +39,37 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: true
   mac:
+    env:
+      PYTHONFAULTHANDLER: "true"
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: 3.8
+        auto-update-conda: false
+        activate-environment: crash-model
+        environment-file: conda-osx-64.lock
     - name: Run mac tests
       run: |
         set -eo pipefail
         . /usr/local/miniconda/etc/profile.d/conda.sh
         sudo chown -R $USER $CONDA
-        conda env create -f environment_mac.yml
         conda activate crash-model
-        conda env export
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
   windows:
+    env:
+      PYTHONFAULTHANDLER: "true"
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
-        python-version: 3.8
         activate-environment: crash-model
-        environment-file: environment_pc.yml
+        environment-file: conda-win-64.lock
+
     - name: Run windows tests
       shell: bash -l {0}
       run: |

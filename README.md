@@ -103,10 +103,10 @@ Setting up
 
 **I want to set up a Docker development environment**
 - A basic (Docker)[https://www.docker.com/] image has been created to run the project in a container, using the ContinuumIO miniconda3 base image (Python 3.6)
-- Download/build the image
-    - Docker Hub: `$ docker pull datafordemocracy/crash-model:latest`
-    - From the repo: `$ docker build --tag datafordemocracy/crash-model:[tag] .`
-- To run the image: `$ docker run -d -p 8080:8080 --name bcm.local -v /local/path/to/project_repo:/app datafordemocracy/crash-model:[tag]`
+- Download or build the image
+    - Download from Docker Hub: `$ docker pull insightlane/crash-model:latest`
+    - Build from the repo: `$ docker build --tag insightlane/crash-model:[tag] .`
+- To run the image: `$ docker run -d -p 8080:8080 --name bcm.local -v /local/path/to/project_repo:/app insightlane/crash-model:[tag]`
 - Once the image is running, you can get a bash prompt to run pipeline commands/etc by running the following: `$ docker exec -it bcm.local /bin/bash`
 
 **I want to add a new city**
