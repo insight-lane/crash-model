@@ -1,5 +1,4 @@
 import os
-from time import sleep
 from os.path import exists as path_exists
 import csv
 import geocoder
