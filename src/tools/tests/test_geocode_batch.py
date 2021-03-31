@@ -5,7 +5,7 @@ import shutil
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
 
-def mockreturn(address, cached, mapboxtoken):
+def mockreturn(address, cached, city, mapboxtoken, strict):
     if address in cached:
         return cached[address]
     else:

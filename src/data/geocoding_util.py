@@ -134,8 +134,6 @@ def geocode_address(address, cached={}, mapboxtoken=None, strict=False,
     # If there was no appropriate result from mapbox, try with arcgis
     if not result_found:
         g = geocoder.arcgis(address)
-    if g.address == 'Somerville, Massachusetts, United States':
-        __import__("ipdb").set_trace()
 
     status = ''
 
