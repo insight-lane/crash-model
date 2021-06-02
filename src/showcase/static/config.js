@@ -160,5 +160,32 @@ var config = [
             speed_unit: "kph",
             file: "data/melbourne/preds_viz_vehicle.geojson",
             crashes: "data/melbourne/crashes_rollup_vehicle.geojson"
+        },
+        {
+            name: "Ada County (pedestrian)",
+            id: "ada_county_pedestrian",
+            latitude: 43.60764000000006,
+            longitude: -116.19339999999994,
+            speed_unit: "mph",
+            file: "data/ada_county/preds_viz_pedestrian.geojson",
+            crashes: "data/ada_county/crashes_rollup_pedestrian.geojson"
+        },
+        {
+            name: "Ada County (bike)",
+            id: "ada_county_bike",
+            latitude: 43.60764000000006,
+            longitude: -116.19339999999994,
+            speed_unit: "mph",
+            file: "data/ada_county/preds_viz_bike.geojson",
+            crashes: "data/ada_county/crashes_rollup_bike.geojson"
+        },
+        {
+            name: "Ada County (vehicle)",
+            id: "ada_county_vehicle",
+            latitude: 43.60764000000006,
+            longitude: -116.19339999999994,
+            speed_unit: "mph",
+            file: "data/ada_county/preds_viz_vehicle.geojson",
+            crashes: "data/ada_county/crashes_rollup_vehicle.geojson"
         }
 ]

@@ -5,7 +5,8 @@ Outline:
 -----------------------
  - Project Overview
  - Data Sources and Modelling
- - Getting Started
+ - Setting up
+ - Contributing
  - Connect with us
  - Project Organization
 
@@ -58,7 +59,10 @@ Future versions of the project are likely to make use of:
 
 - road construction data
 
-Predictions are generated on a per road-segment basis and will be made available via a searchable web visualization, with roads of highest risk easily identifiable. Details of which factors are most associated with risk on each road will also be included.
+Predictions are generated on a per road-segment basis can be explored with an interactive visualization.
+
+**Who are the intended users?**
+Though originally a collaboration between Data4Democracy and the City of Boston, the project is now being developed to work for any city that wishes to use it. The intended users include city transportation departments, those responsible for managing risk on road networks and individuals interested in crash risk.
 
 **What are the requirements for use?**
 
@@ -86,85 +90,76 @@ Data Sources and Modelling
 -	The [data dictionary](https://github.com/Data4Democracy/crash-model/blob/master/docs/model_data_dictionary.md) contains information about the default features included in the model 
 -	As of V2.0, the models tests [Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html) vs [XGBoost](https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier) and picks the best performing (based on [ROC AUC](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html))
 
-Getting Started
+Setting up
 -----------------------
-## Setting up
+**I want to set up a local development environment and run the pipeline**
+- Clone the repo
+- Insight Lane with Conda
+- Install [anaconda](https://www.anaconda.com/) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+    - Use the Python 3.7 version
+- Navigate to the repo directory
+- Create an environment for the project using the command `conda env create -f environment_<your os>.yml (<your os> will be Linux, Mac or PC)`
+- Activate the environment using `source activate crash-model`
 
-### Dependencies:
-Most of the work on this project so far has been done in Python, in Jupyter notebooks.
-- Python 3.6 (we recommend [Anaconda](https://www.continuum.io/downloads))
-- conda (included with Anaconda)
-
-### Module Dependencies
-If using conda, you can get all the depencies using the [environment_linux.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_linux.yml), [environment_mac.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_mac.yml), or [environment_pc.yml](https://github.com/Data4Democracy/crash-model/blob/master/environment_pc.yml) files.
-Python modules: Use requirements\_spatial.txt
-
-
-rtree additionally requires download and installation of [libspatialindex](http://libspatialindex.github.io/)
-(For Anaconda install, can use [conda-forge](https://anaconda.org/conda-forge/libspatialindex))
-
-
-### Environment:
-You'll want to reproduce the packages and package versions required to run code in this repo, ideally in a virtual environment to avoid conflicts with other projects you may be working on. We have a version of environment.yml without versions, but recommend you use the pinned version for your operating system (environment_linux.yml, environment_mac.yml, or environment_pc.yml) since they shouldn't break if newer conda packages break).
-
-    $ conda env create -f [environment_linux.yml or other environment file]
-    $ activate crash-model
-
-
-### Docker:
-A basic [Docker](https://www.docker.com) image has been created to run the project in a container, using the ContinuumIO miniconda3 base image (Python 3.6). The virtual environment 'crash-model' is installed and activated when the image is started via container, as well as an apache2 webserver via supervisord to serve the visualization.
-
-You can download the latest stable image from D4D's Docker Hub repo by running the following command, from a machine with the Docker engine installed:
-
-	$ docker pull datafordemocracy/crash-model:latest
-
-Automatic building of images from the project's GitHub project have been configured to run on every commit to a branch. To see all available tagged versions of the image and their date of creation, see [https://hub.docker.com/r/datafordemocracy/crash-model/tags/](https://hub.docker.com/r/datafordemocracy/crash-model/tags/)
-
-For testing purposes you can build the image yourself from the Dockerfile by running the following from within the project repo:
-
-	$ docker build --tag datafordemocracy/crash-model:[tag] .
-
-Once you have the image, you can run it in a container. The project folder (/app) is intentionally empty within the image, so you'll also need the project repo from GitHub available on your local machine. To do this run:
-
-	$ docker run -d -p 8080:8080 --name bcm.local -v /local/path/to/project_repo:/app datafordemocracy/crash-model:[tag]
-
-The arguments to this command perform the following:
-
-1. `-d` detaches the container and runs it in the background (gives you your shell back)
-2. `-p 8080:8080` maps port 8080 from the container to 8080 on your local machine (required if you want to view the visualization via browser)
-3. `--name bcm.local` names the container 'bcm.local' (or whatever value you specify)
-4. `-v /local/path/to/project_repo:/app` mounts your local machine's copy of the project repo into /app in the container.
-
-Once you have a running container, you can get a shell on it to run the pipeline, test scripts etc. by running:
-
-	$ docker exec -it bcm.local /bin/bash
-
-
-## Contributing
-"First-timers" are welcome! Whether you're trying to learn data science, hone your coding skills, or get started collaborating over the web, we're happy to help. If you have any questions feel free to pose them on our [Slack channel](https://datafordemocracy.slack.com/messages/p-crash-model), or reach out to one of the team leads. If you have questions about Git and GitHub specifically, our github-playground repo and the #github-help Slack channel are good places to start.
-
-
-**I want to know what’s going on and pick up a task I like**
--	Open tasks are available [here](https://github.com/Data4Democracy/crash-model/issues)
--	Issues pertaining towards upcoming releases are available [here](https://github.com/Data4Democracy/crash-model/projects)
-
+**I want to set up a Docker development environment**
+- A basic (Docker)[https://www.docker.com/] image has been created to run the project in a container, using the ContinuumIO miniconda3 base image (Python 3.6)
+- Download or build the image
+    - Download from Docker Hub: `$ docker pull insightlane/crash-model:latest`
+    - Build from the repo: `$ docker build --tag insightlane/crash-model:[tag] .`
+- To run the image: `$ docker run -d -p 8080:8080 --name bcm.local -v /local/path/to/project_repo:/app insightlane/crash-model:[tag]`
+- Once the image is running, you can get a bash prompt to run pipeline commands/etc by running the following: `$ docker exec -it bcm.local /bin/bash`
 
 **I want to add a new city**
--	See instructions in src README
+- Step 1: Obtain crash data for your city
+    - Try looking for your city’s open data portal or contacting someone from your local transportation department
+    - Format should be CSV
+- Step 1a: My crash data has addresses instead of latitude and longitude
+    - See our [geocoding section](https://github.com/Data4Democracy/crash-model/tree/master/src#geocoding) for how to process this into latitude and longitude
+- Step 2: Set up your environment (See above)
+- Step 3: Generate a configuration file
+[Detailed walkthrough](https://github.com/Data4Democracy/crash-model/tree/master/src#initializing-a-city)
+    - Run `python initialize_city.py -city <city name> -f <folder name> -crash <crash file> --supplemental <supplemental file1>,<supplemental file2>`
+        - City name: e.g. "Cambridge, MA, USA".
+        - Folder name: Name for city folder
+        - Crash file: The location of the crash data
+         - Supplemental files: Any other files that contain additional features
+    - Edit generated configuration file to specify columns in crash data containing id, latitude and longitude
+- Step 4: Run the pipeline
+    - Navigate to the src directory
+    - Run python pipeline.py -c <config file name>
+- Step 5: Check results
+    - There should be a number of files in the data/<folder name>/processed directory
 
-**I want to add a new city to our showcase**
--	Link to onboard showcase
+**I want to run the interactive visualization (showcase)** 
+- [Obtain a Mapbox token](https://docs.mapbox.com/help/how-mapbox-works/access-tokens/) 
+- Export an environment variable called MAPBOX_TOKEN
+- Export an environment variable `CONFIG_FILE=config_<folder name>.yml`
 
+Contributing
+-----------------------
+"First-timers" are welcome! Whether you're trying to learn data science, hone your coding skills, or get started collaborating over the web, we're happy to help. If you have any questions feel free to pose them on our [Slack channel](https://join.slack.com/t/insightlane/shared_invite/zt-ewlvaic7-ymYlps33v2M2~RhC4DFRGg), or reach out to one of the team leads. 
+
+**I want to know what’s going on and pick up a task I like**
+
+Open tasks are available [here](https://github.com/Data4Democracy/crash-model/issues)
+Issues pertaining towards upcoming releases are available [here](https://github.com/Data4Democracy/crash-model/projects)
+
+
+**I want to add a new city to the online showcase**
+
+Once you’ve successfully run the pipeline on a city, get in touch with the Insight Lane team for details how to add to the showcase
 
 Connect with us
 -----------------------
-Join our [Slack channel](https://datafordemocracy.slack.com/messages/p-crash-model) on the D4D Slack. If you haven't joined our Slack yet, fill out [this contact form](https://www.datafordemocracy.org/join-us)!
+Join our [Slack channel](https://join.slack.com/t/insightlane/shared_invite/zt-ewlvaic7-ymYlps33v2M2~RhC4DFRGg).
 
 Leads:
- - [@bpben](https://datafordemocracy.slack.com/messages/@bpben)
- - [@j-t-t](https://datafordemocracy.slack.com/messages/@j-t-t)
- - [@alicefeng](https://datafordemocracy.slack.com/messages/@alicefeng)
- - [@terryf82](https://datafordemocracy.slack.com/messages/@terryf82)
+ - @bpben
+ - @j-t-t
+ - @terryf82
+ - @andhint
+ - @alicefeng
+ 
 
 
 Project Organization

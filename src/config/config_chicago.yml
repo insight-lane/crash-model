@@ -1,0 +1,108 @@
+# City name
+city: Chicago,IL,USA
+# City centerpoint latitude & longitude (default geocoded values set)
+city_latitude: 41.884250000000065
+city_longitude: -87.63244999999995
+
+# City's time zone: defaults to the local time zone of computer initializing the city's config file
+timezone: America/Chicago
+# Radius of city's road network from centerpoint in km, required if OSM has no polygon data (defaults to 20km)
+city_radius: 20
+speed_unit: mph
+
+# By default, maps are created from OSM's polygon data and fall back to radius
+# if there is no polygon data, but but you can change the openstreetmap_geography
+# to 'radius' if preferred
+map_geography: shapefile
+boundary_shapefile: chicago_boundaries.geojson
+
+# The folder under data where this city's data is stored
+name: chicago
+
+# If given, limit crashes to after startdate and no later than enddate
+# Recommended to limit to just a few years for now
+startdate: 2019-01-01
+enddate: 2020-12-31
+
+crashes_files:
+  Chicago_Crashes_Joined_Crashes_People.csv:
+    required:
+      id: ID
+      latitude: LATITUDE
+      longitude: LONGITUDE
+      # If date supplied in single column:
+      date_complete: CRASH_DATE_x
+      # If date is separated into year/month/day:
+      date_year: 
+      date_month: 
+      # Leave date_day empty if not available
+      date_day: 
+      # If time is available and separate from date:
+      time: 
+      # If time specified, time_format is one of:
+      # default (HH:MM:SS)
+      # seconds (since midnight)
+      # military (HHMM)
+      time_format: 
+    optional:
+      summary: 
+      # If the crash file doesn't have a lat/lon, you must give the address field
+      # and you will need to run the geocode_batch script - see the README
+      address: 
+      # This section allows you to specify additional feature in the crash file
+      # (split_columns) to go into the training set
+      # Most commonly split_columns are used for mode (pedestrian/bike/vehicle)
+      # but you can specify other fields in the crash data file.
+      # See the README for examples
+      split_columns:
+        pedestrian:
+          column_name: PERSON_TYPE
+          column_value: PEDESTRIAN
+        bike:
+          column_name: PERSON_TYPE
+          column_value: BICYCLE
+        vehicle:
+          column_name: PERSON_TYPE
+          column_value: DRIVER
+
+#################################################################
+# Configuration for default features
+
+# Default features from open street map. You can remove features you don't want
+# Note: we don't support adding features in the config file.
+# If there is an additional feature you want from open street map, contact the development team
+openstreetmap_features:
+  categorical:
+    width: Width
+    cycleway_type: Bike lane
+    signal: Signal
+    oneway: One Way
+    lanes: Number of lanes
+  continuous:
+    width_per_lane: Average width per lane
+
+# Speed limit is a required feature
+# If you choose to override OpenStreetMaps' speed limit, replace 'osm_speed' with the feature name here
+speed_limit: osm_speed
+
+
+
+# Additional data sources
+# Any csv file with rows corresponding to location points
+data_source:
+  - name: 311_DOT_Requests
+    filename: 311_Service_Requests.csv
+    latitude: LATITUDE
+    longitude: LONGITUDE
+    date: CREATED_DATE
+    time: 
+    category: SR_TYPE
+    notes: 
+    # Feature is 'categorical' or 'continuous'
+    feat: categorical
+    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' 
+    feat_agg: 
+    # if latest, the column name where the value can be found 
+    value: 
+
+
