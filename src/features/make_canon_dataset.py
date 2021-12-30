@@ -1,7 +1,7 @@
 
 # coding: utf-8
-# Generate canonical dataset for hackathon
-# Developed by: bpben
+# Generate canonical dataset
+# Developed by: bpben, j-t-t
 import json
 import pandas as pd
 from data.util import read_geojson
@@ -56,7 +56,7 @@ def read_records(fp, id_col, split_columns=[]):
     return(df_g)
 
 
-def road_make(feats, fp):
+def road_make(feats: list, fp: str) -> pd.DataFrame:
     """ Makes road feature df, intersections + non-intersections
     Args:
         feats - list of features to be included
@@ -69,7 +69,9 @@ def road_make(feats, fp):
     print("reading ", fp)
     segments = read_geojson(fp)
     df = pd.DataFrame([x.properties for x in segments])
-
+    # need to enforce id to string
+    # TODO: This id as string issue is always a problem, we need to fix that
+    df['id'] = df['id'].astype(str)
     df.set_index('id', inplace=True)
 
     # Check for missing features
@@ -85,7 +87,7 @@ def road_make(feats, fp):
     return df[feats]
 
 
-def aggregate_roads(feats, datadir, split_columns):
+def aggregate_roads(feats: list, datadir: str, split_columns: list):
 
     # read/aggregate crashes
     crash = read_records(

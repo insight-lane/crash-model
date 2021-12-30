@@ -32,10 +32,15 @@ def test_aggregate_roads():
         DATA_FP,
         ['bike', 'pedestrian', 'vehicle']
     )
+    expected_columns = ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
+       'segment_id', 'crash', 'bike', 'pedestrian', 'vehicle']
 
     cr_con_roads = make_canon_dataset.combine_crash_with_segments(
         cr_con, aggregated)
-#    assert len(cr_con_roads.year.unique()) == 2
+
+    assert pd.api.types.infer_dtype(cr_con_roads.segment_id) == 'string'
+    assert cr_con_roads.columns.tolist() == expected_columns
+    assert cr_con_roads.shape == (17, 11)
     
 
 def test_road_make():

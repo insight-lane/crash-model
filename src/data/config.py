@@ -2,7 +2,6 @@ import sys
 import pytz
 import yaml
 
-
 # Configuration object
 class Configuration(object):
     """A configuration object deals with everything that we specify
@@ -81,7 +80,22 @@ class Configuration(object):
             if 'optional' in crash_value and 'split_columns' in crash_value['optional']:
                 self.split_columns += crash_value['optional']['split_columns'].keys()
 
-        
+    def __get_feature_type(self, feat: dict) -> str:
+        """
+        Gets the feature type for feature, defaults to continuous
+        Args:
+            feat: dictionary with feature properties
+        Returns: feature type (short name)
+        """
+        # translate to short names
+        feat_trans = {'continuous': 'f_cont', 'categorical': 'f_cat'}
+        feat_type = 'f_cont'
+        if 'feat_type' in feat:
+            if feat['feat_type'] in feat_trans:
+                feat_type = feat_trans[feat['feat_type']]
+        return(feat_type)
+
+
     def get_feature_list(self, config):
         """
         Make the list of features, and write it to the city's data folder
@@ -94,6 +108,7 @@ class Configuration(object):
 
         # Features drawn from open street maps
         feat_types = {'f_cat': [], 'f_cont': [], 'default': []}
+
 
         # Run through the possible feature types
         for feat_type in ['openstreetmap_features',
@@ -110,12 +125,12 @@ class Configuration(object):
         # each feature has its own file and accompanying details
         if 'data_source' in config and config['data_source']:
             for additional in config['data_source']:
-                if 'feat_type' not in additional:
-                    feat_types['default'].append(additional['name'])
-                elif additional['feat_type'] == 'categorical':
-                    feat_types['f_cat'].append(additional['name'])
-                elif additional['feat_type'] == 'continuous':
-                    feat_types['f_cont'].append(additional['name'])
+                # for multiple features per file, different processing
+                if 'feats' in additional:
+                    for feat in additional['feats']:
+                        feat_types[self.__get_feature_type(feat)].append(feat['name'])
+                    continue
+                feat_types[self.__get_feature_type(additional)].append(additional['name'])
 
         # May eventually want to rename this feature to be more general
         # For now, all atr features are continuous

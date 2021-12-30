@@ -88,17 +88,21 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             else:
                 crash_date = crash[fields["date_complete"]]
 
-        elif fields["date_year"] and fields["date_month"]:
+        elif fields["date_year"]:
+            # TODO: generally, we don't need date anymore, we should remove it
+            # for now, month is always january if unspecified
+            date_month = 1
+            date_year = int(crash[fields["date_year"]])
+            if fields["date_month"]:
+                date_month = int(crash[fields["date_month"]])
             if fields["date_day"]:
-                crash_date = str(crash[fields["date_year"]]) + "-" + str(
-                    crash[fields["date_month"]]) + "-" + crash[fields["date_day"]]
+                crash_date = f'{date_year}-{date_month}-{crash[fields["date_day"]]}'
             # some cities do not supply a day of month for crashes, randomize if so
             else:
                 available_dates = calendar.Calendar().itermonthdates(
-                    crash[fields["date_year"]], crash[fields["date_month"]])
+                    date_year, date_month)
                 crash_date = str(random.choice(
-                    [date for date in available_dates if date.month == crash[fields["date_month"]]]))
-
+                    [date for date in available_dates if date.month == date_month]))
         # skip any crashes that don't have a date
         else:
             continue

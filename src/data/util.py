@@ -409,7 +409,7 @@ def write_records_to_geojson(records, outfilename):
 
     records = prepare_geojson(records)
     with open(outfilename, 'w') as outfile:
-        geojson.dump(records, outfile)
+        geojson.dump(records, outfile, allow_nan=True)
     return records
 
 
@@ -560,7 +560,7 @@ def output_from_shapes(items, filename):
         })
 
     with open(filename, 'w') as outfile:
-        geojson.dump(geojson.FeatureCollection(output), outfile)
+        geojson.dump(geojson.FeatureCollection(output), outfile, allow_nan=True)
 
 
 def write_segments(non_inters, inters, mapfp):
@@ -586,6 +586,6 @@ def write_segments(non_inters, inters, mapfp):
     segments = non_inters['features'] + int_w_ids['features']
 
     with open(os.path.join(mapfp, 'inter_and_non_int.geojson'), 'w') as outfile:
-        geojson.dump(geojson.FeatureCollection(segments), outfile)
+        geojson.dump(geojson.FeatureCollection(segments), outfile, allow_nan=True)
 
 

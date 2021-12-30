@@ -278,7 +278,8 @@ def find_non_ints(roads, int_buffers):
     return non_int_lines, inter_segments
 
 
-def add_point_based_features(non_inters, inters, jsonfile,
+def add_point_based_features(non_inters: list, inters: list,
+                             jsonfile: str,
                              feats_filename=None,
                              additional_feats_filename=None,
                              forceupdate=False):
@@ -286,8 +287,8 @@ def add_point_based_features(non_inters, inters, jsonfile,
     Add any point-based set of features to existing segment data.
     If it isn't already attached to the segments
     Args:
-        non_inters
-        inters
+        non_inters - list of non-intersection segments
+        inters - list of intersection segments
         jsonfile - points_joined.json, storing the results of snapping
         feats_filename - geojson file for point-based features data
         addtiional_feats_filename (optional) - file for additional
@@ -335,6 +336,7 @@ def add_point_based_features(non_inters, inters, jsonfile,
             if str(near) not in matches:
                 matches[str(near)] = {}
 
+            # only accepts "latest value", otherwise just count
             if feat_agg_type == 'latest':  
                 aggregation_values[(str(near), feat_type)][date] = feature.properties['value']
             else:
