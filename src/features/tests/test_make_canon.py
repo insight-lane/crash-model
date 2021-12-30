@@ -40,7 +40,7 @@ def test_aggregate_roads():
 
     assert pd.api.types.infer_dtype(cr_con_roads.segment_id) == 'string'
     assert cr_con_roads.columns.tolist() == expected_columns
-    assert cr_con_roads.shape == (17, 11)
+    assert cr_con_roads.shape == (14, 11)
     
 
 def test_road_make():
@@ -56,12 +56,12 @@ def test_road_make():
 
     expected = pd.DataFrame({
         'id': ['000', '001', '002', '003', '004', '005', '006',
-               '007', '008', '009', 0, 1, 2, 3],
+               '007', '008', '009', '0', '1', '2', '3'],
         'width': [24, 24, 24, 15, 15, 24, 5, 24, 12, 12, 24, 24, 24, 24],
         'lanes': [2, 3, 3, 3, 3, 2, 1, 2, 1, 1, 2, 3, 3, 3],
         'hwy_type': [6, 6, 6, 3, 6, 6, 1, 6, 1, 1, 1, 1, 3, 1],
         'osm_speed': [0, 0, 0, 0, 25, 0, 25, 0, 25, 25, 25, 25, 25, 25]
     })
     expected.set_index('id', inplace=True)
-    assert expected.equals(result)
+    pd.testing.assert_frame_equal(expected, result)
 
