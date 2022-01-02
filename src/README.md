@@ -45,11 +45,18 @@ If you'd prefer to run the pipeline on any of our demo cities, you can access th
     - Supplemental files are optional: any number of csv files that contain a lat/lon point and some type of feature you'd like to extract
 
 - Once you have run the initialize_city script, you need to manually edit the configuration file found in e.g. src/config/config_cambridge:
-        - If OpenStreetMaps does not have polygon data for your city, the road network will need to be constructed manually. Set the city_latitude and city_longitude values to the centerpoint of the city, and the city_radius to an appropriate distance (in km) that you would like the road network to be built for, e.g 15 for 15km radius from the specified lat / lng.
-        - For your csv crash file, enter the column header for id, latitude, longitude, and date.  If time is in a different column than date, give that column header as well. If your csv file does not contain an id field, just put ID here, and the csv will be modified to add an ID
-        - If you have any supplemental files, they will be listed under data_source. For each data source, you'll need to enter the column headers for latitude, longitude, and date.
-        - Modify time_target to be the last month and year of your crash data (this is legacy and you won't need to do this unless you want to do week-by-week modeling)
-        - We also allow you to specify addditional features in the crash file to include in the training data set. This has been designed to handle mode (pedestrian, bike, vehicle) but designed to handle any set of features in the crash file. Here is an example of how to handle mode if it is specified as a single column with different value for each mode
+  - If OpenStreetMaps does not have polygon data for your city:
+    - Set the city_latitude and city_longitude values to the centerpoint of the city
+    - Set the city_radius to an appropriate distance (in km) that you would like the road network to be built for, e.g 15 for 15km radius from the centerpoint lat / lng.
+  - For the crash file configuration section
+    - Enter the column name for id, latitude, longitude, and date
+      - If your csv file does not contain an id field, just put ID here, and the csv will be modified to add an ID
+    - If time is in a different column than date, give that column header as well. 
+  - If you have any supplemental files (point based features)
+    - Refer to the section on [point based features](https://github.com/insight-lane/crash-model/tree/master/src#point-based-features)
+  - Modify time_target to be the last month and year of your crash data (this is legacy and you won't need to do this unless you want to do week-by-week modeling)
+  - Specify addditional crash features in the crash file to include in the training data set
+    - This has been designed to handle mode (pedestrian, bike, vehicle) but designed to handle any set of features in the crash file. Here is an example of how to handle mode if it is specified as a single column with different value for each mode
 
 ```
       split_columns:
@@ -131,7 +138,38 @@ If you have set split columns in the config .yml file, you can select which spli
 
 Details about other visualization scripts can be found in the README under src/visualization
 
-### Running on existing cities
+## Point-based features
+- If you have additional features for the model that have lat/lon or addresses, you can add them in the `data_source` section
+- For each file, you need to provide location info (either lat/long or address) and _at least_ a year value
+- For each feature in that file, provide feature details
+  - name (required) - feature name
+  - feat_type - feature is 'categorical' or 'continuous' (numeric), default is continuous 
+  - feat_agg (feature aggregation) - only option is 'latest' (latest value), default is count
+    - count - the number of instances of that location, example: concerns reported
+    - latest - if you just want one value per location, will take the latest based on date
+      - This is useful for segment-specific features that exist with, e.g. crash data
+  - value (required if using feat_agg = 'latest') - column name having the value for the feature  
+  - supplemental (not used in pipeline currently)
+    - category - column name with category information 
+    - notes - notes column
+  
+Example: 
+```
+data_source:
+  - filename: example.csv
+    latitude: lat
+    longitude: lon
+    date: date_col
+    feats:
+      - name: road_type
+        feat_agg: latest # will get latest value at lat/long
+        value: RAW_ROAD_TYPE_COL
+        feat_type: categorical # road type is a categorical feature
+      - name: concerns # will default to count at lat/long
+```
+
+
+## Running on existing cities
 - Cities we have already set up on the showcase can be viewed using the default configuration file. If you'd prefer to view these cities, use that configuration file instead: `export CONFIG_FILE=static/config.js'
 
 

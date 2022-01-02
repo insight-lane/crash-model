@@ -27,13 +27,13 @@ def test_read_file_info_default(tmpdir):
         'Ticket Issue Date': '09/02/2014',
         'Issue Time': '9:10 AM',
         'Location': "1100 CAMBRIDGE ST\nCambridge, MA\n" +
-                    "(42.37304187600046, -71.09569369699966)",
+        "(42.37304187600046, -71.09569369699966)",
         'Violation Description': 'METER EXPIRED',
     }, {
         'Ticket Issue Date': '01/09/2014',
         'Issue Time': '9:33 AM',
         'Location': "CAMBRIDGE ST / OAKLAND ST\n" +
-                    "Cambridge, MA\n(42.374105433000466, -71.12219272199962)",
+        "Cambridge, MA\n(42.374105433000466, -71.12219272199962)",
         'Violation Description': 'HYDRANT WITHIN 10 FT',
     }]
     tmppath = create_test_csv(test, tmpdir, 'test.csv')

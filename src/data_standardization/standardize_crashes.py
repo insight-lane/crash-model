@@ -17,9 +17,33 @@ CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
-def read_standardized_fields(raw_crashes, fields, opt_fields,
-                             timezone, datadir, city,
-                             startdate=None, enddate=None):
+def validate_coords(crash: dict, lat_field: str, lon_field: str):
+    """
+    Validates latitude/longitude values, returns numeric values
+    Args:
+        crash: crash data
+        lat_field: lat field name
+        lon_field: lon field name
+    Returns: tuple of float values or None, if invalid
+    """
+    if lat_field and lon_field:
+        try:
+            # if strings, try and convert
+            lat = float(crash[lat_field])
+            lon = float(crash[lon_field])
+        except ValueError:
+            return None, None
+        if abs(lat) > 90:
+            return None, None
+        if abs(lon) > 180:
+            return None, None
+        return lat, lon
+
+
+
+def read_standardized_fields(raw_crashes: dict, fields: dict, opt_fields: dict,
+                             timezone: str, datadir: str, city: str,
+                             startdate=None, enddate=None) -> dict:
 
     crashes = {}
     # Drop times from startdate/enddate in the unlikely event
@@ -58,12 +82,10 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
-            
-        lat = crash[fields['latitude']] if fields['latitude'] else None
-        lon = crash[fields['longitude']] if fields['longitude'] else None
+
+        lat, lon = validate_coords(crash, fields['latitude'], fields['longitude'])
 
         if not lat or not lon:
-
             # skip any crashes that don't have coordinates
             if 'address' not in opt_fields or opt_fields['address'] not in crash:
                 continue
@@ -140,7 +162,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             min_date = crash_day
         if max_date is None or crash_day > max_date:
             max_date = crash_day
-        
+
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", crash_date_time),

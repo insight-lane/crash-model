@@ -106,7 +106,7 @@ if __name__ == '__main__':
             '-n',
             outputdir
         ] + (['--forceupdate'] if recreate else []))
-        # Create segments from the Boston data
+
         subprocess.check_call([
             'python',
             '-m',
@@ -122,8 +122,7 @@ if __name__ == '__main__':
                 DATA_FP, 'processed', 'maps', outputdir, 'elements.geojson')
         ] + (['--forceupdate'] if recreate else []))
 
-        # Map the boston segments to the open street map segments
-        # and add features
+        # Map the additional map segments to the open street map segments
         subprocess.check_call([
             'python',
             '-m',

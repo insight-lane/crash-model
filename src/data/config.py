@@ -80,7 +80,7 @@ class Configuration(object):
             if 'optional' in crash_value and 'split_columns' in crash_value['optional']:
                 self.split_columns += crash_value['optional']['split_columns'].keys()
 
-    def __get_feature_type(self, feat: dict) -> str:
+    def _get_feature_type(self, feat: dict) -> str:
         """
         Gets the feature type for feature, defaults to continuous
         Args:
@@ -128,9 +128,9 @@ class Configuration(object):
                 # for multiple features per file, different processing
                 if 'feats' in additional:
                     for feat in additional['feats']:
-                        feat_types[self.__get_feature_type(feat)].append(feat['name'])
+                        feat_types[self._get_feature_type(feat)].append(feat['name'])
                     continue
-                feat_types[self.__get_feature_type(additional)].append(additional['name'])
+                feat_types[self._get_feature_type(additional)].append(additional['name'])
 
         # May eventually want to rename this feature to be more general
         # For now, all atr features are continuous

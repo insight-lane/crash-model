@@ -328,7 +328,7 @@ def add_point_based_features(non_inters: list, inters: list,
         feat_type = feature.properties['feature']
         feat_agg_type = ""
 
-        if 'feat_agg' in feature.properties and 'value' in feature.properties:
+        if 'feat_agg' in feature.properties:
             feat_agg_type = feature.properties['feat_agg']
             date = feature.properties['date']
 
@@ -337,8 +337,14 @@ def add_point_based_features(non_inters: list, inters: list,
                 matches[str(near)] = {}
 
             # only accepts "latest value", otherwise just count
-            if feat_agg_type == 'latest':  
-                aggregation_values[(str(near), feat_type)][date] = feature.properties['value']
+            if feat_agg_type == 'latest':
+                try:
+                    if 'value' in feature.properties:
+                        aggregation_values[(str(near), feat_type)][date] = feature.properties['value']
+                    elif 'category' in feature.properties:
+                        aggregation_values[(str(near), feat_type)][date] = feature.properties['category']
+                except KeyError as e:
+                    raise KeyError(f"feature_agg 'latest' specified but no value in key {e}")
             else:
                 if feat_type not in matches[str(near)]:
                     matches[str(near)][feat_type] = 0

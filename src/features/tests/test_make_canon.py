@@ -28,19 +28,23 @@ def test_read_records(tmpdir):
 def test_aggregate_roads():
 
     aggregated, cr_con = make_canon_dataset.aggregate_roads(
-        ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway'],
+        ['width', 'lanes', 'hwy_type', 'signal', 'oneway'],
+        ['osm_speed'],
         DATA_FP,
         ['bike', 'pedestrian', 'vehicle']
     )
-    expected_columns = ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
-       'segment_id', 'crash', 'bike', 'pedestrian', 'vehicle']
+    expected_columns = set(['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
+       'segment_id', 'crash', 'bike', 'pedestrian', 'vehicle'])
+
+    expected_width = [24, 24, 24, 15, 15, 24, 5, 24, 12, 12, 24, 24, 24, 24]
 
     cr_con_roads = make_canon_dataset.combine_crash_with_segments(
         cr_con, aggregated)
 
     assert pd.api.types.infer_dtype(cr_con_roads.segment_id) == 'string'
-    assert cr_con_roads.columns.tolist() == expected_columns
+    assert set(cr_con_roads.columns.tolist()) == expected_columns
     assert cr_con_roads.shape == (14, 11)
+    assert cr_con_roads.width.tolist() == [24, 24, 24, 15, 15, 24, 5, 24, 12, 12, 24, 24, 24, 24]
     
 
 def test_road_make():

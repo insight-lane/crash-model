@@ -87,7 +87,7 @@ def road_make(feats: list, fp: str) -> pd.DataFrame:
     return df[feats]
 
 
-def aggregate_roads(feats: list, datadir: str, split_columns: list):
+def aggregate_roads(categorical_features: list, continuous_features: list, datadir: str, split_columns: list):
 
     # read/aggregate crashes
     crash = read_records(
@@ -101,13 +101,18 @@ def aggregate_roads(feats: list, datadir: str, split_columns: list):
     # combined road feature dataset parameters
     fp = os.path.join(datadir, 'maps', 'inter_and_non_int.geojson')
     # create combined road feature dataset
+    feats = categorical_features + continuous_features
     aggregated = road_make(feats, fp)
     print("road features being included: ", ', '.join(feats))
 
-    aggregated = aggregated.fillna(0)
-
-    # All features as int
-    aggregated = aggregated.apply(lambda x: x.astype('int'))
+    # handle missing
+    # TODO: probably can move this to training - add imputation, possibly
+    if categorical_features:
+        aggregated[categorical_features] = aggregated[categorical_features].fillna('no_value')
+    if continuous_features:
+        # ensure continuous features are numeric
+        aggregated[continuous_features] = aggregated[continuous_features].fillna(0)
+        aggregated[continuous_features] = aggregated[continuous_features].apply(lambda x: pd.to_numeric(x))
 
     return aggregated, crash
 
@@ -146,7 +151,8 @@ if __name__ == '__main__':
     print("Data directory: " + DATA_FP)
 
     aggregated, crash = aggregate_roads(
-        feats,
+        config.categorical_features,
+        config.continuous_features,
         DATA_FP,
         config.split_columns
     )

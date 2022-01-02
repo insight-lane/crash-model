@@ -75,26 +75,33 @@ def write_default_features(f, waze=False, supplemental=[],
 
     if supplemental:
         f.write(
-            "# Additional data sources\n" +
+            "# Additional point based features sources\n" +
             "# Any csv file with rows corresponding to location points\n" +
+            "# See README for details on format (https://github.com/insight-lane/crash-model/tree/master/src#point-based-features)\n" +
             "data_source:\n"
         )
 
         for filename in supplemental:
             f.write(
-                "  - name: \n" +
-                "    filename: {}\n".format(filename) +
+                " copy-paste the block below for each additional data source\n" +
+                "  - filename: {}\n".format(filename) +
+                "    # Provide either lat/long or address (address will be geocoded): \n" +
+                "    latitude: \n" +
+                "    longitude: \n" +
                 "    address: \n" +
                 "    date: \n" +
                 "    time: \n" +
-                "    category: \n" +
-                "    notes: \n" +
-                "    # Feature is 'categorical' or 'continuous'\n" +
-                "    feat: \n" +
-                "    # feat_agg (feature aggregation) can be total count 'default' or 'latest value' \n" +
-                "    feat_agg: \n"
-                "    # if latest, the column name where the value can be found \n" +
-                "    value: \n"
+                "    feats: \n" +
+                "    # copy-paste the block below for each additional feature for this file\n" +
+                "      - name: \n" +
+                "        category: \n" +
+                "        notes: \n" +
+                "        # Feature is 'categorical' or 'continuous' (numeric), default is continuous'\n" +
+                "        feat_type: \n" +
+                "        # feat_agg (feature aggregation), only option is 'latest' (latest value), default is count\n" +
+                "        feat_agg: \n"
+                "        # if 'latest' above, provide column name where the value can be found \n" +
+                "        value: \n"
                 )
         f.write("\n")
 

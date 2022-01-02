@@ -9,20 +9,27 @@ CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(CURR_FP)
 
-def process_row(row: dict, row_config: dict) -> dict:
+def process_row(row: dict, row_config: dict) -> OrderedDict:
+    """
+    Function to process a row of pbf data
+    Args:
+        row: dictionary of data from pdf
+        row_config: dictionary derived from config yaml
+    Returns: dict with appropriate values
+    """
     new_row = OrderedDict()
     if "category" in row_config and row_config['category']:
         new_row['category'] = row[row_config['category']]
-    if "notes" in row_config and row_config['notes']:
-        new_row['notes'] = row[row_config['notes']]
-    if "feat_agg" in row_config and row_config['feat_agg']:
-        new_row['feat_agg'] = row_config['feat_agg']
     if "value" in row_config and row_config['value']:
         # value must be numeric
         val = row[row_config['value']]
         if type(val) not in (int, float):
             val = pd.to_numeric(val).item()
         new_row['value'] = val
+    if "notes" in row_config and row_config['notes']:
+        new_row['notes'] = row[row_config['notes']]
+    if "feat_agg" in row_config and row_config['feat_agg']:
+        new_row['feat_agg'] = row_config['feat_agg']
     return(new_row)
 
 def read_file_info(config: data.config.Configuration,
@@ -50,13 +57,6 @@ def read_file_info(config: data.config.Configuration,
                 raise SystemExit(filepath + " not found, exiting")
 
         df = pd.read_csv(filepath, na_filter=False)
-
-        # rename columns according to source_config
-        #df.rename(columns=dict((v, k) for k, v in source_config.items()), inplace=True)
-        #if 'address' in source_config:
-        #    df['lat'] = None
-        #    df['lon'] = None
-        #    df['address'].apply(standardization_util.parse_address)
 
         rows = df.to_dict("records")
         missing = 0
