@@ -396,4 +396,4 @@ def test_validate_coords():
     example = {'a': 90.0,
                'b': -100.0}
     assert standardize_crashes.validate_coords(example, 'a', 'b') == (90.0, -100.0)
-    assert standardize_crashes.validate_coords(example, 'b', 'a')[0] is None
+    assert standardize_crashes.validate_coords(example, 'b', 'a') is None

@@ -32,12 +32,13 @@ def validate_coords(crash: dict, lat_field: str, lon_field: str):
             lat = float(crash[lat_field])
             lon = float(crash[lon_field])
         except ValueError:
-            return None, None
+            return
         if abs(lat) > 90:
-            return None, None
+            return
         if abs(lon) > 180:
-            return None, None
+            return
         return lat, lon
+
 
 
 
@@ -83,9 +84,11 @@ def read_standardized_fields(raw_crashes: dict, fields: dict, opt_fields: dict,
         if i % 10000 == 0:
             print(i)
 
-        lat, lon = validate_coords(crash, fields['latitude'], fields['longitude'])
+        lat_lon = validate_coords(crash, fields['latitude'], fields['longitude'])
+        if lat_lon:
+            lat, lon = lat_lon
 
-        if not lat or not lon:
+        else:
             # skip any crashes that don't have coordinates
             if 'address' not in opt_fields or opt_fields['address'] not in crash:
                 continue
