@@ -1,4 +1,4 @@
-name: crash-model
+name: crash-model_2
 channels:
   - conda-forge
   - defaults
@@ -177,7 +177,7 @@ dependencies:
   - seaborn-base=0.10.1=py_1
   - send2trash=1.5.0=py_0
   - setuptools=47.3.1=py36h9f0ad1d_0
-  - shapely=1.6.4
+  - shapely=1.6.4=py36h5c88e11_1006
   - sip=4.19.8=py36h0a44026_1000
   - six=1.15.0=pyh9f0ad1d_0
   - sqlite=3.30.1=h93121df_0
