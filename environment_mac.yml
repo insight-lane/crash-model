@@ -1,4 +1,4 @@
-name: crash-model_2
+name: crash-model
 channels:
   - conda-forge
   - defaults
