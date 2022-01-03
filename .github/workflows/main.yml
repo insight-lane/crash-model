@@ -49,6 +49,8 @@ jobs:
         auto-update-conda: false
         activate-environment: crash-model
         environment-file: conda-osx-64.lock
+        channels: conda-forge, defaults
+        channel-priority: strict
     - name: Run mac tests
       run: |
         set -eo pipefail
