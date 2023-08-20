@@ -5,7 +5,7 @@ from jsonschema import validate
 from dateutil import tz
 
 
-def parse_date(date, timezone, time=None, time_format=None):
+def parse_date(date: str, timezone: str, time=None, time_format=None):
     """
     Turn a date (and optional time) into a datetime string
     in standardized format

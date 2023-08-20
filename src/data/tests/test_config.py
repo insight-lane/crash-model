@@ -81,3 +81,18 @@ def test_get_feature_list(tmpdir):
     assert config.continuous_features == ['AADT']
     assert set(config.features) == set([
         'SPEEDLIMIT', 'Struct_Cnd', 'Surface_Tp', 'F_F_Class', 'AADT'])
+
+    config_dict['data_source'] = [
+        {'filename': 'test_multi',
+        'feats': [
+            {'name': 'cat_test',
+            'feat_type': 'categorical'},
+            {'name': 'cont_test',
+             'feat_type': 'continuous'},
+            {'name': 'default_test'},
+         ]}]
+
+    write_to_file(yml_file, config_dict)
+    config = data.config.Configuration(yml_file)
+    assert all([c in config.continuous_features for c in ['cont_test', 'default_test']])
+    assert 'cat_test' in config.categorical_features

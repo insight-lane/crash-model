@@ -391,3 +391,9 @@ def test_add_city_specific_fields():
     assert result['pedestrian'] == 1
     assert 'vehicle' not in result
     assert 'bike' not in result
+
+def test_validate_coords():
+    example = {'a': 90.0,
+               'b': -100.0}
+    assert standardize_crashes.validate_coords(example, 'a', 'b') == (90.0, -100.0)
+    assert standardize_crashes.validate_coords(example, 'b', 'a') is None

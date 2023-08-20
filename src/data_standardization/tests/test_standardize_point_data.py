@@ -8,7 +8,7 @@ from .. import standardize_point_data
 
 def create_test_csv(test_list, tmpdir, filename):
     tmppath = tmpdir.strpath
-    
+
     os.makedirs(os.path.join(tmpdir, 'raw'))
     os.makedirs(os.path.join(tmpdir, 'raw', 'supplemental'))
     os.makedirs(os.path.join(tmpdir, 'standardized'))
@@ -23,7 +23,6 @@ def create_test_csv(test_list, tmpdir, filename):
 
 
 def test_read_file_info_default(tmpdir):
-
     test = [{
         'Ticket Issue Date': '09/02/2014',
         'Issue Time': '9:10 AM',
@@ -60,7 +59,7 @@ def test_read_file_info_default(tmpdir):
     with open(config_filename, "w") as f:
         ruamel.yaml.round_trip_dump(config_dict, f)
     config = data.config.Configuration(config_filename)
-    
+
     standardize_point_data.read_file_info(config, tmppath)
     filename = os.path.join(tmppath, 'standardized', 'points.json')
     with open(filename) as data_file:
@@ -74,7 +73,7 @@ def test_read_file_info_default(tmpdir):
             'longitude': -71.09569369699966
         },
         'category': 'METER EXPIRED'
-        },
+    },
         {
             'feature': 'test',
             'date': '2014-01-09T09:33:00-05:00',
@@ -139,14 +138,88 @@ def test_read_file_info_agg(tmpdir):
         },
         'feat_agg': 'latest',
         'value': 87081
-        },
+    },
         {
-        'feature': 'aggtest',
-        'date': '2012-05-01T20:00:00-04:00',
-        'location': {
-            'latitude': 39.90415873,
-            'longitude': -75.19348751
-        },
-        'feat_agg': 'latest',
-        'value': 87679
+            'feature': 'aggtest',
+            'date': '2012-05-01T20:00:00-04:00',
+            'location': {
+                'latitude': 39.90415873,
+                'longitude': -75.19348751
+            },
+            'feat_agg': 'latest',
+            'value': 87679
         }]
+
+
+def test_read_file_info_multi(tmpdir):
+    test = [{
+        'SETDATE': '2012-03-15T00:00:00.000Z',
+        'LATITUDE': '39.74391',
+        'LONGITUDE': '-75.22693',
+        'RECORDNUM': '87081'
+    }, {
+        'SETDATE': '2012-05-02T00:00:00.000Z',
+        'LATITUDE': '39.90415873',
+        'LONGITUDE': '-75.19348751',
+        'RECORDNUM': '87679'
+    }]
+    tmppath = create_test_csv(test, tmpdir, 'test_multi.csv')
+
+    config_dict = {
+        'name': 'cambridge',
+        'city_latitude': 42.3600825,
+        'city_longitude': -71.0588801,
+        'city_radius': 15,
+        'crashes_files': {'test': {}},
+        'city': "Cambridge, Massachusetts, USA",
+        'timezone': "America/New_York",
+        'data_source': [{
+            'name': 'aggtest',
+            'filename': 'test_multi.csv',
+            'latitude': 'LATITUDE',
+            'longitude': 'LONGITUDE',
+            'date': 'SETDATE',
+            'feats': [{
+                'name': 'test_value',
+                'feat_agg': 'latest',
+                'value': 'RECORDNUM'
+            },
+                {'name': 'test_count'
+                 }
+            ]
+        }]
+    }
+
+    config_filename = os.path.join(tmpdir, 'test.yml')
+    with open(config_filename, "w") as f:
+        ruamel.yaml.round_trip_dump(config_dict, f)
+    config = data.config.Configuration(config_filename)
+
+    standardize_point_data.read_file_info(config, tmppath)
+    filename = os.path.join(tmppath, 'standardized', 'points.json')
+    with open(filename) as data_file:
+        result = json.load(data_file)
+    assert result == [{'feature': 'test_value',
+                   'feat_agg': 'latest',
+                   'value': 87081,
+                   'date': '2012-03-14T20:00:00-04:00',
+                   'location': {
+                       'latitude': 39.74391,
+                       'longitude': -75.22693000000001}},
+                  {'feature': 'test_count',
+                   'date': '2012-03-14T20:00:00-04:00',
+                   'location': {
+                       'latitude': 39.74391,
+                       'longitude': -75.22693000000001}},
+                  {'feature': 'test_value',
+                   'feat_agg': 'latest',
+                   'value': 87679,
+                   'date': '2012-05-01T20:00:00-04:00',
+                   'location': {
+                       'latitude': 39.90415873,
+                       'longitude': -75.19348751}},
+                  {'feature': 'test_count',
+                   'date': '2012-05-01T20:00:00-04:00',
+                   'location': {
+                       'latitude': 39.90415873,
+                       'longitude': -75.19348751}}]

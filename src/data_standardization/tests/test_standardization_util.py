@@ -51,6 +51,9 @@ def test_parse_date():
     assert standardization_util.parse_date(
         '2009-01-08T08:53:00.000Z', timezone) == '2009-01-08T03:53:00-05:00'
 
+    assert standardization_util.parse_date(
+        '2009', timezone)[:4] == '2009'
+
 
 def test_parse_address():
 

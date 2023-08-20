@@ -17,9 +17,34 @@ CURR_FP = os.path.dirname(
     os.path.abspath(__file__))
 BASE_FP = os.path.dirname(os.path.dirname(CURR_FP))
 
-def read_standardized_fields(raw_crashes, fields, opt_fields,
-                             timezone, datadir, city,
-                             startdate=None, enddate=None):
+def validate_coords(crash: dict, lat_field: str, lon_field: str):
+    """
+    Validates latitude/longitude values, returns numeric values
+    Args:
+        crash: crash data
+        lat_field: lat field name
+        lon_field: lon field name
+    Returns: tuple of float values or None, if invalid
+    """
+    if lat_field and lon_field:
+        try:
+            # if strings, try and convert
+            lat = float(crash[lat_field])
+            lon = float(crash[lon_field])
+        except ValueError:
+            return
+        if abs(lat) > 90:
+            return
+        if abs(lon) > 180:
+            return
+        return lat, lon
+
+
+
+
+def read_standardized_fields(raw_crashes: dict, fields: dict, opt_fields: dict,
+                             timezone: str, datadir: str, city: str,
+                             startdate=None, enddate=None) -> dict:
 
     crashes = {}
     # Drop times from startdate/enddate in the unlikely event
@@ -58,12 +83,12 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
     for i, crash in enumerate(raw_crashes):
         if i % 10000 == 0:
             print(i)
-            
-        lat = crash[fields['latitude']] if fields['latitude'] else None
-        lon = crash[fields['longitude']] if fields['longitude'] else None
 
-        if not lat or not lon:
+        lat_lon = validate_coords(crash, fields['latitude'], fields['longitude'])
+        if lat_lon:
+            lat, lon = lat_lon
 
+        else:
             # skip any crashes that don't have coordinates
             if 'address' not in opt_fields or opt_fields['address'] not in crash:
                 continue
@@ -88,17 +113,21 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             else:
                 crash_date = crash[fields["date_complete"]]
 
-        elif fields["date_year"] and fields["date_month"]:
+        elif fields["date_year"]:
+            # TODO: generally, we don't need date anymore, we should remove it
+            # for now, month is always january if unspecified
+            date_month = 1
+            date_year = int(crash[fields["date_year"]])
+            if fields["date_month"]:
+                date_month = int(crash[fields["date_month"]])
             if fields["date_day"]:
-                crash_date = str(crash[fields["date_year"]]) + "-" + str(
-                    crash[fields["date_month"]]) + "-" + crash[fields["date_day"]]
+                crash_date = f'{date_year}-{date_month}-{crash[fields["date_day"]]}'
             # some cities do not supply a day of month for crashes, randomize if so
             else:
                 available_dates = calendar.Calendar().itermonthdates(
-                    crash[fields["date_year"]], crash[fields["date_month"]])
+                    date_year, date_month)
                 crash_date = str(random.choice(
-                    [date for date in available_dates if date.month == crash[fields["date_month"]]]))
-
+                    [date for date in available_dates if date.month == date_month]))
         # skip any crashes that don't have a date
         else:
             continue
@@ -136,7 +165,7 @@ def read_standardized_fields(raw_crashes, fields, opt_fields,
             min_date = crash_day
         if max_date is None or crash_day > max_date:
             max_date = crash_day
-        
+
         formatted_crash = OrderedDict([
             ("id", crash[fields["id"]]),
             ("dateOccurred", crash_date_time),
