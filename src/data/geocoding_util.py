@@ -67,7 +67,7 @@ def write_geocode_cache(results,
             writer.writerow([key, value[0], value[1], value[2], value[3]])
 
 
-def lookup_address(intersection, cached, mapboxtoken=None, city=None, strict=False):
+def lookup_address(intersection, cached, mapboxtoken=None, city=None, strict=True):
     """
     Look up an intersection first in the cache, and if it
     doesn't exist, geocode it
@@ -93,7 +93,7 @@ def lookup_address(intersection, cached, mapboxtoken=None, city=None, strict=Fal
             intersection, {}, mapboxtoken=mapboxtoken, city=city, strict=strict))
 
 
-def geocode_address(address, cached={}, mapboxtoken=None, strict=False,
+def geocode_address(address, cached={}, mapboxtoken=None, strict=True,
                     city=None):
     """
     Check an optional cache to see if we already have the geocoded address
