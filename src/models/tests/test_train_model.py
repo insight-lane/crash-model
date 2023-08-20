@@ -57,8 +57,8 @@ def test_process_features(tmpdir):
     f_cont = ['width', 'jam_percent']
     features = ['signal', 'lanes', 'width', 'jam_percent']
     test_data, features, lm_features = train_model.process_features(features, f_cat, f_cont, test_data)
-    assert set(features) == set(['intersection', 'signal1', 'signal0', 'log_width', 'lanes2', 'lanes1'])
-    assert set(lm_features) == set(['intersection', 'signal1', 'log_width', 'lanes2'])
+    assert set(features) == set(['intersection', 'signal_1', 'signal_0', 'log_width', 'lanes_2', 'lanes_1'])
+    assert set(lm_features) == set(['intersection', 'signal_1', 'log_width', 'lanes_2'])
     
 
 def test_initialize_and_run(tmpdir):

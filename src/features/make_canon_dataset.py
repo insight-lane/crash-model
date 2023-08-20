@@ -1,7 +1,7 @@
 
 # coding: utf-8
-# Generate canonical dataset for hackathon
-# Developed by: bpben
+# Generate canonical dataset
+# Developed by: bpben, j-t-t
 import json
 import pandas as pd
 from data.util import read_geojson
@@ -56,7 +56,7 @@ def read_records(fp, id_col, split_columns=[]):
     return(df_g)
 
 
-def road_make(feats, fp):
+def road_make(feats: list, fp: str) -> pd.DataFrame:
     """ Makes road feature df, intersections + non-intersections
     Args:
         feats - list of features to be included
@@ -69,7 +69,9 @@ def road_make(feats, fp):
     print("reading ", fp)
     segments = read_geojson(fp)
     df = pd.DataFrame([x.properties for x in segments])
-
+    # need to enforce id to string
+    # TODO: This id as string issue is always a problem, we need to fix that
+    df['id'] = df['id'].astype(str)
     df.set_index('id', inplace=True)
 
     # Check for missing features
@@ -85,7 +87,7 @@ def road_make(feats, fp):
     return df[feats]
 
 
-def aggregate_roads(feats, datadir, split_columns):
+def aggregate_roads(categorical_features: list, continuous_features: list, datadir: str, split_columns: list):
 
     # read/aggregate crashes
     crash = read_records(
@@ -99,13 +101,18 @@ def aggregate_roads(feats, datadir, split_columns):
     # combined road feature dataset parameters
     fp = os.path.join(datadir, 'maps', 'inter_and_non_int.geojson')
     # create combined road feature dataset
+    feats = categorical_features + continuous_features
     aggregated = road_make(feats, fp)
     print("road features being included: ", ', '.join(feats))
 
-    aggregated = aggregated.fillna(0)
-
-    # All features as int
-    aggregated = aggregated.apply(lambda x: x.astype('int'))
+    # handle missing
+    # TODO: probably can move this to training - add imputation, possibly
+    if categorical_features:
+        aggregated[categorical_features] = aggregated[categorical_features].fillna('no_value')
+    if continuous_features:
+        # ensure continuous features are numeric
+        aggregated[continuous_features] = aggregated[continuous_features].fillna(0)
+        aggregated[continuous_features] = aggregated[continuous_features].apply(lambda x: pd.to_numeric(x))
 
     return aggregated, crash
 
@@ -144,7 +151,8 @@ if __name__ == '__main__':
     print("Data directory: " + DATA_FP)
 
     aggregated, crash = aggregate_roads(
-        feats,
+        config.categorical_features,
+        config.continuous_features,
         DATA_FP,
         config.split_columns
     )

@@ -28,14 +28,23 @@ def test_read_records(tmpdir):
 def test_aggregate_roads():
 
     aggregated, cr_con = make_canon_dataset.aggregate_roads(
-        ['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway'],
+        ['width', 'lanes', 'hwy_type', 'signal', 'oneway'],
+        ['osm_speed'],
         DATA_FP,
         ['bike', 'pedestrian', 'vehicle']
     )
+    expected_columns = set(['width', 'lanes', 'hwy_type', 'osm_speed', 'signal', 'oneway',
+       'segment_id', 'crash', 'bike', 'pedestrian', 'vehicle'])
+
+    expected_width = [24, 24, 24, 15, 15, 24, 5, 24, 12, 12, 24, 24, 24, 24]
 
     cr_con_roads = make_canon_dataset.combine_crash_with_segments(
         cr_con, aggregated)
-#    assert len(cr_con_roads.year.unique()) == 2
+
+    assert pd.api.types.infer_dtype(cr_con_roads.segment_id) == 'string'
+    assert set(cr_con_roads.columns.tolist()) == expected_columns
+    assert cr_con_roads.shape == (14, 11)
+    assert cr_con_roads.width.tolist() == [24, 24, 24, 15, 15, 24, 5, 24, 12, 12, 24, 24, 24, 24]
     
 
 def test_road_make():
@@ -51,12 +60,12 @@ def test_road_make():
 
     expected = pd.DataFrame({
         'id': ['000', '001', '002', '003', '004', '005', '006',
-               '007', '008', '009', 0, 1, 2, 3],
+               '007', '008', '009', '0', '1', '2', '3'],
         'width': [24, 24, 24, 15, 15, 24, 5, 24, 12, 12, 24, 24, 24, 24],
         'lanes': [2, 3, 3, 3, 3, 2, 1, 2, 1, 1, 2, 3, 3, 3],
         'hwy_type': [6, 6, 6, 3, 6, 6, 1, 6, 1, 1, 1, 1, 3, 1],
         'osm_speed': [0, 0, 0, 0, 25, 0, 25, 0, 25, 25, 25, 25, 25, 25]
     })
     expected.set_index('id', inplace=True)
-    assert expected.equals(result)
+    pd.testing.assert_frame_equal(expected, result)
 

@@ -6,6 +6,7 @@ import pandas as pd
 import scipy.stats as ss
 import os
 import json
+import re
 import argparse
 from copy import deepcopy
 from .model_classes import Indata, Tuner, Tester
@@ -195,20 +196,22 @@ def process_features(features, f_cat, f_cont, data_segs):
 
     print(('Processing categorical: {}'.format(f_cat)))
     for f in f_cat:
-        t = pd.get_dummies(data_segs[f])
-        t.columns = [f+str(c) for c in t.columns]
-        data_segs = pd.concat([data_segs, t], axis=1)
-        features += t.columns.tolist()
+        # get dummy-codings for categorical
+        dummy_f = pd.get_dummies(data_segs[f])
+        # clean up the names, can't have punctuation
+        dummy_f.columns = [f"{f}_{re.sub('[^A-Za-z0-9 _]', '', str(c))}" for c in dummy_f.columns]
+        data_segs = pd.concat([data_segs, dummy_f], axis=1)
+        features += dummy_f.columns.tolist()
         # for linear model, allow for intercept
-        lm_features += t.columns.tolist()[1:]
+        lm_features += dummy_f.columns.tolist()[1:]
     # aadt - log-transform
     print(('Processing continuous: {}'.format(f_cont)))
     for f in f_cont:
-
         data_segs['log_%s' % f] = np.log(data_segs[f]+1)
         features += ['log_%s' % f]
         lm_features += ['log_%s' % f]
     # add segment type
+    # TODO: This is horrible - segment_ids need to not be string nor dependent on this format
     data_segs['intersection'] = data_segs.segment_id.map(lambda x: x[:2]!='00').astype(int)
     features += ['intersection']
     lm_features += ['intersection']
