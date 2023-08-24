@@ -41,7 +41,7 @@ jobs:
   mac:
     env:
       PYTHONFAULTHANDLER: "true"
-    runs-on: macos-10.15
+    runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
