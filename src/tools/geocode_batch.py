@@ -20,7 +20,7 @@ def parse_addresses(directory, filename, city, addressfield,
         for r in csv_reader:
             address = r[addressfield] + ' ' + city
             geocoded_add, lat, lng, status = lookup_address(
-                address, cached, mapboxtoken=mapboxtoken)
+                address, cached, mapboxtoken=mapboxtoken, city=city, strict=True)
             cached[address] = [geocoded_add, lat, lng, status]
 
             if status == 'S':
