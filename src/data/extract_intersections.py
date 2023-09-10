@@ -1,6 +1,6 @@
+from shapely.geometry import Point, shape
 import fiona
 import math
-from shapely.geometry import Point, shape
 import itertools
 import pickle
 import os

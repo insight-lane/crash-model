@@ -1,7 +1,7 @@
+from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
 import fiona
 import pyproj
 import rtree
-from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
 from matplotlib import pyplot
 import os
 import json
