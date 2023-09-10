@@ -48,7 +48,8 @@ jobs:
       with:
         auto-update-conda: true
         activate-environment: crash-model
-        environment-file: conda-osx-64.lock
+        #environment-file: conda-osx-64.lock
+        environment-file: environment_mac.yml
         channels: conda-forge, defaults
         channel-priority: strict
     - name: Run mac tests
