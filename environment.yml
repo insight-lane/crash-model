@@ -7,22 +7,21 @@ dependencies:
 - fiona
 - flask
 - folium
-- geopandas=0.5.1=py_0 # pinned
+- geopandas
+- xgboost
 - geocoder
-- geojson=2.4.1 # pinned
+- geojson
 - ipdb
 - ipython
 - jupyter
 - matplotlib
 - numpy
 - openpyxl
-- osmnx=0.11
-- pandas=1.0.5 # pinned
-- py-xgboost
+- osmnx
+- pandas
 - pylint
-- pyproj=2.2.1 # pinned
+- pyproj
 - pytest
-- python=3.6
 - pyyaml
 - pytest-cov
 - rtree
@@ -31,7 +30,5 @@ dependencies:
 - scikit-learn
 - shapely
 - tzlocal
-#- xgboost
 - xlrd
 - zstd
-

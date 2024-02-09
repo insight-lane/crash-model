@@ -32,7 +32,7 @@ def extract_intersections(inter, prop):
         yield inter, prop
     # If multiple intersections, return each point
     elif "MultiPoint" == inter.type:
-        for i in inter:
+        for i in inter.geoms:
             yield(i, prop)
     # If line with overlap, find start/end, return
     elif "MultiLineString" == inter.type:
