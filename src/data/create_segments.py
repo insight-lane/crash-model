@@ -61,7 +61,7 @@ def get_intersection_buffers(intersections, intersection_buffer_units,
         inter_index.insert(idx, inter_point['geometry'].bounds)
 
     # Get the points that overlap with the buffers
-    for buff in buffered_intersections:
+    for buff in buffered_intersections.geoms:
         matches = []
         for idx in inter_index.intersection(buff.bounds):
             if intersections[idx]['geometry'].within(buff):
@@ -225,6 +225,7 @@ def find_non_ints(roads, int_buffers):
     non_int_count = 0
 
     for i, road in enumerate(roads):
+        # tracking progress
         util.track(i, 1000, len(roads))
 
         # If there's no overlap between the road segment and any intersections
@@ -242,12 +243,15 @@ def find_non_ints(roads, int_buffers):
                 buffered_int = inter[1]
                 diff = diff.difference(buffered_int)
 
-            if diff.type in ('LineString', 'MultiLineString'):
-                if 'LineString' == diff.type:
+            
+            # check if there is any part of the segment outside buffer
+            if not diff.is_empty:
+                geom_type = diff.geom_type
+                if geom_type == 'LineString':
                     coords = [x for x in diff.coords]
-                elif 'MultiLineString' == diff.type:
+                elif geom_type == 'MultiLineString':
                     coords = []
-                    for l in diff:
+                    for l in diff.geoms:
                         for coord in l.coords:
                             coords.append(coord)
 
@@ -264,9 +268,11 @@ def find_non_ints(roads, int_buffers):
             else:
                 # There may be no sections of the segment that fall outside
                 # of an intersection, in which case it's skipped
-                if len(diff) == 0:
-                    continue
-                print("{} found, skipping".format(diff.type))
+                if diff.length == 0:
+                    print("Segment entirely in intersection, skipping")
+                else:
+                    # TODO: not sure if this could happen
+                    print("Error in non-intersection processing")
 
     # Update intersections' connected segments with id instead of original id
     for inter_segment in inter_segments:
@@ -532,7 +538,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
         # be taken out
         if type(lines) == LineString:
             lines = MultiLineString([lines.coords])
-        for line in lines:
+        for line in lines.geoms:
             coords += [[x for x in line.coords]]
 
         intersection.geometry = MultiLineString(coords)

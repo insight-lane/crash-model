@@ -65,10 +65,10 @@ def test_make_rollup():
         "vehicle": 1
     }]
     expected_rollup_total = gpd.GeoDataFrame()
-    expected_rollup_total["coordinates"] = [
+    expected_rollup_total["coordinates"] = gpd.GeoSeries([
         Point(-71.106, 42.365),
         Point(-71.097, 42.361),
-        Point(-71.127, 42.396)]
+        Point(-71.127, 42.396)])
     expected_rollup_total["total_crashes"] = [3, 1, 2]
     expected_rollup_total["crash_dates"] = [
         "2015-01-01T00:45:00-05:00,2015-04-15T00:45:00-05:00,2015-10-20T00:45:00-05:00",
@@ -77,19 +77,19 @@ def test_make_rollup():
     ]
 
     expected_rollup_pedestrian = gpd.GeoDataFrame()
-    expected_rollup_pedestrian["coordinates"] = [
+    expected_rollup_pedestrian["coordinates"] = gpd.GeoSeries([
         Point(-71.106, 42.365)
-    ]
+    ])
     expected_rollup_pedestrian["total_crashes"] = [1]
     expected_rollup_pedestrian["crash_dates"] = [
         "2015-04-15T00:45:00-05:00"
     ]
 
     expected_rollup_bike = gpd.GeoDataFrame()
-    expected_rollup_bike["coordinates"] = [
+    expected_rollup_bike["coordinates"] = gpd.GeoSeries([
         Point(-71.097, 42.361),
         Point(-71.127, 42.396)
-    ]
+    ])
     expected_rollup_bike["total_crashes"] = [1, 1]
     expected_rollup_bike["crash_dates"] = [
         "2015-01-01T01:12:00-05:00",

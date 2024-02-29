@@ -29,8 +29,7 @@ You can alternatively run each of the data generation scripts individually.  Eac
 - Given a city name, queries open street maps for the city segments.  Simplifies the street network by combining some ways.  Cleans up features, and writes the segments with their cleaned features out to shapefile
 - **Usage:** `python -m data.osm_create_maps 'Boston, MA, USA' ../data/` (can replace Boston with any other city, and can use a different data directory
 - **Results:**
-    - data/processed/maps/osm_ways.shp
-    - data/processed/maps/osm_nodes.shp
+    - data/processed/maps/osm.gpkg
     - data/processed/maps/osm_ways_3857.shp (this is the file where the cleaned features are attached to ways)
     - data/docs/highway_keys.csv (a mapping from highway key number to the highway type string)
 - **Features generated from open street maps:**

@@ -4,6 +4,7 @@ from shapely.geometry import Polygon
 import networkx as nx
 import json
 import fiona
+import pickle
 from .. import osm_create_maps
 from .. import util
 from .. import config
@@ -30,13 +31,13 @@ def test_reproject_and_clean_feats(tmpdir):
 
     tmppath = tmpdir.strpath
     shutil.copy(
-        TEST_FP + '/data/processed/maps/osm_elements.geojson',
+        TEST_FP + '/data/processed/maps/osm.gpkg',
         tmppath
     )
 
     # For now, just make sure it runs
     osm_create_maps.clean_ways(
-        tmppath + '/osm_elements.geojson',
+        tmppath + '/osm.gpkg',
         tmppath + '/docs'
     )
 
@@ -86,7 +87,7 @@ def test_expand_polygon():
 
 
 def mockreturn(config):
-    G1 = nx.read_gpickle(os.path.join(TEST_FP, 'data', 'osm_output.gpickle'))
+    G1 = pickle.load(open(os.path.join(TEST_FP, 'data', 'osm_output.gpickle'), 'rb'))
     return G1
 
 
@@ -109,8 +110,8 @@ def test_simple_get_roads(tmpdir, monkeypatch):
                   if x['properties']['feature'] == 'crosswalk']
     assert len(crosswalks) == 9
 
-    nodes = fiona.open(os.path.join(tmpdir, 'osm_nodes.shp'))
-    ways = fiona.open(os.path.join(tmpdir, 'osm_ways.shp'))
+    nodes = fiona.open(os.path.join(tmpdir, 'osm.gpkg'), layer='nodes')
+    ways = fiona.open(os.path.join(tmpdir, 'osm.gpkg'), layer='edges')
 
     # It's just coincidence that the number of ways and nodes is the same
     assert len(nodes) == 28

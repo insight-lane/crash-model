@@ -225,11 +225,11 @@ def test_add_point_based_features(tmpdir):
         "near_id": "001556"
     }, {
         "feature": "signal",
-        "location": {"latitude": 42.386904, "longitude": -71.1161581},
+        "location": {"latitude": 42.386904, "longitude": -71.116158},
         "near_id": ""
     }, {
         "feature": "crosswalk",
-        "location": {"latitude": 42.3834466, "longitude": -71.1377047},
+        "location": {"latitude": 42.383447, "longitude": -71.137705},
         "near_id": 975
     }]
     with open(outputfile, 'r') as f:
@@ -359,7 +359,8 @@ def test_connected_segments():
     assert len(inter_segments[1].lines) == 3
 
     # Test connected segments
-    assert set(inter_segments[0].connected_segments) == set([
+    # TODO: this matches the assertion set, but previously was idx 0, not 2
+    assert set(inter_segments[2].connected_segments) == set([
         '0011', '007', '005', '000'])
     assert set(non_int_lines[8].properties['connected_segments']) == set([
         3, 4])

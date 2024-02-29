@@ -211,16 +211,16 @@ def simple_get_roads(config, mapfp):
         None
         This function creates the following files
            features.geojson - traffic signals, crosswalks and intersections
-           osm_ways.shp - the simplified road network
+           osm.gpkg - the simplified road network
            osm_nodes.shp - the intersections and dead ends
     """
 
-    ox.settings.useful_tags_path.append('cycleway')
+    ox.settings.useful_tags_way.append('cycleway')
     G1 = get_graph(config)
     G = ox.simplify_graph(G1)
 
     # Label endpoints
-    streets_per_node = ox.count_streets_per_node(G)
+    streets_per_node = ox.stats.count_streets_per_node(G)
     for node, count in list(streets_per_node.items()):
         if count <= 1:
             G.nodes()[node]['dead_end'] = True
@@ -257,39 +257,29 @@ def simple_get_roads(config, mapfp):
         json.dump(features, f)
 
     # Store simplified network
-    ox.save_graph_shapefile(
-        G, filename='temp', folder=mapfp)
-
-    # Copy and remove temp directory
-    tempdir = os.path.join(mapfp, 'temp')
-    for filename in os.listdir(os.path.join(tempdir, 'edges')):
-        _, extension = filename.split('.')
-        shutil.move(os.path.join(tempdir, 'edges', filename),
-                    os.path.join(mapfp, 'osm_ways.' + extension))
-    for filename in os.listdir(os.path.join(tempdir, 'nodes')):
-        _, extension = filename.split('.')
-        shutil.move(os.path.join(tempdir, 'nodes', filename),
-                    os.path.join(mapfp, 'osm_nodes.' + extension))
-    shutil.rmtree(tempdir)
+    # seems to be an error with inserting osmid that hasn't been fixed yet
+    for node, data in G.nodes(data=True):
+        if 'osmid' in data:
+            data['osmid_original'] = data.pop('osmid')
+    ox.save_graph_geopackage(
+        G, filepath=os.path.join(mapfp, 'osm.gpkg'))
 
 
-def clean_and_write(ways_file, nodes_file,
+def clean_and_write(osm_graph_file,
                     result_file, DOC_FP):
     """
     Takes several shape files in 4326 projection, created from osmnx,
     reprojects them, and calls write_geojson
     Args:
-        ways_file - shp file for the ways
-        nodes_file - shp file for the intersection and end nodes
-        all_nodes_file - shp file for ALL nodes in the road network
+        osm_graph_file - osm gpkg with node and edge layers
         result_file - file to write to
         DOC_FP - file to write highway keys to
     Returns:
         None, writes a geojson file
     """
-    cleaned_ways = clean_ways(ways_file, DOC_FP)
+    cleaned_ways = clean_ways(osm_graph_file, DOC_FP)
 
-    nodes = fiona.open(nodes_file)
+    nodes = fiona.open(osm_graph_file, layer='nodes')
     nodes, cleaned_ways = get_connections(cleaned_ways, nodes)
 
     write_geojson(cleaned_ways, nodes,
@@ -409,10 +399,11 @@ def get_speed(speed):
 
 def clean_ways(orig_file, DOC_FP):
     """
-    Reads in osm_ways file, cleans up the features, and reprojects
+    Reads in osm gpkg file, cleans up the features, and reprojects
     results into 3857 projection
     Additionally writes a key which shows the correspondence between
-    highway type as a string and the resulting int feature
+    highway type/cycleway type as a string and the resulting int feature
+    This can be used to map the int values back to the features, output as csvs
     Features:
         width
         lanes
@@ -427,7 +418,7 @@ def clean_ways(orig_file, DOC_FP):
         a list of reprojected way lines
     """
 
-    way_lines = fiona.open(orig_file)
+    way_lines = fiona.open(orig_file, layer='edges')
 
     highway_keys = {None: 0}
     cycleway_keys = {}
@@ -527,7 +518,7 @@ if __name__ == '__main__':
     RAW_FP = os.path.join(args.datadir, 'raw')
 
     # If maps do not exist, create
-    if not os.path.exists(os.path.join(MAP_FP, 'osm_ways.shp')) \
+    if not os.path.exists(os.path.join(MAP_FP, 'osm.gpkg')) \
        or args.forceupdate:
         print('Generating map from open street map...')
         simple_get_roads(config, MAP_FP)
@@ -537,8 +528,7 @@ if __name__ == '__main__':
         print("Cleaning and writing to {}...".format('osm_elements.geojson'))
 
         clean_and_write(
-            os.path.join(MAP_FP, 'osm_ways.shp'),
-            os.path.join(MAP_FP, 'osm_nodes.shp'),
+            os.path.join(MAP_FP, 'osm.gpkg'),
             os.path.join(MAP_FP, 'osm_elements.geojson'),
             DOC_FP
         )

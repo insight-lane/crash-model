@@ -115,6 +115,8 @@ def write_intersections(inters, roads):
     # in the create_segments script
     for road in roads:
         road['properties']['id'] = road['id']
+        # fiona.model.Properties has circular references
+        road['properties'] = dict(road['properties'])
         roads_with_ids.append(road)
     roads = prepare_geojson(roads_with_ids)
 

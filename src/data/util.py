@@ -404,7 +404,7 @@ def write_records_to_geojson(records, outfilename):
 
     records = [{
         'geometry': mapping(record.geometry),
-        'properties': record.properties
+        'properties': dict(record.properties)
         } for record in records]
 
     records = prepare_geojson(records)
@@ -427,7 +427,8 @@ def prepare_geojson(elements):
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
-        properties=x['properties']) for x in elements]
+        # properties are usually Fiona.model.Feature - circular ref error
+        properties=dict(x['properties'])) for x in elements]
 
     return geojson.FeatureCollection(results)
 
@@ -464,7 +465,7 @@ def get_center_point(segment):
             .5, normalized=True)
         return point.x, point.y
     elif segment.geometry.type == 'MultiLineString':
-        lines = [x for x in [line for line in segment.geometry]]
+        lines = [x for x in [line for line in segment.geometry.geoms]]
         coords = []
         for line in lines:
             coords.extend([x for x in line.coords])
