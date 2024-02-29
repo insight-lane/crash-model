@@ -7,6 +7,7 @@ import os
 import argparse
 from .util import track, prepare_geojson
 import geojson
+from collections import OrderedDict
 
 MAP_DATA_FP = os.path.dirname(
     os.path.dirname(
@@ -116,7 +117,7 @@ def write_intersections(inters, roads):
     for road in roads:
         road['properties']['id'] = road['id']
         # fiona.model.Properties has circular references
-        road['properties'] = dict(road['properties'])
+        road['properties'] = OrderedDict(road['properties'])
         roads_with_ids.append(road)
     roads = prepare_geojson(roads_with_ids)
 

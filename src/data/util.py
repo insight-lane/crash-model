@@ -9,6 +9,7 @@ from dateutil.parser import parse
 import datetime
 from .record import Crash, Record
 import geojson
+from collections import OrderedDict
 from .segment import Segment
 from .record import transformer_4326_to_3857, transformer_3857_to_4326
 
@@ -404,7 +405,7 @@ def write_records_to_geojson(records, outfilename):
 
     records = [{
         'geometry': mapping(record.geometry),
-        'properties': dict(record.properties)
+        'properties': OrderedDict(record.properties)
         } for record in records]
 
     records = prepare_geojson(records)
@@ -428,7 +429,7 @@ def prepare_geojson(elements):
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
         # properties are usually Fiona.model.Feature - circular ref error
-        properties=dict(x['properties'])) for x in elements]
+        properties=OrderedDict(x['properties'])) for x in elements]
 
     return geojson.FeatureCollection(results)
 
