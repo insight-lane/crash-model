@@ -111,6 +111,10 @@ def get_connections(points, segments):
     connected_lines = []
     while inters:
         curr = inters.pop(0)
+        # TODO: this ignores any inters with no connected segments
+        # there may be an issue here we haven't caught - but fixing for now to view
+        if len(curr[1]) == 0:
+            continue
         if inters:
             connected = [x[1] for x in inters if x[0].intersects(
                     curr[0]
@@ -191,7 +195,7 @@ def find_non_ints(roads, int_buffers):
         # We store these, because the roads that do not have any intersections
         # associated with them don't need to be split into separate
         # intersection and non intersection segments
-        # to-do: turn these into intersection objects
+        # TODO: turn these into intersection objects
         for r in matched_roads:
             if r.properties['id'] not in roads_with_int_segments:
                 roads_with_int_segments[r.properties['id']] = []
@@ -201,16 +205,18 @@ def find_non_ints(roads, int_buffers):
 
             # Get the ids of the adjacent non-intersection segments
             connected = [x.properties['orig_id'] for x in int_segment[0]]
-            inter_segments.append(Intersection(
-                count,
-                [x.geometry for x in int_segment[0]],
-                [x.properties for x in int_segment[0]],
-                {
-                    'id': count
-                },
-                nodes=[x for x in int_buffer.points],
-                connected_segments=connected
-            ))
+            # create intersection object
+            inter_segment = Intersection(
+                    segment_id=count,
+                    lines=[x.geometry for x in int_segment[0]],
+                    data=[x.properties for x in int_segment[0]],
+                    properties={
+                        'id': count
+                    },
+                    nodes=[x for x in int_buffer.points],
+                    connected_segments=connected
+                )
+            inter_segments.append(inter_segment)
             for idx in connected:
                 connected_segment_ids[idx].append(count)
 
@@ -243,7 +249,6 @@ def find_non_ints(roads, int_buffers):
                 buffered_int = inter[1]
                 diff = diff.difference(buffered_int)
 
-            
             # check if there is any part of the segment outside buffer
             if not diff.is_empty:
                 geom_type = diff.geom_type

@@ -383,3 +383,15 @@ def test_multilinestring():
         roads, int_buffers)
     assert all([x.geometry.type == 'LineString' for x in non_int_lines])
 
+def test_get_connections_empty():
+    """
+    Test issue with empty polygons in get connections function
+    """
+    import pickle
+    points = pickle.load(open(os.path.join(TEST_FP, 'data/int_buffer_empty.pkl'), 'rb'))
+    segments = pickle.load(open(os.path.join(TEST_FP, 'data/match_segments_empty.pkl'), 'rb'))
+    int_segments = create_segments.get_connections(points, segments)
+
+    # assert no empty polygons
+    all([~x[1].is_empty for x in int_segments])
+

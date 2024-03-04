@@ -9,6 +9,7 @@ import geojson
 import json
 import requests
 import geopandas
+from collections import OrderedDict
 from . import util
 from shapely.geometry import Polygon, LineString, LinearRing
 import data.config
@@ -241,13 +242,13 @@ def simple_get_roads(config, mapfp):
     for _, row in node_feats.iterrows():
         features.append(geojson.Feature(
             geometry=geojson.Point((row['x'], row['y'])),
-            id=row['osmid'],
+            id=row.name,
             properties={'feature': names[row['highway']]},
         ))
     for _, row in intersections.iterrows():
         features.append(geojson.Feature(
             geometry=geojson.Point((row['x'], row['y'])),
-            id=row['osmid'],
+            id=row.name,
             properties={'feature': 'intersection'},
         ))
 
@@ -261,6 +262,10 @@ def simple_get_roads(config, mapfp):
     for node, data in G.nodes(data=True):
         if 'osmid' in data:
             data['osmid_original'] = data.pop('osmid')
+    # TODO: apparently you can't specify overwrite to this function
+    gpkg_path = os.path.join(mapfp, 'osm.gpkg')
+    if os.path.exists(gpkg_path):
+        os.remove(gpkg_path)
     ox.save_graph_geopackage(
         G, filepath=os.path.join(mapfp, 'osm.gpkg'))
 
@@ -491,7 +496,7 @@ def write_geojson(way_results, node_results, outfp):
             node['properties']['signal'] = 1
         feats.append(geojson.Feature(
             geometry=geojson.Point(node['geometry']['coordinates']),
-            properties=node['properties'])
+            properties=OrderedDict(node['properties']))
         )
 
     feat_collection = geojson.FeatureCollection(feats)
