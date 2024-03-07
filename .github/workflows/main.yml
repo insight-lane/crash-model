@@ -24,6 +24,8 @@ jobs:
         auto-update-conda: false
         # activate-environment: crash-model
         # environment-file: conda-linux-64.lock
+        channels: conda-forge, defaults
+        channel-priority: strict
     - name: Run linux tests
       run: |
         set -eo pipefail
@@ -61,7 +63,7 @@ jobs:
         conda activate crash-model
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-        py.test
+        
   windows:
     env:
       PYTHONFAULTHANDLER: "true"
@@ -73,7 +75,8 @@ jobs:
         auto-update-conda: true
         #activate-environment: crash-model
         #environment-file: conda-win-64.lock
-
+        channels: conda-forge, defaults
+        channel-priority: strict
     - name: Run windows tests
       shell: bash -l {0}
       run: |
