@@ -19,6 +19,7 @@ def test_get_intersection_buffers():
 
     inters = fiona.open(
          TEST_FP + '/data/processed/maps/inters.geojson')
+    inters = util.reproject_records([x for x in inters])
 
     assert len(inters) == 6
 

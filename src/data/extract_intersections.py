@@ -29,14 +29,15 @@ def extract_intersections(inter, prop):
     """
 
     # A single intersection
-    if "Point" == inter.type:
+    geom_type = inter.geom_type
+    if "Point" == geom_type:
         yield inter, prop
     # If multiple intersections, return each point
-    elif "MultiPoint" == inter.type:
+    elif "MultiPoint" == geom_type:
         for i in inter.geoms:
             yield(i, prop)
     # If line with overlap, find start/end, return
-    elif "MultiLineString" == inter.type:
+    elif "MultiLineString" == geom_type:
         multiLine = [line for line in inter]
         first_coords = multiLine[0].coords[0]
         last_coords = multiLine[-1].coords[1]
@@ -45,7 +46,7 @@ def extract_intersections(inter, prop):
                 Point(last_coords[0], last_coords[1])]:
             yield(i, prop)
     # If collection points/lines (rare), just re-run on each part
-    elif "GeometryCollection" == inter.type:
+    elif "GeometryCollection" == geom_type:
         for geom in inter:
             for i in extract_intersections(geom, prop):
                 yield i

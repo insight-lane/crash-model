@@ -555,7 +555,7 @@ def output_from_shapes(items, filename):
         output.append({
             'type': 'Feature',
             'geometry': {
-                'type': item.type,
+                'type': item.geom_type,
                 'coordinates': reprojected_coords
             },
             'properties': properties

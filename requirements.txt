@@ -1,25 +1,21 @@
 codecov
-fiona
+fiona==1.9.4
 flask
 folium
 geopandas
 geocoder
 geojson
-ipdb
-ipython
-jupyter
 matplotlib
 numpy
 openpyxl
 osmnx
 pandas # pinned
-pylint
 pyproj
 pytest
 pyyaml
 pytest-cov
 rtree
-ruamel.yaml
+ruamel.yaml==0.17.33
 seaborn
 scikit-learn
 shapely
@@ -27,3 +23,4 @@ tzlocal
 xlrd
 xgboost
 tox
+jsonschema
