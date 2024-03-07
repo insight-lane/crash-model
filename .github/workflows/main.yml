@@ -44,7 +44,7 @@ jobs:
   mac:
     env:
       PYTHONFAULTHANDLER: "true"
-    runs-on: macos-latest
+    runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v3
@@ -63,7 +63,7 @@ jobs:
         conda activate crash-model
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-        
+        py.test
   windows:
     env:
       PYTHONFAULTHANDLER: "true"
