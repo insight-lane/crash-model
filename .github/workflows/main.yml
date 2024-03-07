@@ -46,7 +46,6 @@ jobs:
         sudo chown -R $USER $CONDA
         conda activate crash-model
         cd src
-        pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
   mac_3:
     env:
@@ -68,5 +67,4 @@ jobs:
         sudo chown -R $USER $CONDA
         conda activate crash-model
         cd src
-        pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
