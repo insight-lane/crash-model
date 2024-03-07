@@ -10,44 +10,36 @@ on:
     branches: [ master ]
 
 jobs:
-  mac:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.12.2' 
-    - name: Install dependencies
-      run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-    - name: Run test
-      run: |
-        set -eo pipefail
-        cd src
-        pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
-        py.test
-  mac_2:
+  linux:
     env:
       PYTHONFAULTHANDLER: "true"
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v3
+    - uses: conda-incubator/setup-miniconda@v2
       with:
-        auto-update-conda: true
-        activate-environment: crash-model
-        environment-file: environment_mac.yml
-    - name: Run mac tests
+        auto-update-conda: false
+        # activate-environment: crash-model
+        # environment-file: conda-linux-64.lock
+    - name: Run linux tests
       run: |
         set -eo pipefail
-        . /usr/local/miniconda/etc/profile.d/conda.sh
-        sudo chown -R $USER $CONDA
+        conda env create --name crash-model -f requirements.txt
         conda activate crash-model
         cd src
-        py.test
-  mac_3:
+        py.test --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./src/coverage.xml
+        flags: unittests
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
+  mac:
     env:
       PYTHONFAULTHANDLER: "true"
     runs-on: macos-latest
@@ -57,6 +49,7 @@ jobs:
       with:
         auto-update-conda: true
         activate-environment: crash-model
+        #environment-file: conda-osx-64.lock
         environment-file: environment_mac.yml
         channels: conda-forge, defaults
         channel-priority: strict
@@ -67,4 +60,25 @@ jobs:
         sudo chown -R $USER $CONDA
         conda activate crash-model
         cd src
+        pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
+        py.test
+  windows:
+    env:
+      PYTHONFAULTHANDLER: "true"
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        #activate-environment: crash-model
+        #environment-file: conda-win-64.lock
+
+    - name: Run windows tests
+      shell: bash -l {0}
+      run: |
+        set -eo pipefail
+        conda env create --name crash-model -f requirements.txt
+        cd src
+        pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
         py.test
