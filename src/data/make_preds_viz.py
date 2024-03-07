@@ -42,7 +42,11 @@ def combine_predictions_and_segments(predictions, segments):
         # Eventually handle osm_speed vs SPEEDLIMIT as part
         # of the configuration
         if 'SPEEDLIMIT' in pred_data:
-            prop['SPEEDLIMIT'] = pred_data['SPEEDLIMIT']
+            # for some reason having some strange "no_value" strings
+            try:
+                prop['SPEEDLIMIT'] = float(pred_data['SPEEDLIMIT'])
+            except ValueError:
+                prop['SPEEDLIMIT'] = 0
         elif 'osm_speed' not in pred_data:
             prop['osm_speed'] = 0
         else:

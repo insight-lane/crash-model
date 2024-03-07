@@ -18,8 +18,7 @@ def test_get_intersection_buffers():
     """
 
     inters = fiona.open(
-        TEST_FP + '/data/processed/maps/inters.geojson')
-    inters = util.reproject_records([x for x in inters])
+         TEST_FP + '/data/processed/maps/inters.geojson')
 
     assert len(inters) == 6
 
@@ -310,7 +309,7 @@ def test_get_connections():
     assert len(connections) == 1
     assert len(connections[0][0]) == 7
 
-    # Test that the case with two unconnected intersections works
+    # Test that the case with two unconnected intersections are not merged
     test_file = os.path.join(test_path, 'unconnected.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
@@ -335,9 +334,16 @@ def test_get_connections():
 
     # Test the segment on the other side of the median
     # getting dropped from the intersection
+    # TODO: this has not been implemented yet
     connections = create_segments.get_connections(
         [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
     assert connections[0][0]
+
+    # Test instance where there are no connected segments
+    roads = []
+    connections = create_segments.get_connections(
+        [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
+    assert not connections
     
 
 def test_connected_segments():
@@ -381,17 +387,5 @@ def test_multilinestring():
     int_buffers = create_segments.get_intersection_buffers(inters, 20)
     non_int_lines, inter_segments = create_segments.find_non_ints(
         roads, int_buffers)
-    assert all([x.geometry.type == 'LineString' for x in non_int_lines])
-
-def test_get_connections_empty():
-    """
-    Test issue with empty polygons in get connections function
-    """
-    import pickle
-    points = pickle.load(open(os.path.join(TEST_FP, 'data/int_buffer_empty.pkl'), 'rb'))
-    segments = pickle.load(open(os.path.join(TEST_FP, 'data/match_segments_empty.pkl'), 'rb'))
-    int_segments = create_segments.get_connections(points, segments)
-
-    # assert no empty polygons
-    all([~x[1].is_empty for x in int_segments])
+    assert all([x.geometry.geom_type == 'LineString' for x in non_int_lines])
 

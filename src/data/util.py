@@ -500,11 +500,11 @@ def get_roads_and_inters(filename):
     data = reproject_records([x for x in data])
     # All the line strings are roads
     roads = [Segment(x['geometry'], x['properties']) for x in data
-             if x['geometry'].type == 'LineString']
+             if x['geometry'].geom_type == 'LineString']
 
     # Get the intersection list by excluding anything that's not labeled
     # as an intersection
-    inters = [x for x in data if x['geometry'].type == 'Point'
+    inters = [x for x in data if x['geometry'].geom_type == 'Point'
               and 'intersection' in list(x['properties'].keys())
               and x['properties']['intersection']]
 

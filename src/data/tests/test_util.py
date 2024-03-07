@@ -185,6 +185,7 @@ def test_get_roads_and_inters():
         'test_get_roads_and_inters.geojson')
     print(path)
     roads, inters = util.get_roads_and_inters(path)
+
     assert len(roads) == 4
     assert len(inters) == 1
 

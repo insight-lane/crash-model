@@ -104,6 +104,7 @@ def get_connections(points, segments):
         for i, (curr_shape, _) in enumerate(inters):
             if line.geometry.distance(curr_shape) < .0001:
                 inters[i][1].append(line)
+                # point expands, includes all geometry of near lines
                 inters[i][0] = unary_union([inters[i][0], line.geometry])
 
     # Merge connected components
@@ -111,23 +112,28 @@ def get_connections(points, segments):
     connected_lines = []
     while inters:
         curr = inters.pop(0)
-        # TODO: this ignores any inters with no connected segments
-        # there may be an issue here we haven't caught - but fixing for now to view
+        # TODO: this ignores any points without connected segments
+        # we may not want to do this - but it does seem to work for Boston, at least
         if len(curr[1]) == 0:
             continue
         if inters:
+            # get the polygon buffer of the points if they intersect current
             connected = [x[1] for x in inters if x[0].intersects(
                     curr[0]
             )]
 
+            # if there are points intersecting current
             if connected:
                 connected_lines = set(
                     curr[1] + [x for y in connected for x in y]
                 )
             else:
+            # otherwise, just take the current polygon
                 connected_lines = set(curr[1])
+       # if no other intersections, just take the current polygon
         else:
             connected_lines = set(curr[1])
+        # remove from iteration if it intersects current
         inters = [x for x in inters if not x[0].intersects(curr[0])]
         
         resulting_inters.append((connected_lines, unary_union(
