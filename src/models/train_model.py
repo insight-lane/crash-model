@@ -233,50 +233,50 @@ def initialize_and_run(data_model, features, lm_features, target,
     # Create train/test split
     df.tr_te_split(.7, seed=seed)
 
-    # # Parameters for model
-    # # class weight
-    # # this needs to adapt to the model data, so can't be specified up from
-    # a = data_model[target].value_counts(normalize=True)
-    # w = 1/a[1]
-    # mp['XGBClassifier']['scale_pos_weight'] = [w]
+    # Parameters for model
+    # class weight
+    # this needs to adapt to the model data, so can't be specified up from
+    a = data_model[target].value_counts(normalize=True)
+    w = 1/a[1]
+    mp['XGBClassifier']['scale_pos_weight'] = [w]
 
-    # # Initialize tuner
-    # tune = Tuner(df)
-    # try: 
-    #     # Base XG model
-    #     tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
-    #     # Base LR model
-    #     tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
-    # except ValueError:
-    #     print('CV fails, likely very few of target available')
-    #     raise
+    # Initialize tuner
+    tune = Tuner(df)
+    try: 
+        # Base XG model
+        tune.tune('XG_base', 'XGBClassifier', features, cvp, mp['XGBClassifier'])
+        # Base LR model
+        tune.tune('LR_base', 'LogisticRegression', lm_features, cvp, mp['LogisticRegression'])
+    except ValueError:
+        print('CV fails, likely very few of target available')
+        raise
 
-    # # Run test
-    # test = Tester(df)
-    # test.init_tuned(tune)
-    # test.run_tuned('LR_base', cal=False)
-    # test.run_tuned('XG_base', cal=False)
+    # Run test
+    test = Tester(df)
+    test.init_tuned(tune)
+    test.run_tuned('LR_base', cal=False)
+    test.run_tuned('XG_base', cal=False)
 
-    # # choose best performing model
-    # best_perf = 0
-    # best_model = None
-    # for m in test.rundict:
-    #     if test.rundict[m]['roc_auc'] > best_perf:
-    #         best_perf = test.rundict[m]['roc_auc']
-    #         best_model = test.rundict[m]['model']
-    #         best_model_features = test.rundict[m]['features']
-    # # check for performance above certain level
-    # if best_perf <= perf_cutoff:
-    #     print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
+    # choose best performing model
+    best_perf = 0
+    best_model = None
+    for m in test.rundict:
+        if test.rundict[m]['roc_auc'] > best_perf:
+            best_perf = test.rundict[m]['roc_auc']
+            best_model = test.rundict[m]['model']
+            best_model_features = test.rundict[m]['features']
+    # check for performance above certain level
+    if best_perf <= perf_cutoff:
+        print(('Model performs below AUC %s, may not be usable' % perf_cutoff))
 
-    # # train on full data
-    # trained_model = best_model.fit(data_model[best_model_features], data_model[target])
+    # train on full data
+    trained_model = best_model.fit(data_model[best_model_features], data_model[target])
 
-    # predict(trained_model, data_model, best_model_features, target, datadir)
+    predict(trained_model, data_model, best_model_features, target, datadir)
 
-    # # output feature importances or coefficients
+    # output feature importances or coefficients
 
-    # output_importance(trained_model, features, datadir, target)
+    output_importance(trained_model, features, datadir, target)
 
 
 if __name__ == '__main__':
