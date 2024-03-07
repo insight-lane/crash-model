@@ -235,3 +235,4 @@ dependencies:
   - zipp=3.17.0
   - zlib=1.2.13
   - zstd=1.5.5
+  - pylint==2.17.6
