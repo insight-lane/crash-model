@@ -47,7 +47,7 @@ jobs:
     runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v3
+    - uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
         #activate-environment: crash-model
@@ -58,8 +58,9 @@ jobs:
     - name: Run mac tests
       run: |
         set -eo pipefail
+        . /usr/local/miniconda/etc/profile.d/conda.sh
+        sudo chown -R $USER $CONDA
         conda env create --name crash-model -f requirements.txt
-        conda init
         conda activate crash-model
         cd src
         pytest
