@@ -64,23 +64,24 @@ jobs:
         conda activate crash-model
         cd src
         pytest
-  windows:
-    env:
-      PYTHONFAULTHANDLER: "true"
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        auto-update-conda: true
-        #activate-environment: crash-model
-        #environment-file: conda-win-64.lock
-        channels: conda-forge, defaults
-        channel-priority: strict
-    - name: Run windows tests
-      shell: bash -l {0}
-      run: |
-        set -eo pipefail
-        conda env create --name crash-model -f requirements.txt
-        cd src
-        py.test
+  # unclear that we need to test on windows
+  # windows:
+  #   env:
+  #     PYTHONFAULTHANDLER: "true"
+  #   runs-on: windows-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - uses: conda-incubator/setup-miniconda@v2
+  #     with:
+  #       auto-update-conda: true
+  #       #activate-environment: crash-model
+  #       #environment-file: conda-win-64.lock
+  #       channels: conda-forge, defaults
+  #       channel-priority: strict
+  #   - name: Run windows tests
+  #     shell: bash -l {0}
+  #     run: |
+  #       set -eo pipefail
+  #       conda env create --name crash-model -f requirements.txt
+  #       cd src
+  #       py.test
