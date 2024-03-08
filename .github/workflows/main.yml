@@ -59,6 +59,7 @@ jobs:
       run: |
         set -eo pipefail
         conda env create --name crash-model -f requirements.txt
+        conda init
         conda activate crash-model
         cd src
         pytest
