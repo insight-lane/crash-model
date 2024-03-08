@@ -10,15 +10,22 @@ class Segment(object):
 
 class Intersection(object):
     """
-    lines is a list of all the component lines
-    properties is a list of dicts of component properties rather than a dict
+    Creates an Intersection object
+    Args:
+        count (int): Unique identifier for the intersection.
+        lines (list of shapely.geometry.linestring): List of lines forming the intersection.
+        properties (list of dict): List of dictionaries containing properties for each line.
+        data (dict, optional): Additional data associated with the intersection. Defaults to an empty dictionary.
+        nodes (list of dict, optional): List of dictionaries containing information about nodes in the intersection. Defaults to an empty list.
+        connected_segments (list of int, optional): List of IDs of segments connected to the intersection. Defaults to an empty list.
+
     """
 
-    def __init__(self, segment_id, lines, all_data, properties,
+    def __init__(self, segment_id, lines, data, properties,
                  nodes=[], connected_segments=[]):
         self.id = segment_id
         self.lines = lines
-        self.data = all_data
+        self.data = data
         self.properties = properties
         self.geometry = None
         # Nodes are the points (with openstreetmap node id) in the intersection

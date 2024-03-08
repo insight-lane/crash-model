@@ -51,7 +51,7 @@ def get_buffer(filename, lat, lon, radius):
             elif type(segment.geometry) == MultiLineString:
                 overlapping.append({
                     'geometry': {
-                        'coordinates': [[y for y in x.coords] for x in segment.geometry],
+                        'coordinates': [[y for y in x.coords] for x in segment.geometry.geoms],
                         'type': 'MultiLineString'
                     },
                     'properties': segment.properties

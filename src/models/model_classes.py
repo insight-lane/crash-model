@@ -98,7 +98,7 @@ class Tuner():
             #cv = GroupKFold(cvparams['folds'])
         grid = RandomizedSearchCV(
                     model(),scoring=cvparams['pmetric'], 
-                    cv = KFold(cvparams['folds'], cvparams['shuffle']),
+                    cv = KFold(n_splits=cvparams['folds'], shuffle=cvparams['shuffle']),
                     refit=False, n_iter=cvparams['iter'],
                     param_distributions=mparams, verbose=1, return_train_score=True)
         return(grid)
@@ -126,7 +126,7 @@ class Tuner():
         best, results = self.run_grid(grid, self.train_x[features], self.train_y)
         results['name'] = name
         results['m_name'] = m_name
-        self.grid_results = self.grid_results.append(results)
+        self.grid_results = pd.concat([self.grid_results, results])
         best['model'] = model(**best['bp'])
         best['features'] = list(features)
         self.best_models.update({name: best}) 

@@ -5,7 +5,6 @@ import pipeline
 import ruamel
 import data.config
 
-
 TEST_FP = os.path.dirname(os.path.abspath(__file__))
 
 

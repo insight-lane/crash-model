@@ -6,7 +6,7 @@ from . import util
 from .record import Record
 import numpy as np
 import pandas as pd
-from pandas.io.json import json_normalize
+from pandas import json_normalize
 import geopandas as gpd
 from sklearn.neighbors import KNeighborsRegressor
 import sys
@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(
         os.path.dirname(
             os.path.abspath(__file__))))
 
-PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data/processed')
+PROCESSED_DATA_FP = os.path.join(BASE_DIR, 'data', 'processed')
 STANDARDIZED_DATA_FP = os.path.join(BASE_DIR, 'data', 'standardized')
 
 
@@ -91,8 +91,6 @@ def read_volume():
 
     return [{'point': x.point, 'properties': x.properties} for x in volume]
 
-    return volume
-
 
 def propagate_volume():
     """
@@ -104,9 +102,9 @@ def propagate_volume():
     """
     # Read in segments
     inter = util.read_geojson(os.path.join(
-        PROCESSED_DATA_FP, 'maps/inters_segments.geojson'))
+        PROCESSED_DATA_FP, 'maps', 'inters_segments.geojson'))
     non_inter = util.read_geojson(
-        os.path.join(PROCESSED_DATA_FP, 'maps/non_inters_segments.geojson'))
+        os.path.join(PROCESSED_DATA_FP, 'maps', 'non_inters_segments.geojson'))
     print("Read in {} intersection, {} non-intersection segments".format(
         len(inter), len(non_inter)))
 

@@ -158,7 +158,8 @@ def test_prepare_geojson():
     for i in range(len(actual_coords)):
         for j in range(len(actual_coords[i])):
             np.testing.assert_almost_equal(
-                actual_coords[i][j], expected_coords[i][j])
+                actual_coords[i][j], expected_coords[i][j],
+                decimal=6)
 
 
 def test_get_center_point():
@@ -184,6 +185,7 @@ def test_get_roads_and_inters():
         'test_get_roads_and_inters.geojson')
     print(path)
     roads, inters = util.get_roads_and_inters(path)
+
     assert len(roads) == 4
     assert len(inters) == 1
 

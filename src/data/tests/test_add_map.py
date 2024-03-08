@@ -29,7 +29,7 @@ def test_add_map(tmpdir):
         os.path.join(data_path, 'osm3857.shp'),
         '-d',
         path
-    ])
+    ], shell=True)
 
     subprocess.check_call([
         'python',
@@ -41,7 +41,7 @@ def test_add_map(tmpdir):
         os.path.join(data_path, 'elements.geojson'),
         '-c',
         os.path.join(base_path, 'config_features.yml')
-    ])
+    ], shell=True)
 
     # Extract and create on supplemental map
     subprocess.check_call([
@@ -53,7 +53,7 @@ def test_add_map(tmpdir):
         path,
         '-n',
         'boston'
-    ])
+    ], shell=True)
 
     subprocess.check_call([
         'python',
@@ -68,7 +68,7 @@ def test_add_map(tmpdir):
         '-c',
         os.path.join(base_path, 'config_features.yml')
 
-    ])
+    ], shell=True)
 
     # Above was all set up, now the testing part
     # and add features
@@ -78,4 +78,4 @@ def test_add_map(tmpdir):
         'data.add_map',
         path,
         'boston',
-    ])
+    ], shell=True)

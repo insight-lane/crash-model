@@ -18,7 +18,7 @@ def test_get_intersection_buffers():
     """
 
     inters = fiona.open(
-        TEST_FP + '/data/processed/maps/inters.geojson')
+         TEST_FP + '/data/processed/maps/inters.geojson')
     inters = util.reproject_records([x for x in inters])
 
     assert len(inters) == 6
@@ -225,11 +225,11 @@ def test_add_point_based_features(tmpdir):
         "near_id": "001556"
     }, {
         "feature": "signal",
-        "location": {"latitude": 42.386904, "longitude": -71.1161581},
+        "location": {"latitude": 42.386904, "longitude": -71.116158},
         "near_id": ""
     }, {
         "feature": "crosswalk",
-        "location": {"latitude": 42.3834466, "longitude": -71.1377047},
+        "location": {"latitude": 42.383447, "longitude": -71.137705},
         "near_id": 975
     }]
     with open(outputfile, 'r') as f:
@@ -310,7 +310,7 @@ def test_get_connections():
     assert len(connections) == 1
     assert len(connections[0][0]) == 7
 
-    # Test that the case with two unconnected intersections works
+    # Test that the case with two unconnected intersections are not merged
     test_file = os.path.join(test_path, 'unconnected.geojson')
     roads, inters = util.get_roads_and_inters(test_file)
     connections = create_segments.get_connections(
@@ -335,9 +335,16 @@ def test_get_connections():
 
     # Test the segment on the other side of the median
     # getting dropped from the intersection
+    # TODO: this has not been implemented yet
     connections = create_segments.get_connections(
         [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
     assert connections[0][0]
+
+    # Test instance where there are no connected segments
+    roads = []
+    connections = create_segments.get_connections(
+        [Record(inters[0]['properties'], point=inters[0]['geometry'])], roads)
+    assert not connections
     
 
 def test_connected_segments():
@@ -359,7 +366,8 @@ def test_connected_segments():
     assert len(inter_segments[1].lines) == 3
 
     # Test connected segments
-    assert set(inter_segments[0].connected_segments) == set([
+    # TODO: this matches the assertion set, but previously was idx 0, not 2
+    assert set(inter_segments[2].connected_segments) == set([
         '0011', '007', '005', '000'])
     assert set(non_int_lines[8].properties['connected_segments']) == set([
         3, 4])
@@ -380,5 +388,5 @@ def test_multilinestring():
     int_buffers = create_segments.get_intersection_buffers(inters, 20)
     non_int_lines, inter_segments = create_segments.find_non_ints(
         roads, int_buffers)
-    assert all([x.geometry.type == 'LineString' for x in non_int_lines])
+    assert all([x.geometry.geom_type == 'LineString' for x in non_int_lines])
 

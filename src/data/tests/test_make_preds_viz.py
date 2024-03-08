@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-import ruamel
+from pandas.testing import assert_frame_equal
+import ruamel.yaml
 import shutil
 import data.config
 from .. import make_preds_viz
@@ -39,8 +40,9 @@ def test_make_preds_viz_boston(tmpdir):
     preds_viz_test = pd.read_json(os.path.join(
         DATA_FP, "single_prediction_viz.geojson")
     )
+
+    assert_frame_equal(tmpdir_preds_viz, preds_viz_test)
     
-    assert (tmpdir_preds_viz.equals(preds_viz_test))
 
 
 def test_write_all_preds(tmpdir):

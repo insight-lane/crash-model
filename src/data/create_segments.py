@@ -61,7 +61,7 @@ def get_intersection_buffers(intersections, intersection_buffer_units,
         inter_index.insert(idx, inter_point['geometry'].bounds)
 
     # Get the points that overlap with the buffers
-    for buff in buffered_intersections:
+    for buff in buffered_intersections.geoms:
         matches = []
         for idx in inter_index.intersection(buff.bounds):
             if intersections[idx]['geometry'].within(buff):
@@ -104,6 +104,7 @@ def get_connections(points, segments):
         for i, (curr_shape, _) in enumerate(inters):
             if line.geometry.distance(curr_shape) < .0001:
                 inters[i][1].append(line)
+                # point expands, includes all geometry of near lines
                 inters[i][0] = unary_union([inters[i][0], line.geometry])
 
     # Merge connected components
@@ -111,19 +112,28 @@ def get_connections(points, segments):
     connected_lines = []
     while inters:
         curr = inters.pop(0)
+        # TODO: this ignores any points without connected segments
+        # we may not want to do this - but it does seem to work for Boston, at least
+        if len(curr[1]) == 0:
+            continue
         if inters:
+            # get the polygon buffer of the points if they intersect current
             connected = [x[1] for x in inters if x[0].intersects(
                     curr[0]
             )]
 
+            # if there are points intersecting current
             if connected:
                 connected_lines = set(
                     curr[1] + [x for y in connected for x in y]
                 )
             else:
+            # otherwise, just take the current polygon
                 connected_lines = set(curr[1])
+       # if no other intersections, just take the current polygon
         else:
             connected_lines = set(curr[1])
+        # remove from iteration if it intersects current
         inters = [x for x in inters if not x[0].intersects(curr[0])]
         
         resulting_inters.append((connected_lines, unary_union(
@@ -191,7 +201,7 @@ def find_non_ints(roads, int_buffers):
         # We store these, because the roads that do not have any intersections
         # associated with them don't need to be split into separate
         # intersection and non intersection segments
-        # to-do: turn these into intersection objects
+        # TODO: turn these into intersection objects
         for r in matched_roads:
             if r.properties['id'] not in roads_with_int_segments:
                 roads_with_int_segments[r.properties['id']] = []
@@ -201,16 +211,18 @@ def find_non_ints(roads, int_buffers):
 
             # Get the ids of the adjacent non-intersection segments
             connected = [x.properties['orig_id'] for x in int_segment[0]]
-            inter_segments.append(Intersection(
-                count,
-                [x.geometry for x in int_segment[0]],
-                [x.properties for x in int_segment[0]],
-                {
-                    'id': count
-                },
-                nodes=[x for x in int_buffer.points],
-                connected_segments=connected
-            ))
+            # create intersection object
+            inter_segment = Intersection(
+                    segment_id=count,
+                    lines=[x.geometry for x in int_segment[0]],
+                    data=[x.properties for x in int_segment[0]],
+                    properties={
+                        'id': count
+                    },
+                    nodes=[x for x in int_buffer.points],
+                    connected_segments=connected
+                )
+            inter_segments.append(inter_segment)
             for idx in connected:
                 connected_segment_ids[idx].append(count)
 
@@ -225,6 +237,7 @@ def find_non_ints(roads, int_buffers):
     non_int_count = 0
 
     for i, road in enumerate(roads):
+        # tracking progress
         util.track(i, 1000, len(roads))
 
         # If there's no overlap between the road segment and any intersections
@@ -242,12 +255,14 @@ def find_non_ints(roads, int_buffers):
                 buffered_int = inter[1]
                 diff = diff.difference(buffered_int)
 
-            if diff.type in ('LineString', 'MultiLineString'):
-                if 'LineString' == diff.type:
+            # check if there is any part of the segment outside buffer
+            if not diff.is_empty:
+                geom_type = diff.geom_type
+                if geom_type == 'LineString':
                     coords = [x for x in diff.coords]
-                elif 'MultiLineString' == diff.type:
+                elif geom_type == 'MultiLineString':
                     coords = []
-                    for l in diff:
+                    for l in diff.geoms:
                         for coord in l.coords:
                             coords.append(coord)
 
@@ -264,9 +279,11 @@ def find_non_ints(roads, int_buffers):
             else:
                 # There may be no sections of the segment that fall outside
                 # of an intersection, in which case it's skipped
-                if len(diff) == 0:
-                    continue
-                print("{} found, skipping".format(diff.type))
+                if diff.length == 0:
+                    print("Segment entirely in intersection, skipping")
+                else:
+                    # TODO: not sure if this could happen
+                    print("Error in non-intersection processing")
 
     # Update intersections' connected segments with id instead of original id
     for inter_segment in inter_segments:
@@ -532,7 +549,7 @@ def create_segments_from_json(roads_shp_path, mapfp):
         # be taken out
         if type(lines) == LineString:
             lines = MultiLineString([lines.coords])
-        for line in lines:
+        for line in lines.geoms:
             coords += [[x for x in line.coords]]
 
         intersection.geometry = MultiLineString(coords)
