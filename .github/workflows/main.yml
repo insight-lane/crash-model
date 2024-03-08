@@ -52,7 +52,7 @@ jobs:
         auto-update-conda: true
         activate-environment: crash-model
         #environment-file: conda-osx-64.lock
-        environment-file: environment_mac.yml
+        #environment-file: environment_mac.yml
         channels: conda-forge, defaults
         channel-priority: strict
     - name: Run mac tests
@@ -60,6 +60,7 @@ jobs:
         set -eo pipefail
         . /usr/local/miniconda/etc/profile.d/conda.sh
         sudo chown -R $USER $CONDA
+        conda env create --name crash-model -f requirements.txt
         conda activate crash-model
         cd src
         pylint pipeline.py initialize_city.py data/*.py visualization/*.py data_standardization/*.py models/*.py features/*.py tools/*.py
