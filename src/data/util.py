@@ -1,7 +1,7 @@
+from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
 import fiona
 import pyproj
 import rtree
-from shapely.geometry import Point, shape, mapping, MultiLineString, LineString
 from matplotlib import pyplot
 import os
 import json
@@ -9,6 +9,7 @@ from dateutil.parser import parse
 import datetime
 from .record import Crash, Record
 import geojson
+from collections import OrderedDict
 from .segment import Segment
 from .record import transformer_4326_to_3857, transformer_3857_to_4326
 
@@ -404,7 +405,7 @@ def write_records_to_geojson(records, outfilename):
 
     records = [{
         'geometry': mapping(record.geometry),
-        'properties': record.properties
+        'properties': OrderedDict(record.properties)
         } for record in records]
 
     records = prepare_geojson(records)
@@ -427,7 +428,8 @@ def prepare_geojson(elements):
     results = [geojson.Feature(
         geometry=mapping(x['geometry']),
         id=x['properties']['id'] if 'id' in x['properties'] else '',
-        properties=x['properties']) for x in elements]
+        # properties are usually Fiona.model.Feature - circular ref error
+        properties=OrderedDict(x['properties'])) for x in elements]
 
     return geojson.FeatureCollection(results)
 
@@ -458,26 +460,26 @@ def get_center_point(segment):
     Returns:
         x, y tuple for the centerpoint
     """
+    if not segment.geometry.is_empty:
+        if segment.geometry.geom_type == 'LineString':
+            point = segment.geometry.interpolate(
+                .5, normalized=True)
+            return point.x, point.y
+        elif segment.geometry.geom_type == 'MultiLineString':
+            lines = [x for x in [line for line in segment.geometry.geoms]]
+            coords = []
+            for line in lines:
+                coords.extend([x for x in line.coords])
 
-    if segment.geometry.type == 'LineString':
-        point = segment.geometry.interpolate(
-            .5, normalized=True)
-        return point.x, point.y
-    elif segment.geometry.type == 'MultiLineString':
-        lines = [x for x in [line for line in segment.geometry]]
-        coords = []
-        for line in lines:
-            coords.extend([x for x in line.coords])
+            minx = min([x[0] for x in coords])
+            maxx = max([x[0] for x in coords])
+            miny = min([x[1] for x in coords])
+            maxy = max([x[1] for x in coords])
+            point = LineString([[minx, miny], [maxx, maxy]]).interpolate(
+                .5, normalized=True)
+            point = segment.geometry.interpolate(segment.geometry.project(point))
 
-        minx = min([x[0] for x in coords])
-        maxx = max([x[0] for x in coords])
-        miny = min([x[1] for x in coords])
-        maxy = max([x[1] for x in coords])
-        point = LineString([[minx, miny], [maxx, maxy]]).interpolate(
-            .5, normalized=True)
-        point = segment.geometry.interpolate(segment.geometry.project(point))
-
-        return point.x, point.y
+            return point.x, point.y
 
     return None, None
 
@@ -498,11 +500,11 @@ def get_roads_and_inters(filename):
     data = reproject_records([x for x in data])
     # All the line strings are roads
     roads = [Segment(x['geometry'], x['properties']) for x in data
-             if x['geometry'].type == 'LineString']
+             if x['geometry'].geom_type == 'LineString']
 
     # Get the intersection list by excluding anything that's not labeled
     # as an intersection
-    inters = [x for x in data if x['geometry'].type == 'Point'
+    inters = [x for x in data if x['geometry'].geom_type == 'Point'
               and 'intersection' in list(x['properties'].keys())
               and x['properties']['intersection']]
 
@@ -525,24 +527,24 @@ def output_from_shapes(items, filename):
     output = []
 
     for item, properties in items:
-        if item.type == 'Polygon':
+        if item.geom_type == 'Polygon':
             coords = [x for x in item.exterior.coords]
             reprojected_coords = [[get_reproject_point(
                 x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in coords]]
-        elif item.type == 'MultiLineString':
+        elif item.geom_type == 'MultiLineString':
             lines = [x for x in item]
             reprojected_coords = []
             for line in lines:
                 reprojected_coords.append([get_reproject_point(
                     x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in line.coords])
-        elif item.type == 'LineString':
+        elif item.geom_type == 'LineString':
             coords = [x for x in item.coords]
             reprojected_coords = [get_reproject_point(
                 x[1], x[0], transformer_3857_to_4326, coords=True)
                                   for x in coords]
-        elif item.type == 'Point':
+        elif item.geom_type == 'Point':
             reprojected_coords = get_reproject_point(
                 item.y, item.x, transformer_3857_to_4326,
                 coords=True
@@ -553,7 +555,7 @@ def output_from_shapes(items, filename):
         output.append({
             'type': 'Feature',
             'geometry': {
-                'type': item.type,
+                'type': item.geom_type,
                 'coordinates': reprojected_coords
             },
             'properties': properties

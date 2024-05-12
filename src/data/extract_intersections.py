@@ -1,12 +1,13 @@
+from shapely.geometry import Point, shape
 import fiona
 import math
-from shapely.geometry import Point, shape
 import itertools
 import pickle
 import os
 import argparse
 from .util import track, prepare_geojson
 import geojson
+from collections import OrderedDict
 
 MAP_DATA_FP = os.path.dirname(
     os.path.dirname(
@@ -28,14 +29,15 @@ def extract_intersections(inter, prop):
     """
 
     # A single intersection
-    if "Point" == inter.type:
+    geom_type = inter.geom_type
+    if "Point" == geom_type:
         yield inter, prop
     # If multiple intersections, return each point
-    elif "MultiPoint" == inter.type:
-        for i in inter:
+    elif "MultiPoint" == geom_type:
+        for i in inter.geoms:
             yield(i, prop)
     # If line with overlap, find start/end, return
-    elif "MultiLineString" == inter.type:
+    elif "MultiLineString" == geom_type:
         multiLine = [line for line in inter]
         first_coords = multiLine[0].coords[0]
         last_coords = multiLine[-1].coords[1]
@@ -44,7 +46,7 @@ def extract_intersections(inter, prop):
                 Point(last_coords[0], last_coords[1])]:
             yield(i, prop)
     # If collection points/lines (rare), just re-run on each part
-    elif "GeometryCollection" == inter.type:
+    elif "GeometryCollection" == geom_type:
         for geom in inter:
             for i in extract_intersections(geom, prop):
                 yield i
@@ -115,6 +117,8 @@ def write_intersections(inters, roads):
     # in the create_segments script
     for road in roads:
         road['properties']['id'] = road['id']
+        # fiona.model.Properties has circular references
+        road['properties'] = OrderedDict(road['properties'])
         roads_with_ids.append(road)
     roads = prepare_geojson(roads_with_ids)
 

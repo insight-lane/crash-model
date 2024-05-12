@@ -134,7 +134,7 @@ def test_read_file_info_agg(tmpdir):
         'date': '2012-03-14T20:00:00-04:00',
         'location': {
             'latitude': 39.74391,
-            'longitude': -75.22693000000001
+            'longitude': -75.22693
         },
         'feat_agg': 'latest',
         'value': 87081
@@ -205,12 +205,12 @@ def test_read_file_info_multi(tmpdir):
                    'date': '2012-03-14T20:00:00-04:00',
                    'location': {
                        'latitude': 39.74391,
-                       'longitude': -75.22693000000001}},
+                       'longitude': -75.22693}},
                   {'feature': 'test_count',
                    'date': '2012-03-14T20:00:00-04:00',
                    'location': {
                        'latitude': 39.74391,
-                       'longitude': -75.22693000000001}},
+                       'longitude': -75.22693}},
                   {'feature': 'test_value',
                    'feat_agg': 'latest',
                    'value': 87679,
