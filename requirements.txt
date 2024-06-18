@@ -16,7 +16,7 @@ pyyaml==6.0.1
 pytest-cov==4.1.0
 rtree==1.2.0
 ruamel.yaml==0.17.33
-scikit-learn==1.4.1.post1
+scikit-learn==1.5.0
 shapely==2.0.3
 tzlocal==5.2
 xlrd==2.0.1
